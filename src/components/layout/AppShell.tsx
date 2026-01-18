@@ -232,6 +232,9 @@ const AppShell = ({ children }: AppShellProps) => {
                     <DropdownMenuItem asChild>
                       <Link to="/student/inbox">Inbox</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/leaderboard">Leaderboard</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => {
                       e.preventDefault();

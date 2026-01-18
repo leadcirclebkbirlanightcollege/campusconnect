@@ -50,6 +50,7 @@ type StudentFilters = {
   department: string;
   className: string;
   status: "active" | "deleted" | "all";
+  verified: "all" | "verified" | "unverified";
 };
 
 const DEFAULT_FILTERS: StudentFilters = {
@@ -57,6 +58,7 @@ const DEFAULT_FILTERS: StudentFilters = {
   department: "all",
   className: "all",
   status: "active",
+  verified: "all",
 };
 
 function normalize(s: string | null | undefined) {
@@ -68,6 +70,11 @@ function matchesFilters(s: StudentRow, f: StudentFilters) {
   if (f.status !== "all") {
     const wantDeleted = f.status === "deleted";
     if (s.is_deleted !== wantDeleted) return false;
+  }
+
+  if (f.verified !== "all") {
+    const wantVerified = f.verified === "verified";
+    if (s.is_verified !== wantVerified) return false;
   }
 
   if (f.department !== "all" && (s.department ?? "") !== f.department) return false;
@@ -235,7 +242,7 @@ export default function StudentManagementTab() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-[1fr,190px,190px,190px]">
+          <div className="grid gap-3 md:grid-cols-[1fr,190px,190px,190px,190px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -294,6 +301,22 @@ export default function StudentManagementTab() {
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="deleted">Deleted</SelectItem>
                 <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.verified}
+              onValueChange={(v) =>
+                setFilters((p) => ({ ...p, verified: v as StudentFilters["verified"] }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Verified" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="verified">Verified</SelectItem>
+                <SelectItem value="unverified">Unverified</SelectItem>
               </SelectContent>
             </Select>
           </div>

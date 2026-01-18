@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Users } from "lucide-react";
+import { Download, Users, BadgeCheck, Filter } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ type ProfileRow = {
   student_id: string | null;
   department: string | null;
   class_name: string | null;
+  is_verified: boolean;
 };
 
 type Row = {
@@ -38,6 +39,7 @@ type Row = {
   className: string;
   status: string;
   timestamp: string;
+  isVerified: boolean;
 };
 
 function downloadCsv(filename: string, rows: Row[]) {
@@ -63,10 +65,11 @@ function downloadCsv(filename: string, rows: Row[]) {
 }
 
 export default function AdminAttendanceLiveView({ lectureId }: { lectureId: string }) {
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const enabled = Boolean(lectureId);
 
   const presentQuery = useQuery({
-    queryKey: ["admin", "attendance", "present", lectureId],
+    queryKey: ["admin", "attendance", "present", lectureId, { verifiedOnly }],
     enabled,
     queryFn: async (): Promise<Row[]> => {
       const { data: attendance, error: aErr } = await supabase
@@ -81,26 +84,33 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
       const userIds = Array.from(new Set((attendance ?? []).map((a) => a.student_user_id)));
       if (userIds.length === 0) return [];
 
-      const { data: profiles, error: pErr } = await supabase
+      let profilesQuery = supabase
         .from("profiles")
-        .select("user_id,name,student_id,department,class_name")
+        .select("user_id,name,student_id,department,class_name,is_verified")
         .in("user_id", userIds);
+
+      if (verifiedOnly) profilesQuery = profilesQuery.eq("is_verified", true);
+
+      const { data: profiles, error: pErr } = await profilesQuery;
       if (pErr) throw pErr;
 
       const map: Record<string, ProfileRow> = {};
       for (const p of (profiles ?? []) as ProfileRow[]) map[p.user_id] = p;
 
-      return ((attendance ?? []) as AttendanceRow[]).map((a) => {
-        const p = map[a.student_user_id];
-        return {
-          name: p?.name ?? a.student_user_id,
-          studentId: p?.student_id ?? "—",
-          department: p?.department ?? "—",
-          className: p?.class_name ?? "—",
-          status: a.status,
-          timestamp: new Date(a.marked_at).toLocaleString(),
-        };
-      });
+      return ((attendance ?? []) as AttendanceRow[])
+        .filter((a) => Boolean(map[a.student_user_id]))
+        .map((a) => {
+          const p = map[a.student_user_id];
+          return {
+            name: p?.name ?? a.student_user_id,
+            studentId: p?.student_id ?? "—",
+            department: p?.department ?? "—",
+            className: p?.class_name ?? "—",
+            status: a.status,
+            timestamp: new Date(a.marked_at).toLocaleString(),
+            isVerified: Boolean(p?.is_verified),
+          };
+        });
     },
     refetchInterval: 5_000,
   });
@@ -144,6 +154,15 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
 
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{exportRows.length} present</Badge>
+            <Button
+              type="button"
+              variant={verifiedOnly ? "secondary" : "outline"}
+              className="gap-2"
+              onClick={() => setVerifiedOnly((v) => !v)}
+            >
+              <Filter className="h-4 w-4" />
+              {verifiedOnly ? "Verified only" : "All"}
+            </Button>
             <Button
               variant="outline"
               className="gap-2"
@@ -192,7 +211,16 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
               ) : (
                 exportRows.map((r) => (
                   <TableRow key={`${r.studentId}-${r.timestamp}`}>
-                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        {r.name}
+                        {r.isVerified ? (
+                          <Badge className="bg-primary text-primary-foreground gap-1">
+                            <BadgeCheck className="h-3 w-3" /> Verified
+                          </Badge>
+                        ) : null}
+                      </span>
+                    </TableCell>
                     <TableCell>{r.studentId}</TableCell>
                     <TableCell className="hidden md:table-cell">{r.department}</TableCell>
                     <TableCell className="hidden md:table-cell">{r.className}</TableCell>
