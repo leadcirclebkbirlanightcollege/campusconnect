@@ -1,13 +1,20 @@
 import { ReactNode, useEffect, useMemo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, CalendarDays, MailOpen, UserRound } from "lucide-react";
+import { BookOpen, CalendarDays, MailOpen, UserRound, LogOut } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AppShellProps {
   children: ReactNode;
@@ -48,6 +55,7 @@ function NavItem({
 
 const AppShell = ({ children }: AppShellProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const qc = useQueryClient();
 
   const authQuery = useQuery({
@@ -132,6 +140,11 @@ const AppShell = ({ children }: AppShellProps) => {
     return (n[0] || "U").toUpperCase();
   }, [profileMiniQuery.data?.name]);
 
+  const handleStudentLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth", { replace: true });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       {/* Ambient background effect */}
@@ -177,13 +190,43 @@ const AppShell = ({ children }: AppShellProps) => {
                   icon={UserRound}
                   active={path.startsWith("/student/profile")}
                 />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="ml-1 inline-flex"
+                      aria-label="Open profile menu"
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage
+                          src={profileMiniQuery.data?.avatar_url ?? undefined}
+                          alt="Profile photo"
+                        />
+                        <AvatarFallback>{avatarInitial}</AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
 
-                <Link to="/student/profile" className="ml-1" aria-label="Open profile">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={profileMiniQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
-                    <AvatarFallback>{avatarInitial}</AvatarFallback>
-                  </Avatar>
-                </Link>
+                  <DropdownMenuContent
+                    align="end"
+                    className="z-50 w-48 bg-popover text-popover-foreground"
+                  >
+                    <DropdownMenuItem asChild>
+                      <Link to="/student/profile">Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/student/inbox">Inbox</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={(e) => {
+                      e.preventDefault();
+                      handleStudentLogout();
+                    }} className="gap-2">
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </nav>
             ) : null}
           </div>
