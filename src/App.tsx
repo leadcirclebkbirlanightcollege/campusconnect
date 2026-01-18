@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentProfile from "./pages/student/StudentProfile";
 import StudentInbox from "./pages/student/StudentInbox";
 import StudentAttendanceHistory from "./pages/student/StudentAttendanceHistory";
 import StudentScanAttendance from "./pages/student/StudentScanAttendance";
@@ -35,6 +36,17 @@ const App = () => (
               <ProtectedRoute requiredRole="student">
                 <AppShell>
                   <StudentDashboard />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <AppShell>
+                  <StudentProfile />
                 </AppShell>
               </ProtectedRoute>
             }

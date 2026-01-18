@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen, LogOut, QrCode } from "lucide-react";
 
 type ProfileRow = {
-  full_name?: string | null;
-  display_name?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
+  name: string;
 };
 
 function getTimeGreeting(now = new Date()) {
@@ -57,15 +54,11 @@ const StudentDashboard = () => {
       // Fetch basic profile name
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, display_name, first_name, last_name")
+        .select("name")
         .eq("user_id", user.id)
         .maybeSingle<ProfileRow>();
 
-      const friendlyName =
-        profile?.display_name ||
-        profile?.full_name ||
-        [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-        "User";
+      const friendlyName = profile?.name || "User";
       setName(friendlyName);
 
       // Fetch total points
@@ -186,31 +179,38 @@ const StudentDashboard = () => {
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Open your inbox for announcements, scan attendance quickly, or browse upcoming lectures.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/student/inbox">
-                <MailOpen className="h-4 w-4" />
-                Inbox
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/student/scan">
-                <QrCode className="h-4 w-4" />
-                Scan Attendance
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/lectures">
-                <Calendar className="h-4 w-4" />
-                Lectures
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-muted-foreground text-sm">
+              Open your inbox for announcements, scan attendance quickly, browse upcoming lectures, or update your
+              profile.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/student/inbox">
+                  <MailOpen className="h-4 w-4" />
+                  Inbox
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/student/scan">
+                  <QrCode className="h-4 w-4" />
+                  Scan Attendance
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/lectures">
+                  <Calendar className="h-4 w-4" />
+                  Lectures
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/student/profile">
+                  <CheckCircle className="h-4 w-4" />
+                  Profile
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
       </Card>
     </div>
   );
