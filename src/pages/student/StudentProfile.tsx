@@ -54,6 +54,7 @@ type ProfileRow = {
   department: string | null;
   class_name: string | null;
   avatar_url: string | null;
+  is_verified: boolean;
 };
 
 type DeletionRequestRow = {
@@ -101,7 +102,7 @@ export default function StudentProfile() {
       const uid = meQuery.data!.id;
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,email,phone,student_id,department,class_name,avatar_url")
+        .select("name,email,phone,student_id,department,class_name,avatar_url,is_verified")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) throw error;
@@ -287,6 +288,11 @@ export default function StudentProfile() {
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <UserRound className="h-6 w-6 text-primary" />
             {title}
+            {profileQuery.data?.is_verified ? (
+              <span className="ml-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                Verified
+              </span>
+            ) : null}
           </h1>
           <p className="mt-2 text-muted-foreground">Update your basic details. Email is read-only.</p>
         </div>

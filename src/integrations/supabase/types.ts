@@ -306,11 +306,14 @@ export type Database = {
           email: string
           id: string
           is_deleted: boolean
+          is_verified: boolean
           name: string
           phone: string | null
           student_id: string | null
           updated_at: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -321,11 +324,14 @@ export type Database = {
           email: string
           id?: string
           is_deleted?: boolean
+          is_verified?: boolean
           name: string
           phone?: string | null
           student_id?: string | null
           updated_at?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -336,11 +342,14 @@ export type Database = {
           email?: string
           id?: string
           is_deleted?: boolean
+          is_verified?: boolean
           name?: string
           phone?: string | null
           student_id?: string | null
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }

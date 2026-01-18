@@ -40,6 +40,7 @@ export type StudentRow = {
   department: string | null;
   class_name: string | null;
   is_deleted: boolean;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -92,7 +93,7 @@ export default function StudentManagementTab() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,created_at,updated_at",
+          "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,created_at,updated_at",
         )
         .order("created_at", { ascending: false });
 
@@ -162,10 +163,37 @@ export default function StudentManagementTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to restore students"),
   });
 
+  const toggleVerifyMutation = useMutation({
+    mutationFn: async ({ userId, next }: { userId: string; next: boolean }) => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      if (!data.user) throw new Error("Not logged in");
+
+      const now = new Date().toISOString();
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          is_verified: next,
+          verified_at: next ? now : null,
+          verified_by: next ? data.user.id : null,
+          updated_at: now,
+        })
+        .eq("user_id", userId);
+
+      if (updateError) throw updateError;
+    },
+    onSuccess: async () => {
+      toast.success("Verification updated");
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update verification"),
+  });
+
   const busy =
     studentsQuery.isLoading ||
     softDeleteMutation.isPending ||
-    restoreMutation.isPending;
+    restoreMutation.isPending ||
+    toggleVerifyMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -337,7 +365,12 @@ export default function StudentManagementTab() {
 
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium leading-tight">{s.name}</span>
+                          <span className="font-medium leading-tight inline-flex items-center gap-2">
+                            {s.name}
+                            {s.is_verified ? (
+                              <Badge className="bg-primary text-primary-foreground">Verified</Badge>
+                            ) : null}
+                          </span>
                           <span className="text-xs text-muted-foreground">{s.email}</span>
                           {s.student_id ? (
                             <span className="text-xs text-muted-foreground">ID: {s.student_id}</span>
@@ -361,13 +394,25 @@ export default function StudentManagementTab() {
                       </TableCell>
 
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setOpenStudentUserId(s.user_id)}
-                        >
-                          View
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOpenStudentUserId(s.user_id)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            variant={s.is_verified ? "outline" : "secondary"}
+                            size="sm"
+                            disabled={busy}
+                            onClick={() =>
+                              toggleVerifyMutation.mutate({ userId: s.user_id, next: !s.is_verified })
+                            }
+                          >
+                            {s.is_verified ? "Unverify" : "Verify"}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

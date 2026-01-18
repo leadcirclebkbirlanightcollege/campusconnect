@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, CalendarDays, MailOpen, UserRound, LogOut } from "lucide-react";
+import { BookOpen, CalendarDays, MailOpen, UserRound, LogOut, BadgeCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -104,11 +104,15 @@ const AppShell = ({ children }: AppShellProps) => {
       const uid = authQuery.data!.id;
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,avatar_url")
+        .select("name,avatar_url,is_verified")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? null) as { name: string; avatar_url: string | null } | null;
+      return (data ?? null) as {
+        name: string;
+        avatar_url: string | null;
+        is_verified: boolean;
+      } | null;
     },
   });
 
@@ -197,13 +201,24 @@ const AppShell = ({ children }: AppShellProps) => {
                       className="ml-1 inline-flex"
                       aria-label="Open profile menu"
                     >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={profileMiniQuery.data?.avatar_url ?? undefined}
-                          alt="Profile photo"
-                        />
-                        <AvatarFallback>{avatarInitial}</AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={profileMiniQuery.data?.avatar_url ?? undefined}
+                            alt="Profile photo"
+                          />
+                          <AvatarFallback>{avatarInitial}</AvatarFallback>
+                        </Avatar>
+
+                        {profileMiniQuery.data?.is_verified ? (
+                          <span className="absolute -bottom-1 -right-1">
+                            <span className="pulse absolute inset-0 rounded-full bg-primary/30" />
+                            <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                              <BadgeCheck className="h-3 w-3" aria-label="Verified" />
+                            </span>
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   </DropdownMenuTrigger>
 
