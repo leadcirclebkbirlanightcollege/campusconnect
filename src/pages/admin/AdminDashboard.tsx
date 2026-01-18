@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
+import AdminAttendanceControlTab from "@/pages/admin/attendance/AdminAttendanceControlTab";
 import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
 
 
@@ -80,15 +81,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="attendance">
-          <Card className="border-primary/10">
-            <CardHeader>
-              <CardTitle>Attendance Control</CardTitle>
-              <CardDescription>Generate OTP/QR codes and finalize attendance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Attendance control interface coming soon</p>
-            </CardContent>
-          </Card>
+          <AdminAttendanceControlTab />
         </TabsContent>
 
         <TabsContent value="notifications">
