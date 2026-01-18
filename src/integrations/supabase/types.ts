@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["account_deletion_status"]
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["account_deletion_status"]
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["account_deletion_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           id: string
@@ -342,6 +375,11 @@ export type Database = {
       is_student: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
+      account_deletion_status:
+        | "requested"
+        | "approved"
+        | "rejected"
+        | "completed"
       app_role: "admin" | "student"
       notification_status: "draft" | "scheduled" | "sent"
     }
@@ -471,6 +509,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_deletion_status: [
+        "requested",
+        "approved",
+        "rejected",
+        "completed",
+      ],
       app_role: ["admin", "student"],
       notification_status: ["draft", "scheduled", "sent"],
     },
