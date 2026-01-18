@@ -3,10 +3,43 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen, LogOut, QrCode } from "lucide-react";
+import {
+  Calendar,
+  TrendingUp,
+  Bell,
+  CheckCircle,
+  MailOpen,
+  LogOut,
+  QrCode,
+  Clock,
+  ListChecks,
+} from "lucide-react";
 
 type ProfileRow = {
   name: string;
+};
+
+type UpcomingLecture = {
+  id: string;
+  topic: string;
+  lecture_date: string;
+  start_time: string;
+  venue: string;
+};
+
+type RecentPoint = {
+  id: string;
+  created_at: string;
+  points: number;
+  source: string;
+  note: string | null;
+};
+
+type RecentAttendance = {
+  id: string;
+  marked_at: string;
+  status: string;
+  lecture_id: string;
 };
 
 function getTimeGreeting(now = new Date()) {
@@ -25,6 +58,10 @@ const StudentDashboard = () => {
     upcomingLectures: 0,
     unreadNotifications: 0,
   });
+
+  const [upcoming, setUpcoming] = useState<UpcomingLecture[]>([]);
+  const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
+  const [recentAttendance, setRecentAttendance] = useState<RecentAttendance[]>([]);
 
   const [name, setName] = useState<string>("User");
   const greeting = useMemo(() => getTimeGreeting(), []);
@@ -63,7 +100,6 @@ const StudentDashboard = () => {
 
       // Fetch total points
       const { data: pointsData } = await supabase.from("points_ledger").select("points").eq("user_id", user.id);
-
       const totalPoints = pointsData?.reduce((sum, entry) => sum + entry.points, 0) || 0;
 
       // Fetch lectures attended
@@ -75,7 +111,7 @@ const StudentDashboard = () => {
 
       // Fetch upcoming lectures
       const today = new Date().toISOString().split("T")[0];
-      const { data: upcomingData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
+      const { data: upcomingCountData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
 
       // Fetch unread notifications
       const { data: notificationsData } = await supabase
@@ -84,10 +120,37 @@ const StudentDashboard = () => {
         .eq("user_id", user.id)
         .is("read_at", null);
 
+      // Essential dashboard lists
+      const { data: upcomingList } = await supabase
+        .from("lectures")
+        .select("id, topic, lecture_date, start_time, venue")
+        .gte("lecture_date", today)
+        .order("lecture_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(3);
+
+      const { data: recentPts } = await supabase
+        .from("points_ledger")
+        .select("id, created_at, points, source, note")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      const { data: recentAtt } = await supabase
+        .from("attendance")
+        .select("id, marked_at, status, lecture_id")
+        .eq("student_user_id", user.id)
+        .order("marked_at", { ascending: false })
+        .limit(5);
+
+      setUpcoming((upcomingList ?? []) as UpcomingLecture[]);
+      setRecentPoints((recentPts ?? []) as RecentPoint[]);
+      setRecentAttendance((recentAtt ?? []) as RecentAttendance[]);
+
       setStats({
         totalPoints,
         lecturesAttended: attendanceData?.length || 0,
-        upcomingLectures: upcomingData?.length || 0,
+        upcomingLectures: upcomingCountData?.length || 0,
         unreadNotifications: notificationsData?.length || 0,
       });
     } catch (error) {
@@ -179,39 +242,129 @@ const StudentDashboard = () => {
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
-          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-muted-foreground text-sm">
-              Open your inbox for announcements, scan attendance quickly, browse upcoming lectures, or update your
-              profile.
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/student/inbox">
-                  <MailOpen className="h-4 w-4" />
-                  Inbox
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/student/scan">
-                  <QrCode className="h-4 w-4" />
-                  Scan Attendance
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/lectures">
-                  <Calendar className="h-4 w-4" />
-                  Lectures
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/student/profile">
-                  <CheckCircle className="h-4 w-4" />
-                  Profile
-                </Link>
-              </Button>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-muted-foreground text-sm">
+            Open your inbox for announcements, scan attendance quickly, browse upcoming lectures, or update your profile.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/student/inbox">
+                <MailOpen className="h-4 w-4" />
+                Inbox
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/student/scan">
+                <QrCode className="h-4 w-4" />
+                Scan Attendance
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/lectures">
+                <Calendar className="h-4 w-4" />
+                Lectures
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/student/profile">
+                <CheckCircle className="h-4 w-4" />
+                Profile
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <Card className="border-primary/10">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Upcoming Lectures
+              </CardTitle>
+              <CardDescription>Next sessions you should attend</CardDescription>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/lectures">View all</Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No upcoming lectures found.</p>
+            ) : (
+              <ul className="space-y-3">
+                {upcoming.map((l) => (
+                  <li key={l.id} className="rounded-xl border border-border/40 bg-card/40 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium">{l.topic}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {l.lecture_date} • {l.start_time} • {l.venue}
+                        </p>
+                      </div>
+                      <Button asChild variant="secondary" size="sm">
+                        <Link to={`/lectures/${l.id}`}>Open</Link>
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-accent/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>Latest points and attendance updates</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-2">Points</p>
+              {recentPoints.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No points activity yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {recentPoints.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">{p.source}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-primary">{p.points > 0 ? `+${p.points}` : p.points}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-2">Attendance</p>
+              {recentAttendance.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No attendance marked yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {recentAttendance.map((a) => (
+                    <li key={a.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">{a.status}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(a.marked_at).toLocaleString()}</p>
+                      </div>
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/attendance">Details</Link>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

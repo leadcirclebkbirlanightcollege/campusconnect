@@ -197,6 +197,7 @@ const AppShell = ({ children }: AppShellProps) => {
           <div className="text-center text-sm text-muted-foreground">
             <p>&copy; 2026 Campus Connect. All rights reserved.</p>
             <p className="mt-1">Empowering academic excellence through technology</p>
+            <p className="mt-2">Developed by - Atharv Jadhav - Department Of Computer Science</p>
           </div>
         </div>
       </footer>
