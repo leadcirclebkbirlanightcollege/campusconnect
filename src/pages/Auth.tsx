@@ -296,6 +296,12 @@ const Auth = () => {
           By continuing, you agree to our Terms of Service and Privacy Policy
         </CardFooter>
       </Card>
+
+      <div className="absolute bottom-6 left-0 right-0 px-4">
+        <p className="text-center text-xs text-muted-foreground">
+          Developed by - Atharv Jadhav - Department Of Computer Science
+        </p>
+      </div>
     </div>
   );
 };
