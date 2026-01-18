@@ -170,6 +170,9 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
           target_role: Database["public"]["Enums"]["app_role"] | null
           target_user_id: string | null
           title: string
@@ -179,6 +182,9 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
           target_role?: Database["public"]["Enums"]["app_role"] | null
           target_user_id?: string | null
           title: string
@@ -188,6 +194,9 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
           target_role?: Database["public"]["Enums"]["app_role"] | null
           target_user_id?: string | null
           title?: string
@@ -307,6 +316,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "student"
+      notification_status: "draft" | "scheduled" | "sent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -435,6 +445,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "student"],
+      notification_status: ["draft", "scheduled", "sent"],
     },
   },
 } as const
