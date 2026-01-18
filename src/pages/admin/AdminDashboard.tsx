@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import AdminProfileSettings from "@/pages/admin/system/AdminProfileSettings";
 import AdminPointsAdjustmentsTab from "@/pages/admin/system/AdminPointsAdjustmentsTab";
 
 const AdminDashboard = () => {
+  const location = useLocation();
   const [tab, setTab] = useState("overview");
 
   const { startIso, endIso, todayDate } = useMemo(() => {
@@ -70,6 +72,12 @@ const AdminDashboard = () => {
     if (!s) return 0;
     return Math.min(100, Math.round((a / s) * 100));
   }, [statsQuery.data]);
+
+  useEffect(() => {
+    if (location.hash === "#admin_profile") setTab("admin_profile");
+    if (location.hash === "#points") setTab("points");
+    if (location.hash === "#settings") setTab("settings");
+  }, [location.hash]);
 
   return (
     <div className="container mx-auto px-4 py-8">
