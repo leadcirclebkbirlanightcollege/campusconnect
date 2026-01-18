@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10'
-import { hashSync } from 'https://esm.sh/bcryptjs@2.4.3'
+import bcrypt from 'https://esm.sh/bcryptjs@2.4.3?target=deno'
 import { crypto as stdCrypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts'
 
 const corsHeaders = {
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
     // Hash the OTP (bcrypt)
     // NOTE: mark-attendance supports both bcrypt + legacy SHA-256 during transition.
-    const otpHash = hashSync(otp, 10)
+    const otpHash = (bcrypt as any).hashSync(otp, 10)
 
     // Set expiry to 10 minutes from now
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
