@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentInbox from "./pages/student/StudentInbox";
+import LecturesList from "./pages/student/lectures/LecturesList";
+import LectureDetail from "./pages/student/lectures/LectureDetail";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -46,7 +48,29 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          
+
+          <Route
+            path="/lectures"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <AppShell>
+                  <LecturesList />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lectures/:id"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <AppShell>
+                  <LectureDetail />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin"
             element={

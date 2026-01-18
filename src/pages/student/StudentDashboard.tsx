@@ -156,14 +156,22 @@ const StudentDashboard = () => {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground text-sm">
-            Jump into your inbox for announcements, then head to lectures to mark attendance.
+            Open your inbox for announcements or browse upcoming lectures.
           </p>
-          <Button asChild variant="outline" className="gap-2">
-            <Link to="/student/inbox">
-              <MailOpen className="h-4 w-4" />
-              Open Inbox
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/student/inbox">
+                <MailOpen className="h-4 w-4" />
+                Inbox
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/lectures">
+                <Calendar className="h-4 w-4" />
+                Lectures
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
