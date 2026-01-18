@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
 
@@ -27,6 +27,7 @@ function publicFlyerUrl(path: string) {
 
 export default function LectureDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
 
   const lectureQuery = useQuery({
     queryKey: ["student", "lecture", id],
@@ -123,7 +124,10 @@ export default function LectureDetail() {
               )}
             </div>
 
-            <AttendanceMarkingCard lectureId={lectureQuery.data.id} />
+            <AttendanceMarkingCard
+              lectureId={lectureQuery.data.id}
+              initialToken={searchParams.get("token") ?? undefined}
+            />
           </CardContent>
         </Card>
       )}

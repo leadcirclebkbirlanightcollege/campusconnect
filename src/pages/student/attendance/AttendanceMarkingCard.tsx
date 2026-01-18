@@ -17,6 +17,7 @@ import QrScannerDialog from "./QrScannerDialog";
 
 type Props = {
   lectureId: string;
+  initialToken?: string;
 };
 
 type MarkAttendanceResponse = {
@@ -30,11 +31,11 @@ function safeErrorMessage(e: unknown) {
   return "Something went wrong";
 }
 
-export default function AttendanceMarkingCard({ lectureId }: Props) {
+export default function AttendanceMarkingCard({ lectureId, initialToken }: Props) {
   const reduceMotion = useReducedMotion();
 
   const [otp, setOtp] = useState("");
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState(initialToken ?? "");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [success, setSuccess] = useState<{ at: number; points: number } | null>(null);
 
@@ -59,6 +60,20 @@ export default function AttendanceMarkingCard({ lectureId }: Props) {
       toast.error(safeErrorMessage(e));
     },
   });
+
+  // Deep-link token: if present, auto-submit once.
+  useEffect(() => {
+    const t = (initialToken ?? "").trim();
+    if (!t) return;
+    if (success) return;
+    if (markMutation.isPending) return;
+    if (token.trim() !== t) setToken(t);
+
+    if (t.length >= 16) {
+      markMutation.mutate({ token: t });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialToken]);
 
   // Live validation: auto-submit when OTP reaches 6 digits
   useEffect(() => {
