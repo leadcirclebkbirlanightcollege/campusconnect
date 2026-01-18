@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen, LogOut } from "lucide-react";
+import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen, LogOut, QrCode } from "lucide-react";
 
 type ProfileRow = {
   full_name?: string | null;
@@ -187,12 +187,20 @@ const StudentDashboard = () => {
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">Open your inbox for announcements or browse upcoming lectures.</p>
+          <p className="text-muted-foreground text-sm">
+            Open your inbox for announcements, scan attendance quickly, or browse upcoming lectures.
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" className="gap-2">
               <Link to="/student/inbox">
                 <MailOpen className="h-4 w-4" />
                 Inbox
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/student/scan">
+                <QrCode className="h-4 w-4" />
+                Scan Attendance
               </Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">
