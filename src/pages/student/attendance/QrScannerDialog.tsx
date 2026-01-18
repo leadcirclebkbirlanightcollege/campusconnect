@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import type { IScannerControls } from "@zxing/browser";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   open: boolean;
@@ -61,10 +62,66 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
   const [active, setActive] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [cameraChoice, setCameraChoice] = useState<"auto" | "front" | "back" | string>("auto");
+  const [permissionState, setPermissionState] = useState<"granted" | "denied" | "prompt" | "unknown">("unknown");
+  const [manualToken, setManualToken] = useState("");
+  const [showDebug, setShowDebug] = useState(false);
 
   const cameraSupport = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.protocol === "https:");
   const isInIframe = typeof window !== "undefined" && window.top !== window.self;
+
+  const canAttemptCamera = cameraSupport && isSecure;
+
+  const deviceLabelSupport = useMemo(() => {
+    // labels are usually empty until permission is granted
+    return devices.some((d) => (d.label ?? "").trim().length > 0);
+  }, [devices]);
+
+  const handleUseToken = () => {
+    const token = extractToken(manualToken).trim();
+    if (token.length < 10) {
+      toast.error("Please paste a valid token");
+      return;
+    }
+    onOpenChange(false);
+    onToken(token);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    if (!canAttemptCamera) {
+      setPermissionState("unknown");
+      return;
+    }
+
+    let cancelled = false;
+
+    async function check() {
+      // Permissions API isn't supported everywhere (notably iOS Safari).
+      const perms: any = (navigator as any).permissions;
+      if (!perms?.query) {
+        setPermissionState("unknown");
+        return;
+      }
+
+      try {
+        const status = await perms.query({ name: "camera" as any });
+        if (cancelled) return;
+        setPermissionState(status.state ?? "unknown");
+        status.onchange = () => {
+          setPermissionState((status.state ?? "unknown") as any);
+        };
+      } catch {
+        setPermissionState("unknown");
+      }
+    }
+
+    check();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, canAttemptCamera]);
 
   useEffect(() => {
     if (!open) return;
@@ -152,6 +209,67 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+            <label className="text-sm font-medium">Paste token (fallback)</label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input
+                value={manualToken}
+                onChange={(e) => setManualToken(e.target.value)}
+                placeholder="Paste token from QR / link"
+                autoComplete="off"
+              />
+              <Button type="button" onClick={handleUseToken} className="shrink-0">
+                Use token
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Use this when the camera is blocked or when scanning fails.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowDebug((v) => !v)}
+            className="text-left text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            {showDebug ? "Hide" : "Show"} camera debug
+          </button>
+
+          {showDebug ? (
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+              <div className="grid gap-1">
+                <div>
+                  <span className="font-medium">Secure context:</span> {String(isSecure)}
+                </div>
+                <div>
+                  <span className="font-medium">In iframe:</span> {String(isInIframe)}
+                </div>
+                <div>
+                  <span className="font-medium">getUserMedia support:</span> {String(cameraSupport)}
+                </div>
+                <div>
+                  <span className="font-medium">Permission:</span> {permissionState}
+                </div>
+                <div>
+                  <span className="font-medium">Camera choice:</span> {cameraChoice}
+                </div>
+                <div>
+                  <span className="font-medium">Devices:</span> {devices.length}
+                  {!deviceLabelSupport ? " (labels hidden until permission granted)" : null}
+                </div>
+              </div>
+              {devices.length ? (
+                <div className="mt-2 space-y-1">
+                  {devices.map((d, idx) => (
+                    <div key={d.deviceId} className="truncate">
+                      {idx + 1}. {(d.label ?? "").trim() || "(no label)"} — {d.deviceId}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {devices.length > 1 ? (
             <div className="space-y-1">
               <label className="text-sm font-medium">Camera</label>
