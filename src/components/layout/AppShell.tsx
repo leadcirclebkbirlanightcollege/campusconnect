@@ -1,10 +1,11 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, MailOpen, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -88,6 +89,21 @@ const AppShell = ({ children }: AppShellProps) => {
     },
   });
 
+  const profileMiniQuery = useQuery({
+    queryKey: ["shell", "profile_mini", authQuery.data?.id],
+    enabled: Boolean(authQuery.data?.id) && roleQuery.data === "student",
+    queryFn: async () => {
+      const uid = authQuery.data!.id;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("name,avatar_url")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as { name: string; avatar_url: string | null } | null;
+    },
+  });
+
   useEffect(() => {
     const uid = authQuery.data?.id;
     if (!uid || roleQuery.data !== "student") return;
@@ -111,6 +127,11 @@ const AppShell = ({ children }: AppShellProps) => {
   const showStudentNav = roleQuery.data === "student";
   const path = location.pathname;
 
+  const avatarInitial = useMemo(() => {
+    const n = (profileMiniQuery.data?.name ?? "U").trim();
+    return (n[0] || "U").toUpperCase();
+  }, [profileMiniQuery.data?.name]);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       {/* Ambient background effect */}
@@ -130,7 +151,7 @@ const AppShell = ({ children }: AppShellProps) => {
             </Link>
 
             {showStudentNav ? (
-              <nav aria-label="Student navigation" className="flex items-center gap-1">
+              <nav aria-label="Student navigation" className="flex items-center gap-2">
                 <NavItem
                   to="/lectures"
                   label="Lectures"
@@ -156,6 +177,13 @@ const AppShell = ({ children }: AppShellProps) => {
                   icon={UserRound}
                   active={path.startsWith("/student/profile")}
                 />
+
+                <Link to="/student/profile" className="ml-1" aria-label="Open profile">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={profileMiniQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
+                    <AvatarFallback>{avatarInitial}</AvatarFallback>
+                  </Avatar>
+                </Link>
               </nav>
             ) : null}
           </div>

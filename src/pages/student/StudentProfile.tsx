@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { UserRound, Save, LogOut } from "lucide-react";
+import { Camera, LogOut, Save, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +29,12 @@ type ProfileRow = {
   student_id: string | null;
   department: string | null;
   class_name: string | null;
+  avatar_url: string | null;
 };
 
 export default function StudentProfile() {
   const navigate = useNavigate();
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   const [form, setForm] = useState<ProfileForm>({
     name: "",
@@ -58,7 +61,7 @@ export default function StudentProfile() {
       const uid = meQuery.data!.id;
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,email,phone,student_id,department,class_name")
+        .select("name,email,phone,student_id,department,class_name,avatar_url")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) throw error;
@@ -109,6 +112,37 @@ export default function StudentProfile() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update profile"),
   });
 
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const uid = meQuery.data?.id;
+      if (!uid) throw new Error("Not logged in");
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const safeExt = ext || "jpg";
+      const objectPath = `${uid}/avatar-${Date.now()}.${safeExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(objectPath, file, { upsert: true, contentType: file.type || undefined });
+      if (uploadError) throw uploadError;
+
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(objectPath);
+      const avatarUrl = pub?.publicUrl;
+      if (!avatarUrl) throw new Error("Failed to create avatar URL");
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+        .eq("user_id", uid);
+      if (updateError) throw updateError;
+    },
+    onSuccess: async () => {
+      toast.success("Profile photo updated");
+      await profileQuery.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Upload failed"),
+  });
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
@@ -146,7 +180,47 @@ export default function StudentProfile() {
           ) : profileQuery.isError ? (
             <div className="text-sm text-muted-foreground">Couldn’t load profile.</div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={profileQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
+                    <AvatarFallback>{(form.name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">Profile photo</div>
+                    <div className="text-xs text-muted-foreground">JPG/PNG recommended.</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      uploadAvatarMutation.mutate(f);
+                      // allow selecting the same file again
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploadAvatarMutation.isPending}
+                  >
+                    <Camera className="h-4 w-4" />
+                    Upload photo
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Full name</label>
                 <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
@@ -184,6 +258,7 @@ export default function StudentProfile() {
                   value={form.class_name ?? ""}
                   onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))}
                 />
+              </div>
               </div>
             </div>
           )}
