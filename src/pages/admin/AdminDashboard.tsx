@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
+import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
 import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
 
 
@@ -75,15 +76,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="lectures">
-          <Card className="border-primary/10">
-            <CardHeader>
-              <CardTitle>Lecture Management</CardTitle>
-              <CardDescription>Create and manage lecture schedules</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Lecture management interface coming soon</p>
-            </CardContent>
-          </Card>
+          <LectureManagementTab />
         </TabsContent>
 
         <TabsContent value="attendance">
