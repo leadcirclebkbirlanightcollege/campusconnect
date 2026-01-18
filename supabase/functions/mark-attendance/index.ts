@@ -1,185 +1,190 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.90.1'
-import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts'
+import { createClient } from "npm:@supabase/supabase-js@2.90.1";
+import * as bcrypt from "npm:bcryptjs@2.4.3";
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function json(status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function sha256Hex(input: string) {
+  const encoder = new TextEncoder();
+  return crypto.subtle.digest("SHA-256", encoder.encode(input)).then((hashBuffer) =>
+    Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join(""),
+  );
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    console.warn("mark-attendance: missing/invalid Authorization header");
+    return json(401, { error: "Unauthorized" });
   }
+
+  const jwt = authHeader.slice("Bearer ".length);
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const userSupabase = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const serviceSupabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // 1) Authenticated user exists
+    const { data: claimsData, error: claimsError } = await userSupabase.auth.getClaims(jwt);
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.warn("mark-attendance: invalid JWT", claimsError);
+      return json(401, { error: "Unauthorized" });
+    }
+    const userId = claimsData.claims.sub;
+
+    console.log("mark-attendance: user", userId);
+
+    // Parse + validate input
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return json(400, { error: "Invalid JSON body" });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
+    const lectureId = String(body?.lectureId ?? "").trim();
+    const otp = typeof body?.otp === "string" ? body.otp.trim() : undefined;
+    const token = typeof body?.token === "string" ? body.token.trim() : undefined;
 
-    // Verify student role (use security-definer RPC to avoid RLS issues on user_roles)
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    if (!lectureId) return json(400, { error: "lectureId is required" });
+    if (!otp && !token) return json(400, { error: "Either otp or token is required" });
 
-    const { data: isStudent, error: roleError } = await supabase
-      .rpc('is_student', { check_user_id: user.id })
-
+    // 2) User role = student
+    const { data: isStudent, error: roleError } = await serviceSupabase.rpc("is_student", {
+      check_user_id: userId,
+    });
     if (roleError) {
-      console.error('Error checking student role:', roleError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to verify role' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.error("mark-attendance: role check failed", roleError);
+      return json(400, { error: "Failed to verify role" });
+    }
+    if (!isStudent) return json(403, { error: "Student access required" });
+
+    // 3) Lecture exists
+    const { data: lecture, error: lectureError } = await serviceSupabase
+      .from("lectures")
+      .select("id")
+      .eq("id", lectureId)
+      .maybeSingle();
+
+    if (lectureError) {
+      console.error("mark-attendance: lecture lookup failed", lectureError);
+      return json(400, { error: "Failed to verify lecture" });
+    }
+    if (!lecture) return json(400, { error: "Lecture not found" });
+
+    // 4) Attendance token exists, is_active=true
+    const { data: tokenRow, error: tokenError } = await serviceSupabase
+      .from("attendance_tokens")
+      .select("id, lecture_id, is_active, expires_at, token, otp_hash, used_count")
+      .eq("lecture_id", lectureId)
+      .maybeSingle();
+
+    if (tokenError) {
+      console.error("mark-attendance: token lookup failed", tokenError);
+      return json(400, { error: "Failed to verify attendance token" });
     }
 
-    if (!isStudent) {
-      return new Response(
-        JSON.stringify({ error: 'Student access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    if (!tokenRow || !tokenRow.is_active) {
+      return json(400, { error: "No active attendance token found for this lecture" });
     }
 
-    const { lectureId, otp, token } = await req.json()
-    
-    if (!lectureId || (!otp && !token)) {
-      return new Response(
-        JSON.stringify({ error: 'lectureId and either otp or token are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // 5) expires_at > now()
+    const now = new Date();
+    const expiresAt = new Date(tokenRow.expires_at);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= now) {
+      return json(410, { error: "Attendance token has expired" });
     }
 
-    // Fetch the token record
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('attendance_tokens')
-      .select('*')
-      .eq('lecture_id', lectureId)
-      .eq('is_active', true)
-      .single()
-
-    if (tokenError || !tokenData) {
-      return new Response(
-        JSON.stringify({ error: 'No active attendance token found for this lecture' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Check if token has expired
-    if (new Date(tokenData.expires_at) < new Date()) {
-      return new Response(
-        JSON.stringify({ error: 'Attendance token has expired' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Validate OTP or token
-    let isValid = false
-
+    // 6) OTP hash comparison using bcrypt (support legacy SHA-256)
+    let isValid = false;
     if (otp) {
-      // Hash the provided OTP and compare
-      const encoder = new TextEncoder()
-      const otpData = encoder.encode(otp)
-      const hashBuffer = await crypto.subtle.digest('SHA-256', otpData)
-      const otpHash = Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('')
-      
-      isValid = otpHash === tokenData.otp_hash
+      const hash = String(tokenRow.otp_hash ?? "");
+      if (hash.startsWith("$2")) {
+        isValid = await bcrypt.compare(otp, hash);
+      } else {
+        // legacy SHA-256
+        const otpHash = await sha256Hex(otp);
+        isValid = otpHash === hash;
+      }
     } else if (token) {
-      isValid = token === tokenData.token
+      isValid = token === tokenRow.token;
     }
 
-    if (!isValid) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid OTP or token' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    if (!isValid) return json(400, { error: "Invalid OTP or token" });
+
+    // 7) Ensure attendance not already marked
+    const { data: existing, error: existingError } = await serviceSupabase
+      .from("attendance")
+      .select("id")
+      .eq("lecture_id", lectureId)
+      .eq("student_user_id", userId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("mark-attendance: existing attendance check failed", existingError);
+      return json(400, { error: "Failed to verify existing attendance" });
     }
 
-    // Check if student has already marked attendance
-    const { data: existingAttendance } = await supabase
-      .from('attendance')
-      .select('id')
-      .eq('lecture_id', lectureId)
-      .eq('student_user_id', user.id)
-      .single()
-
-    if (existingAttendance) {
-      return new Response(
-        JSON.stringify({ error: 'Attendance already marked for this lecture' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    if (existing) return json(400, { error: "Attendance already marked for this lecture" });
 
     // Mark attendance
-    const pointsEarned = 10 // Default points for attendance
-    
-    const { error: attendanceError } = await supabase
-      .from('attendance')
-      .insert({
-        lecture_id: lectureId,
-        student_user_id: user.id,
-        status: 'present',
-        points_earned: pointsEarned
-      })
+    const pointsEarned = 10;
+
+    const { error: attendanceError } = await serviceSupabase.from("attendance").insert({
+      lecture_id: lectureId,
+      student_user_id: userId,
+      status: "present",
+      points_earned: pointsEarned,
+    });
 
     if (attendanceError) {
-      console.error('Error marking attendance:', attendanceError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to mark attendance' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.error("mark-attendance: insert attendance failed", attendanceError);
+      return json(400, { error: "Failed to mark attendance" });
     }
 
-    // Add points to ledger
-    const { error: ledgerError } = await supabase
-      .from('points_ledger')
-      .insert({
-        user_id: user.id,
-        points: pointsEarned,
-        source: 'attendance',
-        source_id: lectureId,
-        note: 'Attendance marked for lecture'
-      })
+    // Points ledger (best-effort)
+    const { error: ledgerError } = await serviceSupabase.from("points_ledger").insert({
+      user_id: userId,
+      points: pointsEarned,
+      source: "attendance",
+      source_id: lectureId,
+      note: "Attendance marked for lecture",
+    });
+    if (ledgerError) console.error("mark-attendance: ledger insert failed", ledgerError);
 
-    if (ledgerError) {
-      console.error('Error adding to points ledger:', ledgerError)
-    }
+    // Increment used count (best-effort)
+    const usedCount = Number(tokenRow.used_count ?? 0);
+    const { error: usedError } = await serviceSupabase
+      .from("attendance_tokens")
+      .update({ used_count: usedCount + 1 })
+      .eq("id", tokenRow.id);
+    if (usedError) console.error("mark-attendance: used_count update failed", usedError);
 
-    // Increment used count
-    await supabase
-      .from('attendance_tokens')
-      .update({ used_count: tokenData.used_count + 1 })
-      .eq('id', tokenData.id)
-
-    console.log('Attendance marked successfully for user:', user.id, 'lecture:', lectureId)
-
-    return new Response(
-      JSON.stringify({
-        message: 'Attendance marked successfully',
-        pointsEarned
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+    console.log("mark-attendance: success", { userId, lectureId });
+    return json(200, { success: true });
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error("mark-attendance: unexpected error", error);
+    // Keep contract limited to requested codes.
+    return json(400, { error: "Unexpected error" });
   }
-})
+});
