@@ -6,13 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settings } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settings, Shield } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
 import AdminAttendanceControlTab from "@/pages/admin/attendance/AdminAttendanceControlTab";
 import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import PointsRulesSettings from "@/pages/admin/system/PointsRulesSettings";
+import AdminProfileSettings from "@/pages/admin/system/AdminProfileSettings";
+
 const AdminDashboard = () => {
   const [tab, setTab] = useState("overview");
 
@@ -78,7 +80,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid grid-cols-6 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="w-4 h-4" />
             Overview
@@ -102,6 +104,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="w-4 h-4" />
             Settings
+          </TabsTrigger>
+          <TabsTrigger value="admin_profile" className="gap-2">
+            <Shield className="w-4 h-4" />
+            Admin
           </TabsTrigger>
         </TabsList>
 
@@ -208,6 +214,10 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <PointsRulesSettings />
           </div>
+        </TabsContent>
+
+        <TabsContent value="admin_profile">
+          <AdminProfileSettings />
         </TabsContent>
       </Tabs>
     </div>
