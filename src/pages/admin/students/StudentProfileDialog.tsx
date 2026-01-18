@@ -1,7 +1,8 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -21,6 +22,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Props = {
   userId: string | null;
@@ -54,6 +58,16 @@ type LectureRow = {
 
 export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   const open = Boolean(userId);
+  const qc = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    student_id: "",
+    department: "",
+    class_name: "",
+  });
 
   const profileQuery = useQuery({
     queryKey: ["admin", "student", userId],
@@ -62,14 +76,54 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select(
-          "user_id,name,email,phone,student_id,department,class_name,is_deleted,created_at",
-        )
+        .select("user_id,name,email,phone,student_id,department,class_name,is_deleted,created_at")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
       return (data ?? null) as Profile | null;
     },
+  });
+
+  useEffect(() => {
+    // reset edit state whenever a new user is opened
+    setIsEditing(false);
+
+    const p = profileQuery.data;
+    setForm({
+      name: p?.name ?? "",
+      phone: p?.phone ?? "",
+      student_id: p?.student_id ?? "",
+      department: p?.department ?? "",
+      class_name: p?.class_name ?? "",
+    });
+  }, [userId, profileQuery.data]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("Missing userId");
+      if (!form.name.trim()) throw new Error("Name is required");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          name: form.name.trim(),
+          phone: form.phone.trim() ? form.phone.trim() : null,
+          student_id: form.student_id.trim() ? form.student_id.trim() : null,
+          department: form.department.trim() ? form.department.trim() : null,
+          class_name: form.class_name.trim() ? form.class_name.trim() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Student details updated");
+      setIsEditing(false);
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update profile"),
   });
 
   const attendanceQuery = useQuery({
@@ -121,34 +175,123 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
         <div className="space-y-5">
           <Card className="border-primary/10">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-3">
-                <span>{profileQuery.data?.name ?? "—"}</span>
-                {profileQuery.data?.is_deleted ? (
-                  <Badge variant="secondary">Deleted</Badge>
-                ) : (
-                  <Badge className="bg-success text-success-foreground">Active</Badge>
-                )}
+              <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <span>{profileQuery.data?.name ?? "—"}</span>
+                  {profileQuery.data?.is_deleted ? (
+                    <Badge variant="secondary">Deleted</Badge>
+                  ) : (
+                    <Badge className="bg-success text-success-foreground">Active</Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditing(false);
+                          const p = profileQuery.data;
+                          setForm({
+                            name: p?.name ?? "",
+                            phone: p?.phone ?? "",
+                            student_id: p?.student_id ?? "",
+                            department: p?.department ?? "",
+                            class_name: p?.class_name ?? "",
+                          });
+                        }}
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={() => updateProfileMutation.mutate()} disabled={updateProfileMutation.isPending}>
+                        {updateProfileMutation.isPending ? "Saving…" : "Save"}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" onClick={() => setIsEditing(true)}>
+                      Edit
+                    </Button>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              <div className="text-sm">
-                <div className="text-muted-foreground">Email</div>
-                <div className="font-medium">{profileQuery.data?.email ?? "—"}</div>
-              </div>
-              <div className="text-sm">
-                <div className="text-muted-foreground">Phone</div>
-                <div className="font-medium">{profileQuery.data?.phone ?? "—"}</div>
-              </div>
-              <div className="text-sm">
-                <div className="text-muted-foreground">Student ID</div>
-                <div className="font-medium">{profileQuery.data?.student_id ?? "—"}</div>
-              </div>
-              <div className="text-sm">
-                <div className="text-muted-foreground">Department / Class</div>
-                <div className="font-medium">
-                  {(profileQuery.data?.department ?? "—") + " / " + (profileQuery.data?.class_name ?? "—")}
+
+            <CardContent className="grid gap-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="text-sm">
+                  <div className="text-muted-foreground">Email</div>
+                  <div className="font-medium">{profileQuery.data?.email ?? "—"}</div>
                 </div>
+
+                {isEditing ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="sp-name">Full name</Label>
+                    <Input
+                      id="sp-name"
+                      value={form.name}
+                      onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                    />
+                  </div>
+                ) : null}
               </div>
+
+              {isEditing ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="sp-phone">Phone</Label>
+                    <Input
+                      id="sp-phone"
+                      value={form.phone}
+                      onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sp-studentid">Student ID</Label>
+                    <Input
+                      id="sp-studentid"
+                      value={form.student_id}
+                      onChange={(e) => setForm((p) => ({ ...p, student_id: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sp-dept">Department</Label>
+                    <Input
+                      id="sp-dept"
+                      value={form.department}
+                      onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sp-class">Class</Label>
+                    <Input
+                      id="sp-class"
+                      value={form.class_name}
+                      onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">Phone</div>
+                    <div className="font-medium">{profileQuery.data?.phone ?? "—"}</div>
+                  </div>
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">Student ID</div>
+                    <div className="font-medium">{profileQuery.data?.student_id ?? "—"}</div>
+                  </div>
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">Department</div>
+                    <div className="font-medium">{profileQuery.data?.department ?? "—"}</div>
+                  </div>
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">Class</div>
+                    <div className="font-medium">{profileQuery.data?.class_name ?? "—"}</div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
