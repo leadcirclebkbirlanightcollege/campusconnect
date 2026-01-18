@@ -58,11 +58,21 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
 
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Please log in first to mark attendance");
+      }
+
       const { data, error } = await supabase.functions.invoke<MarkAttendanceResponse>("mark-attendance", {
         body: { lectureId, ...payload },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Helpful for debugging: expose details to safeErrorMessage via thrown error
+        console.debug("mark-attendance invoke error", error);
+        throw error;
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -71,6 +81,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
       toast.success("Attendance marked");
     },
     onError: (e) => {
+      console.debug("mark-attendance failed", e);
       toast.error(safeErrorMessage(e));
     },
   });
