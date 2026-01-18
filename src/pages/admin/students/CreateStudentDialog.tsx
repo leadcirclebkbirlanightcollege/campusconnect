@@ -56,6 +56,11 @@ export default function CreateStudentDialog() {
         throw new Error(parsed.error.issues[0]?.message ?? "Invalid form");
       }
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
       const { data, error } = await supabase.functions.invoke("admin-create-student", {
         body: payload,
       });
