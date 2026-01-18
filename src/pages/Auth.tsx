@@ -155,7 +155,7 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-premium relative z-10 border-primary/10">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-premium flex items-center justify-center mb-4 shadow-premium">
-            <GraduationCap className="w-10 h-10 text-white" />
+            <GraduationCap className="w-10 h-10 text-primary-foreground" />
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-premium bg-clip-text text-transparent">
             Campus Connect
