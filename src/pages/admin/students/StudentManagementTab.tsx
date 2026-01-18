@@ -28,6 +28,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 import StudentProfileDialog from "./StudentProfileDialog";
+import CreateStudentDialog from "./CreateStudentDialog";
 
 export type StudentRow = {
   id: string;
@@ -182,6 +183,7 @@ export default function StudentManagementTab() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <CreateStudentDialog />
               <Button
                 variant="outline"
                 disabled={selectedIds.length === 0 || busy}
