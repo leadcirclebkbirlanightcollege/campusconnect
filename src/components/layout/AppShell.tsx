@@ -1,20 +1,125 @@
-import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { ReactNode, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, CalendarDays, MailOpen } from "lucide-react";
+
+import { supabase } from "@/integrations/supabase/client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface AppShellProps {
   children: ReactNode;
 }
 
+function NavItem({
+  to,
+  label,
+  icon: Icon,
+  active,
+  badge,
+}: {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+  badge?: number;
+}) {
+  return (
+    <Button
+      asChild
+      variant={active ? "secondary" : "ghost"}
+      size="sm"
+      className="gap-2"
+    >
+      <Link to={to} aria-current={active ? "page" : undefined}>
+        <Icon className="h-4 w-4" />
+        <span className="hidden sm:inline">{label}</span>
+        {typeof badge === "number" && badge > 0 ? (
+          <Badge className="ml-1 bg-accent text-accent-foreground" aria-label={`${badge} unread`}>
+            {badge}
+          </Badge>
+        ) : null}
+      </Link>
+    </Button>
+  );
+}
+
 const AppShell = ({ children }: AppShellProps) => {
+  const location = useLocation();
+  const qc = useQueryClient();
+
+  const authQuery = useQuery({
+    queryKey: ["shell", "auth"],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return data.user ?? null;
+    },
+  });
+
+  const roleQuery = useQuery({
+    queryKey: ["shell", "role", authQuery.data?.id],
+    enabled: Boolean(authQuery.data?.id),
+    queryFn: async () => {
+      const uid = authQuery.data!.id;
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.role as "student" | "admin" | null) ?? null;
+    },
+  });
+
+  const unreadQuery = useQuery({
+    queryKey: ["shell", "unread", authQuery.data?.id],
+    enabled: Boolean(authQuery.data?.id) && roleQuery.data === "student",
+    queryFn: async () => {
+      const uid = authQuery.data!.id;
+      const { count, error } = await supabase
+        .from("notification_recipients")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  useEffect(() => {
+    const uid = authQuery.data?.id;
+    if (!uid || roleQuery.data !== "student") return;
+
+    const channel = supabase
+      .channel(`shell_unread_${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notification_recipients", filter: `user_id=eq.${uid}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["shell", "unread", uid] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [authQuery.data?.id, qc, roleQuery.data]);
+
+  const showStudentNav = roleQuery.data === "student";
+  const path = location.pathname;
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       {/* Ambient background effect */}
       <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
-      
+
       <header className="sticky top-0 z-50 border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center space-x-2 group">
               <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium group-hover:shadow-xl transition-all">
                 <span className="text-white font-bold text-lg">CC</span>
@@ -23,13 +128,35 @@ const AppShell = ({ children }: AppShellProps) => {
                 Campus Connect
               </span>
             </Link>
+
+            {showStudentNav ? (
+              <nav aria-label="Student navigation" className="flex items-center gap-1">
+                <NavItem
+                  to="/lectures"
+                  label="Lectures"
+                  icon={BookOpen}
+                  active={path.startsWith("/lectures")}
+                />
+                <NavItem
+                  to="/attendance"
+                  label="Attendance"
+                  icon={CalendarDays}
+                  active={path.startsWith("/attendance")}
+                />
+                <NavItem
+                  to="/student/inbox"
+                  label="Inbox"
+                  icon={MailOpen}
+                  active={path.startsWith("/student/inbox")}
+                  badge={unreadQuery.data ?? 0}
+                />
+              </nav>
+            ) : null}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 relative z-10">
-        {children}
-      </main>
+      <main className="flex-1 relative z-10">{children}</main>
 
       <footer className="relative z-10 border-t border-border/40 bg-card/60 backdrop-blur-sm mt-auto">
         <div className="container mx-auto px-4 py-6">

@@ -1,8 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { QRCodeCanvas } from "qrcode.react";
-import { CalendarClock, CheckCircle2, QrCode, RefreshCw, ShieldCheck, Timer, Printer } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  QrCode,
+  RefreshCw,
+  ShieldCheck,
+  Timer,
+  Printer,
+  Users,
+  Download,
+} from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AdminAttendanceLiveView from "@/pages/admin/attendance/AdminAttendanceLiveView";
 
 const generateSchema = z.object({
   lectureId: z.string().uuid(),
@@ -64,9 +76,9 @@ function formatLectureLabel(l: LectureRow) {
 }
 
 function buildQrPayload(lectureId: string, token: string) {
-  // Keep it simple: QR contains raw token; scanner can also accept URLs later.
-  // If you prefer URL deep-links, we can switch to: `${location.origin}/lectures/${lectureId}?token=${token}`
-  return token;
+  // Deep-link QR: lets students open the exact lecture detail page and auto-fill token.
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/lectures/${lectureId}?token=${encodeURIComponent(token)}`;
 }
 
 function msUntil(iso: string) {
@@ -228,6 +240,10 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
               </Button>
             </div>
           </div>
+
+          <Separator />
+
+          {lectureId ? <AdminAttendanceLiveView lectureId={lectureId} /> : null}
 
           <Separator />
 
