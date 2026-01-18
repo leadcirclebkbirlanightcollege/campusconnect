@@ -60,6 +60,7 @@ function pickCameraDeviceId(
 export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [active, setActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [cameraChoice, setCameraChoice] = useState<"auto" | "front" | "back" | string>("auto");
   const [permissionState, setPermissionState] = useState<"granted" | "denied" | "prompt" | "unknown">("unknown");
@@ -127,33 +128,60 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
     if (!open) return;
     if (!cameraSupport || !isSecure) {
       setActive(false);
+      setCameraError(!isSecure ? "Camera requires HTTPS." : "Camera not supported on this device/browser.");
       return;
     }
+
+    setCameraError(null);
 
     const codeReader = new BrowserMultiFormatReader();
     let stopped = false;
     let controls: IScannerControls | null = null;
+    let startTimer: number | null = null;
 
     async function start() {
       try {
         setActive(true);
 
-        // Ask for permission first so device labels become available on many browsers.
-        // This also helps avoid "camera not starting" situations on mobile.
+        // Permission warm-up so labels become available.
+        // Important: stop tracks immediately so we don't block ZXing from opening the camera.
         try {
-          await navigator.mediaDevices.getUserMedia({
+          const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: "environment" } },
             audio: false,
           });
-        } catch {
-          // We'll still try to start via ZXing; if it fails we show a toast below.
+          stream.getTracks().forEach((t) => t.stop());
+        } catch (e: any) {
+          if (e?.name === "NotAllowedError") {
+            setPermissionState("denied");
+            setCameraError("Camera permission denied. Please allow camera access and try again.");
+            setActive(false);
+            return;
+          }
+          // otherwise continue; ZXing may still succeed
         }
 
         const list = await BrowserMultiFormatReader.listVideoInputDevices();
         setDevices(list);
+
+        if (!list.length) {
+          setCameraError("No camera devices found.");
+          setActive(false);
+          return;
+        }
+
         const deviceId = pickCameraDeviceId(list, cameraChoice);
 
         if (!videoRef.current) throw new Error("Video element not ready");
+
+        // If camera doesn't start quickly, show fallback help.
+        startTimer = window.setTimeout(() => {
+          if (!stopped) {
+            setCameraError(
+              "Camera is taking too long to start. Try switching cameras, allowing permission, or use the token fallback.",
+            );
+          }
+        }, 4500);
 
         controls = await codeReader.decodeFromVideoDevice(deviceId, videoRef.current, (result) => {
           if (stopped) return;
@@ -177,11 +205,15 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
             onToken(token);
           }
         });
-      } catch (_e) {
+      } catch (e: any) {
+        console.error("QR scanner start failed", e);
         setActive(false);
-        toast.error(
-          "Camera unavailable. Please allow camera permission and use HTTPS (or try the token/OTP fallback).",
+        setCameraError(
+          e?.name === "NotAllowedError"
+            ? "Camera permission denied. Please allow camera access and try again."
+            : "Camera unavailable. Please allow camera permission and try switching camera or using token fallback.",
         );
+        toast.error("Camera unavailable. Use the token/OTP fallback if needed.");
       }
     }
 
@@ -189,6 +221,7 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
 
     return () => {
       stopped = true;
+      if (startTimer) window.clearTimeout(startTimer);
       try {
         controls?.stop();
       } catch {
@@ -196,7 +229,7 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
       }
       setActive(false);
     };
-  }, [open, cameraChoice, onOpenChange, onToken]);
+  }, [open, cameraChoice, onOpenChange, onToken, cameraSupport, isSecure, setPermissionState]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -305,9 +338,12 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
             />
             {!active ? (
               <div className="absolute inset-0 grid place-items-center text-muted-foreground">
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-2 text-center">
                   <CameraOff className="h-6 w-6" />
                   <span className="text-sm">Starting camera…</span>
+                  {cameraError ? (
+                    <span className="max-w-[28rem] text-xs text-muted-foreground">{cameraError}</span>
+                  ) : null}
                 </div>
               </div>
             ) : null}
