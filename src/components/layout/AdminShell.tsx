@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard } from "lucide-react";
+import { LogOut, LayoutDashboard, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -42,11 +42,19 @@ const AdminShell = ({ children }: AdminShellProps) => {
                 <span className="text-xs text-muted-foreground">Admin Dashboard</span>
               </div>
             </Link>
-            
-            <Button onClick={handleLogout} variant="outline" className="gap-2">
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/admin#admin_profile">
+                  <UserRound className="w-4 h-4" />
+                  Profile
+                </Link>
+              </Button>
+              <Button onClick={handleLogout} variant="outline" className="gap-2">
+                <LogOut className="w-4 h-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
