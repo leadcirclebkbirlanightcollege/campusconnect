@@ -77,26 +77,25 @@ Deno.serve(async (req) => {
     // Set expiry to 10 minutes from now
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-    // Deactivate any existing tokens for this lecture
-    await supabase
+    // Upsert token for this lecture (lecture_id is unique)
+    const { error: upsertError } = await supabase
       .from('attendance_tokens')
-      .update({ is_active: false })
-      .eq('lecture_id', lectureId)
+      .upsert(
+        {
+          lecture_id: lectureId,
+          token,
+          otp_hash: otpHash,
+          expires_at: expiresAt,
+          is_active: true,
+          used_count: 0,
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: 'lecture_id' },
+      )
 
-    // Insert new token
-    const { error: insertError } = await supabase
-      .from('attendance_tokens')
-      .insert({
-        lecture_id: lectureId,
-        token,
-        otp_hash: otpHash,
-        expires_at: expiresAt,
-        is_active: true,
-        created_by: user.id
-      })
-
-    if (insertError) {
-      console.error('Error inserting token:', insertError)
+    if (upsertError) {
+      console.error('Error upserting token:', upsertError)
       return new Response(
         JSON.stringify({ error: 'Failed to generate attendance token' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
