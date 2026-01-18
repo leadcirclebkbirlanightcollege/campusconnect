@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.90.1";
-import { compareSync } from "https://esm.sh/bcryptjs@2.4.3";
+import bcrypt from "https://esm.sh/bcryptjs@2.4.3?target=deno";
 import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     if (otp) {
       const hash = String(tokenRow.otp_hash ?? "");
       if (hash.startsWith("$2")) {
-        isValid = compareSync(otp, hash);
+        isValid = (bcrypt as any).compareSync(otp, hash);
       } else {
         // legacy SHA-256
         const otpHash = await sha256Hex(otp);
