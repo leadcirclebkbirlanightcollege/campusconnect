@@ -58,9 +58,9 @@ const Auth = () => {
         .single();
 
       if (data?.role === "admin") {
-        navigate("/admin");
+        navigate("/admin", { replace: true });
       } else {
-        navigate("/student");
+        navigate("/student", { replace: true });
       }
     } catch (error) {
       console.error("Error fetching role:", error);
@@ -130,7 +130,7 @@ const Auth = () => {
       if (roleError) throw roleError;
 
       toast.success("Account created successfully!");
-      navigate("/student");
+      navigate("/student", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
