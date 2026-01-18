@@ -1,11 +1,27 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen } from "lucide-react";
+import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen, LogOut } from "lucide-react";
+
+type ProfileRow = {
+  full_name?: string | null;
+  display_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+};
+
+function getTimeGreeting(now = new Date()) {
+  const h = now.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     totalPoints: 0,
     lecturesAttended: 0,
@@ -13,19 +29,17 @@ const StudentDashboard = () => {
     unreadNotifications: 0,
   });
 
+  const [name, setName] = useState<string>("User");
+  const greeting = useMemo(() => getTimeGreeting(), []);
+
   useEffect(() => {
     fetchDashboardStats();
 
     const channel = supabase
       .channel("student_dashboard_notifications")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notification_recipients" },
-        () => {
-          // safe: unread count lives here
-          fetchDashboardStats();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notification_recipients" }, () => {
+        fetchDashboardStats();
+      })
       .subscribe();
 
     return () => {
@@ -35,15 +49,28 @@ const StudentDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch basic profile name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, display_name, first_name, last_name")
+        .eq("user_id", user.id)
+        .maybeSingle<ProfileRow>();
+
+      const friendlyName =
+        profile?.display_name ||
+        profile?.full_name ||
+        [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+        "User";
+      setName(friendlyName);
+
       // Fetch total points
-      const { data: pointsData } = await supabase
-        .from("points_ledger")
-        .select("points")
-        .eq("user_id", user.id);
-      
+      const { data: pointsData } = await supabase.from("points_ledger").select("points").eq("user_id", user.id);
+
       const totalPoints = pointsData?.reduce((sum, entry) => sum + entry.points, 0) || 0;
 
       // Fetch lectures attended
@@ -54,11 +81,8 @@ const StudentDashboard = () => {
         .eq("status", "present");
 
       // Fetch upcoming lectures
-      const today = new Date().toISOString().split('T')[0];
-      const { data: upcomingData } = await supabase
-        .from("lectures")
-        .select("id")
-        .gte("lecture_date", today);
+      const today = new Date().toISOString().split("T")[0];
+      const { data: upcomingData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
 
       // Fetch unread notifications
       const { data: notificationsData } = await supabase
@@ -78,14 +102,28 @@ const StudentDashboard = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">
-          Student Dashboard
-        </h1>
-        <p className="text-muted-foreground">Track your academic progress and stay updated</p>
-      </div>
+      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">Student Dashboard</h1>
+          <p className="text-muted-foreground">
+            {greeting}, {name}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </header>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-premium transition-all border-primary/10">
@@ -97,9 +135,7 @@ const StudentDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{stats.totalPoints}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Keep attending to earn more!
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Keep attending to earn more!</p>
           </CardContent>
         </Card>
 
@@ -112,9 +148,7 @@ const StudentDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-accent">{stats.lecturesAttended}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Great attendance record!
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Great attendance record!</p>
           </CardContent>
         </Card>
 
@@ -127,9 +161,7 @@ const StudentDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{stats.upcomingLectures}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Don't miss out!
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Don't miss out!</p>
           </CardContent>
         </Card>
 
@@ -155,9 +187,7 @@ const StudentDashboard = () => {
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Open your inbox for announcements or browse upcoming lectures.
-          </p>
+          <p className="text-muted-foreground text-sm">Open your inbox for announcements or browse upcoming lectures.</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" className="gap-2">
               <Link to="/student/inbox">
