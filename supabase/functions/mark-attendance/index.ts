@@ -26,22 +26,27 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     })
 
-    // Verify student role
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Verify student role (use security-definer RPC to avoid RLS issues on user_roles)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single()
+    const { data: isStudent, error: roleError } = await supabase
+      .rpc('is_student', { check_user_id: user.id })
 
-    if (!roleData || roleData.role !== 'student') {
+    if (roleError) {
+      console.error('Error checking student role:', roleError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify role' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!isStudent) {
       return new Response(
         JSON.stringify({ error: 'Student access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

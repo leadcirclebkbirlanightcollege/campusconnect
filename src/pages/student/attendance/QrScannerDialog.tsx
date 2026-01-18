@@ -41,8 +41,16 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [active, setActive] = useState(false);
 
+  const cameraSupport = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+  const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.protocol === "https:");
+  const isInIframe = typeof window !== "undefined" && window.top !== window.self;
+
   useEffect(() => {
     if (!open) return;
+    if (!cameraSupport || !isSecure) {
+      setActive(false);
+      return;
+    }
 
     const codeReader = new BrowserMultiFormatReader();
     let stopped = false;
@@ -139,6 +147,16 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
               </div>
             ) : null}
           </div>
+
+          {!cameraSupport || !isSecure ? (
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
+              Camera scanning requires HTTPS and camera permission on your device.
+            </div>
+          ) : isInIframe ? (
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
+              If the camera doesn’t open in the preview, try the published app in a new tab (some previews block camera).
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
