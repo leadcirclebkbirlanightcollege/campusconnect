@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.90.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,7 +26,9 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json(401, { error: 'Missing authorization header' })
+    if (!authHeader?.startsWith('Bearer ')) return json(401, { error: 'Unauthorized' })
+
+    const jwt = authHeader.replace('Bearer ', '')
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -37,19 +39,23 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Backend is not configured for admin user creation' })
     }
 
-    // Client bound to the caller (RLS applies) -> used only for auth/role verification
+    // Client bound to the caller (RLS applies) -> used only for role verification.
     const caller = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: callerAuth } = await caller.auth.getUser()
-    const user = callerAuth.user
-    if (!user) return json(401, { error: 'Unauthorized' })
+    const { data: claimsData, error: claimsError } = await caller.auth.getClaims(jwt)
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error('Invalid JWT:', claimsError)
+      return json(401, { error: 'Unauthorized' })
+    }
+
+    const callerUserId = claimsData.claims.sub
 
     const { data: roleData, error: roleError } = await caller
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', callerUserId)
       .single()
 
     if (roleError) {
@@ -137,7 +143,7 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Failed to assign student role' })
     }
 
-    console.log('Student created by admin', { admin_user_id: user.id, student_user_id: newUserId })
+    console.log('Student created by admin', { admin_user_id: callerUserId, student_user_id: newUserId })
 
     return json(200, {
       message: 'Student account created',
