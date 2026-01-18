@@ -171,8 +171,13 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
       setLastGenerateError(null);
       return data;
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       toast.success("OTP/QR generated");
+      try {
+        if (data?.debugId) localStorage.setItem("cc:lastDebugId", data.debugId);
+      } catch {
+        // ignore
+      }
       await qc.invalidateQueries({ queryKey: ["admin", "attendance", "active-token", lectureId] });
       setPosterOpen(true);
     },
@@ -180,6 +185,11 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
       // Display JSON if we got it
       const msg = e instanceof Error ? e.message : "Failed to generate";
       toast.error(msg);
+      try {
+        if (lastGenerateError?.debugId) localStorage.setItem("cc:lastDebugId", lastGenerateError.debugId);
+      } catch {
+        // ignore
+      }
     },
   });
 

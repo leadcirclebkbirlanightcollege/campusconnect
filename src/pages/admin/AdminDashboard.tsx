@@ -11,6 +11,7 @@ import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
 import AdminAttendanceControlTab from "@/pages/admin/attendance/AdminAttendanceControlTab";
 import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
+import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 const AdminDashboard = () => {
   const [tab, setTab] = useState("overview");
 
@@ -133,7 +134,7 @@ const AdminDashboard = () => {
             </Card>
            </div>
 
-           <div className="mt-6 grid gap-6 lg:grid-cols-2">
+           <div className="mt-6 grid gap-6 lg:grid-cols-3">
              <Card className="border-primary/10">
                <CardHeader>
                  <CardTitle className="text-lg">Quick actions</CardTitle>
@@ -177,6 +178,8 @@ const AdminDashboard = () => {
                  </div>
                </CardContent>
              </Card>
+
+             <SystemHealthPanel />
            </div>
          </TabsContent>
 

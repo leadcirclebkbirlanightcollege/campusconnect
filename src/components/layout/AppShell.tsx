@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, CalendarDays, MailOpen } from "lucide-react";
+import { BookOpen, CalendarDays, MailOpen, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -149,6 +149,12 @@ const AppShell = ({ children }: AppShellProps) => {
                   icon={MailOpen}
                   active={path.startsWith("/student/inbox")}
                   badge={unreadQuery.data ?? 0}
+                />
+                <NavItem
+                  to="/student/profile"
+                  label="Profile"
+                  icon={UserRound}
+                  active={path.startsWith("/student/profile")}
                 />
               </nav>
             ) : null}
