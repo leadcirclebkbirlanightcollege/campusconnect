@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, TrendingUp, Bell, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, TrendingUp, Bell, CheckCircle, MailOpen } from "lucide-react";
 
 const StudentDashboard = () => {
   const [stats, setStats] = useState({
@@ -13,6 +15,22 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
+
+    const channel = supabase
+      .channel("student_dashboard_notifications")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notification_recipients" },
+        () => {
+          // safe: unread count lives here
+          fetchDashboardStats();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -136,10 +154,16 @@ const StudentDashboard = () => {
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground text-sm">
-            Dashboard features coming soon: View lectures, mark attendance, check points history, and manage notifications.
+            Jump into your inbox for announcements, then head to lectures to mark attendance.
           </p>
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/student/inbox">
+              <MailOpen className="h-4 w-4" />
+              Open Inbox
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>
