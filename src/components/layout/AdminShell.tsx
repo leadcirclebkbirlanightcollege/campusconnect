@@ -33,7 +33,7 @@ const AdminShell = ({ children }: AdminShellProps) => {
           <div className="flex items-center justify-between">
             <Link to="/admin" className="flex items-center space-x-2 group">
               <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium group-hover:shadow-xl transition-all">
-                <LayoutDashboard className="w-6 h-6 text-white" />
+                <LayoutDashboard className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <span className="text-xl font-bold bg-gradient-premium bg-clip-text text-transparent block">

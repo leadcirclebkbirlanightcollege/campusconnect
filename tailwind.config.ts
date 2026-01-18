@@ -64,6 +64,15 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      backgroundImage: {
+        "gradient-mesh": "var(--gradient-mesh)",
+        "gradient-premium": "var(--gradient-premium)",
+        "gradient-accent": "var(--gradient-accent)",
+      },
+      boxShadow: {
+        premium: "var(--shadow-premium)",
+        accent: "var(--shadow-accent)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
