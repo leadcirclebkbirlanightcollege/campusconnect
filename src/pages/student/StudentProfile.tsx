@@ -289,8 +289,23 @@ export default function StudentProfile() {
             <UserRound className="h-6 w-6 text-primary" />
             {title}
             {profileQuery.data?.is_verified ? (
-              <span className="ml-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Verified
+              <span
+                className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                aria-label="Verified"
+                title="Verified"
+              >
+                <span className="sr-only">Verified</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
               </span>
             ) : null}
           </h1>
