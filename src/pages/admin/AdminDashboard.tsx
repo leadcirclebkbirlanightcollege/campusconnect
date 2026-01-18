@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard } from "lucide-react";
+import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 
 const AdminDashboard = () => {
   return (
@@ -68,15 +69,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="students">
-          <Card className="border-primary/10">
-            <CardHeader>
-              <CardTitle>Student Management</CardTitle>
-              <CardDescription>Add, edit, and manage student profiles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Student management interface coming soon</p>
-            </CardContent>
-          </Card>
+          <StudentManagementTab />
         </TabsContent>
 
         <TabsContent value="lectures">

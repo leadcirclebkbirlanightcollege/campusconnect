@@ -1,0 +1,385 @@
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound } from "lucide-react";
+
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+
+import StudentProfileDialog from "./StudentProfileDialog";
+
+export type StudentRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  student_id: string | null;
+  department: string | null;
+  class_name: string | null;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type StudentFilters = {
+  q: string;
+  department: string;
+  className: string;
+  status: "active" | "deleted" | "all";
+};
+
+const DEFAULT_FILTERS: StudentFilters = {
+  q: "",
+  department: "all",
+  className: "all",
+  status: "active",
+};
+
+function normalize(s: string | null | undefined) {
+  return (s ?? "").toLowerCase();
+}
+
+function matchesFilters(s: StudentRow, f: StudentFilters) {
+  const q = normalize(f.q).trim();
+  if (f.status !== "all") {
+    const wantDeleted = f.status === "deleted";
+    if (s.is_deleted !== wantDeleted) return false;
+  }
+
+  if (f.department !== "all" && (s.department ?? "") !== f.department) return false;
+  if (f.className !== "all" && (s.class_name ?? "") !== f.className) return false;
+
+  if (!q) return true;
+  const hay = [s.name, s.email, s.student_id, s.phone, s.department, s.class_name]
+    .map((x) => normalize(x))
+    .join(" ");
+  return hay.includes(q);
+}
+
+export default function StudentManagementTab() {
+  const qc = useQueryClient();
+
+  const [filters, setFilters] = useState<StudentFilters>(DEFAULT_FILTERS);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [openStudentUserId, setOpenStudentUserId] = useState<string | null>(null);
+
+  const studentsQuery = useQuery({
+    queryKey: ["admin", "students"],
+    queryFn: async (): Promise<StudentRow[]> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(
+          "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,created_at,updated_at",
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data ?? []) as StudentRow[];
+    },
+  });
+
+  const distinct = useMemo(() => {
+    const rows = studentsQuery.data ?? [];
+    const departments = Array.from(new Set(rows.map((r) => r.department).filter(Boolean))) as string[];
+    const classNames = Array.from(new Set(rows.map((r) => r.class_name).filter(Boolean))) as string[];
+    departments.sort((a, b) => a.localeCompare(b));
+    classNames.sort((a, b) => a.localeCompare(b));
+    return { departments, classNames };
+  }, [studentsQuery.data]);
+
+  const filtered = useMemo(() => {
+    const rows = studentsQuery.data ?? [];
+    return rows.filter((r) => matchesFilters(r, filters));
+  }, [studentsQuery.data, filters]);
+
+  const selectedIds = useMemo(() => Object.keys(selected).filter((k) => selected[k]), [selected]);
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((r) => selected[r.user_id]);
+  const someVisibleSelected = filtered.some((r) => selected[r.user_id]) && !allVisibleSelected;
+
+  const toggleSelectAllVisible = (next: boolean) => {
+    setSelected((prev) => {
+      const out = { ...prev };
+      for (const r of filtered) out[r.user_id] = next;
+      return out;
+    });
+  };
+
+  const clearSelection = () => setSelected({});
+
+  const softDeleteMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .in("user_id", userIds);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Students soft-deleted");
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete students"),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_deleted: false, deleted_at: null })
+        .in("user_id", userIds);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Students restored");
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to restore students"),
+  });
+
+  const busy =
+    studentsQuery.isLoading ||
+    softDeleteMutation.isPending ||
+    restoreMutation.isPending;
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-primary/10">
+        <CardHeader>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <UserRound className="h-5 w-5 text-primary" />
+                Student Management
+              </CardTitle>
+              <CardDescription>
+                Search, filter, bulk soft delete/restore, and drill into a student's attendance history.
+              </CardDescription>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                disabled={selectedIds.length === 0 || busy}
+                onClick={() => restoreMutation.mutate(selectedIds)}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Restore
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={selectedIds.length === 0 || busy}
+                onClick={() => softDeleteMutation.mutate(selectedIds)}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Soft delete
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-[1fr,190px,190px,190px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filters.q}
+                onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
+                placeholder="Search name, email, student ID…"
+                className="pl-10"
+              />
+            </div>
+
+            <Select
+              value={filters.department}
+              onValueChange={(v) => setFilters((p) => ({ ...p, department: v }))}
+            >
+              <SelectTrigger className="gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All departments</SelectItem>
+                {distinct.departments.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.className}
+              onValueChange={(v) => setFilters((p) => ({ ...p, className: v }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Class" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All classes</SelectItem>
+                {distinct.classNames.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.status}
+              onValueChange={(v) =>
+                setFilters((p) => ({ ...p, status: v as StudentFilters["status"] }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="deleted">Deleted</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Badge variant="secondary">{filtered.length} shown</Badge>
+              <span className="hidden sm:inline">•</span>
+              <span>{selectedIds.length} selected</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                disabled={selectedIds.length === 0}
+                onClick={clearSelection}
+              >
+                Clear selection
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="rounded-lg border border-border/60 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[46px]">
+                    <Checkbox
+                      checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                      onCheckedChange={(v) => toggleSelectAllVisible(Boolean(v))}
+                      aria-label="Select all visible students"
+                    />
+                  </TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead className="hidden md:table-cell">Department</TableHead>
+                  <TableHead className="hidden md:table-cell">Class</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {studentsQuery.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      Loading students…
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      No students match your filters.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((s) => (
+                    <TableRow key={s.user_id} data-state={selected[s.user_id] ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={Boolean(selected[s.user_id])}
+                          onCheckedChange={(v) =>
+                            setSelected((p) => ({ ...p, [s.user_id]: Boolean(v) }))
+                          }
+                          aria-label={`Select ${s.name}`}
+                        />
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium leading-tight">{s.name}</span>
+                          <span className="text-xs text-muted-foreground">{s.email}</span>
+                          {s.student_id ? (
+                            <span className="text-xs text-muted-foreground">ID: {s.student_id}</span>
+                          ) : null}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="hidden md:table-cell">
+                        {s.department ? <span>{s.department}</span> : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {s.class_name ? <span>{s.class_name}</span> : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+
+                      <TableCell>
+                        {s.is_deleted ? (
+                          <Badge variant="secondary">Deleted</Badge>
+                        ) : (
+                          <Badge className="bg-success text-success-foreground">Active</Badge>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenStudentUserId(s.user_id)}
+                        >
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <StudentProfileDialog
+        userId={openStudentUserId}
+        onOpenChange={(open) => setOpenStudentUserId(open ? openStudentUserId : null)}
+      />
+    </div>
+  );
+}
