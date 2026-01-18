@@ -30,16 +30,37 @@ function extractToken(text: string) {
   }
 }
 
-function pickBestCameraDeviceId(devices: MediaDeviceInfo[]) {
+function pickCameraDeviceId(
+  devices: MediaDeviceInfo[],
+  preference: "auto" | "front" | "back" | string,
+) {
   if (!devices.length) return undefined;
+
+  // Explicit device id
+  if (preference && preference !== "auto" && preference !== "front" && preference !== "back") {
+    const exact = devices.find((d) => d.deviceId === preference);
+    return (exact ?? devices[0]).deviceId;
+  }
+
+  const wantFront = preference === "front";
+  const wantBack = preference === "back";
+
   // Prefer back/rear camera when labels are available (after permission)
-  const preferred = devices.find((d) => /back|rear|environment/i.test(d.label));
-  return (preferred ?? devices[0]).deviceId;
+  const back = devices.find((d) => /back|rear|environment/i.test(d.label));
+  const front = devices.find((d) => /front|user|face/i.test(d.label));
+
+  if (wantBack) return (back ?? devices[0]).deviceId;
+  if (wantFront) return (front ?? devices[0]).deviceId;
+
+  // auto
+  return (back ?? devices[0]).deviceId;
 }
 
 export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [active, setActive] = useState(false);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [cameraChoice, setCameraChoice] = useState<"auto" | "front" | "back" | string>("auto");
 
   const cameraSupport = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.protocol === "https:");
@@ -71,8 +92,9 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
           // We'll still try to start via ZXing; if it fails we show a toast below.
         }
 
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        const deviceId = pickBestCameraDeviceId(devices);
+        const list = await BrowserMultiFormatReader.listVideoInputDevices();
+        setDevices(list);
+        const deviceId = pickCameraDeviceId(list, cameraChoice);
 
         if (!videoRef.current) throw new Error("Video element not ready");
 
@@ -117,7 +139,7 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
       }
       setActive(false);
     };
-  }, [open, onOpenChange, onToken]);
+  }, [open, cameraChoice, onOpenChange, onToken]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,6 +152,31 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
         </DialogHeader>
 
         <div className="space-y-3">
+          {devices.length > 1 ? (
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Camera</label>
+              <select
+                value={cameraChoice}
+                onChange={(e) => setCameraChoice(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="auto">Auto (recommended)</option>
+                <option value="back">Back camera</option>
+                <option value="front">Front camera</option>
+                <optgroup label="Devices">
+                  {devices.map((d, idx) => (
+                    <option key={d.deviceId} value={d.deviceId}>
+                      {d.label?.trim() ? d.label : `Camera ${idx + 1}`}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                If scanning fails, switch between back/front (or pick a specific device).
+              </p>
+            </div>
+          ) : null}
+
           <div className="relative overflow-hidden rounded-lg border border-border/60 bg-muted/20">
             <video
               ref={videoRef}
