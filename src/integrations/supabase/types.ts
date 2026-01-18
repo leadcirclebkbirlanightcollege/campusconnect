@@ -379,6 +379,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_leaderboard: {
+        Args: { p_limit?: number; p_verified_only?: boolean }
+        Returns: {
+          avatar_url: string
+          is_verified: boolean
+          name: string
+          points_total: number
+          rank: number
+          user_id: string
+        }[]
+      }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_student: { Args: { check_user_id: string }; Returns: boolean }

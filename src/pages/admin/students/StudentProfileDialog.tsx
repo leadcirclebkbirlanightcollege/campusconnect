@@ -40,6 +40,7 @@ type Profile = {
   department: string | null;
   class_name: string | null;
   is_deleted: boolean;
+  is_verified: boolean;
   created_at: string;
 };
 
@@ -76,7 +77,7 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id,name,email,phone,student_id,department,class_name,is_deleted,created_at")
+        .select("user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,created_at")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
@@ -177,7 +178,12 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
             <CardHeader>
               <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <span>{profileQuery.data?.name ?? "—"}</span>
+                  <span className="inline-flex items-center gap-2">
+                    {profileQuery.data?.name ?? "—"}
+                    {profileQuery.data?.is_verified ? (
+                      <Badge className="bg-primary text-primary-foreground">Verified</Badge>
+                    ) : null}
+                  </span>
                   {profileQuery.data?.is_deleted ? (
                     <Badge variant="secondary">Deleted</Badge>
                   ) : (

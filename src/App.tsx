@@ -13,8 +13,10 @@ import StudentScanAttendance from "./pages/student/StudentScanAttendance";
 import LecturesList from "./pages/student/lectures/LecturesList";
 import LectureDetail from "./pages/student/lectures/LectureDetail";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import RoleShell from "./components/layout/RoleShell";
 import AppShell from "./components/layout/AppShell";
 import AdminShell from "./components/layout/AdminShell";
 
@@ -114,6 +116,17 @@ const App = () => (
                 <AdminShell>
                   <AdminDashboard />
                 </AdminShell>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <RoleShell>
+                  <Leaderboard />
+                </RoleShell>
               </ProtectedRoute>
             }
           />

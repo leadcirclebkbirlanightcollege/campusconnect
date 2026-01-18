@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { CalendarDays, Filter, Medal, ReceiptText, TicketCheck, ArrowLeft } from "lucide-react";
+import { CalendarDays, Filter, Medal, ReceiptText, TicketCheck, ArrowLeft, BadgeCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -61,6 +61,30 @@ export default function StudentAttendanceHistory() {
     lectureId: "all",
     from: "",
     to: "",
+  });
+
+  const meQuery = useQuery({
+    queryKey: ["student", "me"],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return data.user ?? null;
+    },
+  });
+
+  const verifiedQuery = useQuery({
+    queryKey: ["student", "verified", meQuery.data?.id],
+    enabled: Boolean(meQuery.data?.id),
+    queryFn: async () => {
+      const uid = meQuery.data!.id;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_verified")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (error) throw error;
+      return Boolean(data?.is_verified);
+    },
   });
 
   const lecturesQuery = useQuery({
@@ -158,7 +182,14 @@ export default function StudentAttendanceHistory() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">Attendance</h1>
+        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2 inline-flex items-center gap-2">
+          Attendance
+          {verifiedQuery.data ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              <BadgeCheck className="h-3 w-3" /> Verified
+            </span>
+          ) : null}
+        </h1>
         <p className="text-muted-foreground">Filter your history and review points earned.</p>
       </div>
 
