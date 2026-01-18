@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Camera, LogOut, Save, UserRound } from "lucide-react";
+import { Camera, LogOut, Save, UserRound, KeyRound, ShieldAlert, Monitor, LogOutIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,17 +10,41 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  phone: z.string().optional(),
-  student_id: z.string().optional(),
-  department: z.string().optional(),
-  class_name: z.string().optional(),
+  name: z.string().trim().min(2, "Name is required").max(100, "Name is too long"),
+  phone: z.string().trim().max(30, "Phone is too long").optional(),
+  student_id: z.string().trim().max(50, "Student ID is too long").optional(),
+  department: z.string().trim().max(100, "Department is too long").optional(),
+  class_name: z.string().trim().max(50, "Class is too long").optional(),
 });
 
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "New password must be at least 8 characters").max(72, "Password too long"),
+    confirmPassword: z.string().min(1, "Confirm your new password"),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 type ProfileForm = z.infer<typeof profileSchema>;
+type PasswordForm = z.infer<typeof passwordSchema>;
 
 type ProfileRow = {
   name: string;
@@ -30,6 +54,14 @@ type ProfileRow = {
   department: string | null;
   class_name: string | null;
   avatar_url: string | null;
+};
+
+type DeletionRequestRow = {
+  id: string;
+  status: "requested" | "approved" | "rejected" | "completed";
+  created_at: string;
+  reason: string | null;
+  admin_note: string | null;
 };
 
 export default function StudentProfile() {
@@ -43,6 +75,14 @@ export default function StudentProfile() {
     department: "",
     class_name: "",
   });
+
+  const [pwForm, setPwForm] = useState<PasswordForm>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [deleteReason, setDeleteReason] = useState<string>("");
 
   const meQuery = useQuery({
     queryKey: ["student", "me"],
@@ -66,6 +106,32 @@ export default function StudentProfile() {
         .maybeSingle();
       if (error) throw error;
       return (data ?? null) as ProfileRow | null;
+    },
+  });
+
+  const sessionQuery = useQuery({
+    queryKey: ["student", "session"],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data.session ?? null;
+    },
+  });
+
+  const deletionRequestQuery = useQuery({
+    queryKey: ["student", "deletion_request", meQuery.data?.id],
+    enabled: Boolean(meQuery.data?.id),
+    queryFn: async (): Promise<DeletionRequestRow | null> => {
+      const uid = meQuery.data!.id;
+      const { data, error } = await supabase
+        .from("account_deletion_requests")
+        .select("id,status,created_at,reason,admin_note")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as DeletionRequestRow | null;
     },
   });
 
@@ -145,8 +211,69 @@ export default function StudentProfile() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/auth");
+    navigate("/auth", { replace: true });
   };
+
+  const logoutEverywhereMutation = useMutation({
+    mutationFn: async () => {
+      // Global signout revokes all refresh tokens for this user.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await supabase.auth.signOut({ scope: "global" } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Logged out everywhere");
+      navigate("/auth", { replace: true });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to logout everywhere"),
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async () => {
+      const parsed = passwordSchema.safeParse(pwForm);
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid password");
+
+      const emailForReauth = profileQuery.data?.email;
+      if (!emailForReauth) throw new Error("Email not available");
+
+      // Re-authenticate to validate current password
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: emailForReauth,
+        password: parsed.data.currentPassword,
+      });
+      if (reauthError) throw new Error("Current password is incorrect");
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: parsed.data.newPassword });
+      if (updateError) throw updateError;
+    },
+    onSuccess: () => {
+      toast.success("Password updated");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update password"),
+  });
+
+  const requestDeletionMutation = useMutation({
+    mutationFn: async () => {
+      const uid = meQuery.data?.id;
+      if (!uid) throw new Error("Not logged in");
+
+      const reason = deleteReason.trim();
+      if (reason.length > 500) throw new Error("Reason is too long (max 500 chars)");
+
+      const { error } = await supabase.from("account_deletion_requests").insert({
+        user_id: uid,
+        reason: reason.length ? reason : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Deletion request submitted");
+      setDeleteReason("");
+      await deletionRequestQuery.refetch();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to submit request"),
+  });
 
   const email = profileQuery.data?.email ?? "";
   const loading = meQuery.isLoading || profileQuery.isLoading;
@@ -276,6 +403,158 @@ export default function StudentProfile() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card className="border-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Change Password
+            </CardTitle>
+            <CardDescription>For security, confirm your current password.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Current password</label>
+              <Input
+                type="password"
+                value={pwForm.currentPassword}
+                onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New password</label>
+              <Input
+                type="password"
+                value={pwForm.newPassword}
+                onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))}
+                autoComplete="new-password"
+              />
+              <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Confirm new password</label>
+              <Input
+                type="password"
+                value={pwForm.confirmPassword}
+                onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="flex items-center justify-end">
+              <Button
+                type="button"
+                className="gap-2"
+                onClick={() => changePasswordMutation.mutate()}
+                disabled={changePasswordMutation.isPending || loading}
+              >
+                <Save className="h-4 w-4" />
+                Update password
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-accent/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-accent" />
+              Account Controls
+            </CardTitle>
+            <CardDescription>Manage sessions and request account deletion.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="rounded-xl border border-border/40 bg-card/40 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Monitor className="h-4 w-4" />
+                    Session / device
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {sessionQuery.data?.expires_at
+                      ? `Expires: ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
+                      : "Session info unavailable"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 break-words">{typeof navigator !== "undefined" ? navigator.userAgent : ""}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => logoutEverywhereMutation.mutate()}
+                  disabled={logoutEverywhereMutation.isPending}
+                >
+                  <LogOutIcon className="h-4 w-4" />
+                  Logout everywhere
+                </Button>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Note: device/session listing is limited to your current session in this app.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-border/40 bg-card/40 p-4">
+              <p className="text-sm font-medium">Delete account request</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This sends a request to the admin team; it does not immediately delete your account.
+              </p>
+
+              {deletionRequestQuery.data ? (
+                <div className="mt-3 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Status:</span> {deletionRequestQuery.data.status}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Requested: {new Date(deletionRequestQuery.data.created_at).toLocaleString()}
+                  </p>
+                  {deletionRequestQuery.data.admin_note ? (
+                    <p className="text-xs text-muted-foreground mt-1">Admin note: {deletionRequestQuery.data.admin_note}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Reason (optional)</label>
+                    <Textarea
+                      value={deleteReason}
+                      onChange={(e) => setDeleteReason(e.target.value)}
+                      placeholder="Tell us why you're requesting deletion (optional)"
+                      rows={3}
+                    />
+                  </div>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button type="button" variant="destructive" className="mt-3">
+                        Request account deletion
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Request account deletion?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will submit a deletion request to admins. You can continue using the app until it’s processed.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => requestDeletionMutation.mutate()}
+                          disabled={requestDeletionMutation.isPending}
+                        >
+                          Submit request
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
