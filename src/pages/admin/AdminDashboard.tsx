@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
+import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
+
 
 const AdminDashboard = () => {
   return (
@@ -97,15 +99,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <Card className="border-primary/10">
-            <CardHeader>
-              <CardTitle>Notification Center</CardTitle>
-              <CardDescription>Send notifications to students</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Notification interface coming soon</p>
-            </CardContent>
-          </Card>
+          <AdminNotificationCenterTab />
         </TabsContent>
       </Tabs>
     </div>
