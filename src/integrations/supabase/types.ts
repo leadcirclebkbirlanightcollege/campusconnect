@@ -239,8 +239,33 @@ export type Database = {
         }
         Relationships: []
       }
+      points_rules: {
+        Row: {
+          created_at: string
+          id: string
+          points_per_attendance: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_per_attendance?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_per_attendance?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          avatar_url: string | null
           class_name: string | null
           created_at: string
           deleted_at: string | null
@@ -255,6 +280,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           class_name?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -269,6 +295,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           class_name?: string | null
           created_at?: string
           deleted_at?: string | null
