@@ -53,8 +53,12 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
   const [scannerOpen, setScannerOpen] = useState(false);
   const [success, setSuccess] = useState<{ at: number; points: number } | null>(null);
 
+  const cameraSupport = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+  const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.protocol === "https:");
+
   const canSubmitOtp = otp.trim().length === 6;
   const canSubmitToken = token.trim().length >= 16;
+  const canUseCamera = cameraSupport && isSecure;
 
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
@@ -219,11 +223,17 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                       variant="outline"
                       className="gap-2"
                       onClick={() => setScannerOpen(true)}
-                      disabled={markMutation.isPending}
+                      disabled={!canUseCamera || markMutation.isPending}
                     >
                       <QrCode className="h-4 w-4" />
                       Scan QR
                     </Button>
+
+                    {!canUseCamera ? (
+                      <span className="text-xs text-muted-foreground">
+                        Camera requires HTTPS + permission (use token/OTP fallback).
+                      </span>
+                    ) : null}
 
                     <Button
                       className="gap-2"
