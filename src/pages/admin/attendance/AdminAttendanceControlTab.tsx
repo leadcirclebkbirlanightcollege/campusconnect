@@ -64,6 +64,9 @@ type GenerateResponse = {
   otp: string;
   token: string;
   expiresAt: string;
+  debugId?: string;
+  error?: string;
+  success?: boolean;
   message?: string;
 };
 
@@ -97,6 +100,7 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
   const qc = useQueryClient();
   const [lectureId, setLectureId] = useState<string>(defaultLectureId ?? "");
   const [posterOpen, setPosterOpen] = useState(false);
+  const [lastGenerateError, setLastGenerateError] = useState<null | { debugId?: string; raw: unknown }>(null);
 
   const lecturesQuery = useQuery({
     queryKey: ["admin", "lectures", "for-attendance"],
@@ -139,8 +143,32 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
       const { data, error } = await supabase.functions.invoke<GenerateResponse>("admin-generate-attendance", {
         body: { lectureId: parsed.data.lectureId },
       });
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        // Supabase FunctionsError often hides server JSON; surface it.
+        const anyErr = error as any;
+        const bodyText: string | undefined = anyErr?.context?.body;
+        if (typeof bodyText === "string") {
+          try {
+            const parsedBody = JSON.parse(bodyText);
+            setLastGenerateError({ debugId: parsedBody?.debugId, raw: parsedBody });
+            throw new Error(JSON.stringify(parsedBody));
+          } catch {
+            setLastGenerateError({ raw: bodyText });
+            throw new Error(bodyText);
+          }
+        }
+        setLastGenerateError({ raw: { message: error.message } });
+        throw new Error(error.message);
+      }
+
+      if (data?.error) {
+        setLastGenerateError({ debugId: data.debugId, raw: data });
+        throw new Error(JSON.stringify(data));
+      }
+
       if (!data?.otp || !data?.token) throw new Error("Failed to generate OTP/token");
+      setLastGenerateError(null);
       return data;
     },
     onSuccess: async () => {
@@ -148,7 +176,11 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
       await qc.invalidateQueries({ queryKey: ["admin", "attendance", "active-token", lectureId] });
       setPosterOpen(true);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to generate"),
+    onError: (e) => {
+      // Display JSON if we got it
+      const msg = e instanceof Error ? e.message : "Failed to generate";
+      toast.error(msg);
+    },
   });
 
   const finalizeMutation = useMutation({
@@ -242,6 +274,24 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
           </div>
 
           <Separator />
+
+          {lastGenerateError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <div className="text-sm font-medium">Token generation error</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {lastGenerateError.debugId ? (
+                  <span>
+                    Debug ID: <span className="font-mono">{lastGenerateError.debugId}</span>
+                  </span>
+                ) : (
+                  ""
+                )}
+              </div>
+              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-background p-3 text-xs">
+{JSON.stringify(lastGenerateError.raw, null, 2)}
+              </pre>
+            </div>
+          ) : null}
 
           {lectureId ? <AdminAttendanceLiveView lectureId={lectureId} /> : null}
 

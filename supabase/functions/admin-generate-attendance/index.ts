@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10'
 import { hashSync } from 'https://esm.sh/bcryptjs@2.4.3'
-import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts'
+import { crypto as stdCrypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,63 +8,79 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  const debugId = (globalThis.crypto as Crypto)?.randomUUID?.() ?? `dbg_${Date.now()}`
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const json = (status: number, body: Record<string, unknown>) =>
+    new Response(JSON.stringify({ debugId, ...body }), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.warn(`[${debugId}] Missing authorization header`)
+      return json(401, { error: 'Missing authorization header' })
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader } },
     })
 
     // Verify admin role
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      console.warn(`[${debugId}] Unauthorized: getUser failed`, userError)
+      return json(401, { error: 'Unauthorized' })
     }
 
-    const { data: roleData } = await supabase
+    console.log(`[${debugId}] admin-generate-attendance: user=${user.id}`)
+
+    const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single()
 
-    if (!roleData || roleData.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    console.log(`[${debugId}] role check result`, { role: roleData?.role, roleError: roleError?.message })
+
+    if (roleError) {
+      console.error(`[${debugId}] role lookup error`, roleError)
+      return json(500, { error: 'Failed to verify role' })
     }
 
-    const { lectureId } = await req.json()
+    if (!roleData || roleData.role !== 'admin') {
+      console.warn(`[${debugId}] Forbidden: role=${roleData?.role}`)
+      return json(403, { error: 'Admin access required' })
+    }
+
+    const body = await req.json().catch(() => null)
+    const lectureId = body?.lectureId
+
+    console.log(`[${debugId}] request`, { lectureId })
+
     if (!lectureId) {
-      return new Response(
-        JSON.stringify({ error: 'lectureId is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return json(400, { error: 'lectureId is required' })
     }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    
+
     // Generate random token for QR code
     const tokenBytes = new Uint8Array(32)
-    crypto.getRandomValues(tokenBytes)
+    stdCrypto.getRandomValues(tokenBytes)
     const token = Array.from(tokenBytes)
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
 
     // Hash the OTP (bcrypt)
@@ -75,7 +91,7 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
     // Upsert token for this lecture (lecture_id is unique)
-    const { error: upsertError } = await supabase
+    const { data: upsertData, error: upsertError } = await supabase
       .from('attendance_tokens')
       .upsert(
         {
@@ -90,32 +106,31 @@ Deno.serve(async (req) => {
         },
         { onConflict: 'lecture_id' },
       )
+      .select('id, lecture_id')
+      .maybeSingle()
+
+    console.log(`[${debugId}] upsert result`, {
+      upsertError: upsertError?.message,
+      tokenRowId: upsertData?.id,
+      lectureId: upsertData?.lecture_id,
+    })
 
     if (upsertError) {
-      console.error('Error upserting token:', upsertError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate attendance token' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.error(`[${debugId}] Error upserting token`, upsertError)
+      return json(500, { error: 'Failed to generate attendance token' })
     }
 
-    console.log('Attendance token generated for lecture:', lectureId)
+    console.log(`[${debugId}] Attendance token generated for lecture: ${lectureId}`)
 
-    return new Response(
-      JSON.stringify({
-        otp,
-        token,
-        expiresAt,
-        message: 'Attendance token generated successfully. OTP and QR code are valid for 10 minutes.'
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+    return json(200, {
+      otp,
+      token,
+      expiresAt,
+      success: true,
+      message: 'Attendance token generated successfully. OTP and QR code are valid for 10 minutes.',
+    })
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error(`[${debugId}] Unexpected error`, error)
+    return json(500, { error: 'An unexpected error occurred' })
   }
 })
