@@ -214,7 +214,7 @@ const AppShell = ({ children }: AppShellProps) => {
                           <span className="absolute -bottom-1 -right-1">
                             <span className="pulse absolute inset-0 rounded-full bg-primary/30" />
                             <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-                              <BadgeCheck className="h-3 w-3" aria-label="Verified" />
+                              <BadgeCheck className="h-3.5 w-3.5" aria-label="Verified" />
                             </span>
                           </span>
                         ) : null}

@@ -5,7 +5,6 @@ import { BadgeCheck, Crown, Filter, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -111,8 +110,13 @@ export default function Leaderboard() {
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{r.name}</span>
                           {r.is_verified ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                              <BadgeCheck className="h-3 w-3" /> Verified
+                            <span
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                              aria-label="Verified"
+                              title="Verified"
+                            >
+                              <span className="sr-only">Verified</span>
+                              <BadgeCheck className="h-3.5 w-3.5" />
                             </span>
                           ) : null}
                         </div>
