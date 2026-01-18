@@ -21,24 +21,36 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+    // Client scoped to the caller (for auth only)
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
     })
 
-    // Verify admin role
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Admin/system client (bypasses RLS) for server-side writes
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+
+    // Verify caller
+    const { data: { user }, error: userError } = await userSupabase.auth.getUser()
+    if (userError || !user) {
+      console.error('Unauthorized caller:', userError)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { data: roleData } = await supabase
+    // Verify admin role (use service client to avoid RLS on user_roles)
+    const { data: roleData, error: roleError } = await serviceSupabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single()
+
+    if (roleError) {
+      console.error('Error checking admin role:', roleError)
+    }
 
     if (!roleData || roleData.role !== 'admin') {
       return new Response(
@@ -55,8 +67,29 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Ensure lecture exists (prevents FK failures when inserting attendance rows)
+    const { data: lecture, error: lectureError } = await serviceSupabase
+      .from('lectures')
+      .select('id')
+      .eq('id', lectureId)
+      .maybeSingle()
+
+    if (lectureError) {
+      console.error('Error verifying lecture:', lectureError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify lecture' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!lecture) {
+      return new Response(
+        JSON.stringify({ error: 'Lecture not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     // Get all students
-    const { data: allStudents, error: studentsError } = await supabase
+    const { data: allStudents, error: studentsError } = await serviceSupabase
       .from('user_roles')
       .select('user_id')
       .eq('role', 'student')
@@ -70,7 +103,7 @@ Deno.serve(async (req) => {
     }
 
     // Get students who already marked attendance
-    const { data: presentStudents, error: presentError } = await supabase
+    const { data: presentStudents, error: presentError } = await serviceSupabase
       .from('attendance')
       .select('student_user_id')
       .eq('lecture_id', lectureId)
@@ -83,20 +116,22 @@ Deno.serve(async (req) => {
       )
     }
 
-    const presentStudentIds = new Set(presentStudents.map(s => s.student_user_id))
-    
+    const presentStudentIds = new Set(
+      (presentStudents ?? []).map((s: { student_user_id: string }) => s.student_user_id)
+    )
+
     // Mark absent students
-    const absentStudents = allStudents
-      .filter(s => !presentStudentIds.has(s.user_id))
-      .map(s => ({
+    const absentStudents = (allStudents ?? [])
+      .filter((s: { user_id: string }) => !presentStudentIds.has(s.user_id))
+      .map((s: { user_id: string }) => ({
         lecture_id: lectureId,
         student_user_id: s.user_id,
         status: 'absent',
-        points_earned: 0
+        points_earned: 0,
       }))
 
     if (absentStudents.length > 0) {
-      const { error: absentError } = await supabase
+      const { error: absentError } = await serviceSupabase
         .from('attendance')
         .insert(absentStudents)
 
@@ -110,7 +145,7 @@ Deno.serve(async (req) => {
     }
 
     // Deactivate the token
-    await supabase
+    await serviceSupabase
       .from('attendance_tokens')
       .update({ is_active: false })
       .eq('lecture_id', lectureId)
