@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import AttendanceMarkingCard from "@/pages/student/attendance/AttendanceMarkingCard";
 
 type LectureRow = {
   id: string;
@@ -122,12 +123,7 @@ export default function LectureDetail() {
               )}
             </div>
 
-            <div className="rounded-lg border border-border/60 p-4">
-              <div className="font-medium">Next: Attendance</div>
-              <p className="text-sm text-muted-foreground mt-1">
-                We’ll connect this page to OTP/QR attendance marking next.
-              </p>
-            </div>
+            <AttendanceMarkingCard lectureId={lectureQuery.data.id} />
           </CardContent>
         </Card>
       )}
