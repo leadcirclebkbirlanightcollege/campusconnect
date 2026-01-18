@@ -13,8 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-import QrScannerDialog from "./QrScannerDialog";
-
 type Props = {
   lectureId: string;
   initialToken?: string;
@@ -50,15 +48,10 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
 
   const [otp, setOtp] = useState("");
   const [token, setToken] = useState(initialToken ?? "");
-  const [scannerOpen, setScannerOpen] = useState(false);
   const [success, setSuccess] = useState<{ at: number; points: number } | null>(null);
-
-  const cameraSupport = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
-  const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.protocol === "https:");
 
   const canSubmitOtp = otp.trim().length === 6;
   const canSubmitToken = token.trim().length >= 16;
-  const canUseCamera = cameraSupport && isSecure;
 
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
@@ -211,29 +204,18 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                       <Camera className="h-5 w-5 text-primary" />
                       <div className="font-medium">QR scan</div>
                     </div>
-                    <Badge variant="secondary">Camera</Badge>
+                    <Badge variant="secondary">Coming soon</Badge>
                   </div>
 
                   <p className="text-sm text-muted-foreground mt-2">
-                    Scan the lecture QR code using your device camera.
+                    QR camera scanning is coming soon. For now, use the OTP or paste the token below.
                   </p>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => setScannerOpen(true)}
-                      disabled={!canUseCamera || markMutation.isPending}
-                    >
+                    <Button variant="outline" className="gap-2" disabled>
                       <QrCode className="h-4 w-4" />
-                      Scan QR
+                      Scan QR (coming soon)
                     </Button>
-
-                    {!canUseCamera ? (
-                      <span className="text-xs text-muted-foreground">
-                        Camera requires HTTPS + permission (use token/OTP fallback).
-                      </span>
-                    ) : null}
 
                     <Button
                       className="gap-2"
@@ -255,21 +237,11 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                       disabled={markMutation.isPending}
                     />
                     <p className="text-xs text-muted-foreground">
-                      If camera scanning isn’t available, paste the token.
+                      Paste the token from the QR/link if scanning isn’t available.
                     </p>
                   </div>
                 </div>
               </div>
-
-              <QrScannerDialog
-                open={scannerOpen}
-                onOpenChange={setScannerOpen}
-                onToken={(t) => {
-                  setToken(t);
-                  // optional: auto-submit when token scanned
-                  markMutation.mutate({ token: t });
-                }}
-              />
             </motion.div>
           )}
         </AnimatePresence>
