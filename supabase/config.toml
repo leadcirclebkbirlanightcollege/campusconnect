@@ -2,3 +2,18 @@ project_id = "oysjpeewsgwgnvvpbghe"
 
 [functions.admin-create-student]
 verify_jwt = false
+
+[functions.mark-attendance]
+verify_jwt = false
+
+[functions.finalize-attendance]
+verify_jwt = false
+
+[functions.admin-generate-attendance]
+verify_jwt = false
+
+[functions.ensure-admin-account]
+verify_jwt = false
+
+[functions.notification-scheduler]
+verify_jwt = false

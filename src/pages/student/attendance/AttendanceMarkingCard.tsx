@@ -26,6 +26,20 @@ type MarkAttendanceResponse = {
 };
 
 function safeErrorMessage(e: unknown) {
+  // supabase-js FunctionsError often only says: "Edge Function returned a non-2xx status code"
+  // but the real message is in the response JSON body.
+  const anyErr = e as any;
+  const bodyText: string | undefined = anyErr?.context?.body;
+  if (typeof bodyText === "string") {
+    try {
+      const parsed = JSON.parse(bodyText);
+      if (parsed?.error) return String(parsed.error);
+      if (parsed?.message) return String(parsed.message);
+    } catch {
+      // ignore
+    }
+  }
+
   if (e instanceof Error) return e.message;
   if (typeof e === "string") return e;
   return "Something went wrong";
