@@ -130,11 +130,16 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          end_at: string
           end_time: string
+          ended_at: string | null
           flyer_object_path: string | null
           id: string
           lecture_date: string
+          live_started_at: string | null
+          start_at: string
           start_time: string
+          status: Database["public"]["Enums"]["lecture_status"]
           topic: string
           updated_at: string
           venue: string
@@ -142,11 +147,16 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          end_at: string
           end_time: string
+          ended_at?: string | null
           flyer_object_path?: string | null
           id?: string
           lecture_date: string
+          live_started_at?: string | null
+          start_at: string
           start_time: string
+          status?: Database["public"]["Enums"]["lecture_status"]
           topic: string
           updated_at?: string
           venue: string
@@ -154,11 +164,16 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          end_at?: string
           end_time?: string
+          ended_at?: string | null
           flyer_object_path?: string | null
           id?: string
           lecture_date?: string
+          live_started_at?: string | null
+          start_at?: string
           start_time?: string
+          status?: Database["public"]["Enums"]["lecture_status"]
           topic?: string
           updated_at?: string
           venue?: string
@@ -203,6 +218,8 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          kind: string
+          lecture_id: string | null
           scheduled_for: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["notification_status"]
@@ -215,6 +232,8 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          kind?: string
+          lecture_id?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
@@ -227,6 +246,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          kind?: string
+          lecture_id?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
@@ -234,7 +255,15 @@ export type Database = {
           target_user_id?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       points_ledger: {
         Row: {
@@ -401,6 +430,7 @@ export type Database = {
         | "rejected"
         | "completed"
       app_role: "admin" | "student"
+      lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent"
     }
     CompositeTypes: {
@@ -536,6 +566,7 @@ export const Constants = {
         "completed",
       ],
       app_role: ["admin", "student"],
+      lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent"],
     },
   },

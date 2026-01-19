@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, CalendarDays, List, Trash2 } from "lucide-react";
+import { Plus, CalendarDays, List, Trash2, Radio, Square } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ export type LectureRow = {
   end_time: string;
   venue: string;
   flyer_object_path: string | null;
+  status: "scheduled" | "live" | "ended";
   created_at: string;
   updated_at: string;
 };
@@ -51,7 +52,7 @@ export default function LectureManagementTab() {
       const { data, error } = await supabase
         .from("lectures")
         .select(
-          "id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,created_at,updated_at",
+          "id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status,created_at,updated_at",
         )
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -71,6 +72,34 @@ export default function LectureManagementTab() {
       await qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete lecture"),
+  });
+
+  const setLectureLive = useMutation({
+    mutationFn: async ({ lectureId }: { lectureId: string }) => {
+      const { error } = await supabase.functions.invoke("lecture-lifecycle", {
+        body: { action: "go_live", lectureId },
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Lecture is LIVE");
+      await qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to start lecture"),
+  });
+
+  const endLecture = useMutation({
+    mutationFn: async ({ lectureId }: { lectureId: string }) => {
+      const { error } = await supabase.functions.invoke("lecture-lifecycle", {
+        body: { action: "end", lectureId },
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Lecture ended");
+      await qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to end lecture"),
   });
 
   const calendarIndex = useMemo(() => {
@@ -143,6 +172,7 @@ export default function LectureManagementTab() {
                       <TableHead>Lecture</TableHead>
                       <TableHead className="hidden md:table-cell">Time</TableHead>
                       <TableHead className="hidden md:table-cell">Venue</TableHead>
+                      <TableHead className="hidden md:table-cell">Status</TableHead>
                       <TableHead>Flyer</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -150,13 +180,13 @@ export default function LectureManagementTab() {
                   <TableBody>
                     {lecturesQuery.isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                           Loading lectures…
                         </TableCell>
                       </TableRow>
                     ) : (lecturesQuery.data ?? []).length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                           No lectures yet.
                         </TableCell>
                       </TableRow>
@@ -177,11 +207,48 @@ export default function LectureManagementTab() {
                           <TableCell className="hidden md:table-cell">
                             <span className="text-sm">{l.venue}</span>
                           </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {l.status === "live" ? (
+                              <Badge variant="destructive" className="gap-1 animate-pulse">
+                                <Radio className="h-3.5 w-3.5" /> LIVE
+                              </Badge>
+                            ) : l.status === "ended" ? (
+                              <Badge variant="secondary" className="gap-1">
+                                <Square className="h-3.5 w-3.5" /> Ended
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Scheduled</Badge>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <LectureFlyerUploader lecture={l} />
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {l.status !== "live" ? (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="gap-2"
+                                  onClick={() => setLectureLive.mutate({ lectureId: l.id })}
+                                  disabled={setLectureLive.isPending}
+                                >
+                                  <Radio className="h-4 w-4" />
+                                  Live
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="gap-2"
+                                  onClick={() => endLecture.mutate({ lectureId: l.id })}
+                                  disabled={endLecture.isPending}
+                                >
+                                  <Square className="h-4 w-4" />
+                                  End
+                                </Button>
+                              )}
+
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -189,6 +256,7 @@ export default function LectureManagementTab() {
                                   setEditLecture(l);
                                   setOpen(true);
                                 }}
+                                disabled={l.status === "live"}
                               >
                                 Edit
                               </Button>
@@ -197,7 +265,7 @@ export default function LectureManagementTab() {
                                 variant="destructive"
                                 className="gap-2"
                                 onClick={() => deleteLecture.mutate(l.id)}
-                                disabled={deleteLecture.isPending}
+                                disabled={deleteLecture.isPending || l.status === "live"}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
