@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import LivePill from "@/components/lectures/LivePill";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ type LectureRow = {
   end_time: string;
   venue: string;
   flyer_object_path: string | null;
+  status: "scheduled" | "live" | "ended";
 };
 
 function publicFlyerUrl(path: string) {
@@ -36,7 +38,7 @@ export default function LectureDetail() {
       if (!id) return null;
       const { data, error } = await supabase
         .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path")
+        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -69,11 +71,14 @@ export default function LectureDetail() {
           <CardContent className="py-10 text-center text-muted-foreground">Lecture not found.</CardContent>
         </Card>
       ) : (
-        <Card className="border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-2xl">{lectureQuery.data.topic}</CardTitle>
-            <CardDescription>Lecture details and flyer.</CardDescription>
-          </CardHeader>
+          <Card className="border-primary/10">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                {lectureQuery.data.topic}
+                {lectureQuery.data.status === "live" ? <LivePill /> : null}
+              </CardTitle>
+              <CardDescription>Lecture details and flyer.</CardDescription>
+            </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg border border-border/60 p-4">
