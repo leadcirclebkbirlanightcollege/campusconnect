@@ -77,11 +77,6 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       if (userError) throw userError;
       if (!userData.user) throw new Error("Not authenticated");
 
-      const startAt = `${values.lecture_date}T${values.start_time}:00Z`;
-      const endAt = `${values.lecture_date}T${values.end_time}:00Z`;
-
-      let lectureId = lecture?.id;
-
       if (lecture) {
         const { error } = await supabase
           .from("lectures")
@@ -91,40 +86,21 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
             start_time: values.start_time,
             end_time: values.end_time,
             venue: values.venue.trim(),
-            start_at: startAt,
-            end_at: endAt,
           })
           .eq("id", lecture.id);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
-          .from("lectures")
-          .insert([
-            {
-              topic: values.topic.trim(),
-              lecture_date: values.lecture_date,
-              start_time: values.start_time,
-              end_time: values.end_time,
-              venue: values.venue.trim(),
-              created_by: userData.user.id,
-              start_at: startAt,
-              end_at: endAt,
-            },
-          ])
-          .select("id")
-          .maybeSingle();
+        const { error } = await supabase.from("lectures").insert([
+          {
+            topic: values.topic.trim(),
+            lecture_date: values.lecture_date,
+            start_time: values.start_time,
+            end_time: values.end_time,
+            venue: values.venue.trim(),
+            created_by: userData.user.id,
+          },
+        ]);
         if (error) throw error;
-        lectureId = data?.id ?? null;
-      }
-
-      if (lectureId) {
-        const { error: scheduleError } = await supabase.functions.invoke("lecture-lifecycle", {
-          body: { action: "upsert_reminders", lectureId },
-        });
-        if (scheduleError) {
-          // Non-blocking; the lecture save succeeded.
-          console.warn("Failed to schedule reminders:", scheduleError);
-        }
       }
     },
     onSuccess: async () => {

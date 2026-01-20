@@ -17,6 +17,3 @@ verify_jwt = false
 
 [functions.notification-scheduler]
 verify_jwt = false
-
-[functions.lecture-lifecycle]
-verify_jwt = false

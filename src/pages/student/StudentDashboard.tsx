@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import LivePill from "@/components/lectures/LivePill";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +25,6 @@ type UpcomingLecture = {
   lecture_date: string;
   start_time: string;
   venue: string;
-  status: "scheduled" | "live" | "ended";
 };
 
 type RecentPoint = {
@@ -62,7 +60,6 @@ const StudentDashboard = () => {
   });
 
   const [upcoming, setUpcoming] = useState<UpcomingLecture[]>([]);
-  const [liveCount, setLiveCount] = useState<number>(0);
   const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
   const [recentAttendance, setRecentAttendance] = useState<RecentAttendance[]>([]);
 
@@ -116,13 +113,6 @@ const StudentDashboard = () => {
       const today = new Date().toISOString().split("T")[0];
       const { data: upcomingCountData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
 
-      // Fetch live lectures (for LIVE indicator)
-      const { data: liveLectures } = await supabase
-        .from("lectures")
-        .select("id")
-        .eq("status", "live")
-        .gte("lecture_date", today);
-
       // Fetch unread notifications
       const { data: notificationsData } = await supabase
         .from("notification_recipients")
@@ -133,7 +123,7 @@ const StudentDashboard = () => {
       // Essential dashboard lists
       const { data: upcomingList } = await supabase
         .from("lectures")
-        .select("id, topic, lecture_date, start_time, venue, status")
+        .select("id, topic, lecture_date, start_time, venue")
         .gte("lecture_date", today)
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -154,7 +144,6 @@ const StudentDashboard = () => {
         .limit(5);
 
       setUpcoming((upcomingList ?? []) as UpcomingLecture[]);
-      setLiveCount(liveLectures?.length ?? 0);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
       setRecentAttendance((recentAtt ?? []) as RecentAttendance[]);
 
@@ -293,7 +282,6 @@ const StudentDashboard = () => {
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Upcoming Lectures
-                {liveCount > 0 ? <LivePill className="h-5" /> : null}
               </CardTitle>
               <CardDescription>Next sessions you should attend</CardDescription>
             </div>
@@ -310,10 +298,7 @@ const StudentDashboard = () => {
                   <li key={l.id} className="rounded-xl border border-border/40 bg-card/40 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{l.topic}</p>
-                          {l.status === "live" ? <LivePill className="h-5" /> : null}
-                        </div>
+                        <p className="font-medium">{l.topic}</p>
                         <p className="text-sm text-muted-foreground">
                           {l.lecture_date} • {l.start_time} • {l.venue}
                         </p>
