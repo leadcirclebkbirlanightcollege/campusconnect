@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useLecturesRealtime } from "@/hooks/use-lectures-realtime";
 import LivePill from "@/components/lectures/LivePill";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,11 +69,6 @@ const StudentDashboard = () => {
   const [name, setName] = useState<string>("User");
   const greeting = useMemo(() => getTimeGreeting(), []);
 
-  useLecturesRealtime(() => {
-    // Keep LIVE badges + lecture lists in sync without refresh.
-    fetchDashboardStats();
-  });
-
   useEffect(() => {
     fetchDashboardStats();
 
@@ -90,7 +84,7 @@ const StudentDashboard = () => {
     };
   }, []);
 
-  async function fetchDashboardStats() {
+  const fetchDashboardStats = async () => {
     try {
       const {
         data: { user },
@@ -123,7 +117,11 @@ const StudentDashboard = () => {
       const { data: upcomingCountData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
 
       // Fetch live lectures (for LIVE indicator)
-      const { data: liveLectures } = await supabase.from("lectures").select("id").eq("status", "live").gte("lecture_date", today);
+      const { data: liveLectures } = await supabase
+        .from("lectures")
+        .select("id")
+        .eq("status", "live")
+        .gte("lecture_date", today);
 
       // Fetch unread notifications
       const { data: notificationsData } = await supabase
@@ -169,7 +167,7 @@ const StudentDashboard = () => {
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     }
-  }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

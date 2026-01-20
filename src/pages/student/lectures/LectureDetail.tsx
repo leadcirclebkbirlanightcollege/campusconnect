@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useLecturesRealtime } from "@/hooks/use-lectures-realtime";
 import LivePill from "@/components/lectures/LivePill";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,6 @@ function publicFlyerUrl(path: string) {
 export default function LectureDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const qc = useQueryClient();
 
   const lectureQuery = useQuery({
     queryKey: ["student", "lecture", id],
@@ -47,15 +45,6 @@ export default function LectureDetail() {
       return (data ?? null) as LectureRow | null;
     },
   });
-
-  useLecturesRealtime(
-    (payload) => {
-      const changedId = (payload.new as any)?.id ?? (payload.old as any)?.id;
-      if (!id || changedId !== id) return;
-      qc.invalidateQueries({ queryKey: ["student", "lecture", id] });
-    },
-    Boolean(id),
-  );
 
   const flyerUrl = useMemo(() => {
     const path = lectureQuery.data?.flyer_object_path;

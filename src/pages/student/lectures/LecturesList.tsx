@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useLecturesRealtime } from "@/hooks/use-lectures-realtime";
 import LivePill from "@/components/lectures/LivePill";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +22,6 @@ type LectureRow = {
 };
 
 export default function LecturesList() {
-  const qc = useQueryClient();
-
   const lecturesQuery = useQuery({
     queryKey: ["student", "lectures"],
     queryFn: async (): Promise<LectureRow[]> => {
@@ -39,10 +36,6 @@ export default function LecturesList() {
       if (error) throw error;
       return (data ?? []) as LectureRow[];
     },
-  });
-
-  useLecturesRealtime(() => {
-    qc.invalidateQueries({ queryKey: ["student", "lectures"] });
   });
 
   const grouped = useMemo(() => {

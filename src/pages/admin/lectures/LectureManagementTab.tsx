@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, CalendarDays, List, Trash2, Radio, Square } from "lucide-react";
 
@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Table,
   TableBody,
@@ -21,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useLecturesRealtime } from "@/hooks/use-lectures-realtime";
 import LectureFormDialog from "./LectureFormDialog";
 import LectureFlyerUploader from "./LectureFlyerUploader";
 
@@ -62,11 +60,6 @@ export default function LectureManagementTab() {
       if (error) throw error;
       return (data ?? []) as LectureRow[];
     },
-  });
-
-  useLecturesRealtime(() => {
-    // Keep this table in sync across multiple admin sessions.
-    qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
   });
 
   const deleteLecture = useMutation({
@@ -232,38 +225,29 @@ export default function LectureManagementTab() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <ToggleGroup
-                                type="single"
-                                value={l.status === "live" ? "live" : l.status === "ended" ? "ended" : ""}
-                                onValueChange={(v) => {
-                                  if (!v) return;
-                                  if (l.status === "ended") return;
-                                  if (v === "live" && l.status !== "live") {
-                                    setLectureLive.mutate({ lectureId: l.id });
-                                  }
-                                  if (v === "ended") {
-                                    endLecture.mutate({ lectureId: l.id });
-                                  }
-                                }}
-                                className="justify-end"
-                              >
-                                <ToggleGroupItem
-                                  value="live"
-                                  aria-label="Set lecture live"
-                                  disabled={setLectureLive.isPending || endLecture.isPending || l.status === "ended"}
-                                  className="gap-1"
+                              {l.status !== "live" ? (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="gap-2"
+                                  onClick={() => setLectureLive.mutate({ lectureId: l.id })}
+                                  disabled={setLectureLive.isPending}
                                 >
-                                  <Radio className="h-4 w-4" /> Live
-                                </ToggleGroupItem>
-                                <ToggleGroupItem
-                                  value="ended"
-                                  aria-label="End lecture"
-                                  disabled={setLectureLive.isPending || endLecture.isPending || l.status !== "live"}
-                                  className="gap-1"
+                                  <Radio className="h-4 w-4" />
+                                  Live
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="gap-2"
+                                  onClick={() => endLecture.mutate({ lectureId: l.id })}
+                                  disabled={endLecture.isPending}
                                 >
-                                  <Square className="h-4 w-4" /> Ended
-                                </ToggleGroupItem>
-                              </ToggleGroup>
+                                  <Square className="h-4 w-4" />
+                                  End
+                                </Button>
+                              )}
 
                               <Button
                                 size="sm"
