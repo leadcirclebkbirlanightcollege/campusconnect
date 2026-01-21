@@ -16,7 +16,7 @@ const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
 
   // Login form
-  const [loginEmail, setLoginEmail] = useState("");
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
   // Signup form
@@ -72,8 +72,27 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const identifier = loginIdentifier.trim();
+      if (!identifier) throw new Error("Please enter Email or Student ID");
+
+      // If user typed a Student ID, resolve it to an email via backend (service role).
+      let email = identifier;
+      if (!identifier.includes("@")) {
+        const { data: resolved, error: resolveError } = await supabase.functions.invoke(
+          "auth-resolve-identifier",
+          {
+            body: { identifier },
+          },
+        );
+
+        if (resolveError || !resolved?.email) {
+          throw new Error("Invalid credentials");
+        }
+        email = String(resolved.email);
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+        email,
         password: loginPassword,
       });
 
@@ -173,13 +192,12 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-identifier">Email / Student ID</Label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="your.email@college.edu"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    id="login-identifier"
+                    placeholder="your.email@college.edu or CS-2026-001"
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
                     required
                   />
                 </div>
