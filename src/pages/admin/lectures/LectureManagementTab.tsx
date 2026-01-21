@@ -12,6 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -45,6 +55,13 @@ export default function LectureManagementTab() {
   const [open, setOpen] = useState(false);
   const [editLecture, setEditLecture] = useState<LectureRow | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(new Date());
+  const [endConfirmOpen, setEndConfirmOpen] = useState(false);
+  const [lectureToEnd, setLectureToEnd] = useState<LectureRow | null>(null);
+
+  const isLectureStartInFuture = (l: Pick<LectureRow, "lecture_date" | "start_time">) => {
+    const startAt = new Date(`${l.lecture_date}T${l.start_time}:00Z`);
+    return !Number.isNaN(startAt.getTime()) && startAt.getTime() > Date.now();
+  };
 
   const lecturesQuery = useQuery({
     queryKey: ["admin", "lectures"],
@@ -211,8 +228,19 @@ export default function LectureManagementTab() {
                               {l.status !== "live" && l.status !== "ended" ? (
                                 <Button
                                   size="sm"
-                                  onClick={() => setLectureStatus.mutate({ id: l.id, status: "live" })}
-                                  disabled={setLectureStatus.isPending}
+                                  onClick={() => {
+                                    if (isLectureStartInFuture(l)) {
+                                      toast.error("You can only go LIVE when the lecture start time is reached.");
+                                      return;
+                                    }
+                                    setLectureStatus.mutate({ id: l.id, status: "live" });
+                                  }}
+                                  title={
+                                    isLectureStartInFuture(l)
+                                      ? "Lecture start time is in the future"
+                                      : undefined
+                                  }
+                                  disabled={setLectureStatus.isPending || isLectureStartInFuture(l)}
                                 >
                                   Live
                                 </Button>
@@ -222,7 +250,10 @@ export default function LectureManagementTab() {
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => setLectureStatus.mutate({ id: l.id, status: "ended" })}
+                                  onClick={() => {
+                                    setLectureToEnd(l);
+                                    setEndConfirmOpen(true);
+                                  }}
                                   disabled={setLectureStatus.isPending}
                                 >
                                   End
@@ -338,6 +369,36 @@ export default function LectureManagementTab() {
           await qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
         }}
       />
+
+      <AlertDialog open={endConfirmOpen} onOpenChange={setEndConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End lecture?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the lecture as ended for all students. You can’t set it back to live from here.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setLectureToEnd(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!lectureToEnd) return;
+                setLectureStatus.mutate({ id: lectureToEnd.id, status: "ended" });
+                setEndConfirmOpen(false);
+                setLectureToEnd(null);
+              }}
+            >
+              End lecture
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
