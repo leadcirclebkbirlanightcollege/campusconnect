@@ -77,6 +77,10 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       if (userError) throw userError;
       if (!userData.user) throw new Error("Not authenticated");
 
+      // Keep timestamps in sync with date + time inputs (stored as UTC).
+      const start_at = new Date(`${values.lecture_date}T${values.start_time}:00Z`).toISOString();
+      const end_at = new Date(`${values.lecture_date}T${values.end_time}:00Z`).toISOString();
+
       if (lecture) {
         const { error } = await supabase
           .from("lectures")
@@ -85,6 +89,8 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
             lecture_date: values.lecture_date,
             start_time: values.start_time,
             end_time: values.end_time,
+            start_at,
+            end_at,
             venue: values.venue.trim(),
           })
           .eq("id", lecture.id);
@@ -96,6 +102,8 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
             lecture_date: values.lecture_date,
             start_time: values.start_time,
             end_time: values.end_time,
+            start_at,
+            end_at,
             venue: values.venue.trim(),
             created_by: userData.user.id,
           },
