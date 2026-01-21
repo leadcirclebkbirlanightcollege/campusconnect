@@ -31,6 +31,7 @@ export type LectureRow = {
   end_time: string;
   venue: string;
   flyer_object_path: string | null;
+  status: "scheduled" | "live" | "ended";
   created_at: string;
   updated_at: string;
 };
@@ -51,7 +52,7 @@ export default function LectureManagementTab() {
       const { data, error } = await supabase
         .from("lectures")
         .select(
-          "id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,created_at,updated_at",
+          "id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status,created_at,updated_at",
         )
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -59,6 +60,27 @@ export default function LectureManagementTab() {
       if (error) throw error;
       return (data ?? []) as LectureRow[];
     },
+  });
+
+  const setLectureStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: LectureRow["status"] }) => {
+      const nowIso = new Date().toISOString();
+      const patch: Record<string, any> = { status };
+      if (status === "live") {
+        patch.live_started_at = nowIso;
+        patch.ended_at = null;
+      }
+      if (status === "ended") {
+        patch.ended_at = nowIso;
+      }
+      const { error } = await supabase.from("lectures").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Lecture updated");
+      await qc.invalidateQueries({ queryKey: ["admin", "lectures"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update lecture"),
   });
 
   const deleteLecture = useMutation({
@@ -165,7 +187,11 @@ export default function LectureManagementTab() {
                         <TableRow key={l.id}>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-medium leading-tight">{l.topic}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium leading-tight">{l.topic}</span>
+                                {l.status === "live" ? <Badge variant="destructive">LIVE</Badge> : null}
+                                {l.status === "ended" ? <Badge variant="secondary">Ended</Badge> : null}
+                              </div>
                               <span className="text-xs text-muted-foreground">{l.lecture_date}</span>
                             </div>
                           </TableCell>
@@ -182,6 +208,27 @@ export default function LectureManagementTab() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {l.status !== "live" && l.status !== "ended" ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => setLectureStatus.mutate({ id: l.id, status: "live" })}
+                                  disabled={setLectureStatus.isPending}
+                                >
+                                  Live
+                                </Button>
+                              ) : null}
+
+                              {l.status === "live" ? (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => setLectureStatus.mutate({ id: l.id, status: "ended" })}
+                                  disabled={setLectureStatus.isPending}
+                                >
+                                  End
+                                </Button>
+                              ) : null}
+
                               <Button
                                 size="sm"
                                 variant="outline"

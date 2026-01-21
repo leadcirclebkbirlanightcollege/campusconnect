@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import LiveBadge from "@/components/lectures/LiveBadge";
 
 type LectureRow = {
   id: string;
@@ -17,6 +18,7 @@ type LectureRow = {
   end_time: string;
   venue: string;
   flyer_object_path: string | null;
+  status?: "scheduled" | "live" | "ended";
 };
 
 export default function LecturesList() {
@@ -26,7 +28,7 @@ export default function LecturesList() {
       const today = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase
         .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path")
+        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status")
         .gte("lecture_date", today)
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -75,7 +77,10 @@ export default function LecturesList() {
                   <div key={l.id} className="rounded-lg border border-border/60 p-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <div className="font-medium">{l.topic}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{l.topic}</div>
+                          {l.status === "live" ? <LiveBadge /> : null}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {l.start_time}–{l.end_time}
                         </div>

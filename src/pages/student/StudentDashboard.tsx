@@ -15,6 +15,8 @@ import {
   ListChecks,
 } from "lucide-react";
 
+import LiveBadge from "@/components/lectures/LiveBadge";
+
 type ProfileRow = {
   name: string;
 };
@@ -25,6 +27,7 @@ type UpcomingLecture = {
   lecture_date: string;
   start_time: string;
   venue: string;
+  status?: "scheduled" | "live" | "ended";
 };
 
 type RecentPoint = {
@@ -60,6 +63,7 @@ const StudentDashboard = () => {
   });
 
   const [upcoming, setUpcoming] = useState<UpcomingLecture[]>([]);
+  const [liveNow, setLiveNow] = useState<UpcomingLecture | null>(null);
   const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
   const [recentAttendance, setRecentAttendance] = useState<RecentAttendance[]>([]);
 
@@ -123,11 +127,19 @@ const StudentDashboard = () => {
       // Essential dashboard lists
       const { data: upcomingList } = await supabase
         .from("lectures")
-        .select("id, topic, lecture_date, start_time, venue")
+        .select("id, topic, lecture_date, start_time, venue, status")
         .gte("lecture_date", today)
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
         .limit(3);
+
+      const { data: liveList } = await supabase
+        .from("lectures")
+        .select("id, topic, lecture_date, start_time, venue, status")
+        .eq("status", "live")
+        .order("lecture_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(1);
 
       const { data: recentPts } = await supabase
         .from("points_ledger")
@@ -144,6 +156,7 @@ const StudentDashboard = () => {
         .limit(5);
 
       setUpcoming((upcomingList ?? []) as UpcomingLecture[]);
+      setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
       setRecentAttendance((recentAtt ?? []) as RecentAttendance[]);
 
@@ -290,6 +303,25 @@ const StudentDashboard = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
+            {liveNow ? (
+              <div className="rounded-xl border border-border/40 bg-card/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{liveNow.topic}</p>
+                      <LiveBadge />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {liveNow.lecture_date} • {liveNow.start_time} • {liveNow.venue}
+                    </p>
+                  </div>
+                  <Button asChild variant="secondary" size="sm">
+                    <Link to={`/lectures/${liveNow.id}`}>Open</Link>
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             {upcoming.length === 0 ? (
               <p className="text-sm text-muted-foreground">No upcoming lectures found.</p>
             ) : (
@@ -298,7 +330,10 @@ const StudentDashboard = () => {
                   <li key={l.id} className="rounded-xl border border-border/40 bg-card/40 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium">{l.topic}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{l.topic}</p>
+                          {l.status === "live" ? <LiveBadge /> : null}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {l.lecture_date} • {l.start_time} • {l.venue}
                         </p>
