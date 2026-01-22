@@ -73,15 +73,24 @@ const StudentDashboard = () => {
   useEffect(() => {
     fetchDashboardStats();
 
-    const channel = supabase
+    const notificationsChannel = supabase
       .channel("student_dashboard_notifications")
       .on("postgres_changes", { event: "*", schema: "public", table: "notification_recipients" }, () => {
         fetchDashboardStats();
       })
       .subscribe();
 
+    const lecturesChannel = supabase
+      .channel("student_dashboard_lectures")
+      .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, () => {
+        // Ensures LIVE/ENDED shows instantly (live badge + counts)
+        fetchDashboardStats();
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(notificationsChannel);
+      supabase.removeChannel(lecturesChannel);
     };
   }, []);
 

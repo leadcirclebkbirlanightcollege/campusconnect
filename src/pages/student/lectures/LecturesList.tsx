@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, MapPin, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,8 @@ type LectureRow = {
 };
 
 export default function LecturesList() {
+  const qc = useQueryClient();
+
   const lecturesQuery = useQuery({
     queryKey: ["student", "lectures"],
     queryFn: async (): Promise<LectureRow[]> => {
@@ -43,6 +45,19 @@ export default function LecturesList() {
     for (const l of lecturesQuery.data ?? []) (out[l.lecture_date] ??= []).push(l);
     return out;
   }, [lecturesQuery.data]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("student_lectures_list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, async () => {
+        await qc.invalidateQueries({ queryKey: ["student", "lectures"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   return (
     <div className="container mx-auto px-4 py-8">
