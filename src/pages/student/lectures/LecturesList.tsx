@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LiveBadge from "@/components/lectures/LiveBadge";
+import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type LectureRow = {
   id: string;
@@ -23,6 +24,7 @@ type LectureRow = {
 
 export default function LecturesList() {
   const qc = useQueryClient();
+  const { justUpdated, markUpdated } = useRecentUpdate();
 
   const lecturesQuery = useQuery({
     queryKey: ["student", "lectures"],
@@ -51,6 +53,7 @@ export default function LecturesList() {
       .channel("student_lectures_list")
       .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, async () => {
         await qc.invalidateQueries({ queryKey: ["student", "lectures"] });
+        markUpdated();
       })
       .subscribe();
 
@@ -66,6 +69,9 @@ export default function LecturesList() {
           Lectures
         </h1>
         <p className="text-muted-foreground">Browse upcoming lectures and open details.</p>
+        {justUpdated ? (
+          <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p>
+        ) : null}
       </div>
 
       <div className="space-y-6">
