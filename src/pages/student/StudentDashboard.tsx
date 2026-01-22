@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import LiveBadge from "@/components/lectures/LiveBadge";
+import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type ProfileRow = {
   name: string;
@@ -54,6 +55,8 @@ function getTimeGreeting(now = new Date()) {
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+
+  const { justUpdated, markUpdated } = useRecentUpdate();
 
   const [stats, setStats] = useState({
     totalPoints: 0,
@@ -175,6 +178,8 @@ const StudentDashboard = () => {
         upcomingLectures: upcomingCountData?.length || 0,
         unreadNotifications: notificationsData?.length || 0,
       });
+
+      markUpdated();
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     }
@@ -193,6 +198,9 @@ const StudentDashboard = () => {
           <p className="text-muted-foreground">
             {greeting}, {name}
           </p>
+          {justUpdated ? (
+            <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">

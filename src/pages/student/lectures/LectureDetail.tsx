@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LiveBadge from "@/components/lectures/LiveBadge";
+import { useRecentUpdate } from "@/hooks/use-recent-update";
 import AttendanceMarkingCard from "@/pages/student/attendance/AttendanceMarkingCard";
 
 type LectureRow = {
@@ -31,6 +32,7 @@ export default function LectureDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const qc = useQueryClient();
+  const { justUpdated, markUpdated } = useRecentUpdate();
 
   const lectureQuery = useQuery({
     queryKey: ["student", "lecture", id],
@@ -61,6 +63,7 @@ export default function LectureDetail() {
         { event: "*", schema: "public", table: "lectures", filter: `id=eq.${id}` },
         async () => {
           await qc.invalidateQueries({ queryKey: ["student", "lecture", id] });
+          markUpdated();
         },
       )
       .subscribe();
@@ -100,6 +103,9 @@ export default function LectureDetail() {
               </span>
             </CardTitle>
             <CardDescription>Lecture details and flyer.</CardDescription>
+            {justUpdated ? (
+              <p className="text-xs text-muted-foreground">Last updated just now</p>
+            ) : null}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:grid-cols-3">
