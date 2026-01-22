@@ -92,6 +92,17 @@ export default function LectureManagementTab() {
       }
       const { error } = await supabase.from("lectures").update(patch).eq("id", id);
       if (error) throw error;
+
+      if (status === "live" || status === "ended") {
+        const { error: notifyErr } = await supabase.functions.invoke("lecture-status-notify", {
+          body: { lecture_id: id, status },
+        });
+        if (notifyErr) {
+          // Don't fail the lecture status update if notifications fail.
+          console.error("lecture-status-notify failed", notifyErr);
+          toast.error("Lecture updated, but sending the student notification failed.");
+        }
+      }
     },
     onSuccess: async () => {
       toast.success("Lecture updated");
