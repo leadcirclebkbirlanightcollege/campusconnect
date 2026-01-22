@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import LiveBadge from "@/components/lectures/LiveBadge";
 import AttendanceMarkingCard from "@/pages/student/attendance/AttendanceMarkingCard";
 
 type LectureRow = {
@@ -18,6 +19,7 @@ type LectureRow = {
   end_time: string;
   venue: string;
   flyer_object_path: string | null;
+  status?: "scheduled" | "live" | "ended";
 };
 
 function publicFlyerUrl(path: string) {
@@ -28,6 +30,7 @@ function publicFlyerUrl(path: string) {
 export default function LectureDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const qc = useQueryClient();
 
   const lectureQuery = useQuery({
     queryKey: ["student", "lecture", id],
@@ -36,7 +39,7 @@ export default function LectureDetail() {
       if (!id) return null;
       const { data, error } = await supabase
         .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path")
+        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -48,6 +51,24 @@ export default function LectureDetail() {
     const path = lectureQuery.data?.flyer_object_path;
     return path ? publicFlyerUrl(path) : null;
   }, [lectureQuery.data?.flyer_object_path]);
+
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`student_lecture_detail_${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "lectures", filter: `id=eq.${id}` },
+        async () => {
+          await qc.invalidateQueries({ queryKey: ["student", "lecture", id] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -71,7 +92,13 @@ export default function LectureDetail() {
       ) : (
         <Card className="border-primary/10">
           <CardHeader>
-            <CardTitle className="text-2xl">{lectureQuery.data.topic}</CardTitle>
+            <CardTitle className="text-2xl">
+              <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                {lectureQuery.data.topic}
+                {lectureQuery.data.status === "live" ? <LiveBadge /> : null}
+                {lectureQuery.data.status === "ended" ? <Badge variant="secondary">Ended</Badge> : null}
+              </span>
+            </CardTitle>
             <CardDescription>Lecture details and flyer.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
