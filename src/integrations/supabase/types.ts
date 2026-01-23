@@ -215,6 +215,8 @@ export type Database = {
       notifications: {
         Row: {
           body: string
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           created_by: string
           id: string
@@ -229,6 +231,8 @@ export type Database = {
         }
         Insert: {
           body: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -243,6 +247,8 @@ export type Database = {
         }
         Update: {
           body?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -431,7 +437,7 @@ export type Database = {
         | "completed"
       app_role: "admin" | "student"
       lecture_status: "scheduled" | "live" | "ended"
-      notification_status: "draft" | "scheduled" | "sent"
+      notification_status: "draft" | "scheduled" | "sent" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -567,7 +573,7 @@ export const Constants = {
       ],
       app_role: ["admin", "student"],
       lecture_status: ["scheduled", "live", "ended"],
-      notification_status: ["draft", "scheduled", "sent"],
+      notification_status: ["draft", "scheduled", "sent", "cancelled"],
     },
   },
 } as const
