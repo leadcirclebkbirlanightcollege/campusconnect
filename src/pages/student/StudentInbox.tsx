@@ -31,6 +31,7 @@ type NotificationRow = {
   body: string;
   created_at: string;
   sent_at: string | null;
+  status?: "draft" | "scheduled" | "sent" | "cancelled";
 };
 
 type InboxItem = {
@@ -77,7 +78,7 @@ export default function StudentInbox() {
 
       const { data, error } = await supabase
         .from("notifications")
-        .select("id,title,body,created_at,sent_at")
+        .select("id,title,body,created_at,sent_at,status")
         .in("id", ids);
       if (error) throw error;
 
@@ -100,6 +101,10 @@ export default function StudentInbox() {
           qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
         },
       )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "notifications"] });
+        qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
+      })
       .subscribe();
 
     return () => {
@@ -110,7 +115,9 @@ export default function StudentInbox() {
   const inboxItems = useMemo<InboxItem[]>(() => {
     const recs = recipientsQuery.data ?? [];
     const map = notificationsQuery.data ?? {};
-    return recs.map((r) => ({ recipient: r, notification: map[r.notification_id] ?? null }));
+    return recs
+      .map((r) => ({ recipient: r, notification: map[r.notification_id] ?? null }))
+      .filter((i) => i.notification?.status !== "cancelled");
   }, [recipientsQuery.data, notificationsQuery.data]);
 
   const unreadCount = useMemo(() => inboxItems.filter((i) => !i.recipient.read_at).length, [inboxItems]);

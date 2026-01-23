@@ -83,6 +83,14 @@ const StudentDashboard = () => {
       })
       .subscribe();
 
+    const notificationsMetaChannel = supabase
+      .channel("student_dashboard_notifications_meta")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        // Pick up edits/cancellations that affect the inbox count.
+        fetchDashboardStats();
+      })
+      .subscribe();
+
     const lecturesChannel = supabase
       .channel("student_dashboard_lectures")
       .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, () => {
@@ -93,6 +101,7 @@ const StudentDashboard = () => {
 
     return () => {
       supabase.removeChannel(notificationsChannel);
+      supabase.removeChannel(notificationsMetaChannel);
       supabase.removeChannel(lecturesChannel);
     };
   }, []);
@@ -132,9 +141,24 @@ const StudentDashboard = () => {
       // Fetch unread notifications
       const { data: notificationsData } = await supabase
         .from("notification_recipients")
-        .select("id")
+        .select("notification_id")
         .eq("user_id", user.id)
         .is("read_at", null);
+
+      const unreadNotificationIds = Array.from(
+        new Set((notificationsData ?? []).map((r: any) => r.notification_id).filter(Boolean) as string[]),
+      );
+
+      let unreadNotificationsCount = unreadNotificationIds.length;
+      if (unreadNotificationIds.length > 0) {
+        const { data: notifMeta, error: notifMetaError } = await supabase
+          .from("notifications")
+          .select("id,status")
+          .in("id", unreadNotificationIds);
+        if (!notifMetaError) {
+          unreadNotificationsCount = (notifMeta ?? []).filter((n: any) => n.status !== "cancelled").length;
+        }
+      }
 
       // Essential dashboard lists
       const { data: upcomingList } = await supabase
@@ -176,7 +200,7 @@ const StudentDashboard = () => {
         totalPoints,
         lecturesAttended: attendanceData?.length || 0,
         upcomingLectures: upcomingCountData?.length || 0,
-        unreadNotifications: notificationsData?.length || 0,
+        unreadNotifications: unreadNotificationsCount,
       });
 
       markUpdated();
