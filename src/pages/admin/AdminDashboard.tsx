@@ -11,6 +11,7 @@ import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settin
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
 import AdminAttendanceControlTab from "@/pages/admin/attendance/AdminAttendanceControlTab";
+import AdminMonthlyAttendance from "@/pages/admin/attendance/AdminMonthlyAttendance";
 import AdminNotificationCenterTab from "@/pages/admin/notifications/AdminNotificationCenterTab";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import PointsRulesSettings from "@/pages/admin/system/PointsRulesSettings";
@@ -89,7 +90,7 @@ const AdminDashboard = () => {
       </div>
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid grid-cols-8 w-full max-w-5xl">
+        <TabsList className="grid grid-cols-9 w-full max-w-5xl">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="w-4 h-4" />
             Overview
@@ -105,6 +106,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="attendance" className="gap-2">
             <CheckSquare className="w-4 h-4" />
             Attendance
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="gap-2">
+            <CheckSquare className="w-4 h-4" />
+            Monthly
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="w-4 h-4" />
@@ -217,6 +222,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="attendance">
           <AdminAttendanceControlTab />
+        </TabsContent>
+
+        <TabsContent value="monthly">
+          <AdminMonthlyAttendance />
         </TabsContent>
 
         <TabsContent value="notifications">
