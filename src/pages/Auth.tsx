@@ -51,11 +51,17 @@ const Auth = () => {
 
   const redirectToDashboard = async (userId: string) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.warn("Role lookup failed; defaulting to student:", error);
+        navigate("/student", { replace: true });
+        return;
+      }
 
       if (data?.role === "admin") {
         navigate("/admin", { replace: true });
@@ -115,10 +121,21 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const name = signupName.trim();
+      const email = signupEmail.trim();
+      const password = signupPassword;
+
+      if (!name) throw new Error("Name is required");
+      if (!email) throw new Error("Email is required");
+      if (!password) throw new Error("Password is required");
+
       // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: signupEmail,
-        password: signupPassword,
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
       });
 
       if (authError) throw authError;
@@ -130,8 +147,8 @@ const Auth = () => {
       // Create profile
       const { error: profileError } = await supabase.from("profiles").insert({
         user_id: authData.user.id,
-        name: signupName,
-        email: signupEmail,
+        name,
+        email,
         phone: signupPhone || null,
         student_id: signupStudentId || null,
         department: signupDepartment || null,

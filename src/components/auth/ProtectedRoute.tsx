@@ -47,10 +47,15 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      setUserRole(data?.role || null);
+      if (error) {
+        console.warn("Role lookup failed:", error);
+        setUserRole(null);
+        return;
+      }
+
+      setUserRole(data?.role ?? null);
     } catch (error) {
       console.error("Error fetching user role:", error);
       setUserRole(null);
