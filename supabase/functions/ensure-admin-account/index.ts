@@ -14,6 +14,9 @@ Deno.serve(async (req) => {
     const adminEmail = Deno.env.get('ADMIN_EMAIL')
     const adminPassword = Deno.env.get('ADMIN_PASSWORD')
 
+    const sharedAdminEmail = Deno.env.get('SHARED_ADMIN_EMAIL')
+    const sharedAdminPassword = Deno.env.get('SHARED_ADMIN_PASSWORD')
+
     if (!adminEmail || !adminPassword) {
       console.error('Missing ADMIN_EMAIL or ADMIN_PASSWORD environment variables')
       return new Response(
@@ -26,9 +29,9 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Check if admin user already exists
+    // Fetch users once, then ensure the required admin accounts exist.
     const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers()
-    
+
     if (listError) {
       console.error('Error listing users:', listError)
       return new Response(
@@ -37,79 +40,89 @@ Deno.serve(async (req) => {
       )
     }
 
-    const existingAdmin = existingUsers.users.find(user => user.email === adminEmail)
+    const ensureAdminAccount = async (email: string, password: string, displayName: string) => {
+      const existing = existingUsers.users.find((u) => u.email === email)
+      const userId = existing?.id
 
-    if (existingAdmin) {
-      // Check if admin role exists
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', existingAdmin.id)
-        .single()
-
-      if (!roleData) {
-        // Add admin role if missing
-        await supabase.from('user_roles').insert({
-          user_id: existingAdmin.id,
-          role: 'admin'
+      let ensuredUserId = userId
+      if (!ensuredUserId) {
+        const { data: created, error: createError } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
         })
 
-        console.log('Admin role added to existing user')
+        if (createError || !created?.user?.id) {
+          console.error('Error creating admin user:', createError)
+          throw new Error('Failed to create admin user')
+        }
+
+        ensuredUserId = created.user.id
+        console.log('Admin account created:', ensuredUserId)
       }
 
-      return new Response(
-        JSON.stringify({ message: 'Admin account already exists', userId: existingAdmin.id }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      // Ensure profile exists
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', ensuredUserId)
+        .maybeSingle()
+
+      if (!profile) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          user_id: ensuredUserId,
+          name: displayName,
+          email,
+        })
+        if (profileError) {
+          // Not fatal; role is more important than profile.
+          console.error('Error creating admin profile:', profileError)
+        }
+      }
+
+      // Ensure admin role exists
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', ensuredUserId)
+        .eq('role', 'admin')
+        .maybeSingle()
+
+      if (!roleData) {
+        const { error: roleError } = await supabase.from('user_roles').insert({
+          user_id: ensuredUserId,
+          role: 'admin',
+        })
+
+        if (roleError) {
+          console.error('Error creating admin role:', roleError)
+          throw new Error('Failed to assign admin role')
+        }
+      }
+
+      return ensuredUserId
+    }
+
+    const results: Record<string, string> = {}
+
+    results.primaryAdminUserId = await ensureAdminAccount(
+      adminEmail,
+      adminPassword,
+      'System Administrator'
+    )
+
+    if (sharedAdminEmail && sharedAdminPassword) {
+      results.sharedAdminUserId = await ensureAdminAccount(
+        sharedAdminEmail,
+        sharedAdminPassword,
+        'Shared Admin'
       )
+    } else {
+      console.log('Shared admin secrets not set; skipping shared admin provisioning')
     }
-
-    // Create admin user
-    const { data: authData, error: createError } = await supabase.auth.admin.createUser({
-      email: adminEmail,
-      password: adminPassword,
-      email_confirm: true
-    })
-
-    if (createError) {
-      console.error('Error creating admin user:', createError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to create admin user' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Create profile
-    const { error: profileError } = await supabase.from('profiles').insert({
-      user_id: authData.user.id,
-      name: 'System Administrator',
-      email: adminEmail
-    })
-
-    if (profileError) {
-      console.error('Error creating admin profile:', profileError)
-    }
-
-    // Add admin role
-    const { error: roleError } = await supabase.from('user_roles').insert({
-      user_id: authData.user.id,
-      role: 'admin'
-    })
-
-    if (roleError) {
-      console.error('Error creating admin role:', roleError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to assign admin role' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    console.log('Admin account created successfully:', authData.user.id)
 
     return new Response(
-      JSON.stringify({ 
-        message: 'Admin account created successfully', 
-        userId: authData.user.id 
-      }),
+      JSON.stringify({ message: 'Admin accounts ensured', ...results }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
