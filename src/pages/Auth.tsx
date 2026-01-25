@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { GraduationCap, Loader2 } from "lucide-react";
-import { User } from "@supabase/supabase-js";
+import FullPageLoader from "@/components/system/FullPageLoader";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { status, role } = useAuth();
 
   // Login form
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -29,49 +30,12 @@ const Auth = () => {
   const [signupClass, setSignupClass] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        redirectToDashboard(session.user.id);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          redirectToDashboard(session.user.id);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const redirectToDashboard = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.warn("Role lookup failed; defaulting to student:", error);
-        navigate("/student", { replace: true });
-        return;
-      }
-
-      if (data?.role === "admin") {
-        navigate("/admin", { replace: true });
-      } else {
-        navigate("/student", { replace: true });
-      }
-    } catch (error) {
-      console.error("Error fetching role:", error);
+    if (status === "loading") return;
+    if (status === "authenticated") {
+      if (role === "admin") navigate("/admin", { replace: true });
+      else navigate("/student", { replace: true });
     }
-  };
+  }, [navigate, role, status]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,10 +69,7 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Login successful!");
-      
-      if (data.user) {
-        redirectToDashboard(data.user.id);
-      }
+      // Navigation is handled by the global auth state.
     } catch (error: any) {
       toast.error(error.message || "Login failed");
     } finally {
@@ -166,7 +127,7 @@ const Auth = () => {
       if (roleError) throw roleError;
 
       toast.success("Account created successfully!");
-      navigate("/student", { replace: true });
+      // Navigation is handled by the global auth state.
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
@@ -174,7 +135,9 @@ const Auth = () => {
     }
   };
 
-  if (user) {
+  if (status === "loading") return <FullPageLoader label="Loading…" />;
+
+  if (status === "authenticated") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
