@@ -1,13 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, MapPin, FileText, Image as ImageIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import LiveBadge from "@/components/lectures/LiveBadge";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 import AttendanceMarkingCard from "@/pages/student/attendance/AttendanceMarkingCard";
@@ -54,6 +55,16 @@ export default function LectureDetail() {
     return path ? publicFlyerUrl(path) : null;
   }, [lectureQuery.data?.flyer_object_path]);
 
+  const flyerKind = useMemo<"image" | "pdf" | "unknown" | "none">(() => {
+    const path = lectureQuery.data?.flyer_object_path;
+    if (!path) return "none";
+    const ext = path.split("?")[0]?.split("#")[0]?.split(".").pop()?.toLowerCase();
+    if (!ext) return "unknown";
+    if (ext === "pdf") return "pdf";
+    if (["png", "jpg", "jpeg", "webp", "gif", "avif", "svg"].includes(ext)) return "image";
+    return "unknown";
+  }, [lectureQuery.data?.flyer_object_path]);
+
   useEffect(() => {
     if (!id) return;
     const channel = supabase
@@ -92,77 +103,87 @@ export default function LectureDetail() {
         <Card className="border-primary/10">
           <CardContent className="py-10 text-center text-muted-foreground">Lecture not found.</CardContent>
         </Card>
-      ) : (
-        <Card className="border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-                {lectureQuery.data.topic}
-                {lectureQuery.data.status === "live" ? <LiveBadge /> : null}
-                {lectureQuery.data.status === "ended" ? <Badge variant="secondary">Ended</Badge> : null}
-              </span>
-            </CardTitle>
-            <CardDescription>Lecture details and flyer.</CardDescription>
-            {justUpdated ? (
-              <p className="text-xs text-muted-foreground">Last updated just now</p>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-border/60 p-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" /> Date
-                </div>
-                <div className="font-medium">{lectureQuery.data.lecture_date}</div>
-              </div>
-              <div className="rounded-lg border border-border/60 p-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" /> Time
-                </div>
-                <div className="font-medium">
-                  {lectureQuery.data.start_time}–{lectureQuery.data.end_time}
-                </div>
-              </div>
-              <div className="rounded-lg border border-border/60 p-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" /> Venue
-                </div>
-                <div className="font-medium">{lectureQuery.data.venue}</div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border/60 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Flyer</span>
-                </div>
-                {flyerUrl ? <Badge variant="secondary">Available</Badge> : <Badge variant="secondary">None</Badge>}
-              </div>
-
-              {flyerUrl ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button asChild variant="outline" className="gap-2">
-                    <a href={flyerUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      Open flyer
-                    </a>
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    If the flyer is an image, your browser will preview it.
-                  </p>
-                </div>
+       ) : (
+        <div className="space-y-4">
+          {/* Hero cover image (static, non-clickable) */}
+          <Card className="overflow-hidden border-primary/10">
+            <AspectRatio ratio={16 / 9}>
+              {flyerUrl && flyerKind === "image" ? (
+                <img
+                  src={flyerUrl}
+                  alt={`Lecture flyer for ${lectureQuery.data.topic}`}
+                  loading="lazy"
+                  className="h-full w-full select-none object-cover"
+                  draggable={false}
+                />
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">No flyer uploaded for this lecture.</p>
+                <div className="flex h-full w-full items-center justify-center bg-muted">
+                  <div className="flex flex-col items-center gap-2 px-6 text-center">
+                    {flyerKind === "pdf" ? (
+                      <FileText className="h-8 w-8 text-muted-foreground" />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    )}
+                    <p className="text-sm font-medium text-foreground">
+                      {flyerKind === "pdf"
+                        ? "Flyer uploaded (PDF)"
+                        : flyerKind === "none"
+                          ? "No flyer uploaded"
+                          : "Flyer unavailable"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      The flyer stays embedded on this page and won’t open separately.
+                    </p>
+                  </div>
+                </div>
               )}
-            </div>
+            </AspectRatio>
+          </Card>
 
-            <AttendanceMarkingCard
-              lectureId={lectureQuery.data.id}
-              initialToken={searchParams.get("token") ?? undefined}
-            />
-          </CardContent>
-        </Card>
+          {/* Details */}
+          <Card className="border-primary/10">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl">
+                <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {lectureQuery.data.topic}
+                  {lectureQuery.data.status === "live" ? <LiveBadge /> : null}
+                  {lectureQuery.data.status === "ended" ? <Badge variant="secondary">Ended</Badge> : null}
+                </span>
+              </CardTitle>
+              <CardDescription>Lecture details.</CardDescription>
+              {justUpdated ? <p className="text-xs text-muted-foreground">Last updated just now</p> : null}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border border-border/60 p-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4" /> Date
+                  </div>
+                  <div className="font-medium">{lectureQuery.data.lecture_date}</div>
+                </div>
+                <div className="rounded-lg border border-border/60 p-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" /> Time
+                  </div>
+                  <div className="font-medium">
+                    {lectureQuery.data.start_time}–{lectureQuery.data.end_time}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border/60 p-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" /> Venue
+                  </div>
+                  <div className="font-medium">{lectureQuery.data.venue}</div>
+                </div>
+              </div>
+
+              <AttendanceMarkingCard
+                lectureId={lectureQuery.data.id}
+                initialToken={searchParams.get("token") ?? undefined}
+              />
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
