@@ -19,7 +19,6 @@
  } from "@/components/ui/sidebar";
  import { Badge } from "@/components/ui/badge";
  import { Separator } from "@/components/ui/separator";
- import { ThemeToggle } from "@/components/theme/ThemeToggle";
  
  const navItems = [
    { title: "Dashboard", url: "/student", icon: Home },
@@ -110,13 +109,6 @@
              </SidebarMenu>
            </SidebarGroupContent>
          </SidebarGroup>
- 
-         <Separator />
- 
-         {/* Theme Toggle */}
-         <div className="p-4">
-           <ThemeToggle />
-         </div>
  
          <Separator />
  

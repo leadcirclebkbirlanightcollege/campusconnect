@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
- /* Theme transition */
- * {
-   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
- }
- 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
