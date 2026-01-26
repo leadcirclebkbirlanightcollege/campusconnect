@@ -15,6 +15,7 @@
    useSidebar,
  } from "@/components/ui/sidebar";
  import { Separator } from "@/components/ui/separator";
+ import { ThemeToggle } from "@/components/theme/ThemeToggle";
  
  const navItems = [
    { title: "Admin Dashboard", url: "/admin", icon: LayoutDashboard, hash: "" },
@@ -91,6 +92,13 @@
              </SidebarMenu>
            </SidebarGroupContent>
          </SidebarGroup>
+ 
+         <Separator />
+ 
+         {/* Theme Toggle */}
+         <div className="p-4">
+           <ThemeToggle />
+         </div>
  
          <Separator />
  
