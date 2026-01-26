@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useMutation } from "@tanstack/react-query";
+ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Camera, CheckCircle2, KeyRound, QrCode } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+ import { useAuth } from "@/contexts/AuthContext";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,11 +46,38 @@ function safeErrorMessage(e: unknown) {
 
 export default function AttendanceMarkingCard({ lectureId, initialToken }: Props) {
   const reduceMotion = useReducedMotion();
+   const { user } = useAuth();
 
   const [otp, setOtp] = useState("");
   const [token, setToken] = useState(initialToken ?? "");
   const [success, setSuccess] = useState<{ at: number; points: number } | null>(null);
 
+   // Check if attendance already marked
+   const existingAttendanceQuery = useQuery({
+     queryKey: ["attendance", "check", lectureId, user?.id],
+     enabled: Boolean(lectureId && user?.id),
+     queryFn: async () => {
+       const { data, error } = await supabase
+         .from("attendance")
+         .select("id,points_earned,marked_at")
+         .eq("lecture_id", lectureId)
+         .eq("student_user_id", user!.id)
+         .maybeSingle();
+       if (error) throw error;
+       return data;
+     },
+   });
+ 
+   // If attendance exists, set success state
+   useEffect(() => {
+     if (existingAttendanceQuery.data && !success) {
+       setSuccess({
+         at: new Date(existingAttendanceQuery.data.marked_at).getTime(),
+         points: existingAttendanceQuery.data.points_earned,
+       });
+     }
+   }, [existingAttendanceQuery.data, success]);
+ 
   const canSubmitOtp = otp.trim().length === 6;
   const canSubmitToken = token.trim().length >= 16;
 
@@ -75,6 +103,8 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     onSuccess: (data) => {
       const points = data?.pointsEarned ?? 0;
       setSuccess({ at: Date.now(), points });
+       // Invalidate the check query so it reflects the new state
+       existingAttendanceQuery.refetch();
       toast.success("Attendance marked");
     },
     onError: (e) => {
@@ -89,23 +119,25 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     if (!t) return;
     if (success) return;
     if (markMutation.isPending) return;
+     if (existingAttendanceQuery.data) return; // Don't auto-submit if already marked
     if (token.trim() !== t) setToken(t);
 
     if (t.length >= 16) {
       markMutation.mutate({ token: t });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialToken]);
+   }, [initialToken, existingAttendanceQuery.data]);
 
   // Live validation: auto-submit when OTP reaches 6 digits
   useEffect(() => {
     if (!canSubmitOtp) return;
     if (markMutation.isPending) return;
     if (success) return;
+     if (existingAttendanceQuery.data) return; // Don't auto-submit if already marked
 
     markMutation.mutate({ otp: otp.trim() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canSubmitOtp]);
+   }, [canSubmitOtp, existingAttendanceQuery.data]);
 
   const anim = useMemo(
     () => ({
@@ -125,37 +157,49 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
           Mark Attendance
         </CardTitle>
         <CardDescription>
-          Use the 6-digit OTP or scan the QR code. We validate instantly and show a success confirmation.
+         {existingAttendanceQuery.data
+           ? "Your attendance has already been recorded for this lecture."
+           : "Use the 6-digit OTP or scan the QR code. We validate instantly and show a success confirmation."}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
+       {existingAttendanceQuery.isLoading ? (
+         <div className="rounded-lg border border-border/60 p-4 text-center text-sm text-muted-foreground">
+           Checking attendance status…
+         </div>
+       ) : null}
+ 
         <AnimatePresence mode="wait">
-          {success ? (
+         {success || existingAttendanceQuery.data ? (
             <motion.div key="success" {...anim} className="rounded-lg border border-success/30 bg-success/10 p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5">
                   <CheckCircle2 className="h-6 w-6 text-success" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">Attendance recorded</div>
+                 <div className="font-medium">✅ Attendance already marked</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    {success.points > 0 ? `You earned ${success.points} points.` : "You're all set for this lecture."}
+                   {success && success.points > 0
+                     ? `You earned ${success.points} points.`
+                     : "You're all set for this lecture."}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Badge className="bg-success text-success-foreground">Present</Badge>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSuccess(null);
-                        setOtp("");
-                        setToken("");
-                      }}
-                    >
-                      Mark again
-                    </Button>
-                  </div>
+                 {!existingAttendanceQuery.data && (
+                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                     <Badge className="bg-success text-success-foreground">Present</Badge>
+                     <Button
+                       variant="outline"
+                       onClick={() => {
+                         setSuccess(null);
+                         setOtp("");
+                         setToken("");
+                       }}
+                     >
+                       Mark again
+                     </Button>
+                   </div>
+                 )}
                 </div>
               </div>
             </motion.div>
