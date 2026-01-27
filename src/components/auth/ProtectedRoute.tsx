@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import FullPageLoader from "@/components/system/FullPageLoader";
 import { useAuth } from "@/contexts/AuthContext";
+import AccountSetupFallback from "@/components/auth/AccountSetupFallback";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
   // Authenticated session but role not resolved yet: block routing to prevent redirect loops.
   if (status === "authenticated" && role === null) {
-    return <FullPageLoader label="Loading your account…" />;
+    return <AccountSetupFallback />;
   }
 
   if (status === "unauthenticated") {
