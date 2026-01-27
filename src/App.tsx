@@ -17,13 +17,19 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import RoleShell from "./components/layout/RoleShell";
-import AppShell from "./components/layout/AppShell";
-import AdminShell from "./components/layout/AdminShell";
 import ErrorBoundary from "@/components/system/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import FullPageLoader from "@/components/system/FullPageLoader";
+import SidebarLayout from "@/components/layout/SidebarLayout";
 
 const queryClient = new QueryClient();
+
+const AuthGate = ({ children }: { children: React.ReactNode }) => {
+  const { status } = useAuth();
+  if (status === "loading") return <FullPageLoader label="Checking session…" />;
+  return <>{children}</>;
+};
 
 const App = () => (
   <ErrorBoundary>
@@ -33,114 +39,116 @@ const App = () => (
           <AppSplash />
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
+          <AuthGate>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
 
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentDashboard />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/student"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <StudentDashboard />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/student/profile"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentProfile />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/student/profile"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <StudentProfile />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/student/inbox"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentInbox />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/student/inbox"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <StudentInbox />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/student/scan"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentScanAttendance />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/student/scan"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <StudentScanAttendance />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentAttendanceHistory />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/attendance"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <StudentAttendanceHistory />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/lectures"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <LecturesList />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/lectures"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <LecturesList />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/lectures/:id"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <LectureDetail />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/lectures/:id"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <SidebarLayout>
+                        <LectureDetail />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminShell>
-                  <AdminDashboard />
-                </AdminShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <SidebarLayout>
+                        <AdminDashboard />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-          <Route
-            path="/leaderboard"
-            element={
-              <ProtectedRoute>
-                <RoleShell>
-                  <Leaderboard />
-                </RoleShell>
-              </ProtectedRoute>
-            }
-          />
+                <Route
+                  path="/leaderboard"
+                  element={
+                    <ProtectedRoute>
+                      <SidebarLayout>
+                        <Leaderboard />
+                      </SidebarLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthGate>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
