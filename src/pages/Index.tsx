@@ -12,6 +12,7 @@ const Index = () => {
 
   useEffect(() => {
     if (status !== "authenticated") return;
+    if (role === null) return;
     if (role === "admin") navigate("/admin", { replace: true });
     else if (role === "student") navigate("/student", { replace: true });
   }, [navigate, role, status]);
