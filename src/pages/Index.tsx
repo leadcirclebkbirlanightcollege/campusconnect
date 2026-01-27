@@ -1,23 +1,52 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import AppShell from "@/components/layout/AppShell";
-import { GraduationCap, Calendar, Trophy, Bell, ArrowRight, CheckCircle } from "lucide-react";
-import FullPageLoader from "@/components/system/FullPageLoader";
-import { useAuth } from "@/contexts/AuthContext";
+import { GraduationCap, Calendar, Trophy, Bell, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { status, role } = useAuth();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
-    if (role === null) return;
-    if (role === "admin") navigate("/admin", { replace: true });
-    else if (role === "student") navigate("/student", { replace: true });
-  }, [navigate, role, status]);
+    let mounted = true;
 
-  if (status === "loading") return <FullPageLoader label="Loading…" />;
+    const run = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user;
+        if (!user) return;
+
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!mounted) return;
+
+        if (data?.role === "admin") navigate("/admin", { replace: true });
+        else navigate("/student", { replace: true });
+      } finally {
+        if (mounted) setChecking(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <AppShell>
