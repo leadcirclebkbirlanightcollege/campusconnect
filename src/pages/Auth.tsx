@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { GraduationCap, Loader2 } from "lucide-react";
 import FullPageLoader from "@/components/system/FullPageLoader";
 import { useAuth } from "@/contexts/AuthContext";
+import AccountSetupFallback from "@/components/auth/AccountSetupFallback";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -140,7 +141,7 @@ const Auth = () => {
   if (status === "loading") return <FullPageLoader label="Loading…" />;
 
   if (status === "authenticated") {
-    if (role === null) return <FullPageLoader label="Loading your account…" />;
+    if (role === null) return <AccountSetupFallback />;
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
