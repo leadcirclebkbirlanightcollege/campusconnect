@@ -14,7 +14,7 @@ const Index = () => {
     if (status !== "authenticated") return;
     if (role === "admin") navigate("/admin", { replace: true });
     else if (role === "student") navigate("/student", { replace: true });
-  }, [navigate]);
+  }, [navigate, role, status]);
 
   if (status === "loading") return <FullPageLoader label="Loading…" />;
 
