@@ -14,6 +14,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <FullPageLoader label="Checking session…" />;
   }
 
+  // Authenticated session but role not resolved yet: block routing to prevent redirect loops.
+  if (status === "authenticated" && role === null) {
+    return <FullPageLoader label="Loading your account…" />;
+  }
+
   if (status === "unauthenticated") {
     return <Navigate to="/auth" replace />;
   }

@@ -32,6 +32,8 @@ const Auth = () => {
   useEffect(() => {
     if (status === "loading") return;
     if (status === "authenticated") {
+      // Wait for role resolution to avoid redirect loops (/auth <-> /student).
+      if (role === null) return;
       if (role === "admin") navigate("/admin", { replace: true });
       else navigate("/student", { replace: true });
     }
@@ -138,6 +140,7 @@ const Auth = () => {
   if (status === "loading") return <FullPageLoader label="Loading…" />;
 
   if (status === "authenticated") {
+    if (role === null) return <FullPageLoader label="Loading your account…" />;
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
