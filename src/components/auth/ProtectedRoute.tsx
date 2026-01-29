@@ -76,14 +76,16 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (requiredRole && userRole !== requiredRole) {
-    // Redirect to appropriate dashboard based on role
-    if (userRole === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else if (userRole === "student") {
-      return <Navigate to="/student" replace />;
-    }
-    return <Navigate to="/auth" replace />;
+  // IMPORTANT:
+  // If `user_roles` row is missing (or hasn't propagated yet), default to STUDENT.
+  // This prevents an infinite redirect loop: /student -> /auth -> /student ...
+  if (requiredRole === "admin") {
+    if (userRole !== "admin") return <Navigate to="/student" replace />;
+  }
+
+  if (requiredRole === "student") {
+    // Allow student access when role is null/unknown (default student)
+    if (userRole === "admin") return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
