@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.notification-scheduler]
 verify_jwt = false
+
+[functions.admin-backfill-user-roles]
+verify_jwt = false
