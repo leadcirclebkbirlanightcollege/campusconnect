@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AppSplash from "@/components/pwa/AppSplash";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -29,6 +30,7 @@ const App = () => (
       <AppSplash />
       <Toaster />
       <Sonner />
+      <SpeedInsights />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
