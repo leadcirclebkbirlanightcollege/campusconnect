@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AppSplash from "@/components/pwa/AppSplash";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -17,9 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import RoleShell from "./components/layout/RoleShell";
-import AppShell from "./components/layout/AppShell";
-import AdminShell from "./components/layout/AdminShell";
+import AppLayout from "./components/layout/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -34,104 +33,45 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
 
+          {/* Canonical authenticated routes */}
           <Route
-            path="/student"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentDashboard />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/student/profile"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentProfile />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/student/inbox"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentInbox />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/student/scan"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentScanAttendance />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <StudentAttendanceHistory />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/lectures"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <LecturesList />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/lectures/:id"
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AppShell>
-                  <LectureDetail />
-                </AppShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminShell>
-                  <AdminDashboard />
-                </AdminShell>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/leaderboard"
+            path="/app"
             element={
               <ProtectedRoute>
-                <RoleShell>
-                  <Leaderboard />
-                </RoleShell>
+                <AppLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="profile" element={<StudentProfile />} />
+            <Route path="inbox" element={<StudentInbox />} />
+            <Route path="scan" element={<StudentScanAttendance />} />
+            <Route path="attendance" element={<StudentAttendanceHistory />} />
+            <Route path="lectures" element={<LecturesList />} />
+            <Route path="lectures/:id" element={<LectureDetail />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
+
+            <Route
+              path="admin/dashboard"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* Legacy routes kept as redirects */}
+          <Route path="/student" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/student/profile" element={<Navigate to="/app/profile" replace />} />
+          <Route path="/student/inbox" element={<Navigate to="/app/inbox" replace />} />
+          <Route path="/student/scan" element={<Navigate to="/app/scan" replace />} />
+          <Route path="/attendance" element={<Navigate to="/app/attendance" replace />} />
+          <Route path="/lectures" element={<Navigate to="/app/lectures" replace />} />
+          <Route path="/lectures/:id" element={<Navigate to="/app/lectures/:id" replace />} />
+          <Route path="/admin" element={<Navigate to="/app/admin/dashboard" replace />} />
+          <Route path="/leaderboard" element={<Navigate to="/app/leaderboard" replace />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -5,7 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settings, Shield, Coins } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
@@ -21,6 +23,22 @@ import AdminPointsAdjustmentsTab from "@/pages/admin/system/AdminPointsAdjustmen
 const AdminDashboard = () => {
   const location = useLocation();
   const [tab, setTab] = useState("overview");
+  const isMobile = useIsMobile();
+
+  const tabItems = useMemo(
+    () => [
+      { value: "overview", label: "Overview", icon: LayoutDashboard },
+      { value: "students", label: "Students", icon: Users },
+      { value: "lectures", label: "Lectures", icon: BookOpen },
+      { value: "attendance", label: "Attendance", icon: CheckSquare },
+      { value: "monthly", label: "Monthly", icon: CheckSquare },
+      { value: "notifications", label: "Notifications", icon: Bell },
+      { value: "points", label: "Points", icon: Coins },
+      { value: "settings", label: "Settings", icon: Settings },
+      { value: "admin_profile", label: "Admin", icon: Shield },
+    ],
+    [],
+  );
 
   const { startIso, endIso, todayDate } = useMemo(() => {
     const now = new Date();
@@ -81,7 +99,7 @@ const AdminDashboard = () => {
   }, [location.hash]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-0 sm:px-4 py-2 sm:py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">
           Admin Dashboard
@@ -89,47 +107,38 @@ const AdminDashboard = () => {
         <p className="text-muted-foreground">Manage lectures, students, attendance, and notifications</p>
       </div>
 
-        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid grid-cols-9 w-full max-w-5xl">
-          <TabsTrigger value="overview" className="gap-2">
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="students" className="gap-2">
-            <Users className="w-4 h-4" />
-            Students
-          </TabsTrigger>
-          <TabsTrigger value="lectures" className="gap-2">
-            <BookOpen className="w-4 h-4" />
-            Lectures
-          </TabsTrigger>
-          <TabsTrigger value="attendance" className="gap-2">
-            <CheckSquare className="w-4 h-4" />
-            Attendance
-          </TabsTrigger>
-          <TabsTrigger value="monthly" className="gap-2">
-            <CheckSquare className="w-4 h-4" />
-            Monthly
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="w-4 h-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="points" className="gap-2">
-            <Coins className="w-4 h-4" />
-            Points
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2">
-            <Settings className="w-4 h-4" />
-            Settings
-          </TabsTrigger>
-          <TabsTrigger value="admin_profile" className="gap-2">
-            <Shield className="w-4 h-4" />
-            Admin
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+        {/* Mobile: dropdown selector */}
+        {isMobile ? (
+          <div className="px-4">
+            <Select value={tab} onValueChange={setTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                {tabItems.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <TabsList className="w-full max-w-5xl flex flex-wrap gap-2 h-auto bg-muted/60">
+            {tabItems.map((t) => {
+              const Icon = t.icon;
+              return (
+                <TabsTrigger key={t.value} value={t.value} className="gap-2 h-10">
+                  <Icon className="w-4 h-4" />
+                  {t.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        )}
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="px-4 sm:px-0">
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="border-primary/10 hover:shadow-premium transition-all">
               <CardHeader>
@@ -212,37 +221,37 @@ const AdminDashboard = () => {
            </div>
          </TabsContent>
 
-        <TabsContent value="students">
+        <TabsContent value="students" className="px-4 sm:px-0">
           <StudentManagementTab />
         </TabsContent>
 
-        <TabsContent value="lectures">
+        <TabsContent value="lectures" className="px-4 sm:px-0">
           <LectureManagementTab />
         </TabsContent>
 
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="px-4 sm:px-0">
           <AdminAttendanceControlTab />
         </TabsContent>
 
-        <TabsContent value="monthly">
+        <TabsContent value="monthly" className="px-4 sm:px-0">
           <AdminMonthlyAttendance />
         </TabsContent>
 
-        <TabsContent value="notifications">
+        <TabsContent value="notifications" className="px-4 sm:px-0">
           <AdminNotificationCenterTab />
         </TabsContent>
 
-        <TabsContent value="points">
+        <TabsContent value="points" className="px-4 sm:px-0">
           <AdminPointsAdjustmentsTab />
         </TabsContent>
 
-        <TabsContent value="settings">
+        <TabsContent value="settings" className="px-4 sm:px-0">
           <div className="space-y-6">
             <PointsRulesSettings />
           </div>
         </TabsContent>
 
-        <TabsContent value="admin_profile">
+        <TabsContent value="admin_profile" className="px-4 sm:px-0">
           <AdminProfileSettings />
         </TabsContent>
       </Tabs>
