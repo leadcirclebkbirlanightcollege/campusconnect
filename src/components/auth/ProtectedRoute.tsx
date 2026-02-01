@@ -80,12 +80,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   // If `user_roles` row is missing (or hasn't propagated yet), default to STUDENT.
   // This prevents an infinite redirect loop: /student -> /auth -> /student ...
   if (requiredRole === "admin") {
-    if (userRole !== "admin") return <Navigate to="/student" replace />;
+    if (userRole !== "admin") return <Navigate to="/app/dashboard" replace />;
   }
 
   if (requiredRole === "student") {
     // Allow student access when role is null/unknown (default student)
-    if (userRole === "admin") return <Navigate to="/admin" replace />;
+    if (userRole === "admin") return <Navigate to="/app/admin/dashboard" replace />;
   }
 
   return <>{children}</>;

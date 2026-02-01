@@ -125,6 +125,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  /* Smooth theme transitions without layout shift */
+  * {
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
   }
 
   @keyframes fade-in {

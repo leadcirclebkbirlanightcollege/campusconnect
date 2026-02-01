@@ -293,7 +293,7 @@ export default function AdminMonthlyAttendance() {
             <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
           </div>
 
-          <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <Button type="button" variant="outline" onClick={exportCsv} disabled={!sheetQuery.data}>
               Export CSV
             </Button>
@@ -324,8 +324,9 @@ export default function AdminMonthlyAttendance() {
             <div className="text-sm text-muted-foreground">No lectures found for this month.</div>
           ) : (
             <ScrollArea className="w-full">
-              <div className="min-w-[900px]">
-                <Table>
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-max">
+                  <Table className="text-xs sm:text-sm">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[220px]">Student</TableHead>
@@ -356,7 +357,8 @@ export default function AdminMonthlyAttendance() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                  </Table>
+                </div>
               </div>
             </ScrollArea>
           )}
