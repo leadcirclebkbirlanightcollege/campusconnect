@@ -63,22 +63,22 @@ export default function AdminPointsAdjustmentsTab() {
 
   const adjustMutation = useMutation({
     mutationFn: async (payload: { userId: string; pointsDelta: number; reason: string }) => {
-      const { data: auth } = await supabase.auth.getUser();
-      const adminId = auth.user?.id;
-      if (!adminId) throw new Error("Not logged in");
-
-      const { error } = await supabase.from("points_ledger").insert({
-        user_id: payload.userId,
-        points: payload.pointsDelta,
-        source: "admin_adjustment",
-        note: payload.reason,
-        created_by: adminId,
-        metadata: {
-          kind: payload.pointsDelta > 0 ? "add" : "deduct",
+      const { data, error } = await supabase.functions.invoke("admin-adjust-points", {
+        body: {
+          userId: payload.userId,
+          pointsDelta: payload.pointsDelta,
           reason: payload.reason,
         },
       });
-      if (error) throw error;
+
+      if (error) {
+        // `error` can be a FunctionsHttpError or similar; normalize message.
+        throw new Error(error.message || "Failed to update points");
+      }
+
+      if ((data as any)?.error) {
+        throw new Error(String((data as any).error));
+      }
     },
     onSuccess: () => toast.success("Points updated"),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update points"),
