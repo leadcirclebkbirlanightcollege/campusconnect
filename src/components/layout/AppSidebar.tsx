@@ -123,6 +123,27 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <a
+          href="https://campus-bookings.vercel.app/login"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={
+            "group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium tracking-wide text-premium " +
+            "underline-offset-4 transition-all hover:underline hover:[filter:drop-shadow(0_0_10px_hsl(var(--premium)/0.35))] " +
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          }
+          aria-label="Open Campus Screening Portal (opens in new tab)"
+          title={isCollapsed ? "Campus Screening Portal" : undefined}
+        >
+          {!isCollapsed ? (
+            <span>Campus Screening Portal</span>
+          ) : (
+            <span className="text-[10px] tracking-[0.25em]">CSP</span>
+          )}
+          {/* subtle affordance */}
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+
         <ThemeToggle />
         {!isCollapsed ? (
           <p className="px-2 pb-2 text-[11px] leading-snug text-sidebar-foreground/70">
