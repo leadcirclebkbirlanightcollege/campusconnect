@@ -128,7 +128,7 @@ export default function AppSidebar() {
           target="_blank"
           rel="noopener noreferrer"
           className={
-            "group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium tracking-wide text-premium " +
+            "group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium tracking-wide !text-premium " +
             "underline-offset-4 transition-all hover:underline hover:[filter:drop-shadow(0_0_10px_hsl(var(--premium)/0.35))] " +
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           }
