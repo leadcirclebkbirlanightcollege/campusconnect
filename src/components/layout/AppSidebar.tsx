@@ -124,7 +124,7 @@ export default function AppSidebar() {
 
       <SidebarFooter>
         <a
-          href="https://campus-bookings.vercel.app/login"
+          href="https://campus-bookings.vercel.app/"
           target="_blank"
           rel="noopener noreferrer"
           className={
