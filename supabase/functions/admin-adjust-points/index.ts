@@ -2,8 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.90.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function json(status: number, body: Record<string, unknown>) {
@@ -75,8 +74,7 @@ Deno.serve(async (req) => {
     const { error: insertError } = await admin.from("points_ledger").insert({
       user_id: userId,
       points: pointsDelta,
-      // Allowed by DB constraint points_ledger_source_check
-      source: "manual",
+      source: "admin_adjustment",
       note: reason,
       created_by: adminUserId,
       metadata: {

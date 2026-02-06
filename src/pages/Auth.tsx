@@ -165,13 +165,8 @@ const Auth = () => {
 
       if (roleError) throw roleError;
 
-      toast.success("Account created — please verify your email to activate your account.");
-      toast.message("We sent you a verification link. Open your inbox and click 'Verify Email' to continue.");
-
-      // When email verification is required, the auth provider will not create an active session yet.
-      // Redirect to a dedicated screen where the user can resend/change email.
-      setSignupPassword("");
-      navigate(`/auth/verify?email=${encodeURIComponent(email)}`, { replace: true });
+      toast.success("Account created successfully!");
+      navigate("/app/dashboard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
