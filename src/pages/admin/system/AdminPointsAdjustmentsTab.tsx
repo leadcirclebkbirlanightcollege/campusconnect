@@ -18,6 +18,24 @@ type StudentOption = {
   student_id: string | null;
 };
 
+function functionsErrorMessage(e: unknown) {
+  const anyErr = e as any;
+  const bodyText: string | undefined = anyErr?.context?.body;
+  if (typeof bodyText === "string") {
+    try {
+      const parsed = JSON.parse(bodyText);
+      if (parsed?.error) return String(parsed.error);
+      if (parsed?.message) return String(parsed.message);
+    } catch {
+      // ignore
+    }
+  }
+
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  return "Failed to update points";
+}
+
 const baseSchema = z.object({
   userId: z.string().uuid("Select a student"),
   points: z.coerce.number().int().positive("Points must be greater than 0"),
@@ -72,8 +90,8 @@ export default function AdminPointsAdjustmentsTab() {
       });
 
       if (error) {
-        // `error` can be a FunctionsHttpError or similar; normalize message.
-        throw new Error(error.message || "Failed to update points");
+        // `error` can be a FunctionsHttpError or similar; surface real body when available.
+        throw error;
       }
 
       if ((data as any)?.error) {
@@ -81,7 +99,7 @@ export default function AdminPointsAdjustmentsTab() {
       }
     },
     onSuccess: () => toast.success("Points updated"),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update points"),
+    onError: (e) => toast.error(functionsErrorMessage(e)),
   });
 
   const submitAdd = () => {
