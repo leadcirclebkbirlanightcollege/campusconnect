@@ -167,9 +167,11 @@ const Auth = () => {
 
       toast.success("Account created — please verify your email to activate your account.");
       toast.message("We sent you a verification link. Open your inbox and click 'Verify Email' to continue.");
+
       // When email verification is required, the auth provider will not create an active session yet.
-      // Keep the user on the Auth screen until they verify.
+      // Redirect to a dedicated screen where the user can resend/change email.
       setSignupPassword("");
+      navigate(`/auth/verify?email=${encodeURIComponent(email)}`, { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
