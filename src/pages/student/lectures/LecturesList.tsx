@@ -1,14 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, MapPin, ArrowRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import LiveBadge from "@/components/lectures/LiveBadge";
+import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type LectureRow = {
@@ -60,18 +57,14 @@ export default function LecturesList() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [qc]);
+  }, [qc, markUpdated]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">
-          Lectures
-        </h1>
+        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">Lectures</h1>
         <p className="text-muted-foreground">Browse upcoming lectures and open details.</p>
-        {justUpdated ? (
-          <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p>
-        ) : null}
+        {justUpdated ? <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p> : null}
       </div>
 
       <div className="space-y-6">
@@ -93,35 +86,17 @@ export default function LecturesList() {
                 </CardTitle>
                 <CardDescription>{items.length} lecture(s)</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {items.map((l) => (
-                  <div key={l.id} className="rounded-lg border border-border/60 p-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{l.topic}</div>
-                          {l.status === "live" ? <LiveBadge /> : null}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {l.start_time}–{l.end_time}
-                        </div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                          <MapPin className="h-4 w-4" />
-                          {l.venue}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {l.flyer_object_path ? <Badge variant="secondary">Flyer</Badge> : null}
-                        <Button asChild variant="outline" className="gap-2">
-                          <Link to={`/lectures/${l.id}`}>
-                            Details
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((l) => (
+                    <UpcomingLectureCard
+                      key={l.id}
+                      lecture={l}
+                      to={`/app/lectures/${l.id}`}
+                      showDateChip={false}
+                    />
+                  ))}
+                </div>
               </CardContent>
             </Card>
           ))

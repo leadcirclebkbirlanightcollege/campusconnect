@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import LiveBadge from "@/components/lectures/LiveBadge";
+import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type ProfileRow = {
@@ -27,7 +28,9 @@ type UpcomingLecture = {
   topic: string;
   lecture_date: string;
   start_time: string;
+  end_time: string;
   venue: string;
+  flyer_object_path: string | null;
   status?: "scheduled" | "live" | "ended";
 };
 
@@ -163,7 +166,7 @@ const StudentDashboard = () => {
       // Essential dashboard lists
       const { data: upcomingList } = await supabase
         .from("lectures")
-        .select("id, topic, lecture_date, start_time, venue, status")
+        .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
         .gte("lecture_date", today)
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -171,7 +174,7 @@ const StudentDashboard = () => {
 
       const { data: liveList } = await supabase
         .from("lectures")
-        .select("id, topic, lecture_date, start_time, venue, status")
+        .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
         .eq("status", "live")
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
@@ -340,52 +343,22 @@ const StudentDashboard = () => {
               <CardDescription>Next sessions you should attend</CardDescription>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/lectures">View all</Link>
+              <Link to="/app/lectures">View all</Link>
             </Button>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {liveNow ? (
-              <div className="rounded-xl border border-border/40 bg-card/40 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{liveNow.topic}</p>
-                      <LiveBadge />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {liveNow.lecture_date} • {liveNow.start_time} • {liveNow.venue}
-                    </p>
-                  </div>
-                  <Button asChild variant="secondary" size="sm">
-                    <Link to={`/lectures/${liveNow.id}`}>Open</Link>
-                  </Button>
-                </div>
-              </div>
+              <UpcomingLectureCard lecture={liveNow} to={`/app/lectures/${liveNow.id}`} className="shadow-sm" />
             ) : null}
 
             {upcoming.length === 0 ? (
               <p className="text-sm text-muted-foreground">No upcoming lectures found.</p>
             ) : (
-              <ul className="space-y-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((l) => (
-                  <li key={l.id} className="rounded-xl border border-border/40 bg-card/40 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{l.topic}</p>
-                          {l.status === "live" ? <LiveBadge /> : null}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {l.lecture_date} • {l.start_time} • {l.venue}
-                        </p>
-                      </div>
-                      <Button asChild variant="secondary" size="sm">
-                        <Link to={`/lectures/${l.id}`}>Open</Link>
-                      </Button>
-                    </div>
-                  </li>
+                  <UpcomingLectureCard key={l.id} lecture={l} to={`/app/lectures/${l.id}`} />
                 ))}
-              </ul>
+              </div>
             )}
           </CardContent>
         </Card>
