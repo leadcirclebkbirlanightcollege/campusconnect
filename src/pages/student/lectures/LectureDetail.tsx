@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import LiveBadge from "@/components/lectures/LiveBadge";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 import AttendanceMarkingCard from "@/pages/student/attendance/AttendanceMarkingCard";
@@ -102,12 +103,28 @@ export default function LectureDetail() {
                 {lectureQuery.data.status === "ended" ? <Badge variant="secondary">Ended</Badge> : null}
               </span>
             </CardTitle>
-            <CardDescription>Lecture details and flyer.</CardDescription>
+            <CardDescription>Lecture details and attendance.</CardDescription>
             {justUpdated ? (
               <p className="text-xs text-muted-foreground">Last updated just now</p>
             ) : null}
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Flyer cover (static, non-clickable) */}
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-card/40">
+              <AspectRatio ratio={16 / 9}>
+                {flyerUrl ? (
+                  <img
+                    src={flyerUrl}
+                    alt={`Lecture flyer for ${lectureQuery.data.topic}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-primary/15 via-background to-accent/10" />
+                )}
+              </AspectRatio>
+            </div>
+
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg border border-border/60 p-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -137,7 +154,7 @@ export default function LectureDetail() {
                   <ImageIcon className="h-5 w-5 text-primary" />
                   <span className="font-medium">Flyer</span>
                 </div>
-                {flyerUrl ? <Badge variant="secondary">Available</Badge> : <Badge variant="secondary">None</Badge>}
+                {flyerUrl ? <Badge variant="secondary">Shown above</Badge> : <Badge variant="secondary">None</Badge>}
               </div>
 
               {flyerUrl ? (
@@ -148,9 +165,7 @@ export default function LectureDetail() {
                       Open flyer
                     </a>
                   </Button>
-                  <p className="text-sm text-muted-foreground">
-                    If the flyer is an image, your browser will preview it.
-                  </p>
+                  <p className="text-sm text-muted-foreground">Optional: open the original in a new tab.</p>
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-muted-foreground">No flyer uploaded for this lecture.</p>
