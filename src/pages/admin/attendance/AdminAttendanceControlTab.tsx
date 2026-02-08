@@ -11,9 +11,8 @@ import {
   Timer,
   Printer,
   Users,
-  Download,
+  UserCheck,
 } from "lucide-react";
-
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -37,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AdminAttendanceLiveView from "@/pages/admin/attendance/AdminAttendanceLiveView";
+import AdminManualAttendanceDialog from "@/pages/admin/attendance/AdminManualAttendanceDialog";
 
 const generateSchema = z.object({
   lectureId: z.string().uuid(),
@@ -267,6 +267,15 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
                 <RefreshCw className="h-4 w-4" />
                 Refresh
               </Button>
+              <AdminManualAttendanceDialog
+                defaultLectureId={lectureId}
+                trigger={
+                  <Button variant="outline" className="gap-2" disabled={!lectureId}>
+                    <UserCheck className="h-4 w-4" />
+                    Manual Override
+                  </Button>
+                }
+              />
               <Button onClick={() => generateMutation.mutate()} disabled={!lectureId || busy} className="gap-2">
                 <QrCode className="h-4 w-4" />
                 Generate OTP/QR
