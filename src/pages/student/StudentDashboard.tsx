@@ -10,13 +10,13 @@ import {
   CheckCircle,
   MailOpen,
   LogOut,
-  QrCode,
   Clock,
   ListChecks,
 } from "lucide-react";
 
-import LiveBadge from "@/components/lectures/LiveBadge";
 import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
+import LiveAttendanceWidget from "@/components/attendance/LiveAttendanceWidget";
+import RecentAttendanceCard from "@/components/attendance/RecentAttendanceCard";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type ProfileRow = {
@@ -294,26 +294,25 @@ const StudentDashboard = () => {
         </Card>
       </div>
 
-      <Card className="mt-8 border-primary/10">
+      {/* PROMINENT ATTENDANCE SECTION */}
+      <div className="mt-8">
+        <LiveAttendanceWidget />
+      </div>
+
+      <Card className="mt-6 border-primary/10">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks you can perform</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground text-sm">
-            Open your inbox for announcements, scan attendance quickly, browse upcoming lectures, or update your profile.
+            Open your inbox for announcements, browse upcoming lectures, or update your profile.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" className="gap-2">
               <Link to="/student/inbox">
                 <MailOpen className="h-4 w-4" />
                 Inbox
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/student/scan">
-                <QrCode className="h-4 w-4" />
-                Scan Attendance
               </Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">
@@ -363,54 +362,34 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Recent Attendance Card */}
+        <RecentAttendanceCard />
+
+        {/* Recent Points */}
         <Card className="border-accent/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ListChecks className="h-4 w-4" />
-              Recent Activity
+              Recent Points
             </CardTitle>
-            <CardDescription>Latest points and attendance updates</CardDescription>
+            <CardDescription>Latest points activity</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">Points</p>
-              {recentPoints.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No points activity yet.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {recentPoints.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium">{p.source}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-primary">{p.points > 0 ? `+${p.points}` : p.points}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div>
-              <p className="text-sm font-medium mb-2">Attendance</p>
-              {recentAttendance.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No attendance marked yet.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {recentAttendance.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium">{a.status}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(a.marked_at).toLocaleString()}</p>
-                      </div>
-                      <Button asChild variant="outline" size="sm">
-                        <Link to="/attendance">Details</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <CardContent>
+            {recentPoints.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No points activity yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {recentPoints.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium">{p.source}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-primary">{p.points > 0 ? `+${p.points}` : p.points}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
