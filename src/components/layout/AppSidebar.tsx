@@ -8,6 +8,8 @@ import {
   UserRound,
   Shield,
   LogOut,
+  BookOpen,
+  Bell,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -61,17 +63,21 @@ export default function AppSidebar() {
 
   const isCollapsed = state === "collapsed";
   const currentPath = location.pathname;
+  const isAdmin = roleQuery.data === "admin";
 
   const items = useMemo(
     () =>
       [
         { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard, show: true },
         { title: "Attendance", url: "/app/attendance", icon: CalendarDays, show: true },
+        { title: "Learning Circles", url: "/app/programmes", icon: BookOpen, show: true },
+        { title: "Lectures", url: "/app/lectures", icon: CalendarDays, show: true },
         { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy, show: true },
+        { title: "Inbox", url: "/app/inbox", icon: Bell, show: true },
         { title: "Profile", url: "/app/profile", icon: UserRound, show: true },
-        { title: "Admin", url: "/app/admin/dashboard", icon: Shield, show: roleQuery.data === "admin" },
+        { title: "Admin", url: "/app/admin/dashboard", icon: Shield, show: isAdmin },
       ].filter((i) => i.show),
-    [roleQuery.data],
+    [isAdmin],
   );
 
   const onLogout = async () => {
@@ -140,7 +146,6 @@ export default function AppSidebar() {
           ) : (
             <span className="text-[10px] tracking-[0.25em]">CSP</span>
           )}
-          {/* subtle affordance */}
           <span className="sr-only">(opens in a new tab)</span>
         </a>
 

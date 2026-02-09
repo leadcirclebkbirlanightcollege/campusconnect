@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,15 @@ import {
   Bell,
   CheckCircle,
   MailOpen,
-  LogOut,
   Clock,
   ListChecks,
+  ExternalLink,
 } from "lucide-react";
 
 import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
 import LiveAttendanceWidget from "@/components/attendance/LiveAttendanceWidget";
 import RecentAttendanceCard from "@/components/attendance/RecentAttendanceCard";
+import StudentProgrammesCard from "@/components/programmes/StudentProgrammesCard";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type ProfileRow = {
@@ -57,8 +58,6 @@ function getTimeGreeting(now = new Date()) {
 }
 
 const StudentDashboard = () => {
-  const navigate = useNavigate();
-
   const { justUpdated, markUpdated } = useRecentUpdate();
 
   const [stats, setStats] = useState({
@@ -212,29 +211,18 @@ const StudentDashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-8">
+      {/* Greeting Header */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">Student Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold bg-gradient-premium bg-clip-text text-transparent">
             {greeting}, {name}
-          </p>
-          {justUpdated ? (
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Welcome back to Campus Connect</p>
+          {justUpdated && (
             <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
+          )}
         </div>
       </header>
 
@@ -243,7 +231,7 @@ const StudentDashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Points</CardTitle>
             <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium">
-              <TrendingUp className="h-5 w-5 text-white" />
+              <TrendingUp className="h-5 w-5 text-primary-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -256,7 +244,7 @@ const StudentDashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lectures Attended</CardTitle>
             <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent">
-              <CheckCircle className="h-5 w-5 text-white" />
+              <CheckCircle className="h-5 w-5 text-accent-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -269,7 +257,7 @@ const StudentDashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Upcoming Lectures</CardTitle>
             <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium">
-              <Calendar className="h-5 w-5 text-white" />
+              <Calendar className="h-5 w-5 text-primary-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -282,7 +270,7 @@ const StudentDashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Notifications</CardTitle>
             <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent">
-              <Bell className="h-5 w-5 text-white" />
+              <Bell className="h-5 w-5 text-accent-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -299,39 +287,26 @@ const StudentDashboard = () => {
         <LiveAttendanceWidget />
       </div>
 
-      <Card className="mt-6 border-primary/10">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common tasks you can perform</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Open your inbox for announcements, browse upcoming lectures, or update your profile.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/student/inbox">
-                <MailOpen className="h-4 w-4" />
-                Inbox
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/lectures">
-                <Calendar className="h-4 w-4" />
-                Lectures
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/student/profile">
-                <CheckCircle className="h-4 w-4" />
-                Profile
-              </Link>
-            </Button>
+      {/* Campus Screening Portal Link */}
+      <Card className="border-premium/20 bg-gradient-to-r from-premium/5 to-transparent">
+        <CardContent className="flex items-center justify-between py-4">
+          <div>
+            <p className="font-medium text-premium">Campus Screening Portal</p>
+            <p className="text-xs text-muted-foreground">Book your hall screenings</p>
           </div>
+          <Button asChild variant="outline" size="sm" className="gap-2 border-premium/30 hover:bg-premium/10">
+            <a href="https://campus-bookings.vercel.app/" target="_blank" rel="noopener noreferrer">
+              Open Portal
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
         </CardContent>
       </Card>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      {/* Learning Circles */}
+      <StudentProgrammesCard />
+
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-primary/10">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -351,7 +326,7 @@ const StudentDashboard = () => {
             ) : null}
 
             {upcoming.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No upcoming lectures found.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">No upcoming lectures. Stay tuned!</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((l) => (
@@ -376,7 +351,7 @@ const StudentDashboard = () => {
           </CardHeader>
           <CardContent>
             {recentPoints.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No points activity yet.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">No points activity yet.</p>
             ) : (
               <ul className="space-y-2">
                 {recentPoints.map((p) => (
