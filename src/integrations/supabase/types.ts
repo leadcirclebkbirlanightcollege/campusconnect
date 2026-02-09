@@ -126,6 +126,45 @@ export type Database = {
           },
         ]
       }
+      lecture_programme_tags: {
+        Row: {
+          id: string
+          lecture_id: string
+          programme_id: string
+          tagged_at: string
+          tagged_by: string
+        }
+        Insert: {
+          id?: string
+          lecture_id: string
+          programme_id: string
+          tagged_at?: string
+          tagged_by: string
+        }
+        Update: {
+          id?: string
+          lecture_id?: string
+          programme_id?: string
+          tagged_at?: string
+          tagged_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecture_programme_tags_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lecture_programme_tags_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programmes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lectures: {
         Row: {
           created_at: string
@@ -387,6 +426,71 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: []
+      }
+      programmes: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_programme_allotments: {
+        Row: {
+          allotted_at: string
+          allotted_by: string
+          id: string
+          programme_id: string
+          student_user_id: string
+        }
+        Insert: {
+          allotted_at?: string
+          allotted_by: string
+          id?: string
+          programme_id: string
+          student_user_id: string
+        }
+        Update: {
+          allotted_at?: string
+          allotted_by?: string
+          id?: string
+          programme_id?: string
+          student_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_programme_allotments_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programmes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

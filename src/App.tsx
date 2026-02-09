@@ -14,6 +14,8 @@ import StudentAttendanceHistory from "./pages/student/StudentAttendanceHistory";
 import StudentScanAttendance from "./pages/student/StudentScanAttendance";
 import LecturesList from "./pages/student/lectures/LecturesList";
 import LectureDetail from "./pages/student/lectures/LectureDetail";
+import ProgrammesList from "./pages/student/programmes/ProgrammesList";
+import ProgrammeDetail from "./pages/student/programmes/ProgrammeDetail";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="attendance" element={<StudentAttendanceHistory />} />
             <Route path="lectures" element={<LecturesList />} />
             <Route path="lectures/:id" element={<LectureDetail />} />
+            <Route path="programmes" element={<ProgrammesList />} />
+            <Route path="programmes/:id" element={<ProgrammeDetail />} />
             <Route path="leaderboard" element={<Leaderboard />} />
 
             <Route

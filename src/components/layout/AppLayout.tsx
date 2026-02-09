@@ -13,6 +13,7 @@ const FOOTER_LINE = "Developed by - Atharv Jadhav - Department Of Computer Scien
 function usePageTitle(pathname: string) {
   if (pathname.startsWith("/app/admin")) return "Admin";
   if (pathname.startsWith("/app/attendance")) return "Attendance";
+  if (pathname.startsWith("/app/programmes")) return "Learning Circles";
   if (pathname.startsWith("/app/lectures")) return "Lectures";
   if (pathname.startsWith("/app/inbox")) return "Inbox";
   if (pathname.startsWith("/app/profile")) return "Profile";

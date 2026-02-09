@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settings, Shield, Coins } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, ArrowRight, Settings, Shield, Coins, GraduationCap } from "lucide-react";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
 import AdminAttendanceControlTab from "@/pages/admin/attendance/AdminAttendanceControlTab";
@@ -19,6 +19,8 @@ import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import PointsRulesSettings from "@/pages/admin/system/PointsRulesSettings";
 import AdminProfileSettings from "@/pages/admin/system/AdminProfileSettings";
 import AdminPointsAdjustmentsTab from "@/pages/admin/system/AdminPointsAdjustmentsTab";
+import ProgrammeManagementTab from "@/pages/admin/programmes/ProgrammeManagementTab";
+import StudentAllotmentTab from "@/pages/admin/programmes/StudentAllotmentTab";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -30,6 +32,8 @@ const AdminDashboard = () => {
       { value: "overview", label: "Overview", icon: LayoutDashboard },
       { value: "students", label: "Students", icon: Users },
       { value: "lectures", label: "Lectures", icon: BookOpen },
+      { value: "programmes", label: "Programmes", icon: GraduationCap },
+      { value: "allotments", label: "Allotments", icon: Users },
       { value: "attendance", label: "Attendance", icon: CheckSquare },
       { value: "monthly", label: "Monthly", icon: CheckSquare },
       { value: "notifications", label: "Notifications", icon: Bell },
@@ -227,6 +231,14 @@ const AdminDashboard = () => {
 
         <TabsContent value="lectures" className="px-4 sm:px-0">
           <LectureManagementTab />
+        </TabsContent>
+
+        <TabsContent value="programmes" className="px-4 sm:px-0">
+          <ProgrammeManagementTab />
+        </TabsContent>
+
+        <TabsContent value="allotments" className="px-4 sm:px-0">
+          <StudentAllotmentTab />
         </TabsContent>
 
         <TabsContent value="attendance" className="px-4 sm:px-0">
