@@ -2,7 +2,7 @@ import { z } from "zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,7 +15,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import type { LectureRow } from "./LectureManagementTab";
 
@@ -27,6 +42,7 @@ const schema = z.object({
   start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
   end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
   venue: z.string().trim().min(2).max(200),
+  programme_id: z.string().optional(),
 });
 
 type Values = z.infer<typeof schema>;
@@ -39,6 +55,37 @@ type Props = {
 };
 
 export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved }: Props) {
+  // Fetch active programmes for the dropdown
+  const programmesQuery = useQuery({
+    queryKey: ["admin", "programmes-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("programmes")
+        .select("id, name, color")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: open,
+  });
+
+  // Fetch existing programme tag for editing
+  const existingTagQuery = useQuery({
+    queryKey: ["admin", "lecture-programme-tag", lecture?.id],
+    queryFn: async () => {
+      if (!lecture) return null;
+      const { data, error } = await supabase
+        .from("lecture_programme_tags")
+        .select("programme_id")
+        .eq("lecture_id", lecture.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.programme_id ?? null;
+    },
+    enabled: open && !!lecture,
+  });
+
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -47,6 +94,7 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       start_time: "09:00",
       end_time: "10:00",
       venue: "",
+      programme_id: undefined,
     },
   });
 
@@ -59,6 +107,7 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
         start_time: lecture.start_time,
         end_time: lecture.end_time,
         venue: lecture.venue,
+        programme_id: existingTagQuery.data ?? undefined,
       });
     } else {
       form.reset({
@@ -67,9 +116,10 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
         start_time: "09:00",
         end_time: "10:00",
         venue: "",
+        programme_id: undefined,
       });
     }
-  }, [open, lecture, form]);
+  }, [open, lecture, form, existingTagQuery.data]);
 
   const saveMutation = useMutation({
     mutationFn: async (values: Values) => {
@@ -77,9 +127,10 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       if (userError) throw userError;
       if (!userData.user) throw new Error("Not authenticated");
 
-      // Keep timestamps in sync with date + time inputs (stored as UTC).
       const start_at = new Date(`${values.lecture_date}T${values.start_time}:00Z`).toISOString();
       const end_at = new Date(`${values.lecture_date}T${values.end_time}:00Z`).toISOString();
+
+      let lectureId: string;
 
       if (lecture) {
         const { error } = await supabase
@@ -95,20 +146,45 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
           })
           .eq("id", lecture.id);
         if (error) throw error;
+        lectureId = lecture.id;
       } else {
-        const { error } = await supabase.from("lectures").insert([
-          {
-            topic: values.topic.trim(),
-            lecture_date: values.lecture_date,
-            start_time: values.start_time,
-            end_time: values.end_time,
-            start_at,
-            end_at,
-            venue: values.venue.trim(),
-            created_by: userData.user.id,
-          },
-        ]);
+        const { data: inserted, error } = await supabase
+          .from("lectures")
+          .insert([
+            {
+              topic: values.topic.trim(),
+              lecture_date: values.lecture_date,
+              start_time: values.start_time,
+              end_time: values.end_time,
+              start_at,
+              end_at,
+              venue: values.venue.trim(),
+              created_by: userData.user.id,
+            },
+          ])
+          .select("id")
+          .single();
         if (error) throw error;
+        lectureId = inserted.id;
+      }
+
+      // Handle programme tag
+      // First, remove existing tag(s) for this lecture
+      await supabase
+        .from("lecture_programme_tags")
+        .delete()
+        .eq("lecture_id", lectureId);
+
+      // Insert new tag if a programme was selected
+      if (values.programme_id) {
+        const { error: tagError } = await supabase
+          .from("lecture_programme_tags")
+          .insert({
+            lecture_id: lectureId,
+            programme_id: values.programme_id,
+            tagged_by: userData.user.id,
+          });
+        if (tagError) throw tagError;
       }
     },
     onSuccess: async () => {
@@ -124,7 +200,7 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{lecture ? "Edit lecture" : "New lecture"}</DialogTitle>
-          <DialogDescription>Schedule details and venue information.</DialogDescription>
+          <DialogDescription>Schedule details, venue, and programme assignment.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -194,6 +270,44 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
                   <FormControl>
                     <Input placeholder="e.g., Hall B, Room 204" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="programme_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Programme (Learning Circle)</FormLabel>
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v === "__none__" ? undefined : v)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a programme (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="__none__">No programme (visible to all)</SelectItem>
+                      {(programmesQuery.data ?? []).map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: p.color || "hsl(var(--primary))" }}
+                            />
+                            {p.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Only students allotted to this programme will see this lecture.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
