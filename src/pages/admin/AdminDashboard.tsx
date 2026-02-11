@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -17,6 +17,7 @@ import AdminProfileSettings from "@/pages/admin/system/AdminProfileSettings";
 import AdminPointsAdjustmentsTab from "@/pages/admin/system/AdminPointsAdjustmentsTab";
 import ProgrammeManagementTab from "@/pages/admin/programmes/ProgrammeManagementTab";
 import StudentAllotmentTab from "@/pages/admin/programmes/StudentAllotmentTab";
+import AdminDigitalIdScanner from "@/pages/admin/scanner/AdminDigitalIdScanner";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
       { value: "notifications", label: "Notifications", icon: Bell },
       { value: "points", label: "Points", icon: Coins },
       { value: "settings", label: "Settings", icon: Settings },
+      { value: "scanner", label: "ID Scanner", icon: ScanLine },
       { value: "admin_profile", label: "Admin", icon: Shield },
     ],
     [],
@@ -127,6 +129,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="admin_profile" className="px-4 sm:px-0">
           <AdminProfileSettings />
+        </TabsContent>
+
+        <TabsContent value="scanner" className="px-4 sm:px-0">
+          <AdminDigitalIdScanner />
         </TabsContent>
       </Tabs>
     </div>

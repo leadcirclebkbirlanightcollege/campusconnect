@@ -4,18 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bell, CheckCheck, MailOpen } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type RecipientRow = {
   id: string;
@@ -42,6 +33,7 @@ type InboxItem = {
 export default function StudentInbox() {
   const qc = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -158,107 +150,81 @@ export default function StudentInbox() {
   const loading = recipientsQuery.isLoading || notificationsQuery.isLoading;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2">Inbox</h1>
-          <p className="text-muted-foreground">Your latest announcements and updates.</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <MailOpen className="h-6 w-6 text-primary" />
+            Inbox
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Your announcements and updates</p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary" className="gap-2">
-            <Bell className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="gap-1.5">
+            <Bell className="h-3.5 w-3.5" />
             {unreadCount} unread
           </Badge>
           <Button
             variant="outline"
+            size="sm"
             onClick={() => markAllRead.mutate()}
             disabled={unreadCount === 0 || markAllRead.isPending}
-            className="gap-2"
+            className="gap-1.5"
           >
-            <CheckCheck className="h-4 w-4" />
+            <CheckCheck className="h-3.5 w-3.5" />
             Mark all read
           </Button>
         </div>
-      </div>
+      </header>
 
-      <Card className="border-primary/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MailOpen className="h-5 w-5 text-primary" />
-            Notifications
-          </CardTitle>
-          <CardDescription>Realtime updates with read receipts.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Separator />
+      {loading ? (
+        <div className="text-center py-10 text-muted-foreground">Loading inbox…</div>
+      ) : inboxItems.length === 0 ? (
+        <Card className="border-border/50">
+          <CardContent className="py-12 text-center">
+            <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No notifications yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">You'll be notified about lectures and announcements here.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {inboxItems.map((item) => {
+            const n = item.notification;
+            const isUnread = !item.recipient.read_at;
+            const isExpanded = expanded === item.recipient.id;
 
-          <div className="rounded-lg border border-border/60 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Message</TableHead>
-                  <TableHead className="w-[140px]">Status</TableHead>
-                  <TableHead className="w-[160px] text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                      Loading inbox…
-                    </TableCell>
-                  </TableRow>
-                ) : inboxItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                      No notifications yet.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  inboxItems.map((item) => {
-                    const n = item.notification;
-                    const isUnread = !item.recipient.read_at;
-                    return (
-                      <TableRow key={item.recipient.id} className={isUnread ? "bg-muted/20" : undefined}>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{n?.title ?? "(missing notification)"}</span>
-                              {isUnread ? <Badge className="bg-accent text-accent-foreground">Unread</Badge> : null}
-                            </div>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{n?.body ?? ""}</p>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(n?.sent_at ?? item.recipient.created_at).toLocaleString()}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {isUnread ? (
-                            <Badge variant="secondary">Not read</Badge>
-                          ) : (
-                            <Badge className="bg-success text-success-foreground">Read</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!isUnread || markOneRead.isPending}
-                            onClick={() => markOneRead.mutate(item.recipient.id)}
-                          >
-                            Mark read
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+            return (
+              <Card
+                key={item.recipient.id}
+                className={`border-border/50 cursor-pointer transition-colors ${isUnread ? "bg-primary/5 border-primary/20" : ""}`}
+                onClick={() => {
+                  setExpanded(isExpanded ? null : item.recipient.id);
+                  if (isUnread) markOneRead.mutate(item.recipient.id);
+                }}
+              >
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${isUnread ? "bg-primary" : "bg-transparent"}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm truncate">{n?.title ?? "(missing)"}</span>
+                        {isUnread && <Badge className="bg-primary/20 text-primary text-[10px] h-4 border-0">New</Badge>}
+                      </div>
+                      <p className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? "" : "line-clamp-1"}`}>
+                        {n?.body ?? ""}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground mt-1 block">
+                        {new Date(n?.sent_at ?? item.recipient.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

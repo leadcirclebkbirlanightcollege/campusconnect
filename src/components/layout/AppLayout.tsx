@@ -16,6 +16,7 @@ function usePageTitle(pathname: string) {
   if (pathname.startsWith("/app/programmes")) return "Learning Circles";
   if (pathname.startsWith("/app/lectures")) return "Lectures";
   if (pathname.startsWith("/app/inbox")) return "Inbox";
+  if (pathname.startsWith("/app/id-card")) return "Digital ID";
   if (pathname.startsWith("/app/profile")) return "Profile";
   if (pathname.startsWith("/app/leaderboard")) return "Leaderboard";
   return "Dashboard";

@@ -3,21 +3,25 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
   TrendingUp,
   Bell,
   CheckCircle,
-  MailOpen,
   Clock,
   ListChecks,
   ExternalLink,
+  Trophy,
+  CreditCard,
+  ArrowRight,
 } from "lucide-react";
 
 import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
 import LiveAttendanceWidget from "@/components/attendance/LiveAttendanceWidget";
 import RecentAttendanceCard from "@/components/attendance/RecentAttendanceCard";
 import StudentProgrammesCard from "@/components/programmes/StudentProgrammesCard";
+import DashboardStatsRing from "@/pages/student/dashboard/DashboardStatsRing";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 
 type ProfileRow = {
@@ -43,13 +47,6 @@ type RecentPoint = {
   note: string | null;
 };
 
-type RecentAttendance = {
-  id: string;
-  marked_at: string;
-  status: string;
-  lecture_id: string;
-};
-
 function getTimeGreeting(now = new Date()) {
   const h = now.getHours();
   if (h < 12) return "Good morning";
@@ -65,12 +62,13 @@ const StudentDashboard = () => {
     lecturesAttended: 0,
     upcomingLectures: 0,
     unreadNotifications: 0,
+    totalLectures: 0,
+    leaderboardRank: 0,
   });
 
   const [upcoming, setUpcoming] = useState<UpcomingLecture[]>([]);
   const [liveNow, setLiveNow] = useState<UpcomingLecture | null>(null);
   const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
-  const [recentAttendance, setRecentAttendance] = useState<RecentAttendance[]>([]);
 
   const [name, setName] = useState<string>("User");
   const greeting = useMemo(() => getTimeGreeting(), []);
@@ -88,7 +86,6 @@ const StudentDashboard = () => {
     const notificationsMetaChannel = supabase
       .channel("student_dashboard_notifications_meta")
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
-        // Pick up edits/cancellations that affect the inbox count.
         fetchDashboardStats();
       })
       .subscribe();
@@ -96,7 +93,6 @@ const StudentDashboard = () => {
     const lecturesChannel = supabase
       .channel("student_dashboard_lectures")
       .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, () => {
-        // Ensures LIVE/ENDED shows instantly (live badge + counts)
         fetchDashboardStats();
       })
       .subscribe();
@@ -115,32 +111,29 @@ const StudentDashboard = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch basic profile name
       const { data: profile } = await supabase
         .from("profiles")
         .select("name")
         .eq("user_id", user.id)
         .maybeSingle<ProfileRow>();
 
-      const friendlyName = profile?.name || "User";
-      setName(friendlyName);
+      setName(profile?.name || "User");
 
-      // Fetch total points
       const { data: pointsData } = await supabase.from("points_ledger").select("points").eq("user_id", user.id);
       const totalPoints = pointsData?.reduce((sum, entry) => sum + entry.points, 0) || 0;
 
-      // Fetch lectures attended
       const { data: attendanceData } = await supabase
         .from("attendance")
         .select("id")
         .eq("student_user_id", user.id)
         .eq("status", "present");
 
-      // Fetch upcoming lectures
       const today = new Date().toISOString().split("T")[0];
       const { data: upcomingCountData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
 
-      // Fetch unread notifications
+      // Total lectures overall (for attendance %)
+      const { data: allLectures } = await supabase.from("lectures").select("id");
+
       const { data: notificationsData } = await supabase
         .from("notification_recipients")
         .select("notification_id")
@@ -162,7 +155,14 @@ const StudentDashboard = () => {
         }
       }
 
-      // Essential dashboard lists
+      // Leaderboard rank
+      let rank = 0;
+      try {
+        const { data: lb } = await supabase.rpc("get_leaderboard", { p_limit: 100, p_verified_only: false });
+        const entry = (lb ?? []).find((r: any) => r.user_id === user.id);
+        rank = entry?.rank ?? 0;
+      } catch { /* ignore */ }
+
       const { data: upcomingList } = await supabase
         .from("lectures")
         .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
@@ -186,23 +186,17 @@ const StudentDashboard = () => {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      const { data: recentAtt } = await supabase
-        .from("attendance")
-        .select("id, marked_at, status, lecture_id")
-        .eq("student_user_id", user.id)
-        .order("marked_at", { ascending: false })
-        .limit(5);
-
       setUpcoming((upcomingList ?? []) as UpcomingLecture[]);
       setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
-      setRecentAttendance((recentAtt ?? []) as RecentAttendance[]);
 
       setStats({
         totalPoints,
         lecturesAttended: attendanceData?.length || 0,
         upcomingLectures: upcomingCountData?.length || 0,
         unreadNotifications: unreadNotificationsCount,
+        totalLectures: allLectures?.length || 0,
+        leaderboardRank: rank,
       });
 
       markUpdated();
@@ -212,115 +206,126 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Greeting Header */}
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-premium bg-clip-text text-transparent">
-            {greeting}, {name}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">Welcome back to Campus Connect</p>
-          {justUpdated && (
-            <p className="mt-1 text-xs text-muted-foreground">Last updated just now</p>
-          )}
-        </div>
+    <div className="space-y-6">
+      {/* Greeting */}
+      <header>
+        <h1 className="text-2xl font-bold text-foreground">
+          {greeting}, {name}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Welcome back to Campus Connect</p>
+        {justUpdated && <p className="text-xs text-muted-foreground mt-0.5">Updated just now</p>}
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-premium transition-all border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Points</CardTitle>
-            <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium">
+      {/* Command Center Row */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {/* Attendance Ring */}
+        <Card className="border-border/50 col-span-2 sm:col-span-1">
+          <CardContent className="flex items-center justify-center py-5">
+            <DashboardStatsRing
+              value={stats.lecturesAttended}
+              max={stats.totalLectures || 1}
+              label="Attendance"
+              sublabel={`${stats.lecturesAttended}/${stats.totalLectures} lectures`}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Points */}
+        <Card className="border-border/50">
+          <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
+            <div className="h-10 w-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium mb-2">
               <TrendingUp className="h-5 w-5 text-primary-foreground" />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{stats.totalPoints}</div>
-            <p className="text-xs text-muted-foreground mt-1">Keep attending to earn more!</p>
+            <p className="text-2xl font-bold text-primary">{stats.totalPoints}</p>
+            <p className="text-xs text-muted-foreground">Total Points</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-accent transition-all border-accent/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lectures Attended</CardTitle>
-            <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent">
-              <CheckCircle className="h-5 w-5 text-accent-foreground" />
+        {/* Rank */}
+        <Card className="border-border/50">
+          <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
+            <div className="h-10 w-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent mb-2">
+              <Trophy className="h-5 w-5 text-accent-foreground" />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-accent">{stats.lecturesAttended}</div>
-            <p className="text-xs text-muted-foreground mt-1">Great attendance record!</p>
+            <p className="text-2xl font-bold text-accent">
+              {stats.leaderboardRank > 0 ? `#${stats.leaderboardRank}` : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">Leaderboard</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-premium transition-all border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Lectures</CardTitle>
-            <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium">
-              <Calendar className="h-5 w-5 text-primary-foreground" />
+        {/* Notifications */}
+        <Card className="border-border/50">
+          <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
+            <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-2 relative">
+              <Bell className="h-5 w-5 text-foreground" />
+              {stats.unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
+                  {stats.unreadNotifications > 9 ? "9+" : stats.unreadNotifications}
+                </span>
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{stats.upcomingLectures}</div>
-            <p className="text-xs text-muted-foreground mt-1">Don't miss out!</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-accent transition-all border-accent/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent">
-              <Bell className="h-5 w-5 text-accent-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-accent">{stats.unreadNotifications}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.unreadNotifications > 0 ? "You have unread messages" : "All caught up!"}
+            <p className="text-2xl font-bold text-foreground">{stats.unreadNotifications}</p>
+            <p className="text-xs text-muted-foreground">
+              {stats.unreadNotifications > 0 ? "Unread" : "All clear"}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* PROMINENT ATTENDANCE SECTION */}
-      <div className="mt-8">
-        <LiveAttendanceWidget />
-      </div>
+      {/* Live Attendance */}
+      <LiveAttendanceWidget />
 
-      {/* Campus Screening Portal Link */}
-      <Card className="border-premium/20 bg-gradient-to-r from-premium/5 to-transparent">
-        <CardContent className="flex items-center justify-between py-4">
-          <div>
-            <p className="font-medium text-premium">Campus Screening Portal</p>
-            <p className="text-xs text-muted-foreground">Book your hall screenings</p>
-          </div>
-          <Button asChild variant="outline" size="sm" className="gap-2 border-premium/30 hover:bg-premium/10">
-            <a href="https://campus-bookings.vercel.app/" target="_blank" rel="noopener noreferrer">
-              Open Portal
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Quick Access Row */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+        <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3">
+          <Link to="/app/id-card">
+            <CreditCard className="h-4 w-4 text-primary" />
+            <span className="text-xs">Digital ID</span>
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3">
+          <Link to="/app/attendance">
+            <Calendar className="h-4 w-4 text-accent" />
+            <span className="text-xs">Attendance</span>
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3">
+          <Link to="/app/leaderboard">
+            <Trophy className="h-4 w-4 text-premium" />
+            <span className="text-xs">Leaderboard</span>
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3">
+          <a href="https://campus-bookings.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs">Screening</span>
+          </a>
+        </Button>
+      </div>
 
       {/* Learning Circles */}
       <StudentProgrammesCard />
 
+      {/* Today's / Upcoming Lectures */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+              <CardTitle className="text-base flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
                 Upcoming Lectures
               </CardTitle>
               <CardDescription>Next sessions you should attend</CardDescription>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/app/lectures">View all</Link>
+            <Button asChild variant="ghost" size="sm" className="gap-1 text-xs">
+              <Link to="/app/lectures">
+                View all
+                <ArrowRight className="h-3 w-3" />
+              </Link>
             </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {liveNow ? (
               <UpcomingLectureCard lecture={liveNow} to={`/app/lectures/${liveNow.id}`} className="shadow-sm" />
             ) : null}
@@ -328,7 +333,7 @@ const StudentDashboard = () => {
             {upcoming.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No upcoming lectures. Stay tuned!</p>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {upcoming.map((l) => (
                   <UpcomingLectureCard key={l.id} lecture={l} to={`/app/lectures/${l.id}`} />
                 ))}
@@ -337,37 +342,41 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Attendance Card */}
         <RecentAttendanceCard />
-
-        {/* Recent Points */}
-        <Card className="border-accent/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListChecks className="h-4 w-4" />
-              Recent Points
-            </CardTitle>
-            <CardDescription>Latest points activity</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentPoints.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No points activity yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {recentPoints.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/40 px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">{p.source}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-primary">{p.points > 0 ? `+${p.points}` : p.points}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Recent Points */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-primary" />
+            Recent Points
+          </CardTitle>
+          <CardDescription>Latest points activity</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recentPoints.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No points activity yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {recentPoints.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between rounded-lg border border-border/40 bg-card/40 px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{p.source}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-primary">
+                    {p.points > 0 ? `+${p.points}` : p.points}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
