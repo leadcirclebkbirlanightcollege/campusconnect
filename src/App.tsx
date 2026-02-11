@@ -12,6 +12,7 @@ import StudentProfile from "./pages/student/StudentProfile";
 import StudentInbox from "./pages/student/StudentInbox";
 import StudentAttendanceHistory from "./pages/student/StudentAttendanceHistory";
 import StudentScanAttendance from "./pages/student/StudentScanAttendance";
+import StudentDigitalId from "./pages/student/StudentDigitalId";
 import LecturesList from "./pages/student/lectures/LecturesList";
 import LectureDetail from "./pages/student/lectures/LectureDetail";
 import ProgrammesList from "./pages/student/programmes/ProgrammesList";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="profile" element={<StudentProfile />} />
             <Route path="inbox" element={<StudentInbox />} />
             <Route path="scan" element={<StudentScanAttendance />} />
+            <Route path="id-card" element={<StudentDigitalId />} />
             <Route path="attendance" element={<StudentAttendanceHistory />} />
             <Route path="lectures" element={<LecturesList />} />
             <Route path="lectures/:id" element={<LectureDetail />} />

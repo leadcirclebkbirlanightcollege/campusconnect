@@ -10,6 +10,8 @@ import {
   LogOut,
   BookOpen,
   Bell,
+  CreditCard,
+  ScanLine,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +76,7 @@ export default function AppSidebar() {
         { title: "Lectures", url: "/app/lectures", icon: CalendarDays, show: true },
         { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy, show: true },
         { title: "Inbox", url: "/app/inbox", icon: Bell, show: true },
+        { title: "Digital ID", url: "/app/id-card", icon: CreditCard, show: true },
         { title: "Profile", url: "/app/profile", icon: UserRound, show: true },
         { title: "Admin", url: "/app/admin/dashboard", icon: Shield, show: isAdmin },
       ].filter((i) => i.show),
