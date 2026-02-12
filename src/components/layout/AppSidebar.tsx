@@ -11,7 +11,9 @@ import {
   BookOpen,
   Bell,
   CreditCard,
-  ScanLine,
+  Megaphone,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +77,10 @@ export default function AppSidebar() {
         { title: "Learning Circles", url: "/app/programmes", icon: BookOpen, show: true },
         { title: "Lectures", url: "/app/lectures", icon: CalendarDays, show: true },
         { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy, show: true },
+        { title: "Announcements", url: "/app/announcements", icon: Megaphone, show: true },
+        { title: "Events", url: "/app/events", icon: CalendarDays, show: true },
+        { title: "Polls", url: "/app/polls", icon: BarChart3, show: true },
+        { title: "Daily", url: "/app/daily", icon: Sparkles, show: true },
         { title: "Inbox", url: "/app/inbox", icon: Bell, show: true },
         { title: "Digital ID", url: "/app/id-card", icon: CreditCard, show: true },
         { title: "Profile", url: "/app/profile", icon: UserRound, show: true },

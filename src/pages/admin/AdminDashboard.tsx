@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -18,6 +18,13 @@ import AdminPointsAdjustmentsTab from "@/pages/admin/system/AdminPointsAdjustmen
 import ProgrammeManagementTab from "@/pages/admin/programmes/ProgrammeManagementTab";
 import StudentAllotmentTab from "@/pages/admin/programmes/StudentAllotmentTab";
 import AdminDigitalIdScanner from "@/pages/admin/scanner/AdminDigitalIdScanner";
+import AdminAnnouncementsTab from "@/pages/admin/announcements/AdminAnnouncementsTab";
+import AdminEventsTab from "@/pages/admin/events/AdminEventsTab";
+import AdminPollsTab from "@/pages/admin/polls/AdminPollsTab";
+import AdminDailyContentTab from "@/pages/admin/content/AdminDailyContentTab";
+import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -33,6 +40,10 @@ const AdminDashboard = () => {
       { value: "allotments", label: "Allotments", icon: Users },
       { value: "attendance", label: "Attendance", icon: CheckSquare },
       { value: "monthly", label: "Monthly", icon: CheckSquare },
+      { value: "announcements", label: "Announce", icon: Megaphone },
+      { value: "events", label: "Events", icon: CalendarDays },
+      { value: "polls", label: "Polls", icon: BarChart3 },
+      { value: "daily_content", label: "Daily", icon: Sparkles },
       { value: "notifications", label: "Notifications", icon: Bell },
       { value: "points", label: "Points", icon: Coins },
       { value: "settings", label: "Settings", icon: Settings },
@@ -72,7 +83,7 @@ const AdminDashboard = () => {
             </Select>
           </div>
         ) : (
-          <TabsList className="w-full max-w-5xl flex flex-wrap gap-1 h-auto bg-muted/50 p-1">
+          <TabsList className="w-full max-w-6xl flex flex-wrap gap-1 h-auto bg-muted/50 p-1">
             {tabItems.map((t) => {
               const Icon = t.icon;
               return (
@@ -113,6 +124,22 @@ const AdminDashboard = () => {
           <AdminMonthlyAttendance />
         </TabsContent>
 
+        <TabsContent value="announcements" className="px-4 sm:px-0">
+          <AdminAnnouncementsTab />
+        </TabsContent>
+
+        <TabsContent value="events" className="px-4 sm:px-0">
+          <AdminEventsTab />
+        </TabsContent>
+
+        <TabsContent value="polls" className="px-4 sm:px-0">
+          <AdminPollsTab />
+        </TabsContent>
+
+        <TabsContent value="daily_content" className="px-4 sm:px-0">
+          <AdminDailyContentTab />
+        </TabsContent>
+
         <TabsContent value="notifications" className="px-4 sm:px-0">
           <AdminNotificationCenterTab />
         </TabsContent>
@@ -124,6 +151,33 @@ const AdminDashboard = () => {
         <TabsContent value="settings" className="px-4 sm:px-0">
           <div className="space-y-6">
             <PointsRulesSettings />
+            {/* System Info Card */}
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="text-base">System Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Version</p>
+                    <p className="font-medium">{APP_VERSION}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Build</p>
+                    <p className="font-medium">{BUILD_NUMBER}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Release Date</p>
+                    <p className="font-medium">{RELEASE_DATE}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Environment</p>
+                    <Badge variant="secondary" className="text-[10px]">{ENVIRONMENT}</Badge>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">Campus Connect · © LeadCircle Initiative · All Rights Reserved</p>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
