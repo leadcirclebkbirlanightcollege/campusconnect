@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppSplash from "@/components/pwa/AppSplash";
+import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -17,6 +18,10 @@ import LecturesList from "./pages/student/lectures/LecturesList";
 import LectureDetail from "./pages/student/lectures/LectureDetail";
 import ProgrammesList from "./pages/student/programmes/ProgrammesList";
 import ProgrammeDetail from "./pages/student/programmes/ProgrammeDetail";
+import StudentAnnouncementsFeed from "./pages/student/announcements/StudentAnnouncementsFeed";
+import StudentEventsList from "./pages/student/events/StudentEventsList";
+import StudentPollsList from "./pages/student/polls/StudentPollsList";
+import StudentDailyContent from "./pages/student/content/StudentDailyContent";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -29,6 +34,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppSplash />
+      <WhatsNewModal />
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -57,6 +63,10 @@ const App = () => (
             <Route path="programmes" element={<ProgrammesList />} />
             <Route path="programmes/:id" element={<ProgrammeDetail />} />
             <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="announcements" element={<StudentAnnouncementsFeed />} />
+            <Route path="events" element={<StudentEventsList />} />
+            <Route path="polls" element={<StudentPollsList />} />
+            <Route path="daily" element={<StudentDailyContent />} />
 
             <Route
               path="admin/dashboard"

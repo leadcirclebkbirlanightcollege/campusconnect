@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Camera, LogOut, Save, UserRound, KeyRound, ShieldAlert, Monitor, LogOutIcon } from "lucide-react";
+import { Camera, LogOut, Save, UserRound, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles } from "lucide-react";
+import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
+import { APP_VERSION } from "@/config/version";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -576,6 +578,29 @@ export default function StudentProfile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Platform Updates */}
+      <Card className="mt-6 border-border/50">
+        <CardContent className="py-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-premium" /> Platform Updates
+            </p>
+            <p className="text-xs text-muted-foreground">Version {APP_VERSION}</p>
+          </div>
+          <WhatsNewModalTrigger />
+        </CardContent>
+      </Card>
     </main>
+  );
+}
+
+function WhatsNewModalTrigger() {
+  const [show, setShow] = useState(false);
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setShow(true)}>View Platform Updates</Button>
+      {show && <WhatsNewModal manualOpen onManualClose={() => setShow(false)} />}
+    </>
   );
 }
