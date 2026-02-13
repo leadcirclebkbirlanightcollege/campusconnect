@@ -22,6 +22,8 @@ import AdminAnnouncementsTab from "@/pages/admin/announcements/AdminAnnouncement
 import AdminEventsTab from "@/pages/admin/events/AdminEventsTab";
 import AdminPollsTab from "@/pages/admin/polls/AdminPollsTab";
 import AdminDailyContentTab from "@/pages/admin/content/AdminDailyContentTab";
+import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
+import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +153,8 @@ const AdminDashboard = () => {
         <TabsContent value="settings" className="px-4 sm:px-0">
           <div className="space-y-6">
             <PointsRulesSettings />
+            <SystemHealthPanel />
+            <AdminRoleBackfillPanel />
             {/* System Info Card */}
             <Card className="border-border/50">
               <CardHeader>
