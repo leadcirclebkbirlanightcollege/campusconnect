@@ -15,6 +15,11 @@ import {
   Trophy,
   CreditCard,
   ArrowRight,
+  Sparkles,
+  Megaphone,
+  BarChart3,
+  AlertTriangle,
+  Shield,
 } from "lucide-react";
 
 import UpcomingLectureCard from "@/components/lectures/UpcomingLectureCard";
@@ -23,11 +28,10 @@ import RecentAttendanceCard from "@/components/attendance/RecentAttendanceCard";
 import StudentProgrammesCard from "@/components/programmes/StudentProgrammesCard";
 import DashboardStatsRing from "@/pages/student/dashboard/DashboardStatsRing";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
+import { useStudentIntelligence } from "@/hooks/use-intelligence";
+import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 
-type ProfileRow = {
-  name: string;
-};
-
+type ProfileRow = { name: string };
 type UpcomingLecture = {
   id: string;
   topic: string;
@@ -38,7 +42,6 @@ type UpcomingLecture = {
   flyer_object_path: string | null;
   status?: "scheduled" | "live" | "ended";
 };
-
 type RecentPoint = {
   id: string;
   created_at: string;
@@ -56,6 +59,7 @@ function getTimeGreeting(now = new Date()) {
 
 const StudentDashboard = () => {
   const { justUpdated, markUpdated } = useRecentUpdate();
+  const intelligence = useStudentIntelligence();
 
   const [stats, setStats] = useState({
     totalPoints: 0,
@@ -69,6 +73,9 @@ const StudentDashboard = () => {
   const [upcoming, setUpcoming] = useState<UpcomingLecture[]>([]);
   const [liveNow, setLiveNow] = useState<UpcomingLecture | null>(null);
   const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [dailyContent, setDailyContent] = useState<any | null>(null);
+  const [activePoll, setActivePoll] = useState<any | null>(null);
 
   const [name, setName] = useState<string>("User");
   const greeting = useMemo(() => getTimeGreeting(), []);
@@ -83,13 +90,6 @@ const StudentDashboard = () => {
       })
       .subscribe();
 
-    const notificationsMetaChannel = supabase
-      .channel("student_dashboard_notifications_meta")
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
-        fetchDashboardStats();
-      })
-      .subscribe();
-
     const lecturesChannel = supabase
       .channel("student_dashboard_lectures")
       .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, () => {
@@ -99,7 +99,6 @@ const StudentDashboard = () => {
 
     return () => {
       supabase.removeChannel(notificationsChannel);
-      supabase.removeChannel(notificationsMetaChannel);
       supabase.removeChannel(lecturesChannel);
     };
   }, []);
@@ -111,49 +110,65 @@ const StudentDashboard = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("user_id", user.id)
-        .maybeSingle<ProfileRow>();
+      const [
+        { data: profile },
+        { data: pointsData },
+        { data: attendanceData },
+        { data: upcomingCountData },
+        { data: allLectures },
+        { data: notificationsData },
+        { data: upcomingList },
+        { data: liveList },
+        { data: recentPts },
+        { data: announcementsData },
+        { data: dailyData },
+        { data: pollData },
+      ] = await Promise.all([
+        supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle<ProfileRow>(),
+        supabase.from("points_ledger").select("points").eq("user_id", user.id),
+        supabase.from("attendance").select("id").eq("student_user_id", user.id).eq("status", "present"),
+        supabase.from("lectures").select("id").gte("lecture_date", new Date().toISOString().split("T")[0]),
+        supabase.from("lectures").select("id"),
+        supabase.from("notification_recipients").select("notification_id").eq("user_id", user.id).is("read_at", null),
+        supabase
+          .from("lectures")
+          .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
+          .gte("lecture_date", new Date().toISOString().split("T")[0])
+          .order("lecture_date", { ascending: true })
+          .order("start_time", { ascending: true })
+          .limit(3),
+        supabase
+          .from("lectures")
+          .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
+          .eq("status", "live")
+          .limit(1),
+        supabase
+          .from("points_ledger")
+          .select("id, created_at, points, source, note")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("announcements")
+          .select("id, title, priority, created_at")
+          .order("is_pinned", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(3),
+        supabase
+          .from("daily_content")
+          .select("id, content_type, title, body")
+          .eq("is_active", true)
+          .order("publish_date", { ascending: false })
+          .limit(1),
+        supabase
+          .from("polls")
+          .select("id, question, options")
+          .order("created_at", { ascending: false })
+          .limit(1),
+      ]);
 
       setName(profile?.name || "User");
-
-      const { data: pointsData } = await supabase.from("points_ledger").select("points").eq("user_id", user.id);
       const totalPoints = pointsData?.reduce((sum, entry) => sum + entry.points, 0) || 0;
-
-      const { data: attendanceData } = await supabase
-        .from("attendance")
-        .select("id")
-        .eq("student_user_id", user.id)
-        .eq("status", "present");
-
-      const today = new Date().toISOString().split("T")[0];
-      const { data: upcomingCountData } = await supabase.from("lectures").select("id").gte("lecture_date", today);
-
-      // Total lectures overall (for attendance %)
-      const { data: allLectures } = await supabase.from("lectures").select("id");
-
-      const { data: notificationsData } = await supabase
-        .from("notification_recipients")
-        .select("notification_id")
-        .eq("user_id", user.id)
-        .is("read_at", null);
-
-      const unreadNotificationIds = Array.from(
-        new Set((notificationsData ?? []).map((r: any) => r.notification_id).filter(Boolean) as string[]),
-      );
-
-      let unreadNotificationsCount = unreadNotificationIds.length;
-      if (unreadNotificationIds.length > 0) {
-        const { data: notifMeta, error: notifMetaError } = await supabase
-          .from("notifications")
-          .select("id,status")
-          .in("id", unreadNotificationIds);
-        if (!notifMetaError) {
-          unreadNotificationsCount = (notifMeta ?? []).filter((n: any) => n.status !== "cancelled").length;
-        }
-      }
 
       // Leaderboard rank
       let rank = 0;
@@ -163,38 +178,26 @@ const StudentDashboard = () => {
         rank = entry?.rank ?? 0;
       } catch { /* ignore */ }
 
-      const { data: upcomingList } = await supabase
-        .from("lectures")
-        .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
-        .gte("lecture_date", today)
-        .order("lecture_date", { ascending: true })
-        .order("start_time", { ascending: true })
-        .limit(3);
-
-      const { data: liveList } = await supabase
-        .from("lectures")
-        .select("id, topic, lecture_date, start_time, end_time, venue, flyer_object_path, status")
-        .eq("status", "live")
-        .order("lecture_date", { ascending: true })
-        .order("start_time", { ascending: true })
-        .limit(1);
-
-      const { data: recentPts } = await supabase
-        .from("points_ledger")
-        .select("id, created_at, points, source, note")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      // Filter notifications
+      const unreadIds = Array.from(new Set((notificationsData ?? []).map((r: any) => r.notification_id).filter(Boolean) as string[]));
+      let unreadCount = unreadIds.length;
+      if (unreadIds.length > 0) {
+        const { data: notifMeta } = await supabase.from("notifications").select("id,status").in("id", unreadIds);
+        if (notifMeta) unreadCount = notifMeta.filter((n: any) => n.status !== "cancelled").length;
+      }
 
       setUpcoming((upcomingList ?? []) as UpcomingLecture[]);
       setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
+      setAnnouncements(announcementsData ?? []);
+      setDailyContent((dailyData ?? [])[0] ?? null);
+      setActivePoll((pollData ?? [])[0] ?? null);
 
       setStats({
         totalPoints,
         lecturesAttended: attendanceData?.length || 0,
         upcomingLectures: upcomingCountData?.length || 0,
-        unreadNotifications: unreadNotificationsCount,
+        unreadNotifications: unreadCount,
         totalLectures: allLectures?.length || 0,
         leaderboardRank: rank,
       });
@@ -205,6 +208,8 @@ const StudentDashboard = () => {
     }
   };
 
+  const tierData = intelligence.data ? TIER_CONFIG[intelligence.data.tier] : null;
+
   return (
     <div className="space-y-6">
       {/* Greeting */}
@@ -212,13 +217,35 @@ const StudentDashboard = () => {
         <h1 className="text-2xl font-bold text-foreground">
           {greeting}, {name}
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Welcome back to Campus Connect</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-sm text-muted-foreground">Welcome back to Campus Connect</p>
+          {tierData && (
+            <Badge className={`${tierData.bg} ${tierData.color} ${tierData.border} border text-[10px] gap-1`}>
+              <Shield className="h-3 w-3" />
+              {tierData.label}
+            </Badge>
+          )}
+        </div>
         {justUpdated && <p className="text-xs text-muted-foreground mt-0.5">Updated just now</p>}
       </header>
 
+      {/* Risk Alert Banner */}
+      {intelligence.data && intelligence.data.riskFlags.length > 0 && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="py-3 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">Attention Required</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {intelligence.data.riskFlags.join(" · ")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Command Center Row */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        {/* Attendance Ring */}
         <Card className="border-border/50 col-span-2 sm:col-span-1">
           <CardContent className="flex items-center justify-center py-5">
             <DashboardStatsRing
@@ -230,7 +257,6 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Points */}
         <Card className="border-border/50">
           <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
             <div className="h-10 w-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium mb-2">
@@ -241,7 +267,6 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Rank */}
         <Card className="border-border/50">
           <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
             <div className="h-10 w-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-accent mb-2">
@@ -254,7 +279,6 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Notifications */}
         <Card className="border-border/50">
           <CardContent className="pt-5 pb-4 flex flex-col items-center justify-center text-center">
             <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-2 relative">
@@ -273,8 +297,96 @@ const StudentDashboard = () => {
         </Card>
       </div>
 
+      {/* Intelligence Scores */}
+      {intelligence.data && (
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              Intelligence Scores
+            </CardTitle>
+            <CardDescription>Your academic performance metrics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <ScoreBar label="Consistency" value={intelligence.data.attendanceConsistency} />
+              <ScoreBar label="Reliability" value={intelligence.data.behaviourReliability} />
+              <ScoreBar label="Engagement" value={intelligence.data.engagementIndex} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Live Attendance */}
       <LiveAttendanceWidget />
+
+      {/* Daily Content + Active Poll row */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {dailyContent && (
+          <Card className="border-border/50">
+            <CardContent className="py-4 text-center space-y-2">
+              <Badge variant="secondary" className="text-[10px]">
+                {dailyContent.content_type === "meme" ? "😂 Meme of the Day" : "✨ Daily Suvichar"}
+              </Badge>
+              {dailyContent.title && <h4 className="text-sm font-medium text-foreground">{dailyContent.title}</h4>}
+              {dailyContent.body && (
+                <p className="text-sm text-muted-foreground italic leading-relaxed">"{dailyContent.body}"</p>
+              )}
+              <Button asChild variant="ghost" size="sm" className="text-xs gap-1">
+                <Link to="/app/daily">
+                  View all <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {activePoll && (
+          <Card className="border-border/50">
+            <CardContent className="py-4 space-y-2">
+              <Badge variant="secondary" className="text-[10px] gap-1">
+                <BarChart3 className="h-3 w-3" /> Active Poll
+              </Badge>
+              <h4 className="text-sm font-medium text-foreground line-clamp-2">{activePoll.question}</h4>
+              <Button asChild variant="outline" size="sm" className="w-full text-xs gap-1">
+                <Link to="/app/polls">
+                  Vote Now <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Announcements Preview */}
+      {announcements.length > 0 && (
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-primary" />
+              Announcements
+            </CardTitle>
+            <Button asChild variant="ghost" size="sm" className="gap-1 text-xs">
+              <Link to="/app/announcements">
+                View all <ArrowRight className="h-3 w-3" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {announcements.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/40 bg-card/40 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{a.title}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</p>
+                </div>
+                {a.priority === "urgent" && (
+                  <Badge variant="destructive" className="text-[10px] shrink-0">Urgent</Badge>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Access Row */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
@@ -307,7 +419,7 @@ const StudentDashboard = () => {
       {/* Learning Circles */}
       <StudentProgrammesCard />
 
-      {/* Today's / Upcoming Lectures */}
+      {/* Upcoming Lectures + Recent Attendance */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -380,5 +492,24 @@ const StudentDashboard = () => {
     </div>
   );
 };
+
+/** Simple horizontal score bar */
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const color = value >= 70 ? "bg-success" : value >= 40 ? "bg-premium" : "bg-destructive";
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-xs font-semibold text-foreground">{value}</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${color}`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default StudentDashboard;
