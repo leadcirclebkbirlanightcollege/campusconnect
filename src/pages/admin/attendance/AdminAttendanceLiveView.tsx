@@ -68,6 +68,18 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const enabled = Boolean(lectureId);
 
+  // Use RPC for consistent attendance count
+  const summaryQuery = useQuery({
+    queryKey: ["admin", "attendance", "summary", lectureId],
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_lecture_attendance_summary", { p_lecture_id: lectureId });
+      if (error) throw error;
+      return data as { present_count: number; total_students: number; attendance_percentage: number };
+    },
+    refetchInterval: 5_000,
+  });
+
   const presentQuery = useQuery({
     queryKey: ["admin", "attendance", "present", lectureId, { verifiedOnly }],
     enabled,
@@ -124,8 +136,8 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "attendance", filter: `lecture_id=eq.${lectureId}` },
         () => {
-          // react-query refetch interval covers it, but this makes it feel instant
           presentQuery.refetch();
+          summaryQuery.refetch();
         },
       )
       .subscribe();
@@ -153,7 +165,10 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{exportRows.length} present</Badge>
+            <Badge variant="secondary">{summaryQuery.data?.present_count ?? exportRows.length} present</Badge>
+            {summaryQuery.data && summaryQuery.data.total_students > 0 && (
+              <Badge variant="outline">{summaryQuery.data.attendance_percentage}%</Badge>
+            )}
             <Button
               type="button"
               variant={verifiedOnly ? "secondary" : "outline"}

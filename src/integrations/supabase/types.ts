@@ -650,6 +650,66 @@ export type Database = {
         }
         Relationships: []
       }
+      student_flags: {
+        Row: {
+          created_at: string
+          flag_type: string
+          id: string
+          reason: string | null
+          resolved_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flag_type: string
+          id?: string
+          reason?: string | null
+          resolved_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flag_type?: string
+          id?: string
+          reason?: string | null
+          resolved_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_intelligence: {
+        Row: {
+          attendance_consistency: number
+          behaviour_reliability: number
+          engagement_index: number
+          id: string
+          risk_flags: string[]
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attendance_consistency?: number
+          behaviour_reliability?: number
+          engagement_index?: number
+          id?: string
+          risk_flags?: string[]
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attendance_consistency?: number
+          behaviour_reliability?: number
+          engagement_index?: number
+          id?: string
+          risk_flags?: string[]
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_programme_allotments: {
         Row: {
           allotted_at: string
@@ -718,6 +778,10 @@ export type Database = {
           rank: number
           user_id: string
         }[]
+      }
+      get_lecture_attendance_summary: {
+        Args: { p_lecture_id: string }
+        Returns: Json
       }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }

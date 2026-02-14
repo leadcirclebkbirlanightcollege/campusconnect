@@ -145,7 +145,11 @@ Deno.serve(async (req) => {
       return json(400, { error: "Failed to verify existing attendance" });
     }
 
-    if (existing) return json(400, { error: "Attendance already marked for this lecture" });
+    if (existing) {
+      // Idempotent: return success if already marked
+      console.log("mark-attendance: already marked, returning success", { userId, lectureId });
+      return json(200, { success: true, message: "Attendance already marked", already_marked: true });
+    }
 
     // Mark attendance
     const pointsEarned = 10;
@@ -180,8 +184,22 @@ Deno.serve(async (req) => {
       .eq("id", tokenRow.id);
     if (usedError) console.error("mark-attendance: used_count update failed", usedError);
 
+    // Trigger intelligence recomputation (best-effort, fire-and-forget)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/recompute-intelligence`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+    } catch (e) {
+      console.error("mark-attendance: intelligence recompute failed", e);
+    }
+
     console.log("mark-attendance: success", { userId, lectureId });
-    return json(200, { success: true });
+    return json(200, { success: true, message: "Attendance marked successfully" });
   } catch (error) {
     console.error("mark-attendance: unexpected error", error);
     // Keep contract limited to requested codes.
