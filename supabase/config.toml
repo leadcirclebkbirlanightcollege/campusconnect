@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.recompute-intelligence]
 verify_jwt = false
+
+[functions.daily-content-cron]
+verify_jwt = false

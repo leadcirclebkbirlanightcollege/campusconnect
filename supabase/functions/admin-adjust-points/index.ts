@@ -87,6 +87,17 @@ Deno.serve(async (req) => {
       return json(400, { error: insertError.message });
     }
 
+    // Trigger intelligence recomputation (best-effort)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/recompute-intelligence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+        body: JSON.stringify({ userId }),
+      });
+    } catch (e) {
+      console.error("admin-adjust-points: intelligence recompute failed", e);
+    }
+
     return json(200, { success: true });
   } catch (err) {
     console.error("admin-adjust-points: unexpected error", err);

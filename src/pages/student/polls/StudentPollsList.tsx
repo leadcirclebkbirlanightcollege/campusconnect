@@ -51,9 +51,18 @@ export default function StudentPollsList() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Vote recorded!");
       qc.invalidateQueries({ queryKey: ["student", "poll_votes"] });
+      // Trigger intelligence recomputation (best-effort)
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          await supabase.functions.invoke("recompute-intelligence", {
+            body: { userId: userData.user.id },
+          });
+        }
+      } catch { /* best-effort */ }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Already voted"),
   });

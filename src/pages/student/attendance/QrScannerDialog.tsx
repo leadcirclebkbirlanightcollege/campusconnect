@@ -58,6 +58,7 @@ function pickCameraDeviceId(
 export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scanLockRef = useRef(false);
+  const lastScanTimeRef = useRef(0);
   const controlsRef = useRef<IScannerControls | null>(null);
   
   const [scanState, setScanState] = useState<ScanState>("warming");
@@ -78,23 +79,35 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
     return devices.some((d) => (d.label ?? "").trim().length > 0);
   }, [devices]);
 
+  // Full stream cleanup helper
+  const stopAllStreams = useCallback(() => {
+    try { controlsRef.current?.stop(); } catch { /* ignore */ }
+    controlsRef.current = null;
+    // Also stop any tracks on the video element directly
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((t) => t.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
   const handleScanResult = useCallback((token: string) => {
+    // 5-second duplicate scan lock
+    const now = Date.now();
+    if (now - lastScanTimeRef.current < 5000) return;
     if (scanLockRef.current) return;
+    
     scanLockRef.current = true;
+    lastScanTimeRef.current = now;
     
     setScanState("success");
-    
-    try {
-      controlsRef.current?.stop();
-    } catch {
-      // ignore
-    }
+    stopAllStreams();
     
     setTimeout(() => {
       onOpenChange(false);
       onToken(token);
     }, 300);
-  }, [onOpenChange, onToken]);
+  }, [onOpenChange, onToken, stopAllStreams]);
 
   const handleUseToken = useCallback(() => {
     const token = extractToken(manualToken).trim();
@@ -236,12 +249,7 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
     return () => {
       stopped = true;
       if (startTimer) window.clearTimeout(startTimer);
-      try {
-        controlsRef.current?.stop();
-      } catch {
-        // ignore
-      }
-      controlsRef.current = null;
+      stopAllStreams();
       setScanState("warming");
     };
   }, [open, cameraChoice, cameraSupport, isSecure, handleScanResult]);
@@ -385,6 +393,19 @@ export default function QrScannerDialog({ open, onOpenChange, onToken }: Props) 
                       {cameraError ? (
                         <span className="max-w-[28rem] text-xs text-muted-foreground">{cameraError}</span>
                       ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => {
+                          stopAllStreams();
+                          setScanState("warming");
+                          setCameraError(null);
+                          setCameraChoice((c) => c === "auto" ? "back" : "auto");
+                        }}
+                      >
+                        Retry Camera
+                      </Button>
                     </>
                   )}
                 </div>
