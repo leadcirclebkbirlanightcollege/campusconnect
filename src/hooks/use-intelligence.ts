@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { IntelligenceScores } from "@/lib/intelligenceEngine";
 import {
   calcAttendanceConsistency,
   calcBehaviourReliability,
   calcEngagementIndex,
   determineTier,
   detectRiskFlags,
-  type IntelligenceScores,
 } from "@/lib/intelligenceEngine";
 
 /**
- * Hook to compute intelligence scores for the current student.
+ * Hook to get intelligence scores for the current student.
+ * Reads from persisted student_intelligence table first,
+ * falls back to client-side computation.
  */
 export function useStudentIntelligence() {
   return useQuery({
@@ -20,7 +22,24 @@ export function useStudentIntelligence() {
       const userId = userData.user?.id;
       if (!userId) throw new Error("Not authenticated");
 
-      // Parallel data fetch
+      // Try persisted data first
+      const { data: persisted } = await supabase
+        .from("student_intelligence")
+        .select("attendance_consistency, behaviour_reliability, engagement_index, tier, risk_flags")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (persisted) {
+        return {
+          attendanceConsistency: persisted.attendance_consistency,
+          behaviourReliability: persisted.behaviour_reliability,
+          engagementIndex: persisted.engagement_index,
+          tier: persisted.tier as IntelligenceScores["tier"],
+          riskFlags: (persisted.risk_flags as string[]) ?? [],
+        };
+      }
+
+      // Fallback: compute client-side
       const [
         { data: allLectures },
         { data: myAttendance },
@@ -44,7 +63,6 @@ export function useStudentIntelligence() {
       const penaltyDeductions = (penaltyLedger ?? []).length;
       const attendancePct = allLectureIds.length > 0 ? (attendedIds.length / allLectureIds.length) * 100 : 100;
 
-      // Consecutive absences (from end)
       let consecutiveAbsences = 0;
       const attendedSet = new Set(attendedIds);
       for (let i = allLectureIds.length - 1; i >= 0; i--) {
