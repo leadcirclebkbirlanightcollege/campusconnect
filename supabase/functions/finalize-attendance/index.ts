@@ -150,6 +150,17 @@ Deno.serve(async (req) => {
       .update({ is_active: false })
       .eq('lecture_id', lectureId)
 
+    // Trigger intelligence recomputation for all students (best-effort)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/recompute-intelligence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceRoleKey}` },
+        body: JSON.stringify({}),
+      });
+    } catch (e) {
+      console.error("finalize-attendance: intelligence recompute failed", e);
+    }
+
     console.log('Attendance finalized for lecture:', lectureId, 'Absent students:', absentStudents.length)
 
     return new Response(
