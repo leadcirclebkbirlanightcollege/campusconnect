@@ -59,16 +59,18 @@ export default function AdminOverviewTab({
         supabase
           .from("attendance")
           .select("id", { count: "exact", head: true })
+          .eq("status", "present")
           .gte("marked_at", startIso)
           .lt("marked_at", endIso),
         supabase
           .from("attendance")
           .select("id", { count: "exact", head: true })
+          .eq("status", "present")
           .gte("marked_at", monthStart),
         supabase
           .from("points_ledger")
           .select("id", { count: "exact", head: true })
-          .eq("source", "admin_adjustment"),
+          .in("source", ["admin_adjustment", "manual"]),
       ]);
 
       const students = studentsCount ?? 0;

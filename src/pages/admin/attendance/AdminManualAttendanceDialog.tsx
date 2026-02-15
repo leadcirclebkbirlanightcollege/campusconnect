@@ -158,6 +158,11 @@ export default function AdminManualAttendanceDialog({ defaultLectureId, trigger 
 
       if (ledgerError) console.error("Ledger insert failed:", ledgerError);
 
+      // Trigger intelligence recompute (best-effort)
+      supabase.functions.invoke("recompute-intelligence", {
+        body: { userId: selectedStudent.user_id },
+      }).catch((e) => console.error("Intelligence recompute failed:", e));
+
       return { success: true };
     },
     onSuccess: () => {
