@@ -768,6 +768,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      export_monthly_attendance_combined: {
+        Args: {
+          p_end_date: string
+          p_programme_id?: string
+          p_start_date: string
+        }
+        Returns: Json
+      }
       get_leaderboard: {
         Args: { p_limit?: number; p_verified_only?: boolean }
         Returns: {
