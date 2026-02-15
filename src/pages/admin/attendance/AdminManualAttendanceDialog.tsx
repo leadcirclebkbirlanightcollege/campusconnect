@@ -144,7 +144,7 @@ export default function AdminManualAttendanceDialog({ defaultLectureId, trigger 
       const { error: ledgerError } = await supabase.from("points_ledger").insert({
         user_id: selectedStudent.user_id,
         points: 10,
-        source: "manual_attendance",
+        source: "manual",
         source_id: lectureId,
         note: `Manual attendance by admin: ${reason}`,
         created_by: adminUser.user.id,
