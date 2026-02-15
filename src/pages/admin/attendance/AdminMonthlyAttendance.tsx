@@ -1,16 +1,40 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { Download, FileText, Users, TrendingUp, AlertTriangle, Trophy } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+
+type CombinedExportRow = {
+  programme: string;
+  class: string;
+  name: string;
+  student_id: string | null;
+  present: number;
+  total_lectures: number;
+  attendance_pct: number;
+  tier: string;
+  risk_flags: string[];
+};
+
+type CombinedSummary = {
+  total_students: number;
+  total_lectures: number;
+  total_present_marks: number;
+  avg_attendance_pct: number;
+  risk_count: number;
+  top_performer: string;
+  avg_intelligence: number;
+};
 
 type ProfileRow = {
   user_id: string;
@@ -75,7 +99,7 @@ function downloadCsv(filename: string, headers: string[], rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-function buildPrintableHtml(title: string, headers: string[], rows: string[][]) {
+function buildPrintableHtml(title: string, headers: string[], rows: string[][], summaryHtml?: string) {
   const th = headers.map((h) => `<th>${h}</th>`).join("");
   const trs = rows
     .map((r) => `<tr>${r.map((c) => `<td>${String(c ?? "")}</td>`).join("")}</tr>`)
@@ -101,6 +125,7 @@ function buildPrintableHtml(title: string, headers: string[], rows: string[][]) 
     </head>
     <body>
       <h1>${title}</h1>
+      ${summaryHtml ?? ""}
       <table>
         <thead><tr>${th}</tr></thead>
         <tbody>${trs}</tbody>
@@ -116,6 +141,55 @@ export default function AdminMonthlyAttendance() {
   const [className, setClassName] = useState<string>("");
   const [month, setMonth] = useState<string>(defaultMonth);
 
+  // Combined export state
+  const [combineMonth, setCombineMonth] = useState<string>(defaultMonth);
+
+  const combinedExport = useMutation({
+    mutationFn: async (action: "csv" | "pdf") => {
+      const { startIsoDate, endIsoDate } = monthRange(combineMonth);
+      const { data, error } = await supabase.rpc("export_monthly_attendance_combined", {
+        p_start_date: startIsoDate,
+        p_end_date: endIsoDate,
+      });
+      if (error) throw error;
+      const result = data as unknown as { summary: CombinedSummary; rows: CombinedExportRow[] };
+      if (!result?.rows?.length) throw new Error("No data found for this period");
+      return { ...result, action };
+    },
+    onSuccess: ({ summary, rows, action }) => {
+      const headers = ["Programme", "Class", "Student Name", "Student ID", "Present", "Total Lectures", "Attendance %", "Tier", "Risk Flags"];
+      const dataRows = rows.map((r) => [
+        r.programme, r.class, r.name, r.student_id ?? "", String(r.present),
+        String(r.total_lectures), String(r.attendance_pct), r.tier,
+        (r.risk_flags ?? []).join("; "),
+      ]);
+
+      // Prepend summary rows
+      const summaryRows = [
+        ["SUMMARY", "", "", "", "", "", "", "", ""],
+        ["Total Students", String(summary.total_students), "Total Lectures", String(summary.total_lectures), "Avg Attendance %", String(summary.avg_attendance_pct), "Risk Count", String(summary.risk_count), ""],
+        ["Top Performer", summary.top_performer ?? "N/A", "Avg Intelligence", String(summary.avg_intelligence), "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", ""],
+      ];
+
+      if (action === "csv") {
+        downloadCsv(`combined_attendance_${combineMonth}.csv`, headers, [...summaryRows, ...dataRows]);
+        toast.success("Combined CSV exported");
+      } else {
+        const title = `Combined Monthly Attendance — ${combineMonth}`;
+        const summaryHtml = `
+          <div style="margin-bottom:16px;padding:12px;background:#f9f9f9;border-radius:6px;font-size:13px;">
+            <strong>Summary:</strong> ${summary.total_students} students · ${summary.total_lectures} lectures · Avg ${summary.avg_attendance_pct}% attendance · ${summary.risk_count} at-risk · Top: ${summary.top_performer ?? "N/A"} · Avg Intelligence: ${summary.avg_intelligence}
+          </div>`;
+        const html = buildPrintableHtml(title, headers, dataRows, summaryHtml);
+        const w = window.open("", "_blank", "noopener,noreferrer");
+        if (!w) { toast.error("Popup blocked"); return; }
+        w.document.open(); w.document.write(html); w.document.close(); w.focus(); w.print();
+        toast.success("Combined PDF ready to print");
+      }
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Export failed"),
+  });
   const classesQuery = useQuery({
     queryKey: ["admin", "classes"],
     queryFn: async () => {
@@ -361,6 +435,65 @@ export default function AdminMonthlyAttendance() {
                 </div>
               </div>
             </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Combined Export Section */}
+      <Card className="border-primary/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Combined Export (All Programmes)
+          </CardTitle>
+          <CardDescription>
+            Export all students grouped by Programme → Class → Student with intelligence data and summary.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3 items-end">
+            <div className="space-y-2">
+              <Label>Month</Label>
+              <Input type="month" value={combineMonth} onChange={(e) => setCombineMonth(e.target.value)} />
+            </div>
+            <Button
+              variant="outline"
+              className="gap-2"
+              disabled={combinedExport.isPending}
+              onClick={() => combinedExport.mutate("csv")}
+            >
+              <Download className="h-4 w-4" />
+              {combinedExport.isPending ? "Exporting…" : "Export Combined CSV"}
+            </Button>
+            <Button
+              className="gap-2"
+              disabled={combinedExport.isPending}
+              onClick={() => combinedExport.mutate("pdf")}
+            >
+              <FileText className="h-4 w-4" />
+              {combinedExport.isPending ? "Generating…" : "Print Combined PDF"}
+            </Button>
+          </div>
+
+          {combinedExport.data && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 pt-2">
+              {[
+                { label: "Students", value: combinedExport.data.summary.total_students, icon: Users },
+                { label: "Lectures", value: combinedExport.data.summary.total_lectures, icon: FileText },
+                { label: "Avg Attendance", value: `${combinedExport.data.summary.avg_attendance_pct}%`, icon: TrendingUp },
+                { label: "At Risk", value: combinedExport.data.summary.risk_count, icon: AlertTriangle },
+                { label: "Top Performer", value: combinedExport.data.summary.top_performer ?? "N/A", icon: Trophy },
+                { label: "Avg Intelligence", value: combinedExport.data.summary.avg_intelligence, icon: TrendingUp },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-lg border border-border/60 p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <stat.icon className="h-3 w-3" />
+                    {stat.label}
+                  </div>
+                  <div className="text-sm font-semibold text-foreground truncate">{stat.value}</div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
