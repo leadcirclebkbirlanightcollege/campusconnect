@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   Video,
   Wifi,
+  FileText,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +60,25 @@ export default function SystemHealthPanel() {
     retry: 1,
   });
 
+  // Audit metrics
+  const auditMetrics = useQuery({
+    queryKey: ["admin", "system_health", "audit_metrics"],
+    queryFn: async () => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const [totalRes, todayRes] = await Promise.all([
+        supabase.from("attendance_audit_log").select("id", { count: "exact", head: true }),
+        supabase.from("attendance_audit_log").select("id", { count: "exact", head: true }).gte("changed_at", todayStart.toISOString()),
+      ]);
+
+      return {
+        totalEdits: totalRes.count ?? 0,
+        todayEdits: todayRes.count ?? 0,
+      };
+    },
+  });
+
   const functionOk = reachabilityQuery.data?.ok === true && !reachabilityQuery.isError;
 
   const debugSummary = useMemo(() => {
@@ -67,8 +87,10 @@ export default function SystemHealthPanel() {
       reachability: functionOk ? "ok" : reachabilityQuery.isLoading ? "checking" : "failed",
       secureContext: isSecure,
       cameraSupport,
+      auditEditsToday: auditMetrics.data?.todayEdits ?? 0,
+      auditEditsTotal: auditMetrics.data?.totalEdits ?? 0,
     };
-  }, [cameraSupport, functionOk, isSecure, lastDebugId, reachabilityQuery.isLoading]);
+  }, [cameraSupport, functionOk, isSecure, lastDebugId, reachabilityQuery.isLoading, auditMetrics.data]);
 
   const copyDebug = async () => {
     try {
@@ -87,7 +109,7 @@ export default function SystemHealthPanel() {
           System Health
         </CardTitle>
         <CardDescription>
-          Quick pre-deploy checks: HTTPS/camera compatibility, backend function reachability, and latest debug IDs.
+          Quick pre-deploy checks: HTTPS/camera compatibility, backend function reachability, and audit metrics.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -103,7 +125,7 @@ export default function SystemHealthPanel() {
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
             <div className="text-xs text-muted-foreground">Latest debug ID</div>
             <div className="mt-1 font-mono text-sm truncate">{lastDebugId ?? "—"}</div>
@@ -118,7 +140,23 @@ export default function SystemHealthPanel() {
               <Video className="h-4 w-4 text-muted-foreground" />
               Admin preview is usually in an iframe; camera may be blocked there.
             </div>
-            <div className="mt-2 text-xs text-muted-foreground">Use the published site on phone to test camera.</div>
+          </div>
+
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <FileText className="h-3.5 w-3.5" />
+              Audit Metrics
+            </div>
+            <div className="mt-1 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Today</span>
+                <span className="font-medium">{auditMetrics.data?.todayEdits ?? "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">All time</span>
+                <span className="font-medium">{auditMetrics.data?.totalEdits ?? "—"}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -132,7 +170,7 @@ export default function SystemHealthPanel() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => reachabilityQuery.refetch()}
+            onClick={() => { reachabilityQuery.refetch(); auditMetrics.refetch(); }}
             disabled={reachabilityQuery.isFetching}
           >
             Re-check

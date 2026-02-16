@@ -70,19 +70,7 @@ Deno.serve(async (req) => {
       return json(400, { success: false, error: "Reason must be at least 3 characters" });
     }
 
-    // 4. Rate limit: 20 edits per admin per hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count: recentEdits } = await db
-      .from("attendance_audit_log")
-      .select("id", { count: "exact", head: true })
-      .eq("changed_by", adminId)
-      .gte("changed_at", oneHourAgo);
-
-    if ((recentEdits ?? 0) >= 20) {
-      return json(429, { success: false, error: "Rate limit exceeded. Max 20 edits per hour." });
-    }
-
-    // 5. Fetch attendance row
+    // 4. Fetch attendance row (no rate limit — admin has unrestricted authority, all edits are audited)
     const { data: attRow, error: attErr } = await db
       .from("attendance")
       .select("id, lecture_id, student_user_id, status")

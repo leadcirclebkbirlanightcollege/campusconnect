@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -22,6 +22,7 @@ import AdminAnnouncementsTab from "@/pages/admin/announcements/AdminAnnouncement
 import AdminEventsTab from "@/pages/admin/events/AdminEventsTab";
 import AdminPollsTab from "@/pages/admin/polls/AdminPollsTab";
 import AdminDailyContentTab from "@/pages/admin/content/AdminDailyContentTab";
+import AdminAuditLogTab from "@/pages/admin/audit/AdminAuditLogTab";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
@@ -50,6 +51,7 @@ const AdminDashboard = () => {
       { value: "points", label: "Points", icon: Coins },
       { value: "settings", label: "Settings", icon: Settings },
       { value: "scanner", label: "ID Scanner", icon: ScanLine },
+      { value: "audit_log", label: "Audit Log", icon: FileText },
       { value: "admin_profile", label: "Admin", icon: Shield },
     ],
     [],
@@ -191,6 +193,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="scanner" className="px-4 sm:px-0">
           <AdminDigitalIdScanner />
+        </TabsContent>
+
+        <TabsContent value="audit_log" className="px-4 sm:px-0">
+          <AdminAuditLogTab />
         </TabsContent>
       </Tabs>
     </div>
