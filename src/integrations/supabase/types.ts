@@ -102,6 +102,8 @@ export type Database = {
       }
       attendance: {
         Row: {
+          edited_at: string | null
+          edited_by: string | null
           id: string
           lecture_id: string
           marked_at: string
@@ -110,6 +112,8 @@ export type Database = {
           student_user_id: string
         }
         Insert: {
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           lecture_id: string
           marked_at?: string
@@ -118,6 +122,8 @@ export type Database = {
           student_user_id: string
         }
         Update: {
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           lecture_id?: string
           marked_at?: string
@@ -134,6 +140,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      attendance_audit_log: {
+        Row: {
+          attendance_id: string | null
+          changed_at: string
+          changed_by: string
+          id: string
+          lecture_id: string
+          new_status: string | null
+          old_status: string | null
+          reason: string
+          student_user_id: string
+        }
+        Insert: {
+          attendance_id?: string | null
+          changed_at?: string
+          changed_by: string
+          id?: string
+          lecture_id: string
+          new_status?: string | null
+          old_status?: string | null
+          reason: string
+          student_user_id: string
+        }
+        Update: {
+          attendance_id?: string | null
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          lecture_id?: string
+          new_status?: string | null
+          old_status?: string | null
+          reason?: string
+          student_user_id?: string
+        }
+        Relationships: []
       }
       attendance_tokens: {
         Row: {

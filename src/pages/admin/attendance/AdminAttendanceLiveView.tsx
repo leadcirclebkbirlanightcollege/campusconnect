@@ -4,6 +4,7 @@ import { Download, Users, BadgeCheck, Filter } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AdminEditAttendanceDialog from "@/pages/admin/attendance/AdminEditAttendanceDialog";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/table";
 
 type AttendanceRow = {
+  id: string;
   student_user_id: string;
   status: string;
   marked_at: string;
@@ -33,6 +35,8 @@ type ProfileRow = {
 };
 
 type Row = {
+  attendanceId: string;
+  studentUserId: string;
   name: string;
   studentId: string;
   department: string;
@@ -86,7 +90,7 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
     queryFn: async (): Promise<Row[]> => {
       const { data: attendance, error: aErr } = await supabase
         .from("attendance")
-        .select("student_user_id,status,marked_at")
+        .select("id,student_user_id,status,marked_at")
         .eq("lecture_id", lectureId)
         .eq("status", "present")
         .order("marked_at", { ascending: true })
@@ -114,6 +118,8 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
         .map((a) => {
           const p = map[a.student_user_id];
           return {
+            attendanceId: a.id,
+            studentUserId: a.student_user_id,
             name: p?.name ?? a.student_user_id,
             studentId: p?.student_id ?? "—",
             department: p?.department ?? "—",
@@ -208,18 +214,19 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
                 <TableHead className="hidden md:table-cell">Class</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Timestamp</TableHead>
+                <TableHead className="w-16">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {presentQuery.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                   <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     Loading live attendance…
                   </TableCell>
                 </TableRow>
               ) : exportRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     No students checked in yet.
                   </TableCell>
                 </TableRow>
@@ -258,6 +265,14 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
                       <Badge className="bg-success text-success-foreground">Present</Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">{r.timestamp}</TableCell>
+                    <TableCell>
+                      <AdminEditAttendanceDialog
+                        attendanceId={r.attendanceId}
+                        studentName={r.name}
+                        currentStatus={r.status}
+                        lectureId={lectureId}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))
               )}
