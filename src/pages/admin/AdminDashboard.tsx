@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText, FileEdit } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -23,6 +23,7 @@ import AdminEventsTab from "@/pages/admin/events/AdminEventsTab";
 import AdminPollsTab from "@/pages/admin/polls/AdminPollsTab";
 import AdminDailyContentTab from "@/pages/admin/content/AdminDailyContentTab";
 import AdminAuditLogTab from "@/pages/admin/audit/AdminAuditLogTab";
+import AdminAttendanceCorrections from "@/pages/admin/attendance/AdminAttendanceCorrections";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
       { value: "allotments", label: "Allotments", icon: Users },
       { value: "attendance", label: "Attendance", icon: CheckSquare },
       { value: "monthly", label: "Monthly", icon: CheckSquare },
+      { value: "corrections", label: "Corrections", icon: FileEdit },
       { value: "announcements", label: "Announce", icon: Megaphone },
       { value: "events", label: "Events", icon: CalendarDays },
       { value: "polls", label: "Polls", icon: BarChart3 },
@@ -126,6 +128,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="monthly" className="px-4 sm:px-0">
           <AdminMonthlyAttendance />
+        </TabsContent>
+
+        <TabsContent value="corrections" className="px-4 sm:px-0">
+          <AdminAttendanceCorrections />
         </TabsContent>
 
         <TabsContent value="announcements" className="px-4 sm:px-0">

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Users, BadgeCheck, Filter } from "lucide-react";
+import { Download, Users, Filter } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import AdminEditAttendanceDialog from "@/pages/admin/attendance/AdminEditAttendanceDialog";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -212,21 +211,20 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
                 <TableHead>Student ID</TableHead>
                 <TableHead className="hidden md:table-cell">Department</TableHead>
                 <TableHead className="hidden md:table-cell">Class</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Timestamp</TableHead>
-                <TableHead className="w-16">Actions</TableHead>
+                 <TableHead>Status</TableHead>
+                 <TableHead className="text-right">Timestamp</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {presentQuery.isLoading ? (
                 <TableRow>
-                   <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                   <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                     Loading live attendance…
                   </TableCell>
                 </TableRow>
               ) : exportRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                     No students checked in yet.
                   </TableCell>
                 </TableRow>
@@ -265,14 +263,6 @@ export default function AdminAttendanceLiveView({ lectureId }: { lectureId: stri
                       <Badge className="bg-success text-success-foreground">Present</Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">{r.timestamp}</TableCell>
-                    <TableCell>
-                      <AdminEditAttendanceDialog
-                        attendanceId={r.attendanceId}
-                        studentName={r.name}
-                        currentStatus={r.status}
-                        lectureId={lectureId}
-                      />
-                    </TableCell>
                   </TableRow>
                 ))
               )}
