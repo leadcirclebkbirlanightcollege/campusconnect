@@ -19,8 +19,12 @@ type Props = {
 };
 
 type MarkAttendanceResponse = {
-  message: string;
-  pointsEarned?: number;
+  success: boolean;
+  attendance_marked?: boolean;
+  already_marked?: boolean;
+  points_awarded?: boolean;
+  message?: string;
+  code?: string;
 };
 
 function safeErrorMessage(e: unknown) {
@@ -103,7 +107,12 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
       return data;
     },
     onSuccess: (data) => {
-      const points = data?.pointsEarned ?? 10;
+      if (data?.already_marked) {
+        setSuccess({ at: Date.now(), points: 0 });
+        toast.info("Attendance already recorded for this lecture.");
+        return;
+      }
+      const points = data?.points_awarded ? 10 : 0;
       setSuccess({ at: Date.now(), points });
       toast.success("✅ Attendance marked successfully!", {
         description: "Your attendance has been securely recorded.",
@@ -111,17 +120,26 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     },
     onError: (e) => {
       const msg = safeErrorMessage(e);
-      if (msg.toLowerCase().includes("already marked")) {
-        toast.error("❌ Already marked", {
-          description: "Your attendance was already recorded for this lecture.",
+      const code = (e as any)?.code || "";
+      
+      if (msg.toLowerCase().includes("already marked") || msg.toLowerCase().includes("already recorded")) {
+        setSuccess({ at: Date.now(), points: 0 });
+        toast.info("Attendance already recorded for this lecture.");
+      } else if (msg.toLowerCase().includes("expired") || code === "OTP_EXPIRED") {
+        toast.error("⏰ Attendance window closed", {
+          description: "The OTP has expired. Ask your lecturer for a new one.",
         });
-      } else if (msg.toLowerCase().includes("expired")) {
-        toast.error("⏰ Token expired", {
-          description: "The attendance window has closed. Contact your lecturer.",
-        });
-      } else if (msg.toLowerCase().includes("invalid")) {
+      } else if (msg.toLowerCase().includes("invalid") || code === "INVALID_OTP") {
         toast.error("❌ Invalid OTP", {
           description: "Please check the OTP and try again.",
+        });
+      } else if (msg.toLowerCase().includes("not live") || code === "LECTURE_NOT_LIVE") {
+        toast.error("📚 Lecture not live", {
+          description: "Attendance can only be marked during a live lecture.",
+        });
+      } else if (code === "NO_ACTIVE_TOKEN") {
+        toast.error("⚠️ No active session", {
+          description: "No attendance session is active for this lecture.",
         });
       } else {
         toast.error("Failed to mark attendance", { description: msg });
