@@ -257,6 +257,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_rewards_log: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          points_awarded: number
+          reward_date: string
+          reward_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          points_awarded?: number
+          reward_date: string
+          reward_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          points_awarded?: number
+          reward_date?: string
+          reward_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -692,6 +722,30 @@ export type Database = {
         }
         Relationships: []
       }
+      student_achievements: {
+        Row: {
+          awarded_at: string
+          code: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          code: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          code?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_flags: {
         Row: {
           created_at: string
@@ -784,6 +838,30 @@ export type Database = {
           },
         ]
       }
+      student_streaks: {
+        Row: {
+          current_streak: number
+          last_login_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_login_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_login_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -810,6 +888,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_attendance_corrections: {
+        Args: {
+          p_end_date?: string
+          p_lecture_id: string
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_start_date?: string
+        }
+        Returns: {
+          attendance_id: string
+          edited_at: string
+          marked_at: string
+          programme: string
+          status: string
+          student_id: string
+          student_name: string
+          student_user_id: string
+          total_count: number
+        }[]
+      }
       export_monthly_attendance_combined: {
         Args: {
           p_end_date: string
@@ -831,6 +930,17 @@ export type Database = {
       }
       get_lecture_attendance_summary: {
         Args: { p_lecture_id: string }
+        Returns: Json
+      }
+      get_my_achievements: { Args: { p_limit?: number }; Returns: Json }
+      get_my_points_total: { Args: never; Returns: number }
+      get_my_streak: { Args: never; Returns: Json }
+      get_my_tier_progress: {
+        Args: {
+          p_bronze_max?: number
+          p_gold_max?: number
+          p_silver_max?: number
+        }
         Returns: Json
       }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }

@@ -57,20 +57,17 @@ type LectureOption = {
   status: string;
 };
 
-type AttendanceRow = {
-  id: string;
+type CorrectionRow = {
+  attendance_id: string;
   student_user_id: string;
+  student_name: string;
+  student_id: string;
+  programme: string;
   status: string;
   marked_at: string;
   edited_at: string | null;
-  edited_by: string | null;
-  lecture_id: string;
+  total_count: number;
 };
-
-type ProfileMap = Record<
-  string,
-  { name: string; student_id: string | null; class_name: string | null; programme?: string }
->;
 
 type AuditEntry = {
   id: string;
@@ -81,10 +78,17 @@ type AuditEntry = {
   changed_by: string;
 };
 
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default function AdminAttendanceCorrections() {
   const qc = useQueryClient();
+
   const [selectedLecture, setSelectedLecture] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [page, setPage] = useState(0);
 
   // Edit dialog state
@@ -93,130 +97,76 @@ export default function AdminAttendanceCorrections() {
     attendanceId: string;
     studentName: string;
     currentStatus: string;
+    studentUserId: string;
+    lectureId: string;
   } | null>(null);
   const [newStatus, setNewStatus] = useState("present");
   const [reason, setReason] = useState("");
 
-  // Reset page when filters change
-  useEffect(() => setPage(0), [selectedLecture, studentSearch]);
+  useEffect(() => setPage(0), [selectedLecture, studentSearch, startDate, endDate]);
 
-  // ── Past lectures ──
+  // Past lectures only
   const lecturesQuery = useQuery({
     queryKey: ["admin", "corrections", "lectures"],
     queryFn: async () => {
+      const today = todayIsoDate();
       const { data, error } = await supabase
         .from("lectures")
         .select("id, topic, lecture_date, start_time, status")
+        .lt("lecture_date", today)
         .order("lecture_date", { ascending: false })
         .order("start_time", { ascending: false })
-        .limit(200);
+        .limit(300);
       if (error) throw error;
       return (data ?? []) as LectureOption[];
     },
   });
 
-  // ── Attendance rows for selected lecture ──
-  const attendanceQuery = useQuery({
-    queryKey: ["admin", "corrections", "attendance", selectedLecture],
+  const correctionsQuery = useQuery<{ rows: CorrectionRow[]; total: number }>({
+    queryKey: [
+      "admin",
+      "corrections",
+      "rows",
+      {
+        selectedLecture,
+        studentSearch,
+        startDate,
+        endDate,
+        page,
+        pageSize: PAGE_SIZE,
+      },
+    ],
     enabled: Boolean(selectedLecture),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("attendance")
-        .select("id, student_user_id, status, marked_at, edited_at, edited_by, lecture_id")
-        .eq("lecture_id", selectedLecture)
-        .order("marked_at", { ascending: true })
-        .limit(1000);
-      if (error) throw error;
-      return (data ?? []) as AttendanceRow[];
-    },
-  });
+      const p_start_date = startDate ? startDate : null;
+      const p_end_date = endDate ? endDate : null;
 
-  // ── Profiles for those students ──
-  const profilesQuery = useQuery({
-    queryKey: ["admin", "corrections", "profiles", attendanceQuery.data?.map((a) => a.student_user_id).join(",")],
-    enabled: Boolean(attendanceQuery.data?.length),
-    queryFn: async () => {
-      const userIds = [...new Set(attendanceQuery.data!.map((a) => a.student_user_id))];
-      if (!userIds.length) return {} as ProfileMap;
-
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("user_id, name, student_id, class_name")
-        .in("user_id", userIds);
-      if (error) throw error;
-
-      // Also fetch programme names
-      const { data: allotments } = await supabase
-        .from("student_programme_allotments")
-        .select("student_user_id, programme_id")
-        .in("student_user_id", userIds);
-
-      const progIds = [...new Set((allotments ?? []).map((a) => a.programme_id))];
-      let progMap: Record<string, string> = {};
-      if (progIds.length) {
-        const { data: progs } = await supabase
-          .from("programmes")
-          .select("id, name")
-          .in("id", progIds);
-        for (const p of progs ?? []) progMap[p.id] = p.name;
-      }
-
-      const allotMap: Record<string, string> = {};
-      for (const a of allotments ?? []) {
-        allotMap[a.student_user_id] = progMap[a.programme_id] ?? "—";
-      }
-
-      const map: ProfileMap = {};
-      for (const p of (profiles ?? [])) {
-        map[p.user_id] = {
-          name: p.name,
-          student_id: p.student_id,
-          class_name: p.class_name,
-          programme: allotMap[p.user_id] ?? "—",
-        };
-      }
-      return map;
-    },
-  });
-
-  // ── Build display rows ──
-  const displayRows = useMemo(() => {
-    if (!attendanceQuery.data || !profilesQuery.data) return [];
-    const search = studentSearch.toLowerCase().trim();
-
-    return attendanceQuery.data
-      .map((a) => {
-        const p = profilesQuery.data[a.student_user_id];
-        return {
-          attendanceId: a.id,
-          studentUserId: a.student_user_id,
-          name: p?.name ?? "Unknown",
-          studentId: p?.student_id ?? "—",
-          programme: p?.programme ?? "—",
-          className: p?.class_name ?? "—",
-          status: a.status,
-          markedAt: new Date(a.marked_at).toLocaleString(),
-          editedAt: a.edited_at,
-          lectureId: a.lecture_id,
-        };
-      })
-      .filter((r) => {
-        if (!search) return true;
-        return (
-          r.name.toLowerCase().includes(search) ||
-          r.studentId.toLowerCase().includes(search) ||
-          r.programme.toLowerCase().includes(search)
-        );
+      const { data, error } = await supabase.rpc("admin_get_attendance_corrections", {
+        p_lecture_id: selectedLecture,
+        p_search: studentSearch.trim() || null,
+        p_start_date,
+        p_end_date,
+        p_page: page,
+        p_page_size: PAGE_SIZE,
       });
-  }, [attendanceQuery.data, profilesQuery.data, studentSearch]);
 
-  const totalPages = Math.max(1, Math.ceil(displayRows.length / PAGE_SIZE));
-  const pagedRows = displayRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+      if (error) throw error;
 
-  // ── Edit mutation ──
+      const rows = (data ?? []) as unknown as CorrectionRow[];
+      const total = rows.length ? Number(rows[0].total_count ?? 0) : 0;
+      return { rows, total };
+    },
+    placeholderData: (prev) => prev,
+  });
+
+  const totalPages = useMemo(() => {
+    const total = correctionsQuery.data?.total ?? 0;
+    return Math.max(1, Math.ceil(total / PAGE_SIZE));
+  }, [correctionsQuery.data?.total]);
   const editMutation = useMutation({
     mutationFn: async () => {
       if (!editRow) throw new Error("No row selected");
+
       const { data, error } = await supabase.functions.invoke("admin-update-attendance", {
         body: {
           attendanceId: editRow.attendanceId,
@@ -224,42 +174,46 @@ export default function AdminAttendanceCorrections() {
           reason: reason.trim(),
         },
       });
+
       if (error) throw new Error(error.message);
       if (data && !data.success) throw new Error(data.error || "Update failed");
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(`Attendance updated: ${data.old_status} → ${data.new_status}`, {
         description: "Intelligence scores will be recalculated.",
       });
+
       setEditOpen(false);
       setEditRow(null);
       setReason("");
-      qc.invalidateQueries({ queryKey: ["admin", "corrections", "attendance"] });
-      qc.invalidateQueries({ queryKey: ["admin", "attendance"] });
-      qc.invalidateQueries({ queryKey: ["admin", "overview"] });
+
+      await qc.invalidateQueries({ queryKey: ["admin", "corrections", "rows"] });
+      await qc.invalidateQueries({ queryKey: ["admin", "attendance"] });
+      await qc.invalidateQueries({ queryKey: ["admin", "overview"] });
+
+      // Student-side refresh targets (best-effort): intelligence + summary RPC consumers
+      await qc.invalidateQueries({ queryKey: ["student", "intelligence"] });
     },
     onError: (e) => {
       toast.error(e instanceof Error ? e.message : "Failed to update attendance");
     },
   });
 
-  const openEdit = useCallback(
-    (row: (typeof displayRows)[0]) => {
-      setEditRow({
-        attendanceId: row.attendanceId,
-        studentName: row.name,
-        currentStatus: row.status,
-      });
-      setNewStatus(row.status === "present" ? "absent" : "present");
-      setReason("");
-      setEditOpen(true);
-    },
-    [],
-  );
+  const openEdit = useCallback((row: CorrectionRow) => {
+    setEditRow({
+      attendanceId: row.attendance_id,
+      studentName: row.student_name,
+      currentStatus: row.status,
+      studentUserId: row.student_user_id,
+      lectureId: selectedLecture,
+    });
+    setNewStatus(row.status === "present" ? "absent" : "present");
+    setReason("");
+    setEditOpen(true);
+  }, [selectedLecture]);
 
-  const canSubmit =
-    editRow && reason.trim().length >= 3 && newStatus !== editRow.currentStatus;
+  const canSubmit = editRow && reason.trim().length >= 3 && newStatus !== editRow.currentStatus;
 
   const selectedLectureData = lecturesQuery.data?.find((l) => l.id === selectedLecture);
 
@@ -275,28 +229,40 @@ export default function AdminAttendanceCorrections() {
             Edit historical attendance records. All changes are audited and trigger intelligence recalculation.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {/* ── Filters ── */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1 space-y-1.5">
-              <label className="text-sm font-medium">Lecture</label>
+          {/* Filters */}
+          <div className="grid gap-3 lg:grid-cols-4">
+            <div className="space-y-1.5 lg:col-span-2">
+              <label className="text-sm font-medium">Lecture (past only)</label>
               <Select value={selectedLecture} onValueChange={setSelectedLecture}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a lecture…" />
+                  <SelectValue placeholder="Select a past lecture…" />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
-                  {lecturesQuery.data?.map((l) => (
+                  {(lecturesQuery.data ?? []).map((l) => (
                     <SelectItem key={l.id} value={l.id}>
                       {l.topic} — {l.lecture_date} {l.start_time}
-                      {l.status !== "ended" ? ` (${l.status})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex-1 space-y-1.5">
-              <label className="text-sm font-medium">Search student</label>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">From</label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">To</label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="w-full max-w-md space-y-1.5">
+              <label className="text-sm font-medium">Student search</label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -307,80 +273,62 @@ export default function AdminAttendanceCorrections() {
                 />
               </div>
             </div>
+
+            {selectedLectureData ? (
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm">
+                <span className="font-medium">{selectedLectureData.topic}</span>
+                <span className="text-muted-foreground">{" · "}{selectedLectureData.lecture_date} · {selectedLectureData.start_time}</span>
+              </div>
+            ) : null}
           </div>
 
-          {/* ── Lecture info ── */}
-          {selectedLectureData && (
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
-              <span className="font-medium">{selectedLectureData.topic}</span>
-              <span className="text-muted-foreground">
-                {" · "}
-                {selectedLectureData.lecture_date} · {selectedLectureData.start_time}
-                {" · "}
-              </span>
-              <Badge variant="outline" className="text-xs">
-                {selectedLectureData.status}
-              </Badge>
-              <span className="text-muted-foreground ml-2">
-                {displayRows.length} record{displayRows.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-          )}
-
-          {/* ── Table ── */}
+          {/* Table */}
           {!selectedLecture ? (
-            <div className="py-12 text-center text-muted-foreground">
-              Select a lecture to view attendance records.
-            </div>
-          ) : attendanceQuery.isLoading || profilesQuery.isLoading ? (
+            <div className="py-12 text-center text-muted-foreground">Select a lecture to view attendance records.</div>
+          ) : correctionsQuery.isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
-          ) : displayRows.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              No attendance records found for this lecture.
-            </div>
+          ) : correctionsQuery.isError ? (
+            <div className="py-12 text-center text-muted-foreground">Failed to load corrections.</div>
+          ) : (correctionsQuery.data?.rows?.length ?? 0) === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">No attendance records found for this lecture.</div>
           ) : (
             <>
               <div className="rounded-lg border border-border/60 overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      <TableHead>Student Name</TableHead>
                       <TableHead>Student ID</TableHead>
                       <TableHead className="hidden md:table-cell">Programme</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="hidden sm:table-cell">Marked At</TableHead>
-                      <TableHead className="w-24">Actions</TableHead>
+                      <TableHead>Edited</TableHead>
+                      <TableHead className="w-24">Edit</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pagedRows.map((r) => (
-                      <TableRow key={r.attendanceId}>
-                        <TableCell className="font-medium">{r.name}</TableCell>
-                        <TableCell>{r.studentId}</TableCell>
+                    {correctionsQuery.data!.rows.map((r) => (
+                      <TableRow key={r.attendance_id}>
+                        <TableCell className="font-medium">{r.student_name}</TableCell>
+                        <TableCell>{r.student_id}</TableCell>
                         <TableCell className="hidden md:table-cell">{r.programme}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <Badge
-                              variant={r.status === "present" ? "default" : "secondary"}
-                              className={
-                                r.status === "present"
-                                  ? "bg-success text-success-foreground"
-                                  : ""
-                              }
-                            >
-                              {r.status}
-                            </Badge>
-                            {r.editedAt && (
-                              <AuditBadge attendanceId={r.attendanceId} />
-                            )}
-                          </div>
+                          <Badge
+                            variant={r.status === "present" ? "default" : "secondary"}
+                            className={r.status === "present" ? "bg-success text-success-foreground" : ""}
+                          >
+                            {r.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                          {r.markedAt}
+                          {new Date(r.marked_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {r.edited_at ? <AuditBadge attendanceId={r.attendance_id} /> : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -403,15 +351,10 @@ export default function AdminAttendanceCorrections() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-sm text-muted-foreground">
-                    Page {page + 1} of {totalPages} · {displayRows.length} records
+                    Page {page + 1} of {totalPages} · {correctionsQuery.data?.total ?? 0} records
                   </span>
                   <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 0}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
+                    <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
@@ -430,7 +373,7 @@ export default function AdminAttendanceCorrections() {
         </CardContent>
       </Card>
 
-      {/* ── Edit Dialog ── */}
+      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -439,17 +382,14 @@ export default function AdminAttendanceCorrections() {
               Edit Historical Attendance
             </DialogTitle>
             <DialogDescription>
-              This will modify historical attendance for{" "}
-              <strong>{editRow?.studentName}</strong> and recalculate intelligence.
+              This will modify historical attendance for <strong>{editRow?.studentName}</strong> and recalculate intelligence.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Current status</span>
-              <Badge
-                variant={editRow?.currentStatus === "present" ? "default" : "secondary"}
-              >
+              <Badge variant={editRow?.currentStatus === "present" ? "default" : "secondary"}>
                 {editRow?.currentStatus}
               </Badge>
             </div>
@@ -480,14 +420,11 @@ export default function AdminAttendanceCorrections() {
             </div>
 
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-muted-foreground">
-              ⚠️ This will modify historical attendance and recalculate intelligence scores.
-              All changes are permanently logged in the audit trail.
+              ⚠️ This will modify historical attendance and recalculate intelligence scores. All changes are permanently logged in the audit trail.
             </div>
 
             {editRow && newStatus === editRow.currentStatus && (
-              <p className="text-xs text-muted-foreground">
-                Status is already {editRow.currentStatus}. Select a different status.
-              </p>
+              <p className="text-xs text-muted-foreground">Status is already {editRow.currentStatus}. Select a different status.</p>
             )}
           </div>
 
@@ -495,10 +432,7 @@ export default function AdminAttendanceCorrections() {
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() => editMutation.mutate()}
-              disabled={!canSubmit || editMutation.isPending}
-            >
+            <Button onClick={() => editMutation.mutate()} disabled={!canSubmit || editMutation.isPending}>
               {editMutation.isPending ? "Updating…" : "Confirm Edit"}
             </Button>
           </DialogFooter>
@@ -508,11 +442,10 @@ export default function AdminAttendanceCorrections() {
   );
 }
 
-// ── Audit Badge with mini history popover ──
 function AuditBadge({ attendanceId }: { attendanceId: string }) {
   const auditQuery = useQuery({
     queryKey: ["admin", "corrections", "audit", attendanceId],
-    enabled: false, // only fetch on click
+    enabled: false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attendance_audit_log")
@@ -557,9 +490,7 @@ function AuditBadge({ attendanceId }: { attendanceId: string }) {
                   </Badge>
                 </div>
                 <p className="text-muted-foreground">{a.reason}</p>
-                <p className="text-muted-foreground/70">
-                  {new Date(a.changed_at).toLocaleString()}
-                </p>
+                <p className="text-muted-foreground/70">{new Date(a.changed_at).toLocaleString()}</p>
               </div>
             ))}
           </div>

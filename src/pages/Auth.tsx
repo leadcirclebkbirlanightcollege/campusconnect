@@ -51,6 +51,27 @@ const Auth = () => {
 
   const redirectToDashboard = async (userId: string) => {
     try {
+      // Trigger retention engine (idempotent; non-blocking)
+      try {
+        const { data: retentionData } = await supabase.functions.invoke("retention-on-login", { body: {} });
+        if (retentionData?.success) {
+          if (retentionData?.streak?.incremented) {
+            toast.success(`🔥 Streak: ${retentionData.streak.current_streak} days`, {
+              description: `Longest: ${retentionData.streak.longest_streak} days`,
+            });
+          }
+          if (retentionData?.daily_reward?.granted) {
+            const msg = retentionData.daily_reward.message || "Daily reward unlocked";
+            toast.success("🎁 Daily Reward", { description: msg });
+          }
+          if (retentionData?.achievements?.granted) {
+            toast.success("🏅 Achievement unlocked", { description: "7-day streak" });
+          }
+        }
+      } catch {
+        // ignore retention errors
+      }
+
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")

@@ -63,6 +63,7 @@ const AdminDashboard = () => {
     if (location.hash === "#admin_profile") setTab("admin_profile");
     if (location.hash === "#points") setTab("points");
     if (location.hash === "#settings") setTab("settings");
+    if (location.hash === "#corrections") setTab("corrections");
   }, [location.hash]);
 
   return (

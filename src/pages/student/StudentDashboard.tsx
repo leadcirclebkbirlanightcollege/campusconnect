@@ -112,7 +112,7 @@ const StudentDashboard = () => {
 
       const [
         { data: profile },
-        { data: pointsData },
+        { data: pointsTotal },
         { data: attendanceData },
         { data: upcomingCountData },
         { data: allLectures },
@@ -125,7 +125,7 @@ const StudentDashboard = () => {
         { data: pollData },
       ] = await Promise.all([
         supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle<ProfileRow>(),
-        supabase.from("points_ledger").select("points").eq("user_id", user.id),
+        supabase.rpc("get_my_points_total"),
         supabase.from("attendance").select("id").eq("student_user_id", user.id).eq("status", "present"),
         supabase.from("lectures").select("id").gte("lecture_date", new Date().toISOString().split("T")[0]),
         supabase.from("lectures").select("id"),
@@ -168,7 +168,7 @@ const StudentDashboard = () => {
       ]);
 
       setName(profile?.name || "User");
-      const totalPoints = pointsData?.reduce((sum, entry) => sum + entry.points, 0) || 0;
+      const totalPoints = Number(pointsTotal ?? 0);
 
       // Leaderboard rank
       let rank = 0;
@@ -176,10 +176,14 @@ const StudentDashboard = () => {
         const { data: lb } = await supabase.rpc("get_leaderboard", { p_limit: 100, p_verified_only: false });
         const entry = (lb ?? []).find((r: any) => r.user_id === user.id);
         rank = entry?.rank ?? 0;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // Filter notifications
-      const unreadIds = Array.from(new Set((notificationsData ?? []).map((r: any) => r.notification_id).filter(Boolean) as string[]));
+      const unreadIds = Array.from(
+        new Set((notificationsData ?? []).map((r: any) => r.notification_id).filter(Boolean) as string[]),
+      );
       let unreadCount = unreadIds.length;
       if (unreadIds.length > 0) {
         const { data: notifMeta } = await supabase.from("notifications").select("id,status").in("id", unreadIds);
