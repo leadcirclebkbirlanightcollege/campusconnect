@@ -76,6 +76,16 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            {/* Dedicated Corrections route (tabs remain the UI) */}
+            <Route
+              path="admin/attendance/corrections"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Navigate to="/app/admin/dashboard#corrections" replace />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Legacy routes kept as redirects */}
