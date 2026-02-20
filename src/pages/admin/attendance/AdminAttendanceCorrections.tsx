@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   FileEdit,
   Search,
@@ -103,7 +104,9 @@ export default function AdminAttendanceCorrections() {
   const [newStatus, setNewStatus] = useState("present");
   const [reason, setReason] = useState("");
 
-  useEffect(() => setPage(0), [selectedLecture, studentSearch, startDate, endDate]);
+  const debouncedSearch = useDebounce(studentSearch, 300);
+
+  useEffect(() => setPage(0), [selectedLecture, debouncedSearch, startDate, endDate]);
 
   // Past lectures only
   const lecturesQuery = useQuery({
@@ -129,7 +132,7 @@ export default function AdminAttendanceCorrections() {
       "rows",
       {
         selectedLecture,
-        studentSearch,
+        studentSearch: debouncedSearch,
         startDate,
         endDate,
         page,
@@ -143,7 +146,7 @@ export default function AdminAttendanceCorrections() {
 
       const { data, error } = await supabase.rpc("admin_get_attendance_corrections", {
         p_lecture_id: selectedLecture,
-        p_search: studentSearch.trim() || null,
+        p_search: debouncedSearch.trim() || null,
         p_start_date,
         p_end_date,
         p_page: page,

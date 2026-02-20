@@ -29,6 +29,7 @@ import StudentProgrammesCard from "@/components/programmes/StudentProgrammesCard
 import DashboardStatsRing from "@/pages/student/dashboard/DashboardStatsRing";
 import { useRecentUpdate } from "@/hooks/use-recent-update";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
+import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 
 type ProfileRow = { name: string };
@@ -321,6 +322,9 @@ const StudentDashboard = () => {
         </Card>
       )}
 
+      {/* Growth Insights */}
+      <GrowthInsightsPanel />
+
       {/* Live Attendance */}
       <LiveAttendanceWidget />
 
@@ -513,6 +517,56 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
         />
       </div>
     </div>
+  );
+}
+
+/** Growth Insights Panel — all data from server RPC */
+function GrowthInsightsPanel() {
+  const growth = useGrowthInsights();
+  if (!growth.data) return null;
+
+  const g = growth.data;
+  const trendIcon = g.trend_direction === "improving" ? "📈" : g.trend_direction === "declining" ? "📉" : "➡️";
+  const riskColor =
+    g.risk_probability === "high" ? "text-destructive" : g.risk_probability === "medium" ? "text-premium" : "text-success";
+  const projTier = TIER_CONFIG[g.projected_tier_next_month as keyof typeof TIER_CONFIG];
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Growth Insights
+        </CardTitle>
+        <CardDescription>30-day trends & projections (server-computed)</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="text-center space-y-1">
+            <p className="text-2xl font-bold text-foreground">{g.last_30_day_attendance_pct}%</p>
+            <p className="text-xs text-muted-foreground">30-Day Attendance</p>
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-2xl font-bold text-foreground">{trendIcon}</p>
+            <p className="text-xs text-muted-foreground capitalize">{g.trend_direction}</p>
+          </div>
+          <div className="text-center space-y-1">
+            {projTier ? (
+              <Badge className={`${projTier.bg} ${projTier.color} ${projTier.border} border text-xs`}>
+                {projTier.label}
+              </Badge>
+            ) : (
+              <p className="text-sm font-semibold capitalize">{g.projected_tier_next_month}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">Projected Tier</p>
+          </div>
+          <div className="text-center space-y-1">
+            <p className={`text-lg font-bold capitalize ${riskColor}`}>{g.risk_probability}</p>
+            <p className="text-xs text-muted-foreground">Risk Level</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

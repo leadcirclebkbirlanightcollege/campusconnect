@@ -917,6 +917,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_growth_insights: { Args: { p_user_id?: string }; Returns: Json }
       get_leaderboard: {
         Args: { p_limit?: number; p_verified_only?: boolean }
         Returns: {
@@ -942,6 +943,17 @@ export type Database = {
           p_silver_max?: number
         }
         Returns: Json
+      }
+      get_weekly_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          is_verified: boolean
+          name: string
+          rank: number
+          user_id: string
+          weekly_points: number
+        }[]
       }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
