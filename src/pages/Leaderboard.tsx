@@ -28,6 +28,7 @@ const PODIUM_LABELS = ["1st", "2nd", "3rd"];
 
 export default function Leaderboard() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [tab, setTab] = useState<"alltime" | "weekly">("alltime");
 
   const meQuery = useQuery({
     queryKey: ["student", "me"],
@@ -50,7 +51,20 @@ export default function Leaderboard() {
     },
   });
 
-  const rows = useMemo(() => leaderboardQuery.data ?? [], [leaderboardQuery.data]);
+  const weeklyQuery = useQuery({
+    queryKey: ["leaderboard", "weekly"],
+    enabled: tab === "weekly",
+    queryFn: async (): Promise<{ user_id: string; name: string; avatar_url: string | null; is_verified: boolean; weekly_points: number; rank: number }[]> => {
+      const { data, error } = await supabase.rpc("get_weekly_leaderboard" as any, { p_limit: 100 });
+      if (error) throw error;
+      return (data ?? []) as any;
+    },
+  });
+
+  const rows = useMemo(() => {
+    if (tab === "weekly") return (weeklyQuery.data ?? []).map((r: any) => ({ ...r, points_total: r.weekly_points }));
+    return leaderboardQuery.data ?? [];
+  }, [leaderboardQuery.data, weeklyQuery.data, tab]);
   const top3 = rows.slice(0, 3);
   const rest = rows.slice(3);
   const myRank = rows.find((r) => r.user_id === meQuery.data?.id);
@@ -63,16 +77,35 @@ export default function Leaderboard() {
             <Trophy className="h-6 w-6 text-primary" />
             Leaderboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">All-time points ranking</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {tab === "weekly" ? "This week's points ranking" : "All-time points ranking"}
+          </p>
         </div>
-        <Button
-          variant={verifiedOnly ? "secondary" : "outline"}
-          className="gap-2"
-          onClick={() => setVerifiedOnly((v) => !v)}
-        >
-          <Filter className="h-4 w-4" />
-          {verifiedOnly ? "Verified only" : "All students"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant={tab === "alltime" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setTab("alltime")}
+          >
+            All-time
+          </Button>
+          <Button
+            variant={tab === "weekly" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setTab("weekly")}
+          >
+            This Week
+          </Button>
+          <Button
+            variant={verifiedOnly ? "secondary" : "outline"}
+            size="sm"
+            className="gap-2"
+            onClick={() => setVerifiedOnly((v) => !v)}
+          >
+            <Filter className="h-4 w-4" />
+            {verifiedOnly ? "Verified" : "All"}
+          </Button>
+        </div>
       </header>
 
       {/* Your rank pinned */}
@@ -164,11 +197,13 @@ export default function Leaderboard() {
         </Card>
       )}
 
-      {leaderboardQuery.isLoading && (
+      {(leaderboardQuery.isLoading || weeklyQuery.isLoading) && (
         <div className="text-center py-10 text-muted-foreground">Loading leaderboard…</div>
       )}
-      {!leaderboardQuery.isLoading && rows.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">No students found.</div>
+      {!(leaderboardQuery.isLoading || weeklyQuery.isLoading) && rows.length === 0 && (
+        <div className="text-center py-10 text-muted-foreground">
+          {tab === "weekly" ? "No activity this week yet." : "No students found."}
+        </div>
       )}
     </div>
   );
