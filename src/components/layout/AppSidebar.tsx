@@ -14,10 +14,18 @@ import {
   Megaphone,
   BarChart3,
   Sparkles,
+  Calendar,
+  Moon,
+  Sun,
+  Wrench,
+  ClipboardCheck,
+  SlidersHorizontal,
+  Settings,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
+import { useTheme } from "@/hooks/use-theme";
 
 import {
   Sidebar,
@@ -32,14 +40,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import ThemeToggle from "@/components/layout/ThemeToggle";
-
 type Role = "admin" | "student" | null;
+
+interface NavSection {
+  label: string;
+  items: { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[];
+}
 
 export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { setOpenMobile } = useSidebar();
+  const { theme, setTheme } = useTheme();
 
   const authQuery = useQuery({
     queryKey: ["app_sidebar", "auth"],
@@ -65,105 +77,166 @@ export default function AppSidebar() {
     },
   });
 
-  const isCollapsed = state === "collapsed";
   const currentPath = location.pathname;
   const isAdmin = roleQuery.data === "admin";
 
-  const items = useMemo(
-    () =>
-      [
-        { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard, show: true },
-        { title: "Attendance", url: "/app/attendance", icon: CalendarDays, show: true },
-        { title: "Learning Circles", url: "/app/programmes", icon: BookOpen, show: true },
-        { title: "Lectures", url: "/app/lectures", icon: CalendarDays, show: true },
-        { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy, show: true },
-        { title: "Announcements", url: "/app/announcements", icon: Megaphone, show: true },
-        { title: "Events", url: "/app/events", icon: CalendarDays, show: true },
-        { title: "Polls", url: "/app/polls", icon: BarChart3, show: true },
-        { title: "Daily", url: "/app/daily", icon: Sparkles, show: true },
-        { title: "Inbox", url: "/app/inbox", icon: Bell, show: true },
-        { title: "Digital ID", url: "/app/id-card", icon: CreditCard, show: true },
-        { title: "Profile", url: "/app/profile", icon: UserRound, show: true },
-        { title: "Admin", url: "/app/admin/dashboard", icon: Shield, show: isAdmin },
-      ].filter((i) => i.show),
-    [isAdmin],
+  const sections: NavSection[] = useMemo(
+    () => [
+      {
+        label: "MAIN",
+        items: [
+          { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
+        ],
+      },
+      {
+        label: "ACADEMICS",
+        items: [
+          { title: "Attendance", url: "/app/attendance", icon: CalendarDays },
+          { title: "Lectures", url: "/app/lectures", icon: BookOpen },
+          { title: "Learning Circles", url: "/app/programmes", icon: Calendar },
+        ],
+      },
+      {
+        label: "ENGAGEMENT",
+        items: [
+          { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy },
+          { title: "Polls", url: "/app/polls", icon: BarChart3 },
+          { title: "Daily", url: "/app/daily", icon: Sparkles },
+        ],
+      },
+      {
+        label: "COMMUNICATION",
+        items: [
+          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
+          { title: "Events", url: "/app/events", icon: CalendarDays },
+          { title: "Inbox", url: "/app/inbox", icon: Bell },
+        ],
+      },
+      {
+        label: "IDENTITY",
+        items: [
+          { title: "Digital ID", url: "/app/id-card", icon: CreditCard },
+          { title: "Profile", url: "/app/profile", icon: UserRound },
+        ],
+      },
+    ],
+    [],
   );
+
+  const adminSection: NavSection = useMemo(
+    () => ({
+      label: "ADMIN",
+      items: [
+        { title: "Admin Dashboard", url: "/app/admin/dashboard", icon: Shield },
+      ],
+    }),
+    [],
+  );
+
+  const isActive = (url: string) =>
+    currentPath === url || currentPath.startsWith(url + "/");
+
+  const handleNav = () => {
+    // Auto-close mobile sidebar on navigation
+    setOpenMobile(false);
+  };
 
   const onLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
   };
 
-  return (
-    <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Campus Connect</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const active = currentPath === item.url || currentPath.startsWith(item.url + "/");
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                      <NavLink
-                        to={item.url}
-                        className="flex items-center gap-2"
-                        activeClassName=""
-                        end={item.url === "/app/dashboard"}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {!isCollapsed ? <span>{item.title}</span> : null}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
-              <SidebarMenuItem>
+  const renderSection = (section: NavSection, idx: number) => (
+    <SidebarGroup key={section.label} className={idx > 0 ? "pt-2" : ""}>
+      <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/50 px-3 pb-1">
+        {section.label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {section.items.map((item) => {
+            const active = isActive(item.url);
+            const Icon = item.icon;
+            return (
+              <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
-                  type="button"
-                  onClick={onLogout}
-                  tooltip="Logout"
-                  className="gap-2"
+                  asChild
+                  isActive={active}
+                  tooltip={item.title}
+                  className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium"
                 >
-                  <LogOut className="h-4 w-4" />
-                  {!isCollapsed ? <span>Logout</span> : null}
+                  <NavLink
+                    to={item.url}
+                    className="flex items-center"
+                    activeClassName=""
+                    end={item.url === "/app/dashboard"}
+                    onClick={handleNav}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{item.title}</span>
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+
+  return (
+    <Sidebar variant="sidebar" className="border-r border-sidebar-border">
+      {/* Logo / Brand */}
+      <div className="flex h-12 items-center gap-2 px-4 border-b border-sidebar-border shrink-0">
+        <div className="h-7 w-7 rounded-lg bg-gradient-premium flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-xs">CC</span>
+        </div>
+        <span className="text-sm font-bold text-sidebar-foreground">Campus Connect</span>
+      </div>
+
+      <SidebarContent className="overflow-y-auto px-1 py-2">
+        {sections.map((s, i) => renderSection(s, i))}
+
+        {/* Admin section with soft divider */}
+        {isAdmin && (
+          <>
+            <div className="mx-3 my-2 border-t border-sidebar-border/60" />
+            {renderSection(adminSection, sections.length)}
+          </>
+        )}
       </SidebarContent>
 
-      <SidebarFooter>
-        <a
-          href="https://campus-bookings.vercel.app/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={
-            "group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium tracking-wide !text-premium " +
-            "underline-offset-4 transition-all hover:underline hover:[filter:drop-shadow(0_0_10px_hsl(var(--premium)/0.35))] " +
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          }
-          aria-label="Open Campus Screening Portal (opens in new tab)"
-          title={isCollapsed ? "Campus Screening Portal" : undefined}
-        >
-          {!isCollapsed ? (
-            <span>Campus Screening Portal</span>
-          ) : (
-            <span className="text-[10px] tracking-[0.25em]">CSP</span>
-          )}
-          <span className="sr-only">(opens in a new tab)</span>
-        </a>
-
-        <ThemeToggle />
-        {!isCollapsed ? (
-          <p className="px-2 pb-2 text-[11px] leading-snug text-sidebar-foreground/70">
-            Developed by - Atharv Jadhav - Department Of Computer Science
-          </p>
-        ) : null}
+      {/* Sticky footer */}
+      <SidebarFooter className="border-t border-sidebar-border px-2 py-2 space-y-1">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleTheme}
+              tooltip={theme === "dark" ? "Light mode" : "Dark mode"}
+              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4 shrink-0" />
+              ) : (
+                <Moon className="h-4 w-4 shrink-0" />
+              )}
+              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={onLogout}
+              tooltip="Logout"
+              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium text-destructive hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );

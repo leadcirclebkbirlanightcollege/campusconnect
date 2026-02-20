@@ -19,6 +19,10 @@ function usePageTitle(pathname: string) {
   if (pathname.startsWith("/app/id-card")) return "Digital ID";
   if (pathname.startsWith("/app/profile")) return "Profile";
   if (pathname.startsWith("/app/leaderboard")) return "Leaderboard";
+  if (pathname.startsWith("/app/announcements")) return "Announcements";
+  if (pathname.startsWith("/app/events")) return "Events";
+  if (pathname.startsWith("/app/polls")) return "Polls";
+  if (pathname.startsWith("/app/daily")) return "Daily";
   return "Dashboard";
 }
 
@@ -38,7 +42,7 @@ export default function AppLayout() {
         <SidebarInset>
           <header className="sticky top-0 z-40 border-b border-border/40 bg-card/80 backdrop-blur-xl">
             <div className="flex h-12 items-center gap-3 px-4 md:px-6">
-              <SidebarTrigger className="-ml-1" />
+              <SidebarTrigger className="-ml-1 md:hidden" />
               <div className="min-w-0">
                 <h1 className="truncate text-sm font-semibold text-foreground">{title}</h1>
               </div>
