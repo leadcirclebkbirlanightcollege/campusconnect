@@ -17,10 +17,6 @@ import {
   Calendar,
   Moon,
   Sun,
-  Wrench,
-  ClipboardCheck,
-  SlidersHorizontal,
-  Settings,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -136,23 +132,18 @@ export default function AppSidebar() {
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
 
-  const handleNav = () => {
-    // Auto-close mobile sidebar on navigation
-    setOpenMobile(false);
-  };
+  const handleNav = () => setOpenMobile(false);
 
   const onLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth", { replace: true });
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const renderSection = (section: NavSection, idx: number) => (
-    <SidebarGroup key={section.label} className={idx > 0 ? "pt-2" : ""}>
-      <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/50 px-3 pb-1">
+    <SidebarGroup key={section.label} className={idx > 0 ? "pt-1" : ""}>
+      <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground px-3 pb-0.5">
         {section.label}
       </SidebarGroupLabel>
       <SidebarGroupContent>
@@ -166,7 +157,7 @@ export default function AppSidebar() {
                   asChild
                   isActive={active}
                   tooltip={item.title}
-                  className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium"
+                  className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal"
                 >
                   <NavLink
                     to={item.url}
@@ -175,7 +166,7 @@ export default function AppSidebar() {
                     end={item.url === "/app/dashboard"}
                     onClick={handleNav}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
+                    <Icon className="h-4 w-4 shrink-0 opacity-70" />
                     <span>{item.title}</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -189,39 +180,39 @@ export default function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" className="border-r border-sidebar-border">
-      {/* Logo / Brand */}
-      <div className="flex h-12 items-center gap-2 px-4 border-b border-sidebar-border shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-gradient-premium flex items-center justify-center">
+      <div className="flex h-14 items-center gap-2.5 px-4 border-b border-sidebar-border shrink-0">
+        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
           <span className="text-primary-foreground font-bold text-xs">CC</span>
         </div>
-        <span className="text-sm font-bold text-sidebar-foreground">Campus Connect</span>
+        <div className="min-w-0">
+          <span className="text-sm font-semibold text-sidebar-foreground block leading-tight">Campus Connect</span>
+          <span className="text-[10px] text-muted-foreground leading-none">Institutional Platform</span>
+        </div>
       </div>
 
       <SidebarContent className="overflow-y-auto px-1 py-2">
         {sections.map((s, i) => renderSection(s, i))}
 
-        {/* Admin section with soft divider */}
         {isAdmin && (
           <>
-            <div className="mx-3 my-2 border-t border-sidebar-border/60" />
+            <div className="mx-3 my-2 border-t border-sidebar-border" />
             {renderSection(adminSection, sections.length)}
           </>
         )}
       </SidebarContent>
 
-      {/* Sticky footer */}
-      <SidebarFooter className="border-t border-sidebar-border px-2 py-2 space-y-1">
+      <SidebarFooter className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={toggleTheme}
               tooltip={theme === "dark" ? "Light mode" : "Dark mode"}
-              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium"
+              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal"
             >
               {theme === "dark" ? (
-                <Sun className="h-4 w-4 shrink-0" />
+                <Sun className="h-4 w-4 shrink-0 opacity-70" />
               ) : (
-                <Moon className="h-4 w-4 shrink-0" />
+                <Moon className="h-4 w-4 shrink-0 opacity-70" />
               )}
               <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
@@ -230,7 +221,7 @@ export default function AppSidebar() {
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Logout"
-              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-medium text-destructive hover:text-destructive"
+              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal text-destructive hover:text-destructive"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Logout</span>

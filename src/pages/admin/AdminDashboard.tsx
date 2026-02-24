@@ -67,34 +67,25 @@ const AdminDashboard = () => {
   }, [location.hash]);
 
   return (
-    <div className="container mx-auto px-0 sm:px-4 py-2 sm:py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage lectures, students, attendance, and programmes</p>
-      </div>
-
+    <div className="space-y-6">
       <Tabs value={tab} onValueChange={setTab} className="space-y-6">
         {isMobile ? (
-          <div className="px-4">
-            <Select value={tab} onValueChange={setTab}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select section" />
-              </SelectTrigger>
-              <SelectContent>
-                {tabItems.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={tab} onValueChange={setTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select section" />
+            </SelectTrigger>
+            <SelectContent>
+              {tabItems.map((t) => (
+                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
-          <TabsList className="w-full max-w-6xl flex flex-wrap gap-1 h-auto bg-muted/50 p-1">
+          <TabsList className="w-full flex flex-wrap gap-0.5 h-auto bg-muted/50 p-1 rounded-lg">
             {tabItems.map((t) => {
               const Icon = t.icon;
               return (
-                <TabsTrigger key={t.value} value={t.value} className="gap-1.5 h-9 text-xs">
+                <TabsTrigger key={t.value} value={t.value} className="gap-1.5 h-8 text-xs rounded-md">
                   <Icon className="w-3.5 h-3.5" />
                   {t.label}
                 </TabsTrigger>
@@ -106,105 +97,54 @@ const AdminDashboard = () => {
         <TabsContent value="overview">
           <AdminOverviewTab onNavigateTab={setTab} />
         </TabsContent>
-
-        <TabsContent value="students" className="px-4 sm:px-0">
-          <StudentManagementTab />
-        </TabsContent>
-
-        <TabsContent value="lectures" className="px-4 sm:px-0">
-          <LectureManagementTab />
-        </TabsContent>
-
-        <TabsContent value="programmes" className="px-4 sm:px-0">
-          <ProgrammeManagementTab />
-        </TabsContent>
-
-        <TabsContent value="allotments" className="px-4 sm:px-0">
-          <StudentAllotmentTab />
-        </TabsContent>
-
-        <TabsContent value="attendance" className="px-4 sm:px-0">
-          <AdminAttendanceControlTab />
-        </TabsContent>
-
-        <TabsContent value="monthly" className="px-4 sm:px-0">
-          <AdminMonthlyAttendance />
-        </TabsContent>
-
-        <TabsContent value="corrections" className="px-4 sm:px-0">
-          <AdminAttendanceCorrections />
-        </TabsContent>
-
-        <TabsContent value="announcements" className="px-4 sm:px-0">
-          <AdminAnnouncementsTab />
-        </TabsContent>
-
-        <TabsContent value="events" className="px-4 sm:px-0">
-          <AdminEventsTab />
-        </TabsContent>
-
-        <TabsContent value="polls" className="px-4 sm:px-0">
-          <AdminPollsTab />
-        </TabsContent>
-
-        <TabsContent value="daily_content" className="px-4 sm:px-0">
-          <AdminDailyContentTab />
-        </TabsContent>
-
-        <TabsContent value="notifications" className="px-4 sm:px-0">
-          <AdminNotificationCenterTab />
-        </TabsContent>
-
-        <TabsContent value="points" className="px-4 sm:px-0">
-          <AdminPointsAdjustmentsTab />
-        </TabsContent>
-
-        <TabsContent value="settings" className="px-4 sm:px-0">
+        <TabsContent value="students"><StudentManagementTab /></TabsContent>
+        <TabsContent value="lectures"><LectureManagementTab /></TabsContent>
+        <TabsContent value="programmes"><ProgrammeManagementTab /></TabsContent>
+        <TabsContent value="allotments"><StudentAllotmentTab /></TabsContent>
+        <TabsContent value="attendance"><AdminAttendanceControlTab /></TabsContent>
+        <TabsContent value="monthly"><AdminMonthlyAttendance /></TabsContent>
+        <TabsContent value="corrections"><AdminAttendanceCorrections /></TabsContent>
+        <TabsContent value="announcements"><AdminAnnouncementsTab /></TabsContent>
+        <TabsContent value="events"><AdminEventsTab /></TabsContent>
+        <TabsContent value="polls"><AdminPollsTab /></TabsContent>
+        <TabsContent value="daily_content"><AdminDailyContentTab /></TabsContent>
+        <TabsContent value="notifications"><AdminNotificationCenterTab /></TabsContent>
+        <TabsContent value="points"><AdminPointsAdjustmentsTab /></TabsContent>
+        <TabsContent value="settings">
           <div className="space-y-6">
             <PointsRulesSettings />
             <SystemHealthPanel />
             <AdminRoleBackfillPanel />
-            {/* System Info Card */}
-            <Card className="border-border/50">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-base">System Information</CardTitle>
+                <CardTitle className="text-sm font-medium">System Information</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs">Version</p>
+                    <p className="text-xs text-muted-foreground">Version</p>
                     <p className="font-medium">{APP_VERSION}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Build</p>
+                    <p className="text-xs text-muted-foreground">Build</p>
                     <p className="font-medium">{BUILD_NUMBER}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Release Date</p>
+                    <p className="text-xs text-muted-foreground">Release Date</p>
                     <p className="font-medium">{RELEASE_DATE}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Environment</p>
+                    <p className="text-xs text-muted-foreground">Environment</p>
                     <Badge variant="secondary" className="text-[10px]">{ENVIRONMENT}</Badge>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">Campus Connect · © LeadCircle Initiative · All Rights Reserved</p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-
-        <TabsContent value="admin_profile" className="px-4 sm:px-0">
-          <AdminProfileSettings />
-        </TabsContent>
-
-        <TabsContent value="scanner" className="px-4 sm:px-0">
-          <AdminDigitalIdScanner />
-        </TabsContent>
-
-        <TabsContent value="audit_log" className="px-4 sm:px-0">
-          <AdminAuditLogTab />
-        </TabsContent>
+        <TabsContent value="admin_profile"><AdminProfileSettings /></TabsContent>
+        <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
+        <TabsContent value="audit_log"><AdminAuditLogTab /></TabsContent>
       </Tabs>
     </div>
   );

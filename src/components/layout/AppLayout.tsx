@@ -10,51 +10,57 @@ import AppSidebar from "@/components/layout/AppSidebar";
 
 const FOOTER_LINE = "Developed by - Atharv Jadhav - Department Of Computer Science";
 
-function usePageTitle(pathname: string) {
-  if (pathname.startsWith("/app/admin")) return "Admin";
-  if (pathname.startsWith("/app/attendance")) return "Attendance";
-  if (pathname.startsWith("/app/programmes")) return "Learning Circles";
-  if (pathname.startsWith("/app/lectures")) return "Lectures";
-  if (pathname.startsWith("/app/inbox")) return "Inbox";
-  if (pathname.startsWith("/app/id-card")) return "Digital ID";
-  if (pathname.startsWith("/app/profile")) return "Profile";
-  if (pathname.startsWith("/app/leaderboard")) return "Leaderboard";
-  if (pathname.startsWith("/app/announcements")) return "Announcements";
-  if (pathname.startsWith("/app/events")) return "Events";
-  if (pathname.startsWith("/app/polls")) return "Polls";
-  if (pathname.startsWith("/app/daily")) return "Daily";
-  return "Dashboard";
+const PAGE_META: Record<string, { title: string; description: string }> = {
+  "/app/dashboard": { title: "Dashboard", description: "Your academic overview at a glance" },
+  "/app/admin": { title: "Admin", description: "System administration and management" },
+  "/app/attendance": { title: "Attendance", description: "View your attendance history and records" },
+  "/app/programmes": { title: "Learning Circles", description: "Browse and track your enrolled programmes" },
+  "/app/lectures": { title: "Lectures", description: "Upcoming and past lecture sessions" },
+  "/app/inbox": { title: "Inbox", description: "Your notifications and messages" },
+  "/app/id-card": { title: "Digital ID", description: "Your institutional identity card" },
+  "/app/profile": { title: "Profile", description: "Manage your personal information" },
+  "/app/leaderboard": { title: "Leaderboard", description: "Student rankings by points earned" },
+  "/app/announcements": { title: "Announcements", description: "Important notices and updates" },
+  "/app/events": { title: "Events", description: "Upcoming campus events" },
+  "/app/polls": { title: "Polls", description: "Active polls and surveys" },
+  "/app/daily": { title: "Daily", description: "Daily content and inspiration" },
+};
+
+function getPageMeta(pathname: string) {
+  for (const [prefix, meta] of Object.entries(PAGE_META)) {
+    if (pathname.startsWith(prefix)) return meta;
+  }
+  return { title: "Dashboard", description: "Your academic overview at a glance" };
 }
 
 export default function AppLayout() {
   const location = useLocation();
-  const title = usePageTitle(location.pathname);
+  const { title, description } = getPageMeta(location.pathname);
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="min-h-svh flex w-full bg-gradient-to-br from-background via-background to-primary/5">
-        {/* ambient */}
-        <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
-        <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
-
+      <div className="min-h-svh flex w-full bg-background">
         <AppSidebar />
 
         <SidebarInset>
-          <header className="sticky top-0 z-40 border-b border-border/40 bg-card/80 backdrop-blur-xl">
-            <div className="flex h-12 items-center gap-3 px-4 md:px-6">
+          <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
+            <div className="flex h-14 items-center gap-3 px-4 md:px-6">
               <SidebarTrigger className="-ml-1 md:hidden" />
               <div className="min-w-0">
                 <h1 className="truncate text-sm font-semibold text-foreground">{title}</h1>
+                <p className="truncate text-xs text-muted-foreground hidden sm:block">{description}</p>
               </div>
             </div>
           </header>
 
-          <main className="relative z-10 flex-1 px-4 py-6 md:px-6 md:py-8">
-            <Outlet />
+          <main className="flex-1 px-4 py-6 md:px-6 md:py-8">
+            <div className="mx-auto max-w-[1280px]">
+              <Outlet />
+            </div>
           </main>
 
-          <footer className="relative z-10 border-t border-border/40 bg-card/60 backdrop-blur-sm">
-            <div className="px-4 py-4 md:px-6">
+          <footer className="border-t border-border bg-card/60">
+            <div className="px-4 py-3 md:px-6">
               <p className="text-center text-xs text-muted-foreground">{FOOTER_LINE}</p>
             </div>
           </footer>

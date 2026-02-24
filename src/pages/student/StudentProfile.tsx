@@ -284,42 +284,8 @@ export default function StudentProfile() {
   const title = useMemo(() => "Profile", []);
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <UserRound className="h-6 w-6 text-primary" />
-            {title}
-            {profileQuery.data?.is_verified ? (
-              <span
-                className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                aria-label="Verified"
-                title="Verified"
-              >
-                <span className="sr-only">Verified</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </span>
-            ) : null}
-          </h1>
-          <p className="mt-2 text-muted-foreground">Update your basic details. Email is read-only.</p>
-        </div>
-        <Button variant="outline" className="gap-2" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
-      </header>
-
-      <Card className="border-primary/10">
+    <div className="space-y-6">
+      <Card>
         <CardHeader>
           <CardTitle>Student Profile</CardTitle>
           <CardDescription>Your information used across the app.</CardDescription>
@@ -427,8 +393,8 @@ export default function StudentProfile() {
         </CardContent>
       </Card>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card className="border-primary/10">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-primary" />
@@ -479,7 +445,7 @@ export default function StudentProfile() {
           </CardContent>
         </Card>
 
-        <Card className="border-accent/10">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-accent" />
@@ -580,7 +546,7 @@ export default function StudentProfile() {
       </div>
 
       {/* Platform Updates */}
-      <Card className="mt-6 border-border/50">
+      <Card>
         <CardContent className="py-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium flex items-center gap-2">
@@ -591,7 +557,7 @@ export default function StudentProfile() {
           <WhatsNewModalTrigger />
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }
 
