@@ -230,7 +230,7 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-primary/10">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
@@ -329,7 +329,7 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
             </div>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card className="border-primary/10">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Live Session</CardTitle>
                   <CardDescription>Active token status and scan count.</CardDescription>
@@ -365,7 +365,7 @@ export default function AdminAttendanceControlTab({ defaultLectureId }: Props) {
                 </CardContent>
               </Card>
 
-              <Card className="border-primary/10">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-base">QR Preview</CardTitle>
                   <CardDescription>Students can scan this code to mark attendance.</CardDescription>

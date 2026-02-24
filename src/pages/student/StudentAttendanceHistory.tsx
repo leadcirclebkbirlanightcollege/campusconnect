@@ -1,14 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { CalendarDays, Filter, Medal, ReceiptText, TicketCheck, ArrowLeft, BadgeCheck } from "lucide-react";
+import { CalendarDays, Filter, BadgeCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -41,15 +38,6 @@ type LectureRow = {
   end_time: string;
 };
 
-type LedgerRow = {
-  id: string;
-  points: number;
-  source: string;
-  source_id: string | null;
-  note: string | null;
-  created_at: string;
-};
-
 type Filters = {
   lectureId: string;
   from: string;
@@ -57,11 +45,7 @@ type Filters = {
 };
 
 export default function StudentAttendanceHistory() {
-  const [filters, setFilters] = useState<Filters>({
-    lectureId: "all",
-    from: "",
-    to: "",
-  });
+  const [filters, setFilters] = useState<Filters>({ lectureId: "all", from: "", to: "" });
 
   const meQuery = useQuery({
     queryKey: ["student", "me"],
@@ -72,21 +56,6 @@ export default function StudentAttendanceHistory() {
     },
   });
 
-  const verifiedQuery = useQuery({
-    queryKey: ["student", "verified", meQuery.data?.id],
-    enabled: Boolean(meQuery.data?.id),
-    queryFn: async () => {
-      const uid = meQuery.data!.id;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_verified")
-        .eq("user_id", uid)
-        .maybeSingle();
-      if (error) throw error;
-      return Boolean(data?.is_verified);
-    },
-  });
-
   const lecturesQuery = useQuery({
     queryKey: ["student", "lectures", "all"],
     queryFn: async (): Promise<LectureRow[]> => {
@@ -94,7 +63,6 @@ export default function StudentAttendanceHistory() {
         .from("lectures")
         .select("id,topic,lecture_date,start_time,end_time")
         .order("lecture_date", { ascending: false })
-        .order("start_time", { ascending: false })
         .limit(500);
       if (error) throw error;
       return (data ?? []) as LectureRow[];
@@ -104,8 +72,7 @@ export default function StudentAttendanceHistory() {
   const attendanceQuery = useQuery({
     queryKey: ["student", "attendance", filters],
     queryFn: async (): Promise<AttendanceRow[]> => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return [];
 
       let q = supabase
@@ -118,7 +85,6 @@ export default function StudentAttendanceHistory() {
       if (filters.lectureId !== "all") q = q.eq("lecture_id", filters.lectureId);
       if (filters.from) q = q.gte("marked_at", new Date(filters.from).toISOString());
       if (filters.to) {
-        // include full day
         const end = new Date(filters.to);
         end.setHours(23, 59, 59, 999);
         q = q.lte("marked_at", end.toISOString());
@@ -127,24 +93,6 @@ export default function StudentAttendanceHistory() {
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as AttendanceRow[];
-    },
-  });
-
-  const ledgerQuery = useQuery({
-    queryKey: ["student", "points", "attendance-ledger"],
-    queryFn: async (): Promise<LedgerRow[]> => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!userData.user) return [];
-
-      const { data, error } = await supabase
-        .from("points_ledger")
-        .select("id,points,source,source_id,note,created_at")
-        .eq("user_id", userData.user.id)
-        .order("created_at", { ascending: false })
-        .limit(300);
-      if (error) throw error;
-      return (data ?? []) as LedgerRow[];
     },
   });
 
@@ -157,190 +105,97 @@ export default function StudentAttendanceHistory() {
   const totals = useMemo(() => {
     const rows = attendanceQuery.data ?? [];
     const present = rows.filter((r) => r.status === "present").length;
-    const points = rows.reduce((sum, r) => sum + (r.points_earned ?? 0), 0);
-    return { total: rows.length, present, points };
+    const pct = rows.length > 0 ? Math.round((present / rows.length) * 100) : 0;
+    return { total: rows.length, present, pct };
   }, [attendanceQuery.data]);
 
-  const pointsBreakdown = useMemo(() => {
-    const rows = ledgerQuery.data ?? [];
-    const bySource: Record<string, number> = {};
-    for (const r of rows) {
-      bySource[r.source] = (bySource[r.source] ?? 0) + (r.points ?? 0);
-    }
-    return bySource;
-  }, [ledgerQuery.data]);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <Button asChild variant="outline" className="gap-2">
-          <Link to="/student">
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
-          </Link>
-        </Button>
+    <div className="space-y-6">
+      {/* Summary strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <SummaryItem label="Total Lectures" value={String(totals.total)} />
+        <SummaryItem label="Present" value={String(totals.present)} />
+        <SummaryItem label="Absent" value={String(totals.total - totals.present)} />
+        <SummaryItem label="Percentage" value={`${totals.pct}%`} />
       </div>
 
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-premium bg-clip-text text-transparent mb-2 inline-flex items-center gap-2">
-          Attendance
-          {verifiedQuery.data ? (
-            <span
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-              aria-label="Verified"
-              title="Verified"
-            >
-              <span className="sr-only">Verified</span>
-              <BadgeCheck className="h-3.5 w-3.5" />
-            </span>
-          ) : null}
-        </h1>
-        <p className="text-muted-foreground">Filter your history and review points earned.</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <TicketCheck className="h-4 w-4 text-primary" />
-              Records
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{totals.total}</div>
-            <div className="text-sm text-muted-foreground mt-1">{totals.present} present</div>
-          </CardContent>
-        </Card>
-        <Card className="border-accent/10">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Medal className="h-4 w-4 text-accent" />
-              Points (from attendance)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-accent">{totals.points}</div>
-            <div className="text-sm text-muted-foreground mt-1">Based on your attendance rows</div>
-          </CardContent>
-        </Card>
-        <Card className="border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <ReceiptText className="h-4 w-4 text-primary" />
-              Ledger breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {Object.keys(pointsBreakdown).length === 0 ? (
-              <div className="text-sm text-muted-foreground">No point entries yet.</div>
-            ) : (
-              Object.entries(pointsBreakdown).map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{k}</span>
-                  <span className="font-medium">{v}</span>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mt-6 border-primary/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-primary" />
-            Filters
-          </CardTitle>
-          <CardDescription>Filter by lecture and date range.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-3">
-          <Select value={filters.lectureId} onValueChange={(v) => setFilters((p) => ({ ...p, lectureId: v }))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Lecture" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All lectures</SelectItem>
-              {(lecturesQuery.data ?? []).map((l) => (
-                <SelectItem key={l.id} value={l.id}>
-                  {l.lecture_date} • {l.topic}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="space-y-1">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" /> From
+      {/* Filters */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Select value={filters.lectureId} onValueChange={(v) => setFilters((p) => ({ ...p, lectureId: v }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="All lectures" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All lectures</SelectItem>
+                {(lecturesQuery.data ?? []).map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.lecture_date} — {l.topic}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">From</label>
+              <input
+                type="date"
+                value={filters.from}
+                onChange={(e) => setFilters((p) => ({ ...p, from: e.target.value }))}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
             </div>
-            <input
-              type="date"
-              value={filters.from}
-              onChange={(e) => setFilters((p) => ({ ...p, from: e.target.value }))}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" /> To
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">To</label>
+              <input
+                type="date"
+                value={filters.to}
+                onChange={(e) => setFilters((p) => ({ ...p, to: e.target.value }))}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
             </div>
-            <input
-              type="date"
-              value={filters.to}
-              onChange={(e) => setFilters((p) => ({ ...p, to: e.target.value }))}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="mt-6 border-primary/10">
-        <CardHeader>
-          <CardTitle>Attendance History</CardTitle>
-          <CardDescription>Latest records (filtered).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-border/60 overflow-hidden">
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Lecture</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Marked at</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
+                  <TableHead className="w-24">Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right w-20">Points</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {attendanceQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                      Loading…
-                    </TableCell>
+                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">Loading...</TableCell>
                   </TableRow>
                 ) : (attendanceQuery.data ?? []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                      No attendance records found.
-                    </TableCell>
+                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No records found.</TableCell>
                   </TableRow>
                 ) : (
                   (attendanceQuery.data ?? []).map((r) => {
                     const l = lectureMap[r.lecture_id];
-                    const title = l ? `${l.lecture_date} • ${l.topic}` : r.lecture_id;
                     return (
                       <TableRow key={r.id}>
-                        <TableCell className="font-medium">{title}</TableCell>
+                        <TableCell className="text-sm">{l ? `${l.topic}` : r.lecture_id.slice(0, 8)}</TableCell>
                         <TableCell>
-                          {r.status === "present" ? (
-                            <Badge className="bg-success text-success-foreground">Present</Badge>
-                          ) : (
-                            <Badge variant="secondary">{r.status}</Badge>
-                          )}
+                          <Badge
+                            variant={r.status === "present" ? "default" : "secondary"}
+                            className={r.status === "present" ? "bg-success text-success-foreground" : ""}
+                          >
+                            {r.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(r.marked_at).toLocaleString()}
+                          {new Date(r.marked_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="text-right font-medium">{r.points_earned}</TableCell>
+                        <TableCell className="text-right text-sm font-medium tabular-nums">{r.points_earned}</TableCell>
                       </TableRow>
                     );
                   })
@@ -348,59 +203,19 @@ export default function StudentAttendanceHistory() {
               </TableBody>
             </Table>
           </div>
-
-          <Separator className="my-4" />
-
-          <Card className="border-primary/10">
-            <CardHeader>
-              <CardTitle className="text-base">Points Ledger (latest 300)</CardTitle>
-              <CardDescription>Full point history, including attendance entries.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-border/60 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>When</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Note</TableHead>
-                      <TableHead className="text-right">Points</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ledgerQuery.isLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                          Loading…
-                        </TableCell>
-                      </TableRow>
-                    ) : (ledgerQuery.data ?? []).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                          No ledger entries.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      (ledgerQuery.data ?? []).map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(r.created_at).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{r.source}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">{r.note ?? "—"}</TableCell>
-                          <TableCell className="text-right font-medium">{r.points}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-semibold text-foreground mt-1">{value}</p>
+      </CardContent>
+    </Card>
   );
 }
