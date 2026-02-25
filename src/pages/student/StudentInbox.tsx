@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell, CheckCheck, MailOpen } from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type RecipientRow = {
   id: string;
@@ -33,7 +34,7 @@ type InboxItem = {
 export default function StudentInbox() {
   const qc = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -57,23 +58,18 @@ export default function StudentInbox() {
 
   const notificationsQuery = useQuery({
     queryKey: [
-      "student",
-      "inbox",
-      userId,
-      "notifications",
+      "student", "inbox", userId, "notifications",
       (recipientsQuery.data ?? []).map((r) => r.notification_id).join(","),
     ],
     enabled: Boolean(userId) && (recipientsQuery.data ?? []).length > 0,
     queryFn: async (): Promise<Record<string, NotificationRow>> => {
       const ids = Array.from(new Set((recipientsQuery.data ?? []).map((r) => r.notification_id)));
       if (ids.length === 0) return {};
-
       const { data, error } = await supabase
         .from("notifications")
         .select("id,title,body,created_at,sent_at,status")
         .in("id", ids);
       if (error) throw error;
-
       const map: Record<string, NotificationRow> = {};
       for (const n of (data ?? []) as NotificationRow[]) map[n.id] = n;
       return map;
@@ -82,26 +78,18 @@ export default function StudentInbox() {
 
   useEffect(() => {
     if (!userId) return;
-
     const channel = supabase
       .channel(`student_inbox_${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notification_recipients", filter: `user_id=eq.${userId}` },
-        () => {
-          qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "recipients"] });
-          qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notification_recipients", filter: `user_id=eq.${userId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "recipients"] });
+        qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
         qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "notifications"] });
         qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
       })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [qc, userId]);
 
   const inboxItems = useMemo<InboxItem[]>(() => {
@@ -148,81 +136,90 @@ export default function StudentInbox() {
   });
 
   const loading = recipientsQuery.isLoading || notificationsQuery.isLoading;
+  const selectedItem = inboxItems.find((i) => i.recipient.id === selectedId);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <MailOpen className="h-6 w-6 text-primary" />
-            Inbox
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Your announcements and updates</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="gap-1.5">
-            <Bell className="h-3.5 w-3.5" />
-            {unreadCount} unread
-          </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => markAllRead.mutate()}
-            disabled={unreadCount === 0 || markAllRead.isPending}
-            className="gap-1.5"
-          >
-            <CheckCheck className="h-3.5 w-3.5" />
-            Mark all read
-          </Button>
-        </div>
-      </header>
+    <div className="space-y-4">
+      {/* Action bar */}
+      <div className="flex items-center justify-between">
+        <Badge variant="secondary" className="text-xs">{unreadCount} unread</Badge>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => markAllRead.mutate()}
+          disabled={unreadCount === 0 || markAllRead.isPending}
+          className="gap-1.5 h-8 text-xs"
+        >
+          <CheckCheck className="h-3.5 w-3.5" />
+          Mark all read
+        </Button>
+      </div>
 
       {loading ? (
-        <div className="text-center py-10 text-muted-foreground">Loading inbox…</div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+        </div>
       ) : inboxItems.length === 0 ? (
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="py-12 text-center">
-            <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No notifications yet.</p>
-            <p className="text-xs text-muted-foreground mt-1">You'll be notified about lectures and announcements here.</p>
+            <Bell className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No notifications yet.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {inboxItems.map((item) => {
-            const n = item.notification;
-            const isUnread = !item.recipient.read_at;
-            const isExpanded = expanded === item.recipient.id;
+        <div className="grid gap-4 lg:grid-cols-[340px,1fr]">
+          {/* Message list */}
+          <div className="divide-y divide-border rounded-xl border bg-card overflow-hidden">
+            {inboxItems.map((item) => {
+              const n = item.notification;
+              const isUnread = !item.recipient.read_at;
+              const isActive = selectedId === item.recipient.id;
 
-            return (
-              <Card
-                key={item.recipient.id}
-                className={`border-border/50 cursor-pointer transition-colors ${isUnread ? "bg-primary/5 border-primary/20" : ""}`}
-                onClick={() => {
-                  setExpanded(isExpanded ? null : item.recipient.id);
-                  if (isUnread) markOneRead.mutate(item.recipient.id);
-                }}
-              >
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${isUnread ? "bg-primary" : "bg-transparent"}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm truncate">{n?.title ?? "(missing)"}</span>
-                        {isUnread && <Badge className="bg-primary/20 text-primary text-[10px] h-4 border-0">New</Badge>}
-                      </div>
-                      <p className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? "" : "line-clamp-1"}`}>
-                        {n?.body ?? ""}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground mt-1 block">
-                        {new Date(n?.sent_at ?? item.recipient.created_at).toLocaleString()}
-                      </span>
-                    </div>
+              return (
+                <button
+                  key={item.recipient.id}
+                  className={`w-full text-left px-4 py-3 transition-colors ${isActive ? "bg-muted" : "hover:bg-muted/50"} ${isUnread ? "border-l-[3px] border-l-primary" : ""}`}
+                  onClick={() => {
+                    setSelectedId(item.recipient.id);
+                    if (isUnread) markOneRead.mutate(item.recipient.id);
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`text-sm truncate ${isUnread ? "font-medium" : ""}`}>
+                      {n?.title ?? "(missing)"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {new Date(n?.sent_at ?? item.recipient.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{n?.body ?? ""}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Message preview */}
+          <Card className="hidden lg:block">
+            <CardContent className="py-6">
+              {selectedItem ? (
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-foreground">
+                    {selectedItem.notification?.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(selectedItem.notification?.sent_at ?? selectedItem.recipient.created_at).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {selectedItem.notification?.body}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Select a message to preview
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
