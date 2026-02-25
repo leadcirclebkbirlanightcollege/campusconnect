@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Smile } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentDailyContent() {
   const today = new Date().toISOString().split("T")[0];
@@ -21,33 +21,45 @@ export default function StudentDailyContent() {
     },
   });
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-premium" /> Daily Inspiration
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Meme of the Day & Daily Suvichar</p>
-      </header>
+  if (query.isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
+    );
+  }
 
+  return (
+    <div className="space-y-4">
       {query.data?.length === 0 && (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">Nothing published today. Check back later!</CardContent></Card>
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            Nothing published today. Check back later.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-4">
-        {query.data?.map((c: any) => (
-          <Card key={c.id} className="border-border/50">
-            <CardContent className="py-6 text-center space-y-3">
-              <div className="flex items-center justify-center gap-2">
-                {c.content_type === "meme" ? <Smile className="h-5 w-5 text-accent" /> : <Sparkles className="h-5 w-5 text-premium" />}
-                <Badge variant="secondary" className="text-[10px]">{c.content_type === "meme" ? "Meme of the Day" : "Daily Suvichar"}</Badge>
-              </div>
-              {c.title && <h3 className="text-lg font-semibold text-foreground">{c.title}</h3>}
-              {c.body && <p className="text-base text-muted-foreground italic leading-relaxed max-w-md mx-auto">"{c.body}"</p>}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {query.data?.map((c: any) => (
+        <Card key={c.id}>
+          <CardContent className="py-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="text-[10px]">
+                {c.content_type === "meme" ? "Meme of the Day" : "Daily Suvichar"}
+              </Badge>
+              {c.publish_date && (
+                <span className="text-xs text-muted-foreground">{c.publish_date}</span>
+              )}
+            </div>
+            {c.title && <h3 className="text-base font-medium text-foreground">{c.title}</h3>}
+            {c.body && (
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+                "{c.body}"
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

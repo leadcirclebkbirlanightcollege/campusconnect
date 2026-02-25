@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { BarChart3, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function StudentPollsList() {
@@ -54,7 +54,6 @@ export default function StudentPollsList() {
     onSuccess: async () => {
       toast.success("Vote recorded!");
       qc.invalidateQueries({ queryKey: ["student", "poll_votes"] });
-      // Trigger intelligence recomputation (best-effort)
       try {
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
@@ -69,67 +68,70 @@ export default function StudentPollsList() {
 
   const userId = meQuery.data?.id;
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-primary" /> Polls
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Share your opinion</p>
-      </header>
+  if (pollsQuery.isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+      </div>
+    );
+  }
 
+  return (
+    <div className="space-y-4">
       {pollsQuery.data?.length === 0 && (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">No active polls.</CardContent></Card>
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No active polls.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-4">
-        {pollsQuery.data?.map((p: any) => {
-          const opts = Array.isArray(p.options) ? p.options as string[] : [];
-          const allVotes = (votesQuery.data ?? []).filter((v: any) => v.poll_id === p.id);
-          const total = allVotes.length;
-          const myVote = allVotes.find((v: any) => v.user_id === userId);
-          const hasVoted = Boolean(myVote);
+      {pollsQuery.data?.map((p: any) => {
+        const opts = Array.isArray(p.options) ? p.options as string[] : [];
+        const allVotes = (votesQuery.data ?? []).filter((v: any) => v.poll_id === p.id);
+        const total = allVotes.length;
+        const myVote = allVotes.find((v: any) => v.user_id === userId);
+        const hasVoted = Boolean(myVote);
 
-          return (
-            <Card key={p.id} className="border-border/50">
-              <CardContent className="py-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <h3 className="font-medium text-foreground">{p.question}</h3>
-                  {hasVoted && <Badge variant="secondary" className="gap-1 text-[10px]"><CheckCircle className="h-3 w-3" /> Voted</Badge>}
-                </div>
-                <div className="space-y-2">
-                  {opts.map((opt: string, i: number) => {
-                    const count = allVotes.filter((v: any) => v.option_index === i).length;
-                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                    const isMyChoice = myVote?.option_index === i;
+        return (
+          <Card key={p.id}>
+            <CardContent className="py-5 space-y-4">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-medium text-foreground">{p.question}</h3>
+                {hasVoted && <Badge variant="secondary" className="text-[10px] h-4 shrink-0">Voted</Badge>}
+              </div>
+              <div className="space-y-2">
+                {opts.map((opt: string, i: number) => {
+                  const count = allVotes.filter((v: any) => v.option_index === i).length;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  const isMyChoice = myVote?.option_index === i;
 
-                    return hasVoted ? (
-                      <div key={i} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className={isMyChoice ? "font-medium text-primary" : "text-muted-foreground"}>{opt}</span>
-                          <span className="text-xs font-medium">{pct}%</span>
-                        </div>
-                        <Progress value={pct} className="h-2" />
+                  return hasVoted ? (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className={isMyChoice ? "font-medium text-primary" : "text-muted-foreground"}>{opt}</span>
+                        <span className="text-xs font-medium tabular-nums">{pct}%</span>
                       </div>
-                    ) : (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        className="w-full justify-start text-sm"
-                        onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: i })}
-                        disabled={voteMutation.isPending}
-                      >
-                        {opt}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground">{total} votes · {format(new Date(p.created_at), "PP")}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                      <Progress value={pct} className="h-1.5" />
+                    </div>
+                  ) : (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      className="w-full justify-start text-sm h-9"
+                      onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: i })}
+                      disabled={voteMutation.isPending}
+                    >
+                      {opt}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">{total} votes · {format(new Date(p.created_at), "PP")}</p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -2,17 +2,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Camera, LogOut, Save, UserRound, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles } from "lucide-react";
+import { Camera, Save, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles } from "lucide-react";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import { APP_VERSION } from "@/config/version";
 
 import { supabase } from "@/integrations/supabase/client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,13 +154,9 @@ export default function StudentProfile() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const parsed = profileSchema.safeParse(form);
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues[0]?.message ?? "Invalid profile");
-      }
-
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid profile");
       const uid = meQuery.data?.id;
       if (!uid) throw new Error("Not logged in");
-
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -171,7 +168,6 @@ export default function StudentProfile() {
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", uid);
-
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -185,20 +181,16 @@ export default function StudentProfile() {
     mutationFn: async (file: File) => {
       const uid = meQuery.data?.id;
       if (!uid) throw new Error("Not logged in");
-
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
       const safeExt = ext || "jpg";
       const objectPath = `${uid}/avatar-${Date.now()}.${safeExt}`;
-
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(objectPath, file, { upsert: true, contentType: file.type || undefined });
       if (uploadError) throw uploadError;
-
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(objectPath);
       const avatarUrl = pub?.publicUrl;
       if (!avatarUrl) throw new Error("Failed to create avatar URL");
-
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
@@ -219,7 +211,6 @@ export default function StudentProfile() {
 
   const logoutEverywhereMutation = useMutation({
     mutationFn: async () => {
-      // Global signout revokes all refresh tokens for this user.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase.auth.signOut({ scope: "global" } as any);
       if (error) throw error;
@@ -235,17 +226,13 @@ export default function StudentProfile() {
     mutationFn: async () => {
       const parsed = passwordSchema.safeParse(pwForm);
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid password");
-
       const emailForReauth = profileQuery.data?.email;
       if (!emailForReauth) throw new Error("Email not available");
-
-      // Re-authenticate to validate current password
       const { error: reauthError } = await supabase.auth.signInWithPassword({
         email: emailForReauth,
         password: parsed.data.currentPassword,
       });
       if (reauthError) throw new Error("Current password is incorrect");
-
       const { error: updateError } = await supabase.auth.updateUser({ password: parsed.data.newPassword });
       if (updateError) throw updateError;
     },
@@ -260,10 +247,8 @@ export default function StudentProfile() {
     mutationFn: async () => {
       const uid = meQuery.data?.id;
       if (!uid) throw new Error("Not logged in");
-
       const reason = deleteReason.trim();
       if (reason.length > 500) throw new Error("Reason is too long (max 500 chars)");
-
       const { error } = await supabase.from("account_deletion_requests").insert({
         user_id: uid,
         reason: reason.length ? reason : null,
@@ -281,260 +266,196 @@ export default function StudentProfile() {
   const email = profileQuery.data?.email ?? "";
   const loading = meQuery.isLoading || profileQuery.isLoading;
 
-  const title = useMemo(() => "Profile", []);
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-32 rounded-xl" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Student Profile</CardTitle>
-          <CardDescription>Your information used across the app.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Loading…</div>
-          ) : profileQuery.isError ? (
-            <div className="text-sm text-muted-foreground">Couldn’t load profile.</div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14">
-                    <AvatarImage src={profileQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
-                    <AvatarFallback>{(form.name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">Profile photo</div>
-                    <div className="text-xs text-muted-foreground">JPG/PNG recommended.</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      uploadAvatarMutation.mutate(f);
-                      // allow selecting the same file again
-                      e.currentTarget.value = "";
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploadAvatarMutation.isPending}
-                  >
-                    <Camera className="h-4 w-4" />
-                    Upload photo
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Full name</label>
-                <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input value={email} disabled />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
-                <Input value={form.phone ?? ""} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Student ID</label>
-                <Input
-                  value={form.student_id ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, student_id: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Department</label>
-                <Input
-                  value={form.department ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Class</label>
-                <Input
-                  value={form.class_name ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))}
-                />
-              </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              className="gap-2"
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || loading}
-            >
-              <Save className="h-4 w-4" />
-              Save changes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Two column: Personal + Academic */}
+      <div className="grid gap-6 lg:grid-cols-[1fr,1fr]">
+        {/* Personal Information */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" />
-              Change Password
-            </CardTitle>
-            <CardDescription>For security, confirm your current password.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Current password</label>
-              <Input
-                type="password"
-                value={pwForm.currentPassword}
-                onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))}
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">New password</label>
-              <Input
-                type="password"
-                value={pwForm.newPassword}
-                onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))}
-                autoComplete="new-password"
-              />
-              <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm new password</label>
-              <Input
-                type="password"
-                value={pwForm.confirmPassword}
-                onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))}
-                autoComplete="new-password"
-              />
-            </div>
-            <div className="flex items-center justify-end">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Personal Information</CardTitle>
               <Button
                 type="button"
-                className="gap-2"
-                onClick={() => changePasswordMutation.mutate()}
-                disabled={changePasswordMutation.isPending || loading}
+                size="sm"
+                className="gap-1.5 h-8 text-xs"
+                onClick={() => saveMutation.mutate()}
+                disabled={saveMutation.isPending}
               >
-                <Save className="h-4 w-4" />
+                <Save className="h-3.5 w-3.5" />
+                Save
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Avatar */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={profileQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
+                <AvatarFallback>{(form.name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    uploadAvatarMutation.mutate(f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-7 text-xs"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadAvatarMutation.isPending}
+                >
+                  <Camera className="h-3 w-3" />
+                  Upload photo
+                </Button>
+              </div>
+            </div>
+
+            {/* Form fields */}
+            <div className="grid gap-3">
+              <FieldRow label="Full name">
+                <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className="h-9" />
+              </FieldRow>
+              <FieldRow label="Email">
+                <Input value={email} disabled className="h-9" />
+              </FieldRow>
+              <FieldRow label="Phone">
+                <Input value={form.phone ?? ""} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} className="h-9" />
+              </FieldRow>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Academic Summary */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm font-medium">Academic Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3">
+              <FieldRow label="Student ID">
+                <Input value={form.student_id ?? ""} onChange={(e) => setForm((p) => ({ ...p, student_id: e.target.value }))} className="h-9" />
+              </FieldRow>
+              <FieldRow label="Department">
+                <Input value={form.department ?? ""} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} className="h-9" />
+              </FieldRow>
+              <FieldRow label="Class">
+                <Input value={form.class_name ?? ""} onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))} className="h-9" />
+              </FieldRow>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Security row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Change Password */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-muted-foreground" />
+              Change Password
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <FieldRow label="Current password">
+              <Input type="password" value={pwForm.currentPassword} onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))} autoComplete="current-password" className="h-9" />
+            </FieldRow>
+            <FieldRow label="New password">
+              <Input type="password" value={pwForm.newPassword} onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))} autoComplete="new-password" className="h-9" />
+            </FieldRow>
+            <FieldRow label="Confirm">
+              <Input type="password" value={pwForm.confirmPassword} onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))} autoComplete="new-password" className="h-9" />
+            </FieldRow>
+            <div className="flex justify-end">
+              <Button type="button" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => changePasswordMutation.mutate()} disabled={changePasswordMutation.isPending}>
+                <Save className="h-3.5 w-3.5" />
                 Update password
               </Button>
             </div>
           </CardContent>
         </Card>
 
+        {/* Account Controls */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-accent" />
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-muted-foreground" />
               Account Controls
             </CardTitle>
-            <CardDescription>Manage sessions and request account deletion.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="rounded-xl border border-border/40 bg-card/40 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
-                    Session / device
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {sessionQuery.data?.expires_at
-                      ? `Expires: ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
-                      : "Session info unavailable"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 break-words">{typeof navigator !== "undefined" ? navigator.userAgent : ""}</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => logoutEverywhereMutation.mutate()}
-                  disabled={logoutEverywhereMutation.isPending}
-                >
-                  <LogOutIcon className="h-4 w-4" />
+          <CardContent className="space-y-4">
+            {/* Session info */}
+            <div className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <Monitor className="h-3.5 w-3.5" />
+                  Session
+                </p>
+                <Button type="button" variant="outline" size="sm" className="gap-1.5 h-7 text-xs" onClick={() => logoutEverywhereMutation.mutate()} disabled={logoutEverywhereMutation.isPending}>
+                  <LogOutIcon className="h-3 w-3" />
                   Logout everywhere
                 </Button>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Note: device/session listing is limited to your current session in this app.
+              <p className="text-xs text-muted-foreground">
+                {sessionQuery.data?.expires_at
+                  ? `Expires: ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
+                  : "Session info unavailable"}
               </p>
             </div>
 
-            <div className="rounded-xl border border-border/40 bg-card/40 p-4">
+            {/* Deletion request */}
+            <div className="rounded-lg border p-3 space-y-2">
               <p className="text-sm font-medium">Delete account request</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                This sends a request to the admin team; it does not immediately delete your account.
-              </p>
+              <p className="text-xs text-muted-foreground">Sends a request to the admin team.</p>
 
               {deletionRequestQuery.data ? (
-                <div className="mt-3 text-sm">
-                  <p>
-                    <span className="text-muted-foreground">Status:</span> {deletionRequestQuery.data.status}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Requested: {new Date(deletionRequestQuery.data.created_at).toLocaleString()}
-                  </p>
-                  {deletionRequestQuery.data.admin_note ? (
-                    <p className="text-xs text-muted-foreground mt-1">Admin note: {deletionRequestQuery.data.admin_note}</p>
-                  ) : null}
+                <div className="text-sm space-y-1">
+                  <p><span className="text-muted-foreground">Status:</span> {deletionRequestQuery.data.status}</p>
+                  <p className="text-xs text-muted-foreground">Requested: {new Date(deletionRequestQuery.data.created_at).toLocaleString()}</p>
+                  {deletionRequestQuery.data.admin_note && (
+                    <p className="text-xs text-muted-foreground">Admin note: {deletionRequestQuery.data.admin_note}</p>
+                  )}
                 </div>
               ) : (
-                <div className="mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Reason (optional)</label>
-                    <Textarea
-                      value={deleteReason}
-                      onChange={(e) => setDeleteReason(e.target.value)}
-                      placeholder="Tell us why you're requesting deletion (optional)"
-                      rows={3}
-                    />
-                  </div>
-
+                <div className="space-y-2">
+                  <Textarea value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} placeholder="Reason (optional)" rows={2} className="text-sm" />
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" className="mt-3">
+                      <Button type="button" variant="destructive" size="sm" className="text-xs">
                         Request account deletion
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Request account deletion?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will submit a deletion request to admins. You can continue using the app until it’s processed.
-                        </AlertDialogDescription>
+                        <AlertDialogDescription>This will submit a deletion request to admins. You can continue using the app until it's processed.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => requestDeletionMutation.mutate()}
-                          disabled={requestDeletionMutation.isPending}
-                        >
-                          Submit request
-                        </AlertDialogAction>
+                        <AlertDialogAction onClick={() => requestDeletionMutation.mutate()} disabled={requestDeletionMutation.isPending}>Submit request</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -547,10 +468,10 @@ export default function StudentProfile() {
 
       {/* Platform Updates */}
       <Card>
-        <CardContent className="py-4 flex items-center justify-between">
+        <CardContent className="py-3 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-premium" /> Platform Updates
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" /> Platform Updates
             </p>
             <p className="text-xs text-muted-foreground">Version {APP_VERSION}</p>
           </div>
@@ -561,11 +482,20 @@ export default function StudentProfile() {
   );
 }
 
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 function WhatsNewModalTrigger() {
   const [show, setShow] = useState(false);
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setShow(true)}>View Platform Updates</Button>
+      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShow(true)}>View Updates</Button>
       {show && <WhatsNewModal manualOpen onManualClose={() => setShow(false)} />}
     </>
   );
