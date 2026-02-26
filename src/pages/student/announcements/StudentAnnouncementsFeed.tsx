@@ -11,7 +11,7 @@ export default function StudentAnnouncementsFeed() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*")
+        .select("id,title,description,priority,is_pinned,target,created_at,expires_at")
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(20);

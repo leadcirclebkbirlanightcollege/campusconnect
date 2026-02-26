@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -93,6 +94,7 @@ export default function StudentManagementTab() {
   const [filters, setFilters] = useState<StudentFilters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [openStudentUserId, setOpenStudentUserId] = useState<string | null>(null);
+  const debouncedQ = useDebounce(filters.q, 300);
 
   const studentsQuery = useQuery({
     queryKey: ["admin", "students"],
@@ -120,8 +122,8 @@ export default function StudentManagementTab() {
 
   const filtered = useMemo(() => {
     const rows = studentsQuery.data ?? [];
-    return rows.filter((r) => matchesFilters(r, filters));
-  }, [studentsQuery.data, filters]);
+    return rows.filter((r) => matchesFilters(r, { ...filters, q: debouncedQ }));
+  }, [studentsQuery.data, filters, debouncedQ]);
 
   const selectedIds = useMemo(() => Object.keys(selected).filter((k) => selected[k]), [selected]);
 

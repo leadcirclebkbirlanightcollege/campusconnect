@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export default function StudentAllotmentTab() {
   const queryClient = useQueryClient();
   const [selectedProgramme, setSelectedProgramme] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const programmesQuery = useQuery({
     queryKey: ["admin", "programmes", "active"],
@@ -113,8 +115,8 @@ export default function StudentAllotmentTab() {
   const allottedUserIds = new Set(allotmentsQuery.data?.map((a) => a.student_user_id) || []);
 
   const filteredStudents = studentsQuery.data?.filter((s) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedSearch) return true;
+    const q = debouncedSearch.toLowerCase();
     return (
       s.name.toLowerCase().includes(q) ||
       s.email.toLowerCase().includes(q) ||

@@ -19,7 +19,7 @@ export default function StudentEventsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select("id,title,description,event_date,event_time,venue")
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data ?? [];

@@ -12,7 +12,7 @@ export default function StudentDailyContent() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("daily_content")
-        .select("*")
+        .select("id,title,body,content_type,publish_date,image_url")
         .eq("is_active", true)
         .order("publish_date", { ascending: false })
         .limit(5);

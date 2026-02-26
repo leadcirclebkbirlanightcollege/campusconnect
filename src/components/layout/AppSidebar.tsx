@@ -38,9 +38,16 @@ import {
 
 type Role = "admin" | "student" | null;
 
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
+}
+
 interface NavSection {
   label: string;
-  items: { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[];
+  items: NavItem[];
 }
 
 export default function AppSidebar() {
@@ -73,8 +80,27 @@ export default function AppSidebar() {
     },
   });
 
+  // Unread inbox count
+  const unreadQuery = useQuery({
+    queryKey: ["app_sidebar", "unread", authQuery.data?.id],
+    enabled: Boolean(authQuery.data?.id),
+    queryFn: async () => {
+      const uid = authQuery.data!.id;
+      const { count, error } = await supabase
+        .from("notification_recipients")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .is("read_at", null);
+      if (error) return 0;
+      return count ?? 0;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
   const currentPath = location.pathname;
   const isAdmin = roleQuery.data === "admin";
+  const unreadCount = unreadQuery.data ?? 0;
 
   const sections: NavSection[] = useMemo(
     () => [
@@ -151,6 +177,9 @@ export default function AppSidebar() {
           {section.items.map((item) => {
             const active = isActive(item.url);
             const Icon = item.icon;
+            const isInbox = item.url === "/app/inbox";
+            const badgeCount = isInbox ? unreadCount : 0;
+
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
@@ -167,7 +196,12 @@ export default function AppSidebar() {
                     onClick={handleNav}
                   >
                     <Icon className="h-4 w-4 shrink-0 opacity-70" />
-                    <span>{item.title}</span>
+                    <span className="flex-1">{item.title}</span>
+                    {badgeCount > 0 && (
+                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground leading-none">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    )}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

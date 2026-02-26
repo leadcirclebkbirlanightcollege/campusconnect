@@ -113,6 +113,7 @@ export default function StudentInbox() {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "recipients"] });
       await qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
+      await qc.invalidateQueries({ queryKey: ["app_sidebar", "unread"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to mark as read"),
   });
@@ -131,6 +132,7 @@ export default function StudentInbox() {
       toast.success("All notifications marked as read");
       await qc.invalidateQueries({ queryKey: ["student", "inbox", userId, "recipients"] });
       await qc.invalidateQueries({ queryKey: ["student", "dashboard"] });
+      await qc.invalidateQueries({ queryKey: ["app_sidebar", "unread"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to mark all as read"),
   });
