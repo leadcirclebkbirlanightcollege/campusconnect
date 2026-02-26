@@ -114,10 +114,10 @@ export default function AdminPointsAdjustmentsTab() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <Card className="border-primary/10">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PlusCircle className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <PlusCircle className="h-4 w-4 text-success" />
             Add Points
           </CardTitle>
           <CardDescription>Select a student, enter points to add, and provide a reason.</CardDescription>
@@ -126,7 +126,7 @@ export default function AdminPointsAdjustmentsTab() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Student</label>
             <select
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
               value={addForm.userId}
               onChange={(e) => setAddForm((p) => ({ ...p, userId: e.target.value }))}
               disabled={busy}
@@ -164,7 +164,7 @@ export default function AdminPointsAdjustmentsTab() {
           </div>
 
           <div className="flex items-center justify-end">
-            <Button type="button" className="gap-2" onClick={submitAdd} disabled={busy}>
+            <Button type="button" size="sm" className="gap-2" onClick={submitAdd} disabled={busy}>
               <Save className="h-4 w-4" />
               Add points
             </Button>
@@ -172,10 +172,10 @@ export default function AdminPointsAdjustmentsTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-accent/10">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MinusCircle className="h-5 w-5 text-accent" />
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <MinusCircle className="h-4 w-4 text-destructive" />
             Deduct Points
           </CardTitle>
           <CardDescription>Select a student, enter points to deduct, and provide a reason.</CardDescription>
@@ -184,7 +184,7 @@ export default function AdminPointsAdjustmentsTab() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Student</label>
             <select
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
               value={deductForm.userId}
               onChange={(e) => setDeductForm((p) => ({ ...p, userId: e.target.value }))}
               disabled={busy}
@@ -222,7 +222,7 @@ export default function AdminPointsAdjustmentsTab() {
           </div>
 
           <div className="flex items-center justify-end">
-            <Button type="button" variant="outline" className="gap-2" onClick={submitDeduct} disabled={busy}>
+            <Button type="button" variant="destructive" size="sm" className="gap-2" onClick={submitDeduct} disabled={busy}>
               <Save className="h-4 w-4" />
               Deduct points
             </Button>

@@ -54,7 +54,7 @@ export default function KpiCards({ students, programmes, avgAttendancePct, manua
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
         return (
-          <Card key={kpi.key} className="border-border/60 hover:shadow-md transition-shadow">
+          <Card key={kpi.key}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
@@ -64,7 +64,7 @@ export default function KpiCards({ students, programmes, avgAttendancePct, manua
                   {loading ? (
                     <Skeleton className="h-8 w-16" />
                   ) : (
-                    <p className="text-3xl font-bold tracking-tight text-foreground">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {values[kpi.key]}
                       {"suffix" in kpi ? kpi.suffix : ""}
                     </p>
