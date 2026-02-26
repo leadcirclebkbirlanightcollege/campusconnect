@@ -49,7 +49,7 @@ export default function LiveOperationsPanel({ attendanceToday, totalStudents, lo
   const isLive = !!liveLecture;
 
   return (
-    <Card className={`border-border/60 ${isLive ? "ring-2 ring-success/30" : ""}`}>
+    <Card className={isLive ? "ring-2 ring-success/40" : ""}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-foreground">Today's Status</CardTitle>

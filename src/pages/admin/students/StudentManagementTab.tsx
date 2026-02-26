@@ -204,12 +204,12 @@ export default function StudentManagementTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-primary/10">
+      <Card>
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <UserRound className="h-4 w-4 text-muted-foreground" />
                 Student Management
               </CardTitle>
               <CardDescription>
