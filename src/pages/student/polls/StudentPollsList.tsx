@@ -24,7 +24,7 @@ export default function StudentPollsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("polls")
-        .select("*")
+        .select("id,question,options,is_anonymous,expires_at,created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];

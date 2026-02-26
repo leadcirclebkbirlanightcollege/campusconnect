@@ -37,7 +37,7 @@ export default function ProgrammeManagementTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("programmes")
-        .select("*")
+        .select("id,name,description,color,is_active,created_at,updated_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Programme[];

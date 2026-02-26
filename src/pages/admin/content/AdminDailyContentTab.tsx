@@ -26,7 +26,7 @@ export default function AdminDailyContentTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("daily_content")
-        .select("*")
+        .select("id,title,body,content_type,publish_date,image_url,is_active,created_at")
         .order("publish_date", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;

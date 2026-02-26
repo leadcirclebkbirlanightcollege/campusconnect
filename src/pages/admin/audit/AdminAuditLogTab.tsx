@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { FileText, ArrowRight, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,16 +24,17 @@ const PAGE_SIZE = 20;
 export default function AdminAuditLogTab() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
 
   const auditQuery = useQuery({
-    queryKey: ["admin", "audit_log", page],
+    queryKey: ["admin", "audit_log", page, debouncedSearch],
     queryFn: async () => {
       const from = page * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
       const { data, error, count } = await supabase
         .from("attendance_audit_log")
-        .select("*", { count: "exact" })
+        .select("id,attendance_id,lecture_id,student_user_id,changed_by,changed_at,old_status,new_status,reason", { count: "exact" })
         .order("changed_at", { ascending: false })
         .range(from, to);
 

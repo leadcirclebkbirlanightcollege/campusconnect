@@ -28,7 +28,7 @@ export default function AdminAnnouncementsTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*")
+        .select("id,title,description,priority,is_pinned,target,target_class,created_at,expires_at,created_by")
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;

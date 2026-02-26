@@ -25,7 +25,7 @@ export default function AdminEventsTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select("id,title,description,event_date,event_time,venue,poster_url,created_at")
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data ?? [];
