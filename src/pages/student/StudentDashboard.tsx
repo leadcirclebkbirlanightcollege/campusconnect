@@ -3,15 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-  Shield,
-  Zap,
-} from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
@@ -66,21 +58,44 @@ const StudentDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use cached session — no getUser() round-trip
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) return;
 
+      // Phase 1: Critical snapshot — minimal queries, shown immediately
       const [
         { data: profile },
         { data: pointsTotal },
-        { data: attendanceData },
-        { data: allLectures },
-        { data: upcomingList },
+        { data: streakRaw },
         { data: liveList },
-        { data: recentPts },
-        { data: streakData },
       ] = await Promise.all([
         supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
         supabase.rpc("get_my_points_total"),
+        supabase.rpc("get_my_streak"),
+        supabase.from("lectures")
+          .select("id, topic, lecture_date, start_time, end_time, venue, status")
+          .eq("status", "live")
+          .limit(1),
+      ]);
+
+      setName((profile as any)?.name || "User");
+      const streakData = streakRaw as any;
+      setStats(prev => ({
+        ...prev,
+        totalPoints: Number(pointsTotal ?? 0),
+        currentStreak: streakData?.current_streak ?? 0,
+      }));
+      setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
+      setLoading(false);
+
+      // Phase 2: Secondary data loaded after initial render
+      const [
+        { data: attendanceData },
+        { data: allLectures },
+        { data: upcomingList },
+        { data: recentPts },
+      ] = await Promise.all([
         supabase.from("attendance").select("id").eq("student_user_id", user.id).eq("status", "present"),
         supabase.from("lectures").select("id"),
         supabase
@@ -92,35 +107,22 @@ const StudentDashboard = () => {
           .order("start_time", { ascending: true })
           .limit(1),
         supabase
-          .from("lectures")
-          .select("id, topic, lecture_date, start_time, end_time, venue, status")
-          .eq("status", "live")
-          .limit(1),
-        supabase
           .from("points_ledger")
           .select("id, created_at, points, source, note")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(8),
-        supabase.rpc("get_my_streak"),
       ]);
 
-      setName((profile as any)?.name || "User");
-
-      const streak = streakData as any;
-      setStats({
-        totalPoints: Number(pointsTotal ?? 0),
+      setStats(prev => ({
+        ...prev,
         lecturesAttended: attendanceData?.length || 0,
         totalLectures: allLectures?.length || 0,
-        currentStreak: streak?.current_streak ?? 0,
-      });
-
-      setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
+      }));
       setNextLecture(((upcomingList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
-    } finally {
       setLoading(false);
     }
   };
@@ -263,7 +265,6 @@ const StudentDashboard = () => {
   );
 };
 
-/* Snapshot card for Zone A */
 function SnapshotCard({ label, value, sub, loading }: { label: string; value: string; sub: string; loading: boolean }) {
   if (loading) {
     return (
@@ -287,7 +288,6 @@ function SnapshotCard({ label, value, sub, loading }: { label: string; value: st
   );
 }
 
-/* Performance metric panel for Zone C */
 function MetricPanel({ label, value, description }: { label: string; value: number; description: string }) {
   const barColor = value >= 70 ? "bg-success" : value >= 40 ? "bg-warning" : "bg-destructive";
   return (
@@ -306,7 +306,6 @@ function MetricPanel({ label, value, description }: { label: string; value: numb
   );
 }
 
-/* Growth insights strip */
 function GrowthInsightsStrip({ data }: { data: any }) {
   const trendLabel = data.trend_direction === "improving" ? "Improving" : data.trend_direction === "declining" ? "Declining" : "Stable";
   const riskColor = data.risk_probability === "high" ? "text-destructive" : data.risk_probability === "medium" ? "text-warning" : "text-success";
