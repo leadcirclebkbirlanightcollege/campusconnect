@@ -29,7 +29,6 @@ const Auth = () => {
   const [signupClass, setSignupClass] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
@@ -37,64 +36,54 @@ const Auth = () => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          redirectToDashboard(session.user.id);
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        redirectToDashboard(session.user.id);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const redirectToDashboard = async (userId: string) => {
-    // 1) Navigate first — do NOT block on any edge function
-    try {
-      const { data, error } = await supabase
+  // Navigate immediately — role check and retention run in background
+  const redirectToDashboard = (userId: string) => {
+    navigate("/app/dashboard", { replace: true });
+
+    // Non-blocking role check — redirect to admin if needed
+    Promise.resolve(
+      supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.warn("Role lookup failed; defaulting to student:", error);
-        navigate("/app/dashboard", { replace: true });
-      } else if (data?.role === "admin") {
+        .maybeSingle()
+    ).then(({ data }) => {
+      if (data?.role === "admin") {
         navigate("/app/admin/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
       }
-    } catch (err: any) {
-      console.error("Role fetch error:", err);
-      navigate("/app/dashboard", { replace: true });
-    }
+    }).catch(() => {/* silent */});
 
-    // 2) Fire-and-forget retention side effects — NEVER block login
+    // Fire-and-forget retention (2s delay so it never races with navigation)
     setTimeout(() => {
       supabase.functions
         .invoke("retention-on-login", { body: {} })
-        .then(({ data: retentionData }) => {
-          if (!retentionData?.success) return;
-          if (retentionData?.streak?.incremented) {
-            toast.success(`🔥 Streak: ${retentionData.streak.current_streak} days`, {
-              description: `Longest: ${retentionData.streak.longest_streak} days`,
+        .then(({ data: r }) => {
+          if (!r?.success) return;
+          if (r?.streak?.incremented) {
+            toast.success(`🔥 Streak: ${r.streak.current_streak} days`, {
+              description: `Longest: ${r.streak.longest_streak} days`,
             });
           }
-          if (retentionData?.daily_reward?.granted) {
+          if (r?.daily_reward?.granted) {
             toast.success("🎁 Daily Reward", {
-              description: retentionData.daily_reward.message || "Daily reward unlocked",
+              description: r.daily_reward.message || "Daily reward unlocked",
             });
           }
-          if (retentionData?.achievements?.granted) {
+          if (r?.achievements?.granted) {
             toast.success("🏅 Achievement unlocked", { description: "7-day streak" });
           }
         })
-        .catch((e) => {
-          // Silently ignore — retention must never block login
-          console.warn("retention-on-login (non-blocking):", e?.message);
-        });
+        .catch(() => {/* silent */});
     }, 2000);
   };
 
@@ -106,34 +95,29 @@ const Auth = () => {
       const identifier = loginIdentifier.trim();
       if (!identifier) throw new Error("Please enter Email or Student ID");
 
-      // If user typed a Student ID, resolve it to an email via backend (service role).
       let email = identifier;
       if (!identifier.includes("@")) {
         const { data: resolved, error: resolveError } = await supabase.functions.invoke(
           "auth-resolve-identifier",
-          {
-            body: { identifier },
-          },
+          { body: { identifier } },
         );
-
-        if (resolveError || !resolved?.email) {
-          throw new Error("Invalid credentials");
-        }
+        if (resolveError || !resolved?.email) throw new Error("Invalid credentials");
         email = String(resolved.email);
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: loginPassword,
-      });
+      const loginTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Login timed out. Please try again.")), 8000)
+      );
+
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password: loginPassword }),
+        loginTimeout,
+      ]);
 
       if (error) throw error;
 
       toast.success("Login successful!");
-      
-      if (data.user) {
-        redirectToDashboard(data.user.id);
-      }
+      if (data.user) redirectToDashboard(data.user.id);
     } catch (error: any) {
       const msg: string = error?.message || "";
       if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
@@ -163,22 +147,15 @@ const Auth = () => {
       if (!email) throw new Error("Email is required");
       if (!password) throw new Error("Password is required");
 
-      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
+        options: { emailRedirectTo: window.location.origin },
       });
 
       if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create user");
 
-      if (!authData.user) {
-        throw new Error("Failed to create user");
-      }
-
-      // Create profile
       const { error: profileError } = await supabase.from("profiles").insert({
         user_id: authData.user.id,
         name,
@@ -191,7 +168,6 @@ const Auth = () => {
 
       if (profileError) throw profileError;
 
-      // Assign student role
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: authData.user.id,
         role: "student",
@@ -218,7 +194,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-      {/* Background effects */}
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
       <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
 
@@ -263,9 +238,9 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-premium hover:opacity-90 transition-opacity shadow-premium" 
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-premium hover:opacity-90 transition-opacity shadow-premium"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -348,9 +323,9 @@ const Auth = () => {
                     />
                   </div>
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-accent hover:opacity-90 transition-opacity shadow-accent" 
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-accent hover:opacity-90 transition-opacity shadow-accent"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
