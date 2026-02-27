@@ -50,28 +50,8 @@ const Auth = () => {
   }, []);
 
   const redirectToDashboard = async (userId: string) => {
+    // 1) Navigate first — do NOT block on any edge function
     try {
-      // Trigger retention engine (idempotent; non-blocking)
-      try {
-        const { data: retentionData } = await supabase.functions.invoke("retention-on-login", { body: {} });
-        if (retentionData?.success) {
-          if (retentionData?.streak?.incremented) {
-            toast.success(`🔥 Streak: ${retentionData.streak.current_streak} days`, {
-              description: `Longest: ${retentionData.streak.longest_streak} days`,
-            });
-          }
-          if (retentionData?.daily_reward?.granted) {
-            const msg = retentionData.daily_reward.message || "Daily reward unlocked";
-            toast.success("🎁 Daily Reward", { description: msg });
-          }
-          if (retentionData?.achievements?.granted) {
-            toast.success("🏅 Achievement unlocked", { description: "7-day streak" });
-          }
-        }
-      } catch {
-        // ignore retention errors
-      }
-
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -81,17 +61,41 @@ const Auth = () => {
       if (error) {
         console.warn("Role lookup failed; defaulting to student:", error);
         navigate("/app/dashboard", { replace: true });
-        return;
-      }
-
-      if (data?.role === "admin") {
+      } else if (data?.role === "admin") {
         navigate("/app/admin/dashboard", { replace: true });
       } else {
         navigate("/app/dashboard", { replace: true });
       }
-    } catch (error) {
-      console.error("Error fetching role:", error);
+    } catch (err: any) {
+      console.error("Role fetch error:", err);
+      navigate("/app/dashboard", { replace: true });
     }
+
+    // 2) Fire-and-forget retention side effects — NEVER block login
+    setTimeout(() => {
+      supabase.functions
+        .invoke("retention-on-login", { body: {} })
+        .then(({ data: retentionData }) => {
+          if (!retentionData?.success) return;
+          if (retentionData?.streak?.incremented) {
+            toast.success(`🔥 Streak: ${retentionData.streak.current_streak} days`, {
+              description: `Longest: ${retentionData.streak.longest_streak} days`,
+            });
+          }
+          if (retentionData?.daily_reward?.granted) {
+            toast.success("🎁 Daily Reward", {
+              description: retentionData.daily_reward.message || "Daily reward unlocked",
+            });
+          }
+          if (retentionData?.achievements?.granted) {
+            toast.success("🏅 Achievement unlocked", { description: "7-day streak" });
+          }
+        })
+        .catch((e) => {
+          // Silently ignore — retention must never block login
+          console.warn("retention-on-login (non-blocking):", e?.message);
+        });
+    }, 2000);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -131,7 +135,16 @@ const Auth = () => {
         redirectToDashboard(data.user.id);
       }
     } catch (error: any) {
-      toast.error(error.message || "Login failed");
+      const msg: string = error?.message || "";
+      if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
+        console.error("Network error during login:", {
+          supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+          origin: window.location.origin,
+        });
+        toast.error("Network configuration error. Please check your connection or contact the administrator.");
+      } else {
+        toast.error(msg || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
