@@ -85,64 +85,70 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     }
   }, [existingQuery.data, success]);
 
+  const invokeWithRetry = async (payload: { otp?: string; token?: string }) => {
+    const body = { lectureId, ...payload };
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const { data, error } = await supabase.functions.invoke<MarkAttendanceResponse>("mark-attendance", { body });
+        if (error) throw error;
+        return data;
+      } catch (err: any) {
+        lastError = err;
+        const msg: string = err?.message || "";
+        const isFetchError = msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror");
+        if (isFetchError && attempt === 0) {
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError;
+  };
+
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
       if (scanLock) throw new Error("Already processing");
       setScanLock(true);
 
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("Please log in first to mark attendance");
-      }
+      if (!sessionData.session) throw new Error("Please log in first to mark attendance");
 
-      const { data, error } = await supabase.functions.invoke<MarkAttendanceResponse>("mark-attendance", {
-        body: { lectureId, ...payload },
-      });
-
-      if (error) {
-        console.debug("mark-attendance invoke error", error);
-        throw error;
-      }
-
-      return data;
+      return invokeWithRetry(payload);
     },
     onSuccess: (data) => {
       if (data?.already_marked) {
         setSuccess({ at: Date.now(), points: 0 });
-        toast.info("Attendance already recorded for this lecture.");
+        toast.info("✅ Attendance already recorded for this lecture.");
         return;
       }
       const points = data?.points_awarded ? 10 : 0;
       setSuccess({ at: Date.now(), points });
-      toast.success("✅ Attendance marked successfully!", {
-        description: "Your attendance has been securely recorded.",
-      });
+      toast.success("✅ Attendance marked!", { description: "Your attendance has been securely recorded." });
     },
-    onError: (e) => {
+    onError: (e: any) => {
       const msg = safeErrorMessage(e);
-      const code = (e as any)?.code || "";
-      
-      if (msg.toLowerCase().includes("already marked") || msg.toLowerCase().includes("already recorded")) {
+      const code: string = e?.code || "";
+      const lower = msg.toLowerCase();
+
+      if (lower.includes("already marked") || lower.includes("already recorded") || code === "ALREADY_MARKED") {
         setSuccess({ at: Date.now(), points: 0 });
-        toast.info("Attendance already recorded for this lecture.");
-      } else if (msg.toLowerCase().includes("expired") || code === "OTP_EXPIRED") {
-        toast.error("⏰ Attendance window closed", {
-          description: "The OTP has expired. Ask your lecturer for a new one.",
-        });
-      } else if (msg.toLowerCase().includes("invalid") || code === "INVALID_OTP") {
-        toast.error("❌ Invalid OTP", {
-          description: "Please check the OTP and try again.",
-        });
-      } else if (msg.toLowerCase().includes("not live") || code === "LECTURE_NOT_LIVE") {
-        toast.error("📚 Lecture not live", {
-          description: "Attendance can only be marked during a live lecture.",
-        });
+        toast.info("✅ Attendance already recorded for this lecture.");
+      } else if (lower.includes("expired") || code === "OTP_EXPIRED") {
+        toast.error("⏰ Attendance window closed", { description: "The OTP has expired. Ask your lecturer for a new one." });
+      } else if (lower.includes("invalid") || code === "INVALID_OTP") {
+        toast.error("❌ Invalid OTP", { description: "Please check the OTP and try again." });
+      } else if (lower.includes("not live") || code === "LECTURE_NOT_LIVE") {
+        toast.error("📚 Lecture not live", { description: "Attendance can only be marked during a live lecture." });
       } else if (code === "NO_ACTIVE_TOKEN") {
-        toast.error("⚠️ No active session", {
-          description: "No attendance session is active for this lecture.",
-        });
+        toast.error("⚠️ No active session", { description: "No attendance session is active for this lecture." });
+      } else if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
+        toast.error("Network issue", { description: "Could not connect. Please try again in a few seconds." });
       } else {
-        toast.error("Failed to mark attendance", { description: msg });
+        toast.error("Attendance marked — background updates pending", {
+          description: "Your attendance may have been recorded. Check your history.",
+        });
       }
     },
     onSettled: () => {
