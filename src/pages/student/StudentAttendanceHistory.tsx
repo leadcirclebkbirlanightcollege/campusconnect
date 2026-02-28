@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AttendanceSkeleton } from "@/components/ui/page-skeletons";
 import {
   Select,
   SelectContent,
@@ -101,6 +102,10 @@ export default function StudentAttendanceHistory() {
     const pct = rows.length > 0 ? Math.round((present / rows.length) * 100) : 0;
     return { total: rows.length, present, pct };
   }, [attendanceQuery.data]);
+
+  if (attendanceQuery.isLoading && !attendanceQuery.data) {
+    return <AttendanceSkeleton />;
+  }
 
   return (
     <div className="space-y-4">

@@ -5,6 +5,8 @@ import AppSplash from "@/components/pwa/AppSplash";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import OfflineBanner from "@/components/layout/OfflineBanner";
+import NetworkHealthDot from "@/components/layout/NetworkHealthDot";
+import SwUpdateManager from "@/components/pwa/SwUpdateManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -35,6 +37,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
       refetchOnReconnect: true,
       staleTime: 30_000,
     },
@@ -46,8 +49,10 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <OfflineBanner />
+        <SwUpdateManager />
         <AppSplash />
         <WhatsNewModal />
+        <NetworkHealthDot />
       <Toaster />
       <Sonner />
       <BrowserRouter>
