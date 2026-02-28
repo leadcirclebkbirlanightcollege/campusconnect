@@ -20,8 +20,17 @@ import "./index.css";
   }
 })();
 
+// SW registered with prompt mode — no forced reload on update.
+// Users see a toast, not an automatic page refresh.
 registerSW({
-  immediate: true,
+  immediate: false,
+  onNeedRefresh() {
+    // Non-blocking: just log. UI can show a refresh prompt later.
+    console.info("[SW] New version available. Refresh when ready.");
+  },
+  onOfflineReady() {
+    console.info("[SW] App ready for offline use.");
+  },
 });
 
 createRoot(document.getElementById("root")!).render(<App />);
