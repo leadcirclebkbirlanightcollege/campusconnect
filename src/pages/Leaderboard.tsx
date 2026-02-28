@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { LeaderboardSkeleton } from "@/components/ui/page-skeletons";
 
 type LeaderRow = {
   user_id: string;
@@ -68,6 +69,10 @@ export default function Leaderboard() {
 
   const myRank = rows.find((r) => r.user_id === meQuery.data?.id);
   const isLoading = leaderboardQuery.isLoading || (tab === "weekly" && weeklyQuery.isLoading);
+
+  if (isLoading && rows.length === 0) {
+    return <LeaderboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
