@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       manifestFilename: "manifest.webmanifest",
       includeAssets: ["favicon.ico", "pwa-512.png"],
       manifest: {

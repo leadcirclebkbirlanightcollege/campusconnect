@@ -11,8 +11,9 @@ export function useStudentIntelligence() {
   return useQuery({
     queryKey: ["student", "intelligence"],
     queryFn: async (): Promise<IntelligenceScores> => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+      // Use cached session to avoid a network round-trip on every render
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
       if (!userId) throw new Error("Not authenticated");
 
       const readPersisted = async () => {

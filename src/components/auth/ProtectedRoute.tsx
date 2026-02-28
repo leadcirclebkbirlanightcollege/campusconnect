@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -9,62 +9,78 @@ interface ProtectedRouteProps {
   requiredRole?: "admin" | "student";
 }
 
+// Module-level role cache so repeated mounts don't re-fetch
+const roleCache = new Map<string, string>();
+
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined); // undefined = loading
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    // Check current session
+    isMounted.current = true;
+
+    // Use cached session — avoids network round-trip on every mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRole(session.user.id);
+      if (!isMounted.current) return;
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) {
+        loadRole(u.id);
       } else {
-        setLoading(false);
+        setRoleLoading(false);
       }
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchUserRole(session.user.id);
-        } else {
-          setUserRole(null);
-          setLoading(false);
-        }
+    // Listen only for sign-out / sign-in changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted.current) return;
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) {
+        loadRole(u.id);
+      } else {
+        setUserRole(null);
+        setRoleLoading(false);
       }
-    );
+    });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const fetchUserRole = async (userId: string) => {
+  const loadRole = async (userId: string) => {
+    // Serve from cache first — no DB hit on repeated renders
+    if (roleCache.has(userId)) {
+      if (isMounted.current) {
+        setUserRole(roleCache.get(userId) ?? null);
+        setRoleLoading(false);
+      }
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (error) {
-        console.warn("Role lookup failed:", error);
-        setUserRole(null);
-        return;
-      }
-
-      setUserRole(data?.role ?? null);
-    } catch (error) {
-      console.error("Error fetching user role:", error);
-      setUserRole(null);
+      const role = data?.role ?? null;
+      roleCache.set(userId, role ?? "student");
+      if (isMounted.current) setUserRole(role);
+    } catch {
+      // Silent — default to student on failure
     } finally {
-      setLoading(false);
+      if (isMounted.current) setRoleLoading(false);
     }
   };
 
-  if (loading) {
+  // Still resolving session
+  if (user === undefined || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -76,15 +92,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // IMPORTANT:
-  // If `user_roles` row is missing (or hasn't propagated yet), default to STUDENT.
-  // This prevents an infinite redirect loop: /student -> /auth -> /student ...
   if (requiredRole === "admin") {
     if (userRole !== "admin") return <Navigate to="/app/dashboard" replace />;
   }
 
   if (requiredRole === "student") {
-    // Allow student access when role is null/unknown (default student)
     if (userRole === "admin") return <Navigate to="/app/admin/dashboard" replace />;
   }
 
