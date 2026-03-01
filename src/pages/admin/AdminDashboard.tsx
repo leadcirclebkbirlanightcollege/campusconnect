@@ -26,6 +26,7 @@ import AdminAuditLogTab from "@/pages/admin/audit/AdminAuditLogTab";
 import AdminAttendanceCorrections from "@/pages/admin/attendance/AdminAttendanceCorrections";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
+import AdminSystemControlTab from "@/pages/admin/system/AdminSystemControlTab";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ const AdminDashboard = () => {
       { value: "scanner", label: "ID Scanner", icon: ScanLine },
       { value: "audit_log", label: "Audit Log", icon: FileText },
       { value: "admin_profile", label: "Admin", icon: Shield },
+      { value: "system_control", label: "Platform Mode", icon: Settings },
     ],
     [],
   );
@@ -144,6 +146,7 @@ const AdminDashboard = () => {
         </TabsContent>
         <TabsContent value="admin_profile"><AdminProfileSettings /></TabsContent>
         <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
+        <TabsContent value="system_control"><AdminSystemControlTab /></TabsContent>
         <TabsContent value="audit_log"><AdminAuditLogTab /></TabsContent>
       </Tabs>
     </div>
