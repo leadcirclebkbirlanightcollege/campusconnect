@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SemesterClosedScreen from "@/components/platform/SemesterClosedScreen";
 import MaintenanceModeScreen from "@/components/platform/MaintenanceModeScreen";
@@ -28,7 +27,6 @@ export default function PlatformModeGuard({ children }: Props) {
   const [userRole, setUserRole] = useState<"admin" | "student" | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const fetchedRef = useRef(false);
-  const location = useLocation();
 
   // 1. Resolve user role once from session cache
   useEffect(() => {
@@ -71,20 +69,13 @@ export default function PlatformModeGuard({ children }: Props) {
       });
   }, []);
 
-  // Admin routes should never be blocked
-  const isAdminRoute = location.pathname.startsWith("/app/admin");
+  // Wait for auth to resolve — do NOT render children prematurely
+  if (!authReady) return null;
 
-  // Don't block until auth is resolved (avoids flicker)
-  if (!authReady) return <>{children}</>;
+  // Admins always bypass — role-based only, no route exceptions
+  if (userRole === "admin") return <>{children}</>;
 
-  // Admins always bypass
-  if (userRole === "admin" || isAdminRoute) return <>{children}</>;
-
-  // Auth pages — never block
-  if (location.pathname === "/auth" || location.pathname === "/") {
-    return <>{children}</>;
-  }
-
+  // Block students based on mode — no exceptions
   if (settings.mode === "semester_closed") {
     return <SemesterClosedScreen settings={settings} />;
   }
