@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type PlatformMode = "normal" | "semester_closed" | "maintenance";
+export type PlatformMode = "normal" | "semester_closed" | "maintenance" | "launch";
 
 export interface PlatformModeSettings {
   mode: PlatformMode;
@@ -9,6 +9,8 @@ export interface PlatformModeSettings {
   custom_subtext: string | null;
   custom_suspense: string | null;
   estimated_return: string | null;
+  event_theme: string | null;
+  launch_date: string | null;
 }
 
 const DEFAULT_SETTINGS: PlatformModeSettings = {
@@ -17,6 +19,8 @@ const DEFAULT_SETTINGS: PlatformModeSettings = {
   custom_subtext: null,
   custom_suspense: null,
   estimated_return: null,
+  event_theme: null,
+  launch_date: null,
 };
 
 // Module-level cache so it's shared across components
