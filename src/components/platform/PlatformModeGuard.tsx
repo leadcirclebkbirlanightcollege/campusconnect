@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SemesterClosedScreen from "@/components/platform/SemesterClosedScreen";
 import MaintenanceModeScreen from "@/components/platform/MaintenanceModeScreen";
+import LaunchModeScreen from "@/components/platform/LaunchModeScreen";
 import type { PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -14,6 +15,8 @@ const DEFAULT: PlatformModeSettings = {
   custom_subtext: null,
   custom_suspense: null,
   estimated_return: null,
+  event_theme: null,
+  launch_date: null,
 };
 
 interface Props {
@@ -69,6 +72,13 @@ export default function PlatformModeGuard({ children }: Props) {
       });
   }, []);
 
+  // Apply event theme to body (non-blocking, runs for everyone including admins)
+  useEffect(() => {
+    const theme = settings.event_theme ?? "";
+    document.body.dataset.theme = theme;
+    return () => { document.body.dataset.theme = ""; };
+  }, [settings.event_theme]);
+
   // Wait for auth to resolve — do NOT render children prematurely
   if (!authReady) return null;
 
@@ -82,6 +92,10 @@ export default function PlatformModeGuard({ children }: Props) {
 
   if (settings.mode === "maintenance") {
     return <MaintenanceModeScreen settings={settings} />;
+  }
+
+  if (settings.mode === "launch") {
+    return <LaunchModeScreen settings={settings} />;
   }
 
   return <>{children}</>;

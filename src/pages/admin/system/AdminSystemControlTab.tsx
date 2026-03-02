@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Settings, AlertTriangle, Save } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette } from "lucide-react";
 import { invalidatePlatformModeCache, PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 const DEFAULT: PlatformModeSettings = {
@@ -17,6 +18,8 @@ const DEFAULT: PlatformModeSettings = {
   custom_subtext: null,
   custom_suspense: null,
   estimated_return: null,
+  event_theme: null,
+  launch_date: null,
 };
 
 export default function AdminSystemControlTab() {
@@ -36,7 +39,7 @@ export default function AdminSystemControlTab() {
       });
   }, []);
 
-  const handleToggle = (toggledMode: "semester_closed" | "maintenance") => {
+  const handleToggle = (toggledMode: "semester_closed" | "maintenance" | "launch") => {
     setSettings((prev) => ({
       ...prev,
       mode: prev.mode === toggledMode ? "normal" : toggledMode,
@@ -58,18 +61,14 @@ export default function AdminSystemControlTab() {
   };
 
   const modeLabel =
-    settings.mode === "normal"
-      ? "Normal"
-      : settings.mode === "semester_closed"
-      ? "Semester Closed"
-      : "Maintenance";
+    settings.mode === "normal" ? "Normal" :
+    settings.mode === "semester_closed" ? "Semester Closed" :
+    settings.mode === "launch" ? "Launch" : "Maintenance";
 
   const modeBadgeVariant =
-    settings.mode === "normal"
-      ? "secondary"
-      : settings.mode === "maintenance"
-      ? "destructive"
-      : "default";
+    settings.mode === "normal" ? "secondary" :
+    settings.mode === "maintenance" ? "destructive" :
+    settings.mode === "launch" ? "default" : "default";
 
   if (loading) {
     return (
@@ -140,7 +139,71 @@ export default function AdminSystemControlTab() {
             </CardDescription>
           </CardHeader>
         </Card>
+
+        {/* Launch Mode */}
+        <Card className={settings.mode === "launch" ? "border-primary/50 bg-primary/5" : ""}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-primary" />
+                <CardTitle className="text-base">Launch Mode</CardTitle>
+              </div>
+              <Switch
+                checked={settings.mode === "launch"}
+                onCheckedChange={() => handleToggle("launch")}
+                id="launch-toggle"
+              />
+            </div>
+            <CardDescription>
+              Shows a teaser countdown screen to students. Use before a major release. Admins retain full access.
+            </CardDescription>
+          </CardHeader>
+          {settings.mode === "launch" && (
+            <CardContent className="pt-0">
+              <div className="space-y-1.5">
+                <Label htmlFor="launch-date" className="text-xs">Launch Date &amp; Time (optional)</Label>
+                <Input
+                  id="launch-date"
+                  type="datetime-local"
+                  value={settings.launch_date ?? ""}
+                  onChange={(e) => setSettings((p) => ({ ...p, launch_date: e.target.value || null }))}
+                />
+              </div>
+            </CardContent>
+          )}
+        </Card>
       </div>
+
+      {/* Event Theme */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5 text-muted-foreground" />
+            <CardTitle className="text-base">Event Theme</CardTitle>
+          </div>
+          <CardDescription>
+            Applies a live UI color theme for special events. Does not block any routes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={settings.event_theme ?? "none"}
+            onValueChange={(v) => setSettings((p) => ({ ...p, event_theme: v === "none" ? null : v }))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="No event theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="fest">Fest 🎉</SelectItem>
+              <SelectItem value="annual_day">Annual Day 🏆</SelectItem>
+              <SelectItem value="tech_week">Tech Week 💻</SelectItem>
+              <SelectItem value="exam">Exam 📚</SelectItem>
+              <SelectItem value="diwali">Diwali 🪔</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
       {/* Custom messages */}
       <Card>

@@ -125,3 +125,34 @@
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Event Themes (applied via body[data-theme]) ── */
+[data-theme="fest"] {
+  --primary: 24 95% 53%;
+  --accent: 24 95% 53%;
+  --ring: 24 95% 53%;
+}
+
+[data-theme="annual_day"] {
+  --primary: 270 60% 50%;
+  --accent: 270 60% 50%;
+  --ring: 270 60% 50%;
+}
+
+[data-theme="tech_week"] {
+  --primary: 195 80% 40%;
+  --accent: 195 80% 40%;
+  --ring: 195 80% 40%;
+}
+
+[data-theme="exam"] {
+  --primary: 220 80% 45%;
+  --accent: 220 80% 45%;
+  --ring: 220 80% 45%;
+}
+
+[data-theme="diwali"] {
+  --primary: 38 95% 50%;
+  --accent: 38 95% 50%;
+  --ring: 38 95% 50%;
+}
