@@ -17,11 +17,13 @@ import {
   Calendar,
   Moon,
   Sun,
+  GraduationCap,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -80,7 +82,6 @@ export default function AppSidebar() {
     },
   });
 
-  // Unread inbox count
   const unreadQuery = useQuery({
     queryKey: ["app_sidebar", "unread", authQuery.data?.id],
     enabled: Boolean(authQuery.data?.id),
@@ -105,13 +106,13 @@ export default function AppSidebar() {
   const sections: NavSection[] = useMemo(
     () => [
       {
-        label: "MAIN",
+        label: "Main",
         items: [
           { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
         ],
       },
       {
-        label: "ACADEMICS",
+        label: "Academics",
         items: [
           { title: "Attendance", url: "/app/attendance", icon: CalendarDays },
           { title: "Lectures", url: "/app/lectures", icon: BookOpen },
@@ -119,7 +120,7 @@ export default function AppSidebar() {
         ],
       },
       {
-        label: "ENGAGEMENT",
+        label: "Engagement",
         items: [
           { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy },
           { title: "Polls", url: "/app/polls", icon: BarChart3 },
@@ -127,7 +128,7 @@ export default function AppSidebar() {
         ],
       },
       {
-        label: "COMMUNICATION",
+        label: "Communication",
         items: [
           { title: "Announcements", url: "/app/announcements", icon: Megaphone },
           { title: "Events", url: "/app/events", icon: CalendarDays },
@@ -135,7 +136,7 @@ export default function AppSidebar() {
         ],
       },
       {
-        label: "IDENTITY",
+        label: "Identity",
         items: [
           { title: "Digital ID", url: "/app/id-card", icon: CreditCard },
           { title: "Profile", url: "/app/profile", icon: UserRound },
@@ -147,9 +148,9 @@ export default function AppSidebar() {
 
   const adminSection: NavSection = useMemo(
     () => ({
-      label: "ADMIN",
+      label: "Admin",
       items: [
-        { title: "Admin Dashboard", url: "/app/admin/dashboard", icon: Shield },
+        { title: "Command Center", url: "/app/admin/dashboard", icon: Shield },
       ],
     }),
     [],
@@ -168,12 +169,12 @@ export default function AppSidebar() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const renderSection = (section: NavSection, idx: number) => (
-    <SidebarGroup key={section.label} className={idx > 0 ? "pt-1" : ""}>
-      <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground px-3 pb-0.5">
+    <SidebarGroup key={section.label} className={cn("py-1", idx > 0 && "pt-0")}>
+      <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 px-3 py-1.5 h-auto">
         {section.label}
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           {section.items.map((item) => {
             const active = isActive(item.url);
             const Icon = item.icon;
@@ -186,7 +187,12 @@ export default function AppSidebar() {
                   asChild
                   isActive={active}
                   tooltip={item.title}
-                  className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal"
+                  className={cn(
+                    "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal",
+                    active
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent",
+                  )}
                 >
                   <NavLink
                     to={item.url}
@@ -195,10 +201,13 @@ export default function AppSidebar() {
                     end={item.url === "/app/dashboard"}
                     onClick={handleNav}
                   >
-                    <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                    <Icon className={cn(
+                      "h-3.5 w-3.5 shrink-0",
+                      active ? "text-primary" : "opacity-60",
+                    )} />
                     <span className="flex-1">{item.title}</span>
                     {badgeCount > 0 && (
-                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground leading-none">
+                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground leading-none">
                         {badgeCount > 99 ? "99+" : badgeCount}
                       </span>
                     )}
@@ -214,39 +223,44 @@ export default function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" className="border-r border-sidebar-border">
-      <div className="flex h-14 items-center gap-2.5 px-4 border-b border-sidebar-border shrink-0">
-        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-xs">CC</span>
+      {/* Brand lockup */}
+      <div className="flex h-[52px] items-center gap-2.5 px-3.5 border-b border-sidebar-border shrink-0">
+        <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-primary shrink-0">
+          <GraduationCap className="h-4 w-4 text-primary-foreground" />
         </div>
-        <div className="min-w-0">
-          <span className="text-sm font-semibold text-sidebar-foreground block leading-tight">Campus Connect</span>
-          <span className="text-[10px] text-muted-foreground leading-none">Institutional Platform</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight">
+            Campus Connect
+          </span>
+          <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 leading-none">
+            3.0 · Institutional
+          </span>
         </div>
       </div>
 
-      <SidebarContent className="overflow-y-auto px-1 py-2">
+      <SidebarContent className="overflow-y-auto px-1.5 py-2">
         {sections.map((s, i) => renderSection(s, i))}
 
         {isAdmin && (
           <>
-            <div className="mx-3 my-2 border-t border-sidebar-border" />
+            <div className="mx-3 my-2 h-px bg-sidebar-border" />
             {renderSection(adminSection, sections.length)}
           </>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
-        <SidebarMenu>
+      <SidebarFooter className="border-t border-sidebar-border px-1.5 py-2 space-y-0.5">
+        <SidebarMenu className="gap-0.5">
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={toggleTheme}
               tooltip={theme === "dark" ? "Light mode" : "Dark mode"}
-              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal"
+              className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-sidebar-foreground hover:bg-sidebar-accent"
             >
               {theme === "dark" ? (
-                <Sun className="h-4 w-4 shrink-0 opacity-70" />
+                <Sun className="h-3.5 w-3.5 shrink-0 opacity-60" />
               ) : (
-                <Moon className="h-4 w-4 shrink-0 opacity-70" />
+                <Moon className="h-3.5 w-3.5 shrink-0 opacity-60" />
               )}
               <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
@@ -255,10 +269,10 @@ export default function AppSidebar() {
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Logout"
-              className="h-8 gap-2.5 rounded-md px-3 text-[13px] font-normal text-destructive hover:text-destructive"
+              className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-muted-foreground hover:text-danger hover:bg-danger/8"
             >
-              <LogOut className="h-4 w-4 shrink-0" />
-              <span>Logout</span>
+              <LogOut className="h-3.5 w-3.5 shrink-0" />
+              <span>Sign Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

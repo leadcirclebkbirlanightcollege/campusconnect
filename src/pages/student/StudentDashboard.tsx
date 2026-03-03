@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Clock, ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Flame,
+  Zap,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronRight,
+  BookOpen,
+} from "lucide-react";
 
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { FadeIn, SlideUp, useMetricCountUp } from "@/components/ui/motion";
+import { IntelligenceBar, LiveIndicator, StatusChip } from "@/components/ui/design-system";
+import { cn } from "@/lib/utils";
 
 type UpcomingLecture = {
   id: string;
@@ -48,7 +62,7 @@ const StudentDashboard = () => {
   const [nextLecture, setNextLecture] = useState<UpcomingLecture | null>(null);
   const [liveNow, setLiveNow] = useState<UpcomingLecture | null>(null);
   const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
-  const [name, setName] = useState("User");
+  const [name, setName] = useState("Student");
   const [loading, setLoading] = useState(true);
   const greeting = useMemo(() => getTimeGreeting(), []);
 
@@ -58,12 +72,10 @@ const StudentDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      // Use cached session — no getUser() round-trip
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) return;
 
-      // Phase 1: Critical snapshot — minimal queries, shown immediately
       const [
         { data: profile },
         { data: pointsTotal },
@@ -79,7 +91,7 @@ const StudentDashboard = () => {
           .limit(1),
       ]);
 
-      setName((profile as any)?.name || "User");
+      setName((profile as any)?.name?.split(" ")[0] || "Student");
       const streakData = streakRaw as any;
       setStats(prev => ({
         ...prev,
@@ -89,7 +101,6 @@ const StudentDashboard = () => {
       setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setLoading(false);
 
-      // Phase 2: Secondary data loaded after initial render
       const [
         { data: attendanceData },
         { data: allLectures },
@@ -111,7 +122,7 @@ const StudentDashboard = () => {
           .select("id, created_at, points, source, note")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
-          .limit(8),
+          .limit(10),
       ]);
 
       setStats(prev => ({
@@ -122,218 +133,350 @@ const StudentDashboard = () => {
       setNextLecture(((upcomingList ?? [])[0] as UpcomingLecture | undefined) ?? null);
       setRecentPoints((recentPts ?? []) as RecentPoint[]);
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      console.error("Dashboard fetch error:", error);
       setLoading(false);
     }
   };
 
   const tierData = intelligence.data ? TIER_CONFIG[intelligence.data.tier] : null;
-  const attendancePct = stats.totalLectures > 0 ? Math.round((stats.lecturesAttended / stats.totalLectures) * 100) : 0;
+  const attendancePct = stats.totalLectures > 0
+    ? Math.round((stats.lecturesAttended / stats.totalLectures) * 100)
+    : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <header>
-        <h1 className="text-xl font-semibold text-foreground">
-          {greeting}, {name}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Welcome back to Campus Connect</p>
-      </header>
+    <div className="space-y-6 page-enter">
 
-      {/* Zone A — Academic Snapshot */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SnapshotCard
-          label="Attendance"
-          value={`${attendancePct}%`}
-          sub={`${stats.lecturesAttended}/${stats.totalLectures}`}
-          loading={loading}
-        />
-        <SnapshotCard
-          label="Current Tier"
-          value={tierData?.label ?? "—"}
-          sub={intelligence.data ? `Score: ${intelligence.data.engagementIndex}` : "Loading"}
-          loading={intelligence.isLoading}
-        />
-        <SnapshotCard
-          label="Streak"
-          value={`${stats.currentStreak}d`}
-          sub="Consecutive days"
-          loading={loading}
-        />
-        <SnapshotCard
-          label="Total Points"
-          value={String(stats.totalPoints)}
-          sub="All time"
-          loading={loading}
-        />
-      </div>
-
-      {/* Zone B — Immediate Action */}
-      {liveNow ? (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-2.5 w-2.5 rounded-full bg-success animate-pulse shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{liveNow.topic}</p>
-                <p className="text-xs text-muted-foreground">{liveNow.venue} — {liveNow.start_time}</p>
-              </div>
-            </div>
-            <Button asChild size="sm">
-              <Link to={`/app/lectures/${liveNow.id}`}>
-                Mark Attendance
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : nextLecture ? (
-        <Card>
-          <CardContent className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">Next: {nextLecture.topic}</p>
-                <p className="text-xs text-muted-foreground">
-                  {nextLecture.lecture_date} at {nextLecture.start_time} — {nextLecture.venue}
+      {/* ── HERO: Greeting + Tier Identity ─────────────────────── */}
+      <FadeIn>
+        <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-sm overflow-hidden">
+          {/* Top bar: tier accent */}
+          {tierData && (
+            <div
+              className="h-1 w-full"
+              style={{ background: `hsl(var(--primary))` }}
+            />
+          )}
+          <div className="p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-label uppercase tracking-widest text-muted-foreground">
+                  {greeting}
                 </p>
+                <h1 className="text-display text-foreground">{name}</h1>
+                {tierData && (
+                  <span className="inline-flex items-center gap-1.5 mt-1 text-caption font-medium text-muted-foreground">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: tierData.color ?? "hsl(var(--primary))" }}
+                    />
+                    {tierData.label} Tier
+                  </span>
+                )}
+              </div>
+
+              {/* Attendance ring */}
+              <div className="flex-shrink-0 text-center">
+                <AttendanceRing pct={attendancePct} loading={loading} />
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/app/lectures">View</Link>
-            </Button>
-          </CardContent>
-        </Card>
+
+            {/* Points + Streak row */}
+            <div className="mt-5 pt-4 border-t border-border-subtle grid grid-cols-2 gap-4">
+              <StatPill
+                label="Total Points"
+                value={stats.totalPoints}
+                icon={<Zap className="h-3.5 w-3.5" />}
+                loading={loading}
+              />
+              <StatPill
+                label="Day Streak"
+                value={stats.currentStreak}
+                suffix="d"
+                icon={<Flame className="h-3.5 w-3.5 text-warning" />}
+                loading={loading}
+              />
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      {/* ── LIVE ACTION ZONE ─────────────────────────────────────── */}
+      {liveNow ? (
+        <SlideUp delay={40}>
+          <div className="rounded-xl border border-success/25 bg-success-soft shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <LiveIndicator />
+                <div className="min-w-0">
+                  <p className="text-body-lg font-semibold text-foreground truncate">{liveNow.topic}</p>
+                  <p className="text-caption text-muted-foreground">{liveNow.venue} · {liveNow.start_time}</p>
+                </div>
+              </div>
+              <Button asChild size="sm" className="shrink-0 shadow-primary">
+                <Link to={`/app/lectures/${liveNow.id}`}>
+                  Mark Attendance
+                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </SlideUp>
+      ) : nextLecture ? (
+        <SlideUp delay={40}>
+          <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs">
+            <div className="flex items-center justify-between px-5 py-4 gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-body font-medium text-foreground truncate">
+                    Next: {nextLecture.topic}
+                  </p>
+                  <p className="text-caption text-muted-foreground">
+                    {nextLecture.lecture_date} · {nextLecture.start_time} · {nextLecture.venue}
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Link to="/app/lectures">View</Link>
+              </Button>
+            </div>
+          </div>
+        </SlideUp>
       ) : null}
 
-      {/* Zone C — Performance Overview */}
-      {intelligence.data && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <MetricPanel
-            label="Attendance Consistency"
-            value={intelligence.data.attendanceConsistency}
-            description="How regularly you attend scheduled lectures"
-          />
-          <MetricPanel
-            label="Behaviour Reliability"
-            value={intelligence.data.behaviourReliability}
-            description="Timeliness and pattern of your attendance marking"
-          />
-          <MetricPanel
-            label="Engagement Index"
-            value={intelligence.data.engagementIndex}
-            description="Overall participation across platform activities"
-          />
-        </div>
+      {/* ── INTELLIGENCE STRIP ──────────────────────────────────── */}
+      {(intelligence.data || intelligence.isLoading) && (
+        <SlideUp delay={80}>
+          <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs">
+            <div className="px-5 pt-4 pb-1">
+              <p className="text-label uppercase tracking-widest text-muted-foreground mb-3">
+                Performance Intelligence
+              </p>
+            </div>
+
+            {intelligence.isLoading ? (
+              <div className="px-5 pb-5 space-y-3">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ) : intelligence.data ? (
+              <div className="px-5 pb-5 space-y-3">
+                <IntelligenceBar value={intelligence.data.attendanceConsistency} label="Attendance Consistency" />
+                <IntelligenceBar value={intelligence.data.behaviourReliability} label="Behaviour Reliability" />
+                <IntelligenceBar value={intelligence.data.engagementIndex} label="Engagement Index" />
+              </div>
+            ) : null}
+
+            {/* Growth summary row */}
+            {growth.data && (
+              <div className="border-t border-border-subtle px-5 py-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <GrowthCell
+                  label="30-Day Attendance"
+                  value={`${growth.data.last_30_day_attendance_pct}%`}
+                />
+                <GrowthCell
+                  label="Trend"
+                  value={growth.data.trend_direction}
+                  icon={
+                    growth.data.trend_direction === "improving"
+                      ? <TrendingUp className="h-3 w-3 text-success" />
+                      : growth.data.trend_direction === "declining"
+                      ? <TrendingDown className="h-3 w-3 text-danger" />
+                      : <Minus className="h-3 w-3 text-muted-foreground" />
+                  }
+                />
+                <GrowthCell
+                  label="Projected Tier"
+                  value={TIER_CONFIG[growth.data.projected_tier_next_month as keyof typeof TIER_CONFIG]?.label ?? growth.data.projected_tier_next_month}
+                />
+                <GrowthCell
+                  label="Risk Level"
+                  value={growth.data.risk_probability}
+                  danger={growth.data.risk_probability === "high"}
+                  warning={growth.data.risk_probability === "medium"}
+                />
+              </div>
+            )}
+          </div>
+        </SlideUp>
       )}
 
-      {/* Growth Insights */}
-      {growth.data && <GrowthInsightsStrip data={growth.data} />}
-
-      {/* Zone D — Activity Timeline */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-            <Button asChild variant="ghost" size="sm" className="text-xs gap-1 h-7">
+      {/* ── ACTIVITY TIMELINE ───────────────────────────────────── */}
+      <SlideUp delay={120}>
+        <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <p className="text-body font-medium text-foreground">Recent Activity</p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="h-7 text-caption gap-1 text-muted-foreground">
               <Link to="/app/attendance">
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {recentPoints.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No activity yet.</p>
-          ) : (
-            <div className="divide-y divide-border">
-              {recentPoints.map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-2.5">
-                  <div className="min-w-0">
-                    <p className="text-sm text-foreground">{p.source}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</p>
+
+          {loading ? (
+            <div className="px-5 py-4 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-2.5 w-20" />
                   </div>
-                  <span className="text-sm font-medium text-foreground tabular-nums">
-                    {p.points > 0 ? `+${p.points}` : p.points}
-                  </span>
+                  <Skeleton className="h-3 w-10" />
                 </div>
               ))}
             </div>
+          ) : recentPoints.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <p className="text-caption text-muted-foreground">No activity yet.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border-subtle">
+              {recentPoints.map((p, i) => (
+                <ActivityRow key={p.id} item={p} index={i} />
+              ))}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </SlideUp>
     </div>
   );
 };
 
-function SnapshotCard({ label, value, sub, loading }: { label: string; value: string; sub: string; loading: boolean }) {
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-4 space-y-2">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-7 w-12" />
-          <Skeleton className="h-3 w-20" />
-        </CardContent>
-      </Card>
-    );
-  }
+/* ── Sub-components ─────────────────────────────────────────────── */
+
+function AttendanceRing({ pct, loading }: { pct: number; loading: boolean }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  const dash = ((loading ? 0 : pct) / 100) * circ;
+
   return (
-    <Card>
-      <CardContent className="py-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-semibold text-foreground mt-1">{value}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-      </CardContent>
-    </Card>
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={72} height={72} className="-rotate-90">
+        <circle cx={36} cy={36} r={r} strokeWidth={5}
+          className="stroke-surface-3 fill-none" />
+        <circle cx={36} cy={36} r={r} strokeWidth={5}
+          strokeDasharray={`${dash} ${circ}`}
+          strokeLinecap="round"
+          className="stroke-primary fill-none transition-all duration-slow" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[15px] font-bold text-foreground tabular-nums leading-none">
+          {loading ? "—" : `${pct}%`}
+        </span>
+        <span className="text-[9px] text-muted-foreground uppercase tracking-wider leading-none mt-0.5">
+          Att.
+        </span>
+      </div>
+    </div>
   );
 }
 
-function MetricPanel({ label, value, description }: { label: string; value: number; description: string }) {
-  const barColor = value >= 70 ? "bg-success" : value >= 40 ? "bg-warning" : "bg-destructive";
+function StatPill({
+  label,
+  value,
+  suffix = "",
+  icon,
+  loading,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  icon: React.ReactNode;
+  loading: boolean;
+}) {
+  const counted = useMetricCountUp(loading ? 0 : value, 800);
   return (
-    <Card>
-      <CardContent className="py-4 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-medium text-foreground">{label}</p>
-          <span className="text-sm font-semibold text-foreground tabular-nums">{value}</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className={`h-full rounded-full ${barColor}`} style={{ width: `${value}%` }} />
-        </div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-2.5">
+      <div className="h-7 w-7 rounded-md bg-surface-3 flex items-center justify-center text-muted-foreground">
+        {icon}
+      </div>
+      <div>
+        <p className="text-label uppercase tracking-widest text-muted-foreground">{label}</p>
+        {loading ? (
+          <Skeleton className="h-4 w-12 mt-0.5" />
+        ) : (
+          <p className="text-body font-semibold text-foreground tabular-nums">
+            {counted}{suffix}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
-function GrowthInsightsStrip({ data }: { data: any }) {
-  const trendLabel = data.trend_direction === "improving" ? "Improving" : data.trend_direction === "declining" ? "Declining" : "Stable";
-  const riskColor = data.risk_probability === "high" ? "text-destructive" : data.risk_probability === "medium" ? "text-warning" : "text-success";
-  const projTier = TIER_CONFIG[data.projected_tier_next_month as keyof typeof TIER_CONFIG];
+function GrowthCell({
+  label,
+  value,
+  icon,
+  danger,
+  warning,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+  danger?: boolean;
+  warning?: boolean;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-label uppercase tracking-widest text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-1">
+        {icon}
+        <p
+          className={cn(
+            "text-caption font-semibold capitalize",
+            danger  && "text-danger",
+            warning && "text-warning",
+            !danger && !warning && "text-foreground",
+          )}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ActivityRow({ item, index }: { item: RecentPoint; index: number }) {
+  const isPositive = item.points > 0;
+  const label = item.source.replace(/_/g, " ");
+  const date = new Date(item.created_at).toLocaleDateString("en-GB", {
+    day: "numeric", month: "short",
+  });
 
   return (
-    <Card>
-      <CardContent className="py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">30-Day Attendance</p>
-            <p className="text-lg font-semibold text-foreground mt-0.5">{data.last_30_day_attendance_pct}%</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Trend</p>
-            <p className="text-lg font-semibold text-foreground mt-0.5">{trendLabel}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Projected Tier</p>
-            <p className="text-lg font-semibold text-foreground mt-0.5">{projTier?.label ?? data.projected_tier_next_month}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Risk Level</p>
-            <p className={`text-lg font-semibold mt-0.5 capitalize ${riskColor}`}>{data.risk_probability}</p>
-          </div>
+    <FadeIn delay={index * 25}>
+      <div className="flex items-center gap-3 px-5 py-3">
+        {/* Timeline dot */}
+        <div className={cn(
+          "h-7 w-7 rounded-full flex items-center justify-center shrink-0",
+          isPositive ? "bg-success-soft" : "bg-danger-soft",
+        )}>
+          {isPositive
+            ? <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+            : <AlertTriangle className="h-3.5 w-3.5 text-danger" />
+          }
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-caption font-medium text-foreground capitalize">{label}</p>
+          <p className="text-[11px] text-muted-foreground">{date}</p>
+        </div>
+
+        <span className={cn(
+          "text-caption font-semibold tabular-nums shrink-0",
+          isPositive ? "text-success" : "text-danger",
+        )}>
+          {isPositive ? `+${item.points}` : item.points}
+        </span>
+      </div>
+    </FadeIn>
   );
 }
 

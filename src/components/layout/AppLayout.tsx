@@ -43,25 +43,26 @@ export default function AppLayout() {
         <AppSidebar />
 
         <SidebarInset>
-          <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
-            <div className="flex h-14 items-center gap-3 px-4 md:px-6">
-              <SidebarTrigger className="-ml-1 md:hidden" />
-              <div className="min-w-0">
-                <h1 className="truncate text-sm font-semibold text-foreground">{title}</h1>
-                <p className="truncate text-xs text-muted-foreground hidden sm:block">{description}</p>
+          <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/90 backdrop-blur-md shadow-xs">
+            <div className="flex h-[52px] items-center gap-3 px-4 md:px-5">
+              <SidebarTrigger className="-ml-1 md:hidden h-8 w-8" />
+              <div className="h-4 w-px bg-border-subtle hidden md:block" />
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-[14px] font-semibold text-foreground leading-none">{title}</h1>
+                <p className="truncate text-[11px] text-muted-foreground mt-0.5 leading-none hidden sm:block">{description}</p>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-6 md:py-8">
-            <div className="mx-auto max-w-[1280px] page-enter">
+          <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
+            <div className="mx-auto max-w-[1280px]">
               <Outlet />
             </div>
           </main>
 
-          <footer className="border-t border-border bg-card/60">
-            <div className="px-4 py-3 md:px-6">
-              <p className="text-center text-xs text-muted-foreground">{FOOTER_LINE}</p>
+          <footer className="border-t border-border-subtle bg-surface-1/60">
+            <div className="px-4 py-2.5 md:px-6">
+              <p className="text-center text-[11px] text-muted-foreground/60">{FOOTER_LINE}</p>
             </div>
           </footer>
         </SidebarInset>

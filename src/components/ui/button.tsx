@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-body font-medium",
-    "ring-offset-background transition-[transform,background-color,box-shadow,opacity]",
-    "duration-fast ease-standard",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-[14px] font-medium",
+    "ring-offset-background",
+    "transition-[transform,background-color,box-shadow,opacity,border-color] duration-[120ms] ease-[cubic-bezier(0.0,0,0.2,1)]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
-    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0",
     "hover:scale-[1.02] active:scale-[0.97]",
     "select-none",
   ].join(" "),
@@ -18,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:shadow-sm",
+          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:shadow-sm active:bg-primary",
         destructive:
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
         outline:
@@ -26,15 +26,15 @@ const buttonVariants = cva(
         secondary:
           "bg-surface-2 text-foreground border border-border-subtle shadow-xs hover:bg-surface-3",
         ghost:
-          "hover:bg-surface-2 hover:text-foreground",
+          "hover:bg-surface-2 text-foreground hover:scale-100 active:scale-[0.98]",
         link:
           "text-primary underline-offset-4 hover:underline hover:scale-100 active:scale-100",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm:      "h-9 rounded-md px-3 text-caption",
-        lg:      "h-11 rounded-md px-8 text-body-lg",
-        icon:    "h-10 w-10",
+        default: "h-9 px-4 py-2 text-[14px]",
+        sm:      "h-7 rounded-md px-3 text-[12px]",
+        lg:      "h-11 rounded-lg px-6 text-[15px]",
+        icon:    "h-9 w-9",
       },
     },
     defaultVariants: {
