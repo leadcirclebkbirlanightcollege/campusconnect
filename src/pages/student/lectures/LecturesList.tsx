@@ -1,21 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BookOpen, ChevronRight, MapPin, Clock, Info } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { FadeIn } from "@/components/ui/motion";
+import { StatusChip, LiveIndicator } from "@/components/ui/design-system";
 
 type LectureRow = {
   id: string;
@@ -36,7 +29,6 @@ export default function LecturesList() {
     queryKey: ["student", "lectures", view],
     queryFn: async (): Promise<LectureRow[]> => {
       const today = new Date().toISOString().slice(0, 10);
-
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
 
@@ -86,87 +78,153 @@ export default function LecturesList() {
         await qc.invalidateQueries({ queryKey: ["student", "lectures"] });
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [qc]);
 
-  const statusBadge = (status?: string) => {
-    if (status === "live") return <Badge className="bg-success text-success-foreground text-xs">Live</Badge>;
-    if (status === "ended") return <Badge variant="secondary" className="text-xs">Ended</Badge>;
-    return <Badge variant="outline" className="text-xs">Scheduled</Badge>;
-  };
+  const lectures = lecturesQuery.data ?? [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button
-          variant={view === "upcoming" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("upcoming")}
-        >
-          Upcoming
-        </Button>
-        <Button
-          variant={view === "past" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("past")}
-        >
-          Past
-        </Button>
+    <div className="space-y-5 page-enter">
+
+      {/* ── Header ── */}
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <h1 className="text-heading text-foreground">Lectures</h1>
+          </div>
+
+          {/* Toggle */}
+          <div className="flex rounded-lg border border-border-subtle bg-surface-2 p-0.5">
+            <button
+              onClick={() => setView("upcoming")}
+              className={cn(
+                "px-3 py-1 rounded-md text-caption font-medium transition-fast",
+                view === "upcoming"
+                  ? "bg-surface-1 text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Upcoming
+            </button>
+            <button
+              onClick={() => setView("past")}
+              className={cn(
+                "px-3 py-1 rounded-md text-caption font-medium transition-fast",
+                view === "past"
+                  ? "bg-surface-1 text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Past
+            </button>
+          </div>
+        </div>
+      </FadeIn>
+
+      {/* ── Content ── */}
+      {lecturesQuery.isLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : lectures.length === 0 ? (
+        <FadeIn>
+          <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs py-16 text-center">
+            <BookOpen className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-body text-muted-foreground">No {view} lectures.</p>
+            <p className="text-caption text-muted-foreground mt-1 flex items-center justify-center gap-1">
+              <Info className="h-3 w-3" />
+              Programme allotment may be pending.
+            </p>
+          </div>
+        </FadeIn>
+      ) : (
+        <div className="space-y-2">
+          {lectures.map((l, i) => (
+            <FadeIn key={l.id} delay={i * 20}>
+              <LectureCard lecture={l} />
+            </FadeIn>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Lecture Card ─────────────────────────────────────────── */
+function LectureCard({ lecture }: { lecture: LectureRow }) {
+  const isLive = lecture.status === "live";
+  const isEnded = lecture.status === "ended";
+
+  const dateFmt = useMemo(() => {
+    const d = new Date(lecture.lecture_date + "T00:00:00");
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  }, [lecture.lecture_date]);
+
+  return (
+    <Link
+      to={`/app/lectures/${lecture.id}`}
+      className={cn(
+        "group flex items-center gap-4 rounded-xl border px-5 py-4 transition-fast",
+        "bg-surface-1 shadow-xs",
+        isLive
+          ? "border-success/25 hover:border-success/40"
+          : isEnded
+          ? "border-border-subtle opacity-80 hover:opacity-100"
+          : "border-border-subtle hover:border-border-strong hover:shadow-sm",
+      )}
+    >
+      {/* Date column */}
+      <div className="flex-shrink-0 w-12 text-center">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none">
+          {dateFmt.split(" ")[0]}
+        </p>
+        <p className="text-[20px] font-bold text-foreground leading-tight tabular-nums">
+          {dateFmt.split(" ")[1]}
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-none">
+          {dateFmt.split(" ")[2]}
+        </p>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Lecture</TableHead>
-                  <TableHead className="w-28">Date</TableHead>
-                  <TableHead className="w-32">Time</TableHead>
-                  <TableHead className="w-28">Venue</TableHead>
-                  <TableHead className="w-24">Status</TableHead>
-                  <TableHead className="w-20"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lecturesQuery.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">Loading...</TableCell>
-                  </TableRow>
-                ) : (lecturesQuery.data ?? []).length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      <div className="space-y-1">
-                        <p>No {view} lectures found.</p>
-                        <p className="text-xs flex items-center justify-center gap-1">
-                          <Info className="h-3 w-3" />
-                          Your programme allotment may be pending.
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  (lecturesQuery.data ?? []).map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-sm font-medium">{l.topic}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.lecture_date}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.start_time}–{l.end_time}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.venue}</TableCell>
-                      <TableCell>{statusBadge(l.status)}</TableCell>
-                      <TableCell>
-                        <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-                          <Link to={`/app/lectures/${l.id}`}>View</Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      {/* Divider */}
+      <div className={cn(
+        "w-px self-stretch rounded-full",
+        isLive ? "bg-success/30" : "bg-border-subtle",
+      )} />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className="flex items-start gap-2">
+          <p className="text-body font-medium text-foreground leading-snug flex-1 min-w-0">
+            {lecture.topic}
+          </p>
+          {isLive && <LiveIndicator className="shrink-0" />}
+          {!isLive && (
+            <StatusChip
+              variant={isEnded ? "ended" : "scheduled"}
+              label={isEnded ? "Ended" : "Scheduled"}
+              className="shrink-0"
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="flex items-center gap-1 text-caption text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {lecture.start_time}–{lecture.end_time}
+          </span>
+          <span className="flex items-center gap-1 text-caption text-muted-foreground">
+            <MapPin className="h-3 w-3" />
+            {lecture.venue}
+          </span>
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-fast" />
+    </Link>
   );
 }

@@ -124,3 +124,48 @@ export function MetricCountUp({
     </span>
   );
 }
+
+/* ── useMetricCountUp hook ── */
+export function useMetricCountUp(target: number, duration = 900): number {
+  const [count, setCount] = React.useState(0);
+  const frameRef = React.useRef<number | undefined>(undefined);
+  const startRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    if (target === 0) { setCount(0); return; }
+    startRef.current = null;
+    const animate = (timestamp: number) => {
+      if (!startRef.current) startRef.current = timestamp;
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * target));
+      if (progress < 1) frameRef.current = requestAnimationFrame(animate);
+    };
+    frameRef.current = requestAnimationFrame(animate);
+    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
+  }, [target, duration]);
+
+  return count;
+}
+
+/* ── StaggerList ── */
+interface StaggerListProps {
+  children: React.ReactNode[];
+  baseDelay?: number;
+  step?: number;
+  className?: string;
+}
+
+export function StaggerList({ children, baseDelay = 0, step = 40, className }: StaggerListProps) {
+  return (
+    <div className={className}>
+      {React.Children.map(children, (child, i) => (
+        <FadeIn key={i} delay={baseDelay + i * step}>
+          {child}
+        </FadeIn>
+      ))}
+    </div>
+  );
+}
+
