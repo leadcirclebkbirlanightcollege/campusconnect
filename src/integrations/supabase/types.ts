@@ -221,6 +221,39 @@ export type Database = {
           },
         ]
       }
+      core_team_members: {
+        Row: {
+          class: string | null
+          created_at: string
+          designation: string | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          photo_url: string | null
+        }
+        Insert: {
+          class?: string | null
+          created_at?: string
+          designation?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          photo_url?: string | null
+        }
+        Update: {
+          class?: string | null
+          created_at?: string
+          designation?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
       daily_content: {
         Row: {
           body: string | null
@@ -509,6 +542,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_branding: {
+        Row: {
+          brand_name: string
+          favicon_url: string | null
+          id: string
+          logo_url: string | null
+          tagline: string
+          updated_at: string
+        }
+        Insert: {
+          brand_name?: string
+          favicon_url?: string | null
+          id?: string
+          logo_url?: string | null
+          tagline?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          favicon_url?: string | null
+          id?: string
+          logo_url?: string | null
+          tagline?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       platform_settings: {
         Row: {

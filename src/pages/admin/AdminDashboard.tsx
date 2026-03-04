@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText, FileEdit } from "lucide-react";
+import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText, FileEdit, Palette, UserCog } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -27,6 +27,8 @@ import AdminAttendanceCorrections from "@/pages/admin/attendance/AdminAttendance
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
 import AdminSystemControlTab from "@/pages/admin/system/AdminSystemControlTab";
+import AdminBrandingTab from "@/pages/admin/branding/AdminBrandingTab";
+import AdminCoreTeamTab from "@/pages/admin/team/AdminCoreTeamTab";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +59,8 @@ const AdminDashboard = () => {
       { value: "audit_log", label: "Audit Log", icon: FileText },
       { value: "admin_profile", label: "Admin", icon: Shield },
       { value: "system_control", label: "Platform Mode", icon: Settings },
+      { value: "branding", label: "Branding", icon: Palette },
+      { value: "core_team", label: "Core Team", icon: UserCog },
     ],
     [],
   );
@@ -148,7 +152,10 @@ const AdminDashboard = () => {
         <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
         <TabsContent value="system_control"><AdminSystemControlTab /></TabsContent>
         <TabsContent value="audit_log"><AdminAuditLogTab /></TabsContent>
+        <TabsContent value="branding"><AdminBrandingTab /></TabsContent>
+        <TabsContent value="core_team"><AdminCoreTeamTab /></TabsContent>
       </Tabs>
+
     </div>
   );
 };
