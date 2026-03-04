@@ -23,6 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/hooks/use-theme";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { cn } from "@/lib/utils";
 
 import {
@@ -57,6 +58,7 @@ export default function AppSidebar() {
   const navigate = useNavigate();
   const { setOpenMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
+  const { branding } = usePlatformBranding();
 
   const authQuery = useQuery({
     queryKey: ["app_sidebar", "auth"],
@@ -225,15 +227,19 @@ export default function AppSidebar() {
     <Sidebar variant="sidebar" className="border-r border-sidebar-border">
       {/* Brand lockup */}
       <div className="flex h-[52px] items-center gap-2.5 px-3.5 border-b border-sidebar-border shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-primary shrink-0">
-          <GraduationCap className="h-4 w-4 text-primary-foreground" />
+        <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
+          {branding.logo_url ? (
+            <img src={branding.logo_url} alt={branding.brand_name} className="w-5 h-5 object-contain" />
+          ) : (
+            <GraduationCap className="h-4 w-4 text-primary-foreground" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight">
-            Campus Connect
+            {branding.brand_name}
           </span>
-          <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 leading-none">
-            3.0 · Institutional
+          <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60 leading-none">
+            {branding.tagline}
           </span>
         </div>
       </div>
