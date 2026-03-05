@@ -46,24 +46,28 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Navigate immediately — role check and retention run in background
-  const redirectToDashboard = (userId: string) => {
-    navigate("/app/dashboard", { replace: true });
-
-    // Non-blocking role check — redirect to admin if needed
-    Promise.resolve(
-      supabase
+  // Fetch role first, then navigate to the correct dashboard
+  const redirectToDashboard = async (userId: string) => {
+    try {
+      const { data } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .maybeSingle()
-    ).then(({ data }) => {
-      if (data?.role === "admin") {
-        navigate("/app/admin/dashboard", { replace: true });
-      }
-    }).catch(() => {/* silent */});
+        .maybeSingle();
 
-    // Fire-and-forget retention (2s delay so it never races with navigation)
+      const role = data?.role;
+      if (role === "super_admin") {
+        navigate("/platform/admin", { replace: true });
+      } else if (role === "admin") {
+        navigate("/app/admin/dashboard", { replace: true });
+      } else {
+        navigate("/app/dashboard", { replace: true });
+      }
+    } catch {
+      navigate("/app/dashboard", { replace: true });
+    }
+
+    // Fire-and-forget retention (always runs regardless of role)
     setTimeout(() => {
       supabase.functions
         .invoke("retention-on-login", { body: {} })
