@@ -221,6 +221,42 @@ export type Database = {
           },
         ]
       }
+      colleges: {
+        Row: {
+          college_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          primary_color: string | null
+          subdomain: string | null
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          college_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          primary_color?: string | null
+          subdomain?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          college_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          primary_color?: string | null
+          subdomain?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       core_team_members: {
         Row: {
           class: string | null
@@ -1025,6 +1061,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_platform_analytics: { Args: never; Returns: Json }
       get_weekly_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
@@ -1039,6 +1076,7 @@ export type Database = {
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_student: { Args: { check_user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
       account_deletion_status:
@@ -1046,7 +1084,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "completed"
-      app_role: "admin" | "student"
+      app_role: "admin" | "student" | "super_admin"
       lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent" | "cancelled"
     }
@@ -1182,7 +1220,7 @@ export const Constants = {
         "rejected",
         "completed",
       ],
-      app_role: ["admin", "student"],
+      app_role: ["admin", "student", "super_admin"],
       lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent", "cancelled"],
     },

@@ -27,7 +27,7 @@ export default function RoleShell({ children }: { children: ReactNode }) {
         .eq("user_id", uid)
         .maybeSingle();
       if (error) throw error;
-      return (data?.role as "admin" | "student" | null) ?? null;
+      return (data?.role as "admin" | "student" | "super_admin" | null) ?? null;
     },
   });
 
@@ -37,6 +37,11 @@ export default function RoleShell({ children }: { children: ReactNode }) {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (roleQuery.data === "super_admin") {
+    // super_admin has their own shell-less dashboard
+    return <>{children}</>;
   }
 
   if (roleQuery.data === "admin") {
