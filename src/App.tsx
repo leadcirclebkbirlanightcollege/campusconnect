@@ -32,6 +32,7 @@ import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
+import SuperAdminDashboard from "./pages/platform/SuperAdminDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,16 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+
+          {/* Super Admin Route */}
+          <Route
+            path="/platform/admin"
+            element={
+              <ProtectedRoute requiredRole="super_admin">
+                <SuperAdminDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Canonical authenticated routes */}
           <Route

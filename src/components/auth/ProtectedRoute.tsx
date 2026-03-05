@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "student";
+  requiredRole?: "admin" | "super_admin" | "student";
 }
 
 // Module-level role cache so repeated mounts don't re-fetch
@@ -92,12 +92,20 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
+  // super_admin: always redirect to /platform/admin if they land on /app routes (no requiredRole)
+  if (!requiredRole && userRole === "super_admin") return <Navigate to="/platform/admin" replace />;
+
+  if (requiredRole === "super_admin") {
+    if (userRole !== "super_admin") return <Navigate to="/app/admin/dashboard" replace />;
+  }
+
   if (requiredRole === "admin") {
-    if (userRole !== "admin") return <Navigate to="/app/dashboard" replace />;
+    // super_admin inherits admin access
+    if (userRole !== "admin" && userRole !== "super_admin") return <Navigate to="/app/dashboard" replace />;
   }
 
   if (requiredRole === "student") {
-    if (userRole === "admin") return <Navigate to="/app/admin/dashboard" replace />;
+    if (userRole === "admin" || userRole === "super_admin") return <Navigate to="/app/admin/dashboard" replace />;
   }
 
   return <>{children}</>;
