@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Failed to verify role' })
     }
 
-    if (!roleData || roleData.role !== 'admin') return json(403, { error: 'Admin access required' })
+    if (!roleData || !['admin', 'super_admin'].includes(roleData.role)) return json(403, { error: 'Admin access required' })
 
     const body = (await req.json()) as CreateStudentBody
 
