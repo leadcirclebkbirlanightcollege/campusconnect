@@ -110,7 +110,7 @@ export default function SAAchievementsTab() {
         .select("*")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data as Achievement[]) ?? [];
+      return (data as unknown as Achievement[]) ?? [];
     },
     staleTime: 60_000,
   });
