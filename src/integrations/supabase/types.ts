@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          points_reward: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           created_at: string

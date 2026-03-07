@@ -2,18 +2,26 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FadeIn, SlideUp } from "@/components/ui/motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Building2, Users, BookOpen, CheckSquare, Coins,
-  BarChart3, ShieldCheck, LogOut, Activity, Globe, UserCog
+  BarChart3, ShieldCheck, LogOut, Activity, Globe,
+  UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
 } from "lucide-react";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
 import CollegeSwitcher from "./components/CollegeSwitcher";
 import { CollegesTab, AdminManagerTab } from "./components/CollegeManagement";
+import SAStudentsTab from "./components/SAStudentsTab";
+import SALecturesTab from "./components/SALecturesTab";
+import SAAchievementsTab from "./components/SAAchievementsTab";
+import SAPlatformModeTab from "./components/SAPlatformModeTab";
+import SAAnalyticsTab from "./components/SAAnalyticsTab";
+import SASecurityTab from "./components/SASecurityTab";
+import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type PlatformAnalytics = {
@@ -42,7 +50,7 @@ function StatCard({ icon: Icon, label, value, accent }: {
 }) {
   return (
     <Card className="bg-surface-1 border-border-subtle">
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${accent ?? "bg-primary/10"}`}>
             <Icon className="w-4 h-4 text-primary" />
@@ -58,6 +66,43 @@ function StatCard({ icon: Icon, label, value, accent }: {
     </Card>
   );
 }
+
+// ── Live Lectures count badge ───────────────────────────────────────────────
+function LiveCount() {
+  const { data } = useQuery({
+    queryKey: ["sa_live_count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("lectures")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "live");
+      return count ?? 0;
+    },
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+  if (!data) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] bg-success/15 text-success border border-success/20 rounded-full px-2 py-0.5 ml-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+      {data}
+    </span>
+  );
+}
+
+// ── Tab Nav ─────────────────────────────────────────────────────────────────
+const TABS = [
+  { value: "overview",   icon: BarChart3,   label: "Overview" },
+  { value: "analytics",  icon: TrendingUp,  label: "Analytics" },
+  { value: "colleges",   icon: Building2,   label: "Colleges" },
+  { value: "admins",     icon: ShieldCheck, label: "Admins" },
+  { value: "students",   icon: Users,       label: "Students" },
+  { value: "lectures",   icon: BookOpen,    label: "Lectures" },
+  { value: "achievements",icon: Trophy,     label: "Achievements" },
+  { value: "platform",   icon: Settings2,   label: "Platform" },
+  { value: "security",   icon: Shield,      label: "Security" },
+  { value: "health",     icon: Activity,    label: "Health" },
+] as const;
 
 // ── Inner Dashboard (needs CollegeContext) ───────────────────────────────────
 function DashboardInner() {
@@ -103,7 +148,6 @@ function DashboardInner() {
               onClick={async () => {
                 const { data } = await supabase.auth.getSession();
                 if (data.session) {
-                  // Open admin dashboard in same tab with college context
                   window.location.href = "/app/admin/dashboard";
                 }
               }}
@@ -111,8 +155,11 @@ function DashboardInner() {
               <UserCog className="w-3.5 h-3.5" />
               Admin View
             </Button>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground"
-              onClick={async () => { await supabase.auth.signOut(); window.location.href = "/auth"; }}>
+            <Button
+              variant="ghost" size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={async () => { await supabase.auth.signOut(); window.location.href = "/auth"; }}
+            >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
             </Button>
@@ -120,90 +167,95 @@ function DashboardInner() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <FadeIn>
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Platform Overview</h1>
-            <p className="text-sm text-muted-foreground mt-1">Multi-college management &amp; platform analytics</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Platform Overview</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Multi-college management &amp; platform analytics</p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <span className="text-xs text-muted-foreground">All systems operational</span>
+            </div>
           </div>
         </FadeIn>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="bg-surface-2 border border-border-subtle">
-            <TabsTrigger value="overview" className="gap-1.5 text-xs">
-              <BarChart3 className="w-3.5 h-3.5" />Overview
-            </TabsTrigger>
-            <TabsTrigger value="colleges" className="gap-1.5 text-xs">
-              <Building2 className="w-3.5 h-3.5" />Colleges
-            </TabsTrigger>
-            <TabsTrigger value="admins" className="gap-1.5 text-xs">
-              <ShieldCheck className="w-3.5 h-3.5" />Admins
-            </TabsTrigger>
-          </TabsList>
+          {/* Scrollable tab list */}
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="bg-surface-2 border border-border-subtle h-auto p-1 flex w-max min-w-full sm:w-auto sm:flex-wrap gap-0">
+              {TABS.map(({ value, icon: Icon, label }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="gap-1.5 text-xs h-8 px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap"
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  {label}
+                  {value === "lectures" && <LiveCount />}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {/* ── OVERVIEW ── */}
           <TabsContent value="overview" className="mt-6 space-y-6">
             <SlideUp>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard icon={Building2} label="Total Colleges" value={analytics?.total_colleges ?? "—"} />
-                <StatCard icon={Activity} label="Active Colleges" value={analytics?.active_colleges ?? "—"} accent="bg-success/10" />
-                <StatCard icon={Users} label="Total Students" value={analytics?.total_students ?? "—"} />
-                <StatCard icon={BookOpen} label="Lectures Conducted" value={analytics?.total_lectures ?? "—"} />
+                <StatCard icon={Building2}   label="Total Colleges"    value={analytics?.total_colleges ?? "—"} />
+                <StatCard icon={Activity}    label="Active Colleges"   value={analytics?.active_colleges ?? "—"} accent="bg-success/10" />
+                <StatCard icon={Users}       label="Total Students"    value={analytics?.total_students ?? "—"} />
+                <StatCard icon={BookOpen}    label="Lectures Conducted" value={analytics?.total_lectures ?? "—"} />
                 <StatCard icon={CheckSquare} label="Attendance Records" value={analytics?.total_attendance ?? "—"} />
-                <StatCard icon={Coins} label="Points Awarded" value={analytics?.total_points_awarded ?? "—"} />
+                <StatCard icon={Coins}       label="Points Awarded"    value={analytics?.total_points_awarded ?? "—"} />
               </div>
             </SlideUp>
 
-            <SlideUp delay={0.08}>
+            <SlideUp delay={0.06}>
               <Card className="bg-surface-1 border-border-subtle">
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
                     <Globe className="w-4 h-4 text-primary" />
-                    Platform Health
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-sm text-foreground">All systems operational</span>
-                    <Badge variant="secondary" className="ml-auto text-[10px]">Live</Badge>
+                    <span className="text-sm font-medium text-foreground">College Snapshot</span>
                   </div>
-                </CardContent>
-              </Card>
-            </SlideUp>
-
-            {/* College snapshot */}
-            {colleges.length > 0 && (
-              <SlideUp delay={0.12}>
-                <Card className="bg-surface-1 border-border-subtle">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      College Snapshot
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                  {colleges.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-2">No colleges yet.</p>
+                  ) : (
                     <div className="space-y-2">
-                      {colleges.slice(0, 5).map(college => (
-                        <div key={college.id} className="flex items-center gap-3 py-1.5">
-                          <div className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: college.primary_color ?? "hsl(var(--primary))" }} />
+                      {colleges.slice(0, 6).map((college) => (
+                        <div key={college.id} className="flex items-center gap-3">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: college.primary_color ?? "hsl(var(--primary))" }}
+                          />
                           <span className="text-sm text-foreground flex-1 truncate">{college.college_name}</span>
-                          <Badge variant={college.is_active ? "default" : "secondary"} className="text-[10px]">
+                          <Badge
+                            variant={college.is_active ? "default" : "secondary"}
+                            className="text-[10px]"
+                          >
                             {college.is_active ? "Active" : "Inactive"}
                           </Badge>
                         </div>
                       ))}
-                      {colleges.length > 5 && (
-                        <p className="text-xs text-muted-foreground pt-1">
-                          +{colleges.length - 5} more colleges
-                        </p>
+                      {colleges.length > 6 && (
+                        <button
+                          className="text-xs text-primary hover:underline pt-1"
+                          onClick={() => setTab("colleges")}
+                        >
+                          +{colleges.length - 6} more → View all colleges
+                        </button>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              </SlideUp>
-            )}
+                  )}
+                </CardContent>
+              </Card>
+            </SlideUp>
+          </TabsContent>
+
+          {/* ── ANALYTICS ── */}
+          <TabsContent value="analytics" className="mt-6">
+            <SAAnalyticsTab />
           </TabsContent>
 
           {/* ── COLLEGES ── */}
@@ -214,6 +266,42 @@ function DashboardInner() {
           {/* ── ADMINS ── */}
           <TabsContent value="admins" className="mt-6">
             <AdminManagerTab />
+          </TabsContent>
+
+          {/* ── STUDENTS ── */}
+          <TabsContent value="students" className="mt-6">
+            <SAStudentsTab />
+          </TabsContent>
+
+          {/* ── LECTURES ── */}
+          <TabsContent value="lectures" className="mt-6">
+            <SALecturesTab />
+          </TabsContent>
+
+          {/* ── ACHIEVEMENTS ── */}
+          <TabsContent value="achievements" className="mt-6">
+            <SAAchievementsTab />
+          </TabsContent>
+
+          {/* ── PLATFORM MODE ── */}
+          <TabsContent value="platform" className="mt-6">
+            <SAPlatformModeTab />
+          </TabsContent>
+
+          {/* ── SECURITY ── */}
+          <TabsContent value="security" className="mt-6">
+            <SASecurityTab />
+          </TabsContent>
+
+          {/* ── SYSTEM HEALTH ── */}
+          <TabsContent value="health" className="mt-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">System Health</h2>
+                <p className="text-xs text-muted-foreground">Real-time platform diagnostics</p>
+              </div>
+              <SystemHealthPanel />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
