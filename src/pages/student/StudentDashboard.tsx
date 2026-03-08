@@ -455,7 +455,8 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-foreground">{meta.label}</p>
-        <p className="truncate text-xs text-muted-foreground">{activity.note ?? date}</p>
+        <p className="truncate text-xs text-muted-foreground">{date}</p>
+        {activity.note ? <p className="truncate text-[11px] text-muted-foreground/80">{activity.note}</p> : null}
       </div>
       <div className={cn("text-sm font-bold tabular-nums", isPositive ? "text-success" : "text-danger")}>
         {isPositive ? "+" : ""}
