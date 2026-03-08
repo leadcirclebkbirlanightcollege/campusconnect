@@ -353,7 +353,7 @@ export default function Index() {
           <div className="space-y-3">
             {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
               <motion.div key={title} variants={ENTER}>
-                <GlassCard className="flex items-start gap-3 border-primary/20" padding="lg">
+                <GlassCard className="flex items-start gap-3 border-border-subtle" padding="lg">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/12 text-primary shadow-glow">
                     <Icon className="h-5 w-5" />
                   </div>
