@@ -20,11 +20,19 @@ export default defineConfig(({ mode }) => ({
       manifestFilename: "manifest.webmanifest",
       includeAssets: ["favicon.ico", "pwa-512.png", "noise.png"],
       devOptions: { enabled: false },
+      // Use custom SW that includes Web Push handlers
+      strategies: "injectManifest",
+      srcDir: "public",
+      filename: "sw.js",
+      injectManifest: {
+        injectionPoint: "self.__WB_MANIFEST",
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
+      },
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
-        // Never cache OAuth redirect routes
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
+        // Never cache OAuth redirect routes or push worker
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/, /^\/sw-push\.js/],
         // Runtime caching: API + image responses
         runtimeCaching: [
           {
