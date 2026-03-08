@@ -393,6 +393,8 @@ export default function AppLayout() {
       </div>
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
+      {/* Floating feedback button — visible for all authenticated users */}
+      <FeedbackButton />
     </SidebarProvider>
     </>
   );
