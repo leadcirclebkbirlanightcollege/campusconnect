@@ -134,9 +134,9 @@ function ProfileMenu({ userId }: { userId: string }) {
         <DropdownMenuSeparator className="bg-border-subtle" />
 
         <DropdownMenuItem asChild className="gap-2.5 text-[13px] cursor-pointer">
-          <Link to="/app/profile">
+          <Link to="/app/settings">
             <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
-            My Profile
+            Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="gap-2.5 text-[13px] cursor-pointer">

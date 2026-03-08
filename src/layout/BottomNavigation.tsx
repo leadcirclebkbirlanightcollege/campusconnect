@@ -17,7 +17,7 @@ import {
   CalendarCheck,
   BookOpen,
   Trophy,
-  UserCircle,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -33,7 +33,7 @@ const TABS: NavTab[] = [
   { label: "Attendance", href: "/app/attendance",  icon: CalendarCheck   },
   { label: "Lectures",   href: "/app/lectures",    icon: BookOpen        },
   { label: "Ranks",      href: "/app/leaderboard", icon: Trophy          },
-  { label: "Profile",    href: "/app/profile",     icon: UserCircle      },
+  { label: "Settings",   href: "/app/settings",    icon: Settings        },
 ];
 
 function isActive(pathname: string, href: string): boolean {

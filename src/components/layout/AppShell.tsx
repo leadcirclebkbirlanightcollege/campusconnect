@@ -352,7 +352,7 @@ const AppShell = ({ children }: AppShellProps) => {
                   <NavItem to="/app/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/app/inbox")} badge={unread} />
                 </div>
 
-                <NavItem to="/app/profile" label="Profile" icon={UserRound} active={path.startsWith("/app/profile")} />
+                <NavItem to="/app/settings" label="Settings" icon={UserRound} active={path.startsWith("/app/settings") || path.startsWith("/app/profile")} />
 
                 {/* Avatar dropdown */}
                 <DropdownMenu>
@@ -375,7 +375,7 @@ const AppShell = ({ children }: AppShellProps) => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-50 w-48 bg-popover text-popover-foreground">
-                    <DropdownMenuItem asChild><Link to="/app/profile">Profile</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/settings">Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/settings/notifications">Notification Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/leaderboard">Leaderboard</Link></DropdownMenuItem>

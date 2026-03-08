@@ -147,7 +147,7 @@ export default function AppSidebar() {
         label: "Identity",
         items: [
           { title: "Digital ID",         url: "/app/id-card",                   icon: CreditCard },
-          { title: "Profile",            url: "/app/profile",                   icon: UserRound },
+          { title: "Settings",           url: "/app/settings",                  icon: UserRound },
           { title: "Notif. Settings",    url: "/app/settings/notifications",    icon: Settings },
         ],
       },
