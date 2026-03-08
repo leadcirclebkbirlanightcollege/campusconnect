@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const oneSignalAppId = Deno.env.get("ONESIGNAL_APP_ID");
+    const oneSignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
     // ── Security: NOTIFICATION_CRON_SECRET is REQUIRED ──────────────────────
     // If the secret is not configured, reject all requests to prevent
