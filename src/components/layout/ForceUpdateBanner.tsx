@@ -72,8 +72,14 @@ export default function ForceUpdateBanner() {
     if (!value || typeof value !== "object") return;
     const p = value as ForceUpdatePayload;
     if (!p.triggered_at) return;
-    // Don't re-trigger if already acked in this session
     if (getAckedTimestamp() === p.triggered_at) return;
+
+    // If this client already runs the pushed version, no need to show/update-block again.
+    if (p.version && isVersionAtLeast(APP_VERSION, p.version)) {
+      ackTimestamp(p.triggered_at);
+      return;
+    }
+
     setPayload(p);
   };
 
