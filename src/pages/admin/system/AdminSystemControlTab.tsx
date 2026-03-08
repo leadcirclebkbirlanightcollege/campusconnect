@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette, RefreshCw, Zap } from "lucide-react";
+import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette, RefreshCw, Zap, Bell } from "lucide-react";
 import { useState as useLocalState } from "react";
 import { APP_VERSION } from "@/config/version";
 import { invalidatePlatformModeCache, PlatformModeSettings } from "@/hooks/use-platform-mode";
