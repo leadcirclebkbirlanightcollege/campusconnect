@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { PROGRESS_RING_TRANSITION } from "@/motion/microInteractions";
 
 interface ProgressRingProps {
   value: number;
@@ -43,7 +44,7 @@ const ProgressRing = React.memo(function ProgressRing({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={PROGRESS_RING_TRANSITION}
         />
       </svg>
 

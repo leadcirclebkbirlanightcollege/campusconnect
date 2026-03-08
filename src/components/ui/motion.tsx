@@ -13,6 +13,8 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { MOTION_MS, MOTION_SPECIAL_MS } from "@/motion/motionTokens";
+import { useCountUp } from "@/motion/microInteractions";
 
 /* ── FadeIn ── */
 interface FadeInProps {
@@ -27,7 +29,7 @@ export function FadeIn({
   children,
   className,
   delay = 0,
-  duration = 150,
+  duration = MOTION_MS.medium,
   as: Tag = "div",
 }: FadeInProps) {
   return (
@@ -56,7 +58,7 @@ export function SlideUp({
   children,
   className,
   delay = 0,
-  duration = 180,
+  duration = MOTION_MS.medium,
 }: SlideUpProps) {
   return (
     <div
@@ -85,33 +87,10 @@ export function MetricCountUp({
   value,
   suffix = "",
   prefix = "",
-  duration = 600,
+  duration = MOTION_SPECIAL_MS.metricCount,
   className,
 }: MetricCountUpProps) {
-  const [display, setDisplay] = React.useState(0);
-  const frameRef = React.useRef<number | null>(null);
-  const startRef = React.useRef<number | null>(null);
-
-  React.useEffect(() => {
-    const start = performance.now();
-    startRef.current = start;
-
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // ease-out quad
-      const eased = 1 - Math.pow(1 - progress, 2);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-    };
-  }, [value, duration]);
+  const display = useCountUp(value, duration);
 
   return (
     <span
@@ -126,27 +105,8 @@ export function MetricCountUp({
 }
 
 /* ── useMetricCountUp hook ── */
-export function useMetricCountUp(target: number, duration = 900): number {
-  const [count, setCount] = React.useState(0);
-  const frameRef = React.useRef<number | undefined>(undefined);
-  const startRef = React.useRef<number | null>(null);
-
-  React.useEffect(() => {
-    if (target === 0) { setCount(0); return; }
-    startRef.current = null;
-    const animate = (timestamp: number) => {
-      if (!startRef.current) startRef.current = timestamp;
-      const elapsed = timestamp - startRef.current;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) frameRef.current = requestAnimationFrame(animate);
-    };
-    frameRef.current = requestAnimationFrame(animate);
-    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-  }, [target, duration]);
-
-  return count;
+export function useMetricCountUp(target: number, duration: number = MOTION_SPECIAL_MS.metricCount): number {
+  return useCountUp(target, duration);
 }
 
 /* ── StaggerList ── */

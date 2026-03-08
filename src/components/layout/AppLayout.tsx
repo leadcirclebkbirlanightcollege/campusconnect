@@ -9,7 +9,7 @@ import {
   BadgeCheck,
   CheckCircle,
 } from "lucide-react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
@@ -35,14 +35,12 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
 import { BottomNavigation } from "@/layout/BottomNavigation";
+import {
+  PAGE_TRANSITION,
+  PAGE_TRANSITION_VARIANTS,
+} from "@/motion/pageTransitions";
+import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { getPageMeta } from "@/ui-engine/navigation-engine";
-
-/* ── Page transition variants ─────────────────────────────────── */
-const PAGE_VARIANTS: Variants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -4, transition: { duration: 0.12, ease: "easeIn" } },
-};
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
@@ -209,7 +207,7 @@ export default function AppLayout() {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+                      transition={{ duration: msToSeconds(MOTION_MS.fast), ease: [0, 0, 0.2, 1] }}
                     >
                       <p className="text-[14px] font-semibold text-foreground leading-none truncate">
                         {title}
@@ -241,10 +239,11 @@ export default function AppLayout() {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}
-                  variants={PAGE_VARIANTS}
+                  variants={PAGE_TRANSITION_VARIANTS}
                   initial="initial"
                   animate="animate"
                   exit="exit"
+                  transition={PAGE_TRANSITION}
                   className="w-full h-full"
                 >
                   <Outlet />

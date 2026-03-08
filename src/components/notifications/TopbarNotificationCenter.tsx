@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff, BookOpen, Megaphone, Settings, Trophy, X } from "lucide-react";
+import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { BUTTON_TAP_ANIMATION, PRESS_TRANSITION } from "@/motion/gestureAnimations";
+import {
+  BELL_GLOW_TRANSITION,
+  NOTIFICATION_BELL_VARIANTS,
+} from "@/motion/microInteractions";
 
 const KIND_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   announcement: Megaphone,
@@ -123,23 +129,36 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
 
   return (
     <div className="relative">
-      <button
+      <motion.button
+        key={unread}
         type="button"
         aria-label="Notifications"
         onClick={() => setOpen((v) => !v)}
+        variants={NOTIFICATION_BELL_VARIANTS}
+        initial="idle"
+        animate={unread > 0 ? "alert" : "idle"}
+        whileTap={BUTTON_TAP_ANIMATION}
+        transition={PRESS_TRANSITION}
         className={cn(
           "relative flex h-8 w-8 items-center justify-center rounded-lg",
           "border border-border-subtle bg-surface-2",
           "text-muted-foreground hover:text-foreground hover:bg-surface-3",
-          "transition-all duration-fast",
-          unread > 0 && "animate-[bounce_140ms_ease-out]"
+          "transition-all duration-fast"
         )}
       >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+          <>
+            <motion.span
+              className="pointer-events-none absolute inset-0 rounded-lg border border-primary/40"
+              initial={{ opacity: 0.55, scale: 1 }}
+              animate={{ opacity: 0, scale: 1.18 }}
+              transition={BELL_GLOW_TRANSITION}
+            />
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+          </>
         )}
-      </button>
+      </motion.button>
 
       {open && (
         <>

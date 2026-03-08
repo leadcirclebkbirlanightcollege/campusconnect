@@ -7,17 +7,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { ReactNode } from "react";
-
-const variants = {
-  initial:  { opacity: 0, y: 6 },
-  animate:  { opacity: 1, y: 0 },
-  exit:     { opacity: 0, y: -4 },
-};
-
-const transition = {
-  duration: 0.18,
-  ease: [0.0, 0, 0.2, 1] as const,
-};
+import {
+  PAGE_TRANSITION,
+  PAGE_TRANSITION_STYLE,
+  PAGE_TRANSITION_VARIANTS,
+} from "@/motion/pageTransitions";
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -30,12 +24,12 @@ export default function PageTransition({ children }: PageTransitionProps) {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        variants={variants}
+        variants={PAGE_TRANSITION_VARIANTS}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={transition}
-        style={{ width: "100%" }}
+        transition={PAGE_TRANSITION}
+        style={PAGE_TRANSITION_STYLE}
       >
         {children}
       </motion.div>
