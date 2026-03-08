@@ -297,154 +297,156 @@ export default function Leaderboard() {
   const hasMore = activeRows.length >= visibleCount;
 
   return (
-    <PageContainer className="space-y-6" withBottomNav>
-      <PageHeader
-        title="Leaderboard"
-        subtitle={mode === "alltime" ? "All-time competition standings" : "Weekly competition standings"}
-        variant="large"
-        gradient
-      />
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <PageContainer className="space-y-6" withBottomNav>
+        <PageHeader
+          title="Leaderboard"
+          subtitle={mode === "alltime" ? "All-time competition standings" : "Weekly competition standings"}
+          variant="large"
+          gradient
+        />
 
-      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <div className="inline-flex rounded-xl border border-border-subtle bg-surface-2 p-1">
-            <button
-              type="button"
-              onClick={() => setMode("alltime")}
-              className={cn(
-                "min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
-                mode === "alltime" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
-              )}
-            >
-              All-Time
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("weekly")}
-              className={cn(
-                "min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
-                mode === "weekly" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
-              )}
-            >
-              Weekly
-            </button>
-          </div>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Top 3 Podium" subtitle="Current leaderboard champions" />
-          {isLoading ? (
-            <div className="grid grid-cols-3 items-end gap-3">
-              <Skeleton className="h-40 rounded-2xl" />
-              <Skeleton className="h-48 rounded-2xl" />
-              <Skeleton className="h-40 rounded-2xl" />
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <div className="inline-flex rounded-xl border border-border-subtle bg-surface-2 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("alltime")}
+                className={cn(
+                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                  mode === "alltime" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+                )}
+              >
+                All-Time
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("weekly")}
+                className={cn(
+                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                  mode === "weekly" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+                )}
+              >
+                Weekly
+              </button>
             </div>
-          ) : top3.length > 0 ? (
-            <div className="grid grid-cols-3 items-end gap-3">
-              {top3[1] ? <PodiumCard row={top3[1]} rank={2} isCurrentUser={top3[1].user_id === myId} /> : <div />}
-              {top3[0] ? <PodiumCard row={top3[0]} rank={1} isCurrentUser={top3[0].user_id === myId} /> : <div />}
-              {top3[2] ? <PodiumCard row={top3[2]} rank={3} isCurrentUser={top3[2].user_id === myId} /> : <div />}
-            </div>
-          ) : (
-            <GlassCard hover={false}>
-              <p className="text-sm text-muted-foreground">No leaderboard entries yet.</p>
-            </GlassCard>
-          )}
-        </motion.section>
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="sticky top-2 z-20">
-          {myRow ? (
-            <GlassCard className="border-primary/35 bg-gradient-to-br from-primary/12 to-surface-1" elevation="high" hover={false}>
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Rank</p>
-                  <p className="text-2xl font-black text-foreground">#{myRow.rank}</p>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Top 3 Podium" subtitle="Current leaderboard champions" />
+            {isLoading ? (
+              <div className="grid grid-cols-3 items-end gap-3">
+                <Skeleton className="h-40 rounded-2xl" />
+                <Skeleton className="h-48 rounded-2xl" />
+                <Skeleton className="h-40 rounded-2xl" />
+              </div>
+            ) : top3.length > 0 ? (
+              <div className="grid grid-cols-3 items-end gap-3">
+                {top3[1] ? <PodiumCard row={top3[1]} rank={2} isCurrentUser={top3[1].user_id === myId} /> : <div />}
+                {top3[0] ? <PodiumCard row={top3[0]} rank={1} isCurrentUser={top3[0].user_id === myId} /> : <div />}
+                {top3[2] ? <PodiumCard row={top3[2]} rank={3} isCurrentUser={top3[2].user_id === myId} /> : <div />}
+              </div>
+            ) : (
+              <GlassCard hover={false}>
+                <p className="text-sm text-muted-foreground">No leaderboard entries yet.</p>
+              </GlassCard>
+            )}
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="sticky top-2 z-20">
+            {myRow ? (
+              <GlassCard className="border-primary/35 bg-gradient-to-br from-primary/12 to-surface-1" elevation="high" hover={false}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Rank</p>
+                    <p className="text-2xl font-black text-foreground">#{myRow.rank}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Points</p>
+                    <p className="text-2xl font-black tabular-nums text-primary">
+                      <MetricCountUp value={myRow.points_total} duration={800} />
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Points</p>
-                  <p className="text-2xl font-black tabular-nums text-primary">
-                    <MetricCountUp value={myRow.points_total} duration={800} />
-                  </p>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <TierPill points={myRow.points_total} />
+                  <MovementIndicator delta={movementMap.get(myRow.user_id) ?? 0} />
                 </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <TierPill points={myRow.points_total} />
-                <MovementIndicator delta={movementMap.get(myRow.user_id) ?? 0} />
-              </div>
-            </GlassCard>
-          ) : (
-            <GlassCard hover={false}>
-              <p className="text-sm text-muted-foreground">Your rank will appear once you enter the top {visibleCount}.</p>
-            </GlassCard>
-          )}
-        </motion.section>
+              </GlassCard>
+            ) : (
+              <GlassCard hover={false}>
+                <p className="text-sm text-muted-foreground">Your rank will appear once you enter the top {visibleCount}.</p>
+              </GlassCard>
+            )}
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Leaderboard List" subtitle="Track your competitors" />
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Leaderboard List" subtitle="Track your competitors" />
 
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(6)].map((_, index) => (
-                <Skeleton key={index} className="h-20 rounded-2xl" />
-              ))}
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(6)].map((_, index) => (
+                  <Skeleton key={index} className="h-20 rounded-2xl" />
+                ))}
+              </div>
+            ) : listRows.length > 0 ? (
+              <div className="space-y-3">
+                {listRows.map((row) => (
+                  <LeaderboardListRow
+                    key={row.user_id}
+                    row={row}
+                    myId={myId}
+                    movement={movementMap.get(row.user_id) ?? 0}
+                  />
+                ))}
+
+                {hasMore ? (
+                  <Button className="h-12 w-full" variant="secondary" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                    Load 20 more
+                  </Button>
+                ) : null}
+              </div>
+            ) : (
+              <GlassCard hover={false}>
+                <p className="text-sm text-muted-foreground">No additional rankings yet.</p>
+              </GlassCard>
+            )}
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            <GlassCard className="flex items-center justify-between gap-3" hover>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Achievements & Rewards</p>
+                <p className="text-xs text-muted-foreground">Earn more points and climb the leaderboard faster.</p>
+              </div>
+              <Link to="/app/achievements" className="tap-ripple inline-flex h-12 items-center rounded-lg border border-primary/30 px-3 text-xs font-semibold text-primary">
+                View
+              </Link>
+            </GlassCard>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            <div className="grid grid-cols-2 gap-3">
+              <GlassCard hover={false}>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <p className="text-xs">Visible Players</p>
+                </div>
+                <p className="mt-2 text-xl font-black text-foreground">{activeRows.length}</p>
+              </GlassCard>
+              <GlassCard hover={false}>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Star className="h-4 w-4" />
+                  <p className="text-xs">Top Score</p>
+                </div>
+                <p className="mt-2 text-xl font-black text-foreground tabular-nums">
+                  {activeRows[0] ? <MetricCountUp value={activeRows[0].points_total} duration={800} /> : "0"}
+                </p>
+              </GlassCard>
             </div>
-          ) : listRows.length > 0 ? (
-            <div className="space-y-3">
-              {listRows.map((row) => (
-                <LeaderboardListRow
-                  key={row.user_id}
-                  row={row}
-                  myId={myId}
-                  movement={movementMap.get(row.user_id) ?? 0}
-                />
-              ))}
-
-              {hasMore ? (
-                <Button className="h-12 w-full" variant="secondary" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
-                  Load 20 more
-                </Button>
-              ) : null}
-            </div>
-          ) : (
-            <GlassCard hover={false}>
-              <p className="text-sm text-muted-foreground">No additional rankings yet.</p>
-            </GlassCard>
-          )}
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM}>
-          <GlassCard className="flex items-center justify-between gap-3" hover>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Achievements & Rewards</p>
-              <p className="text-xs text-muted-foreground">Earn more points and climb the leaderboard faster.</p>
-            </div>
-            <Link to="/app/achievements" className="inline-flex h-12 items-center rounded-lg border border-primary/30 px-3 text-xs font-semibold text-primary">
-              View
-            </Link>
-          </GlassCard>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM}>
-          <div className="grid grid-cols-2 gap-3">
-            <GlassCard hover={false}>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <p className="text-xs">Visible Players</p>
-              </div>
-              <p className="mt-2 text-xl font-black text-foreground">{activeRows.length}</p>
-            </GlassCard>
-            <GlassCard hover={false}>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Star className="h-4 w-4" />
-                <p className="text-xs">Top Score</p>
-              </div>
-              <p className="mt-2 text-xl font-black text-foreground tabular-nums">
-                {activeRows[0] ? <MetricCountUp value={activeRows[0].points_total} duration={800} /> : "0"}
-              </p>
-            </GlassCard>
-          </div>
-        </motion.section>
-      </motion.div>
-    </PageContainer>
+          </motion.section>
+        </motion.div>
+      </PageContainer>
+    </PullToRefresh>
   );
 }

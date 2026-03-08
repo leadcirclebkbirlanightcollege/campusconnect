@@ -199,69 +199,71 @@ export default function LecturesList() {
   }
 
   return (
-    <PageContainer className="space-y-6" withBottomNav>
-      <PageHeader
-        title="Lectures"
-        subtitle="Live, upcoming, and past sessions in one place"
-        variant="large"
-        gradient
-      />
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <PageContainer className="space-y-6" withBottomNav>
+        <PageHeader
+          title="Lectures"
+          subtitle="Live, upcoming, and past sessions in one place"
+          variant="large"
+          gradient
+        />
 
-      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Live Lecture" subtitle="Jump into active sessions instantly" />
-          <LectureLiveBanner lecture={(liveLectureQuery.data as LectureRecord | null) ?? null} />
-        </motion.section>
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Live Lecture" subtitle="Jump into active sessions instantly" />
+            <LectureLiveBanner lecture={(liveLectureQuery.data as LectureRecord | null) ?? null} />
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Lecture Snapshot" subtitle="Your academic pulse today" />
-          <div className="grid grid-cols-2 gap-3">
-            <MetricCard icon={BookOpen} value={upcomingQuery.data?.length ?? 0} label="Upcoming" />
-            <MetricCard icon={Clock3} value={historyRows.length} label="History Loaded" />
-            <MetricCard icon={TrendingUp} value={attendanceRate} suffix="%" label="Attendance Rate" />
-            <GlassCard className="space-y-2" hover={false}>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Current State</p>
-              <p className="text-sm font-semibold text-foreground">
-                {liveLectureQuery.data ? "Live lecture available" : "No live lecture"}
-              </p>
-              <div className="inline-flex items-center gap-1 text-xs text-primary">
-                <Radio className="h-3.5 w-3.5" />
-                Central academic timeline
-              </div>
-            </GlassCard>
-          </div>
-        </motion.section>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Lecture Snapshot" subtitle="Your academic pulse today" />
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard icon={BookOpen} value={upcomingQuery.data?.length ?? 0} label="Upcoming" />
+              <MetricCard icon={Clock3} value={historyRows.length} label="History Loaded" />
+              <MetricCard icon={TrendingUp} value={attendanceRate} suffix="%" label="Attendance Rate" />
+              <GlassCard className="space-y-2" hover={false}>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Current State</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {liveLectureQuery.data ? "Live lecture available" : "No live lecture"}
+                </p>
+                <div className="inline-flex items-center gap-1 text-xs text-primary">
+                  <Radio className="h-3.5 w-3.5" />
+                  Central academic timeline
+                </div>
+              </GlassCard>
+            </div>
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Upcoming Lectures" subtitle="Your next academic sessions" />
-          <UpcomingLecturesSection lectures={upcomingQuery.data ?? []} isLoading={upcomingQuery.isLoading} />
-        </motion.section>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Upcoming Lectures" subtitle="Your next academic sessions" />
+            <UpcomingLecturesSection lectures={upcomingQuery.data ?? []} isLoading={upcomingQuery.isLoading} />
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Weekly Calendar" subtitle="Next 7 days preview" />
-          <LectureCalendarPreview lectures={upcomingQuery.data ?? []} />
-        </motion.section>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Weekly Calendar" subtitle="Next 7 days preview" />
+            <LectureCalendarPreview lectures={upcomingQuery.data ?? []} />
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Lecture History" subtitle="Past sessions and attendance status" />
-          <LectureHistorySection
-            rows={historyRows}
-            isLoading={historyQuery.isLoading}
-            hasNextPage={Boolean(historyQuery.hasNextPage)}
-            isFetchingNextPage={historyQuery.isFetchingNextPage}
-            onLoadMore={() => historyQuery.fetchNextPage()}
-          />
-        </motion.section>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Lecture History" subtitle="Past sessions and attendance status" />
+            <LectureHistorySection
+              rows={historyRows}
+              isLoading={historyQuery.isLoading}
+              hasNextPage={Boolean(historyQuery.hasNextPage)}
+              isFetchingNextPage={historyQuery.isFetchingNextPage}
+              onLoadMore={() => historyQuery.fetchNextPage()}
+            />
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Lecture Insights" subtitle="Smart guidance from your lecture patterns" />
-          <LectureInsightsPanel
-            attendanceRate={attendanceRate}
-            recentMissed={Boolean(recentMissed)}
-            trendDirection={trendDirection}
-          />
-        </motion.section>
-      </motion.div>
-    </PageContainer>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Lecture Insights" subtitle="Smart guidance from your lecture patterns" />
+            <LectureInsightsPanel
+              attendanceRate={attendanceRate}
+              recentMissed={Boolean(recentMissed)}
+              trendDirection={trendDirection}
+            />
+          </motion.section>
+        </motion.div>
+      </PageContainer>
+    </PullToRefresh>
   );
 }
