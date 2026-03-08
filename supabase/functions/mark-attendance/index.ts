@@ -117,15 +117,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 7. Validate OTP/token
+    // 7. Validate OTP/token — use timing-safe SHA-256 comparison only (no string equality)
     let isValid = false;
     if (otp) {
       const hash = String(tokenRow.otp_hash ?? "");
-      // SHA-256 comparison (no bcrypt to avoid Deno runtime issues)
       const otpHash = await sha256Hex(otp);
-      isValid = otpHash === hash;
+      // Timing-safe byte comparison via crypto.subtle.timingSafeEqual equivalent
+      // Both sides are hex strings of equal length — compare encoded bytes
+      const enc = new TextEncoder();
+      const a = enc.encode(otpHash.padEnd(64, "\0"));
+      const b = enc.encode(hash.padEnd(64, "\0"));
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+      isValid = diff === 0 && otpHash.length === hash.length && hash.length > 0;
     } else if (token) {
-      isValid = token === tokenRow.token;
+      // QR token: timing-safe comparison
+      const enc = new TextEncoder();
+      const maxLen = Math.max(token.length, tokenRow.token?.length ?? 0);
+      const a = enc.encode((token).padEnd(maxLen, "\0"));
+      const b = enc.encode((tokenRow.token ?? "").padEnd(maxLen, "\0"));
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+      isValid = diff === 0 && token.length === (tokenRow.token ?? "").length;
     }
 
     if (!isValid) {

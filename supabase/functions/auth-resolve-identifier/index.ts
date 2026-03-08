@@ -57,9 +57,10 @@ Deno.serve(async (req) => {
       .eq("student_id", identifier)
       .maybeSingle();
 
-    // Always return generic failures to avoid user enumeration.
+    // Always return HTTP 200 regardless of outcome to prevent student-ID enumeration.
+    // The client should show a generic "Invalid credentials" message when email is null.
     if (error || !profile || profile.is_deleted || !profile.email) {
-      return json(404, { error: "Not found" });
+      return json(200, { email: null });
     }
 
     return json(200, { email: String(profile.email).toLowerCase() });
