@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, MailOpen, UserRound, LogOut, BadgeCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { BRANDING } from "@/config/branding";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -159,11 +160,13 @@ const AppShell = ({ children }: AppShellProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center space-x-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-premium flex items-center justify-center shadow-premium group-hover:shadow-xl transition-all">
-                <span className="text-primary-foreground font-bold text-lg">CC</span>
-              </div>
+              <img
+                src={BRANDING.logo}
+                alt={BRANDING.name}
+                className="w-9 h-9 object-contain"
+              />
               <span className="text-xl font-bold bg-gradient-premium bg-clip-text text-transparent">
-                Campus Connect
+                {BRANDING.name}
               </span>
             </Link>
 

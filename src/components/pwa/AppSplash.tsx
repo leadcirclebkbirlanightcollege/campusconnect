@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { BRANDING } from "@/config/branding";
 
 /**
  * Branded PWA splash screen.
@@ -52,9 +53,9 @@ export default function AppSplash() {
     };
   }, []);
 
-  const logoSrc = branding.logo_url ?? "/pwa-512.png";
-  const name = branding.brand_name ?? "Campus Connect";
-  const tagline = branding.tagline ?? "By Students For Students";
+  const logoSrc = branding.logo_url ?? BRANDING.logo;
+  const name = branding.brand_name ?? BRANDING.name;
+  const tagline = branding.tagline ?? BRANDING.tagline;
 
   return (
     <AnimatePresence>

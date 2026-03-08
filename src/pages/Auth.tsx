@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  GraduationCap, Loader2, Eye, EyeOff,
+  Loader2, Eye, EyeOff,
   ArrowRight, CheckCircle2, BookOpen, Trophy, Zap,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { BRANDING } from "@/config/branding";
 
 /* ── Feature chip ─────────────────────────────────────────────── */
 const FEATURES = [
@@ -220,13 +221,11 @@ const Auth = () => {
 
         {/* Brand */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-primary">
-            {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.brand_name} className="h-6 w-6 object-contain" />
-            ) : (
-              <GraduationCap className="h-5 w-5 text-primary-foreground" />
-            )}
-          </div>
+          <img
+            src={branding.logo_url ?? BRANDING.logo}
+            alt={branding.brand_name}
+            className="h-9 w-9 object-contain"
+          />
           <div>
             <p className="text-[15px] font-bold text-foreground leading-tight">{branding.brand_name}</p>
             <p className="text-[11px] text-muted-foreground">{branding.tagline}</p>
@@ -268,9 +267,7 @@ const Auth = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
         {/* Mobile brand */}
         <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={branding.logo_url ?? BRANDING.logo} alt={branding.brand_name} className="h-8 w-8 object-contain" />
           <span className="text-[16px] font-bold text-foreground">{branding.brand_name}</span>
         </div>
 
