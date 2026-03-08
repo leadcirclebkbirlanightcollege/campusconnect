@@ -185,8 +185,8 @@ export default function AdminAnnouncementsTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate()} disabled={!title.trim() || !description.trim() || createMutation.isPending}>
-              Publish
+            <Button onClick={() => createMutation.mutate()} disabled={!title.trim() || !description.trim() || (target === "class" && !targetClass.trim()) || createMutation.isPending}>
+              Publish + Push
             </Button>
           </DialogFooter>
         </DialogContent>
