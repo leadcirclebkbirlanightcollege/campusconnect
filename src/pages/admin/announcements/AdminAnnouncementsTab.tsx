@@ -74,6 +74,7 @@ export default function AdminAnnouncementsTab() {
       setDescription("");
       setPriority("normal");
       setTarget("all");
+      setTargetClass("");
       setIsPinned(false);
       qc.invalidateQueries({ queryKey: ["admin", "announcements"] });
     },
