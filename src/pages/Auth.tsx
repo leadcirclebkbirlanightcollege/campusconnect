@@ -392,6 +392,26 @@ const Auth = () => {
                   onChange={setSignupPassword}
                 />
 
+                {/* College selector */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-college" className="text-[13px] font-medium text-foreground">
+                    College <span className="text-danger">*</span>
+                  </Label>
+                  <Select value={signupCollegeId} onValueChange={setSignupCollegeId} required>
+                    <SelectTrigger
+                      id="signup-college"
+                      className="bg-surface-2 border-border-subtle text-[14px] h-10"
+                    >
+                      <SelectValue placeholder="Select your college" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colleges.map((c: { id: string; college_name: string }) => (
+                        <SelectItem key={c.id} value={c.id}>{c.college_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="signup-student-id" className="text-[13px] font-medium text-foreground">Student ID</Label>
@@ -441,7 +461,7 @@ const Auth = () => {
                 <Button
                   type="submit"
                   className="w-full h-10 gap-2 shadow-primary text-[14px] mt-1"
-                  disabled={loading}
+                  disabled={loading || !signupCollegeId}
                 >
                   {loading
                     ? <Loader2 className="h-4 w-4 animate-spin" />
