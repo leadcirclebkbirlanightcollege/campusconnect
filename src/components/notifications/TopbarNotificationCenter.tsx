@@ -1,19 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, BookOpen, Megaphone, Settings, Trophy, X } from "lucide-react";
+import { Bell, BellOff, BookOpen, Megaphone, Settings, Trophy, X, AlertTriangle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { BUTTON_TAP_ANIMATION, PRESS_TRANSITION } from "@/motion/gestureAnimations";
-import {
-  BELL_GLOW_TRANSITION,
-  NOTIFICATION_BELL_VARIANTS,
-} from "@/motion/microInteractions";
+import { BELL_GLOW_TRANSITION, NOTIFICATION_BELL_VARIANTS } from "@/motion/microInteractions";
 
-const KIND_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+const KIND_ICON: Record<string, ComponentType<{ className?: string }>> = {
   announcement: Megaphone,
   lecture_reminder: BookOpen,
+  lecture_alert: BookOpen,
+  attendance_alert: AlertTriangle,
+  attendance_warning: AlertTriangle,
   achievement: Trophy,
   system_update: Settings,
   general: Bell,
@@ -52,7 +53,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
       return (data ?? []) as Recipient[];
     },
     staleTime: 10_000,
-    refetchInterval: 30_000,
+    refetchInterval: 25_000,
   });
 
   const notificationsQuery = useQuery({
@@ -67,10 +68,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
       const ids = [...new Set((recipientsQuery.data ?? []).map((r) => r.notification_id))];
       if (!ids.length) return {} as Record<string, Notification>;
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("id,title,body,kind,status,sent_at")
-        .in("id", ids);
+      const { data, error } = await supabase.from("notifications").select("id,title,body,kind,status,sent_at").in("id", ids);
       if (error) throw error;
 
       return (data ?? []).reduce<Record<string, Notification>>((acc, curr) => {
@@ -92,6 +90,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["topbar", "notification_center", userId] });
       qc.invalidateQueries({ queryKey: ["topbar", "unread", userId] });
+      qc.invalidateQueries({ queryKey: ["student", "inbox", userId] });
     },
   });
 
@@ -109,6 +108,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
         () => {
           qc.invalidateQueries({ queryKey: ["topbar", "notification_center", userId] });
           qc.invalidateQueries({ queryKey: ["topbar", "unread", userId] });
+          qc.invalidateQueries({ queryKey: ["student", "inbox", userId] });
         }
       )
       .subscribe();
@@ -140,17 +140,18 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
         whileTap={BUTTON_TAP_ANIMATION}
         transition={PRESS_TRANSITION}
         className={cn(
-          "relative flex h-8 w-8 items-center justify-center rounded-lg",
+          "relative flex h-10 min-w-10 items-center justify-center gap-1 rounded-xl px-2",
           "border border-border-subtle bg-surface-2",
           "text-muted-foreground hover:text-foreground hover:bg-surface-3",
           "transition-all duration-fast"
         )}
       >
         <Bell className="h-4 w-4" />
+        {unread > 0 && <span className="text-[11px] font-bold text-foreground">{Math.min(unread, 99)}</span>}
         {unread > 0 && (
           <>
             <motion.span
-              className="pointer-events-none absolute inset-0 rounded-lg border border-primary/40"
+              className="pointer-events-none absolute inset-0 rounded-xl border border-primary/40"
               initial={{ opacity: 0.55, scale: 1 }}
               animate={{ opacity: 0, scale: 1.18 }}
               transition={BELL_GLOW_TRANSITION}
@@ -163,7 +164,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-10 z-50 w-[340px] overflow-hidden rounded-2xl border border-border-subtle bg-surface-1 shadow-lg">
+          <div className="absolute right-0 top-12 z-50 w-[350px] overflow-hidden rounded-2xl border border-border-subtle bg-surface-1 shadow-lg">
             <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
               <div>
                 <p className="text-xs font-semibold text-foreground">Notification Center</p>
@@ -197,7 +198,7 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
                         if (isUnread) markReadMutation.mutate(recipient.id);
                       }}
                       className={cn(
-                        "flex w-full items-start gap-3 border-b border-border-subtle px-4 py-3 text-left transition-colors",
+                        "flex min-h-12 w-full items-start gap-3 border-b border-border-subtle px-4 py-3 text-left transition-colors",
                         isUnread ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-surface-2"
                       )}
                     >
@@ -221,6 +222,15 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
                 })
               )}
             </div>
+
+            <Link
+              to="/app/inbox"
+              onClick={() => setOpen(false)}
+              className="flex h-12 items-center justify-between border-t border-border-subtle px-4 text-xs font-semibold text-primary hover:bg-surface-2"
+            >
+              Open full inbox
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </>
       )}

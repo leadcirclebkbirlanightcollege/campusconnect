@@ -19,6 +19,7 @@ type TargetType =
   | "students_only"
   | "college_students"
   | "class"
+  | "programme"
   | "user";
 
 function json(status: number, body: Record<string, unknown>) {
@@ -273,6 +274,15 @@ async function resolveRecipientIds(
     if (error) throw error;
     return (data ?? []).map((r: any) => r.user_id);
   }
+  if (targetType === "programme") {
+    if (!value) return [];
+    const { data, error } = await db
+      .from("student_programme_allotments")
+      .select("student_user_id")
+      .eq("programme_id", value);
+    if (error) throw error;
+    return [...new Set((data ?? []).map((r: any) => r.student_user_id))];
+  }
   return [];
 }
 
@@ -331,6 +341,37 @@ Deno.serve(async (req) => {
 
     const recipients = await resolveRecipientIds(db, role, callerCollegeId, targetType, targetValue);
 
+    const preferenceColumnByKind: Record<string, string> = {
+      announcement: "announcements",
+      lecture_alert: "lecture_alerts",
+      lecture_reminder: "lecture_alerts",
+      achievement: "achievement_alerts",
+      attendance_alert: "attendance_alerts",
+      attendance_warning: "attendance_alerts",
+      system_update: "system_updates",
+    };
+
+    const prefColumn = preferenceColumnByKind[kind] ?? null;
+
+    let uniqRecipients = [...new Set(recipients)];
+
+    if (prefColumn && uniqRecipients.length > 0) {
+      const { data: prefRows, error: prefError } = await db
+        .from("notification_preferences")
+        .select(`user_id,${prefColumn}`)
+        .in("user_id", uniqRecipients);
+
+      if (prefError) throw prefError;
+
+      const prefMap = new Map<string, boolean>();
+      for (const row of prefRows ?? []) {
+        const value = (row as Record<string, unknown>)[prefColumn];
+        prefMap.set((row as { user_id: string }).user_id, value !== false);
+      }
+
+      uniqRecipients = uniqRecipients.filter((uid) => prefMap.get(uid) ?? true);
+    }
+
     const nowIso = new Date().toISOString();
     const targetRole = targetType === "students_only" || targetType === "college_students" || targetType === "class"
       ? "student"
@@ -348,7 +389,6 @@ Deno.serve(async (req) => {
     if (notificationError) throw notificationError;
 
     // ── 2. Insert notification_recipients ────────────────────────────────────
-    const uniqRecipients = [...new Set(recipients)];
     if (uniqRecipients.length > 0) {
       const { error: recipientError } = await db.from("notification_recipients").insert(
         uniqRecipients.map((userId) => ({ notification_id: notification.id, user_id: userId }))
