@@ -20,7 +20,8 @@ export default function AdminAnnouncementsTab() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
-  const [target, setTarget] = useState<"all" | "programme" | "class">("all");
+  const [target, setTarget] = useState<"all" | "class">("all");
+  const [targetClass, setTargetClass] = useState("");
   const [isPinned, setIsPinned] = useState(false);
 
   const announcementsQuery = useQuery({
