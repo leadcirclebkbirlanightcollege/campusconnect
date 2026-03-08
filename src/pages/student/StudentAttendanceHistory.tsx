@@ -210,10 +210,10 @@ export default function StudentAttendanceHistory() {
       {/* ── KPI Strip ── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: BarChart3,    label: "Overall",  value: `${totals.pct}%`,          sub: `${totals.present} of ${totals.total} attended`, accent: (totals.pct >= 75 ? "success" : totals.pct >= 60 ? "warning" : "danger") as any },
-          { icon: CheckCircle2, label: "Present",  value: String(totals.present),     sub: "Lectures attended",                             accent: "success" as const },
-          { icon: XCircle,      label: "Absent",   value: String(totals.absent),      sub: "Lectures missed",                               accent: (totals.absent > totals.present * 0.3 ? "danger" : "warning") as const },
-          { icon: Zap,          label: "Points",   value: String(totals.pts),         sub: "From attendance",                               accent: "primary" as const },
+          { icon: BarChart3,    label: "Overall",  value: `${totals.pct}%`,      sub: `${totals.present} of ${totals.total} attended`, accent: (totals.pct >= 75 ? "success" : totals.pct >= 60 ? "warning" : "danger") as "success" | "warning" | "danger" },
+          { icon: CheckCircle2, label: "Present",  value: String(totals.present), sub: "Lectures attended",                             accent: "success" as const },
+          { icon: XCircle,      label: "Absent",   value: String(totals.absent),  sub: "Lectures missed",                               accent: (totals.absent > totals.present * 0.3 ? "danger" : "warning") as "danger" | "warning" },
+          { icon: Zap,          label: "Points",   value: String(totals.pts),     sub: "From attendance",                               accent: "primary" as const },
         ].map(({ icon, label, value, sub, accent }, i) => (
           <motion.div key={label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <KpiCard icon={icon} label={label} value={value} sub={sub} accent={accent} />
