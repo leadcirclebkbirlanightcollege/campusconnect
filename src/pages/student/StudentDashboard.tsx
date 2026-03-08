@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useMemo, useState, memo } from "react";
+import { lazy, Suspense, useMemo, memo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
@@ -29,6 +30,61 @@ const EngagementScorePanel = lazy(() => import("@/components/student/EngagementS
 const UpcomingEventsStrip  = lazy(() => import("@/components/student/UpcomingEventsStrip"));
 
 const PanelSkeleton = () => <Skeleton className="h-[180px] w-full rounded-2xl" />;
+
+/* ── Data queries ───────────────────────────────────────────── */
+async function fetchDashboardCore() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("unauthenticated");
+
+  const [{ data: profile }, { data: pointsTotal }, { data: streakRaw }, { data: liveList }] =
+    await Promise.all([
+      supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
+      supabase.rpc("get_my_points_total"),
+      supabase.rpc("get_my_streak"),
+      supabase.from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .eq("status", "live").limit(1),
+    ]);
+
+  const sk = streakRaw as any;
+  return {
+    name: (profile as any)?.name?.split(" ")[0] ?? "Student",
+    totalPoints: Number(pointsTotal ?? 0),
+    currentStreak: sk?.current_streak ?? 0,
+    longestStreak: sk?.longest_streak ?? 0,
+    liveNow: ((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null,
+  };
+}
+
+async function fetchDashboardSecondary(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const [{ count: attended }, { count: total }, { data: upcoming }, { data: pts }] =
+    await Promise.all([
+      supabase.from("attendance")
+        .select("id", { count: "exact", head: true })
+        .eq("student_user_id", userId).eq("status", "present"),
+      supabase.from("lectures")
+        .select("id", { count: "exact", head: true }),
+      supabase.from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .gte("lecture_date", today).neq("status", "ended")
+        .order("lecture_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(1),
+      supabase.from("points_ledger")
+        .select("id,created_at,points,source,note")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }).limit(8),
+    ]);
+
+  return {
+    lecturesAttended: attended ?? 0,
+    totalLectures: total ?? 0,
+    nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
+    recentPoints: (pts ?? []) as RecentPoint[],
+  };
+}
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type UpcomingLecture = {
@@ -79,63 +135,53 @@ const StudentDashboard = () => {
   const growth = useGrowthInsights();
   const greeting = useMemo(() => getTimeGreeting(), []);
 
-  const [stats, setStats] = useState({ totalPoints: 0, lecturesAttended: 0, totalLectures: 0, currentStreak: 0, longestStreak: 0 });
-  const [nextLecture, setNextLecture] = useState<UpcomingLecture | null>(null);
-  const [liveNow, setLiveNow] = useState<UpcomingLecture | null>(null);
-  const [recentPoints, setRecentPoints] = useState<RecentPoint[]>([]);
-  const [name, setName] = useState("Student");
-  const [loading, setLoading] = useState(true);
+  // ── Critical path: name, points, streak, live lecture (shows skeleton)
+  const coreQuery = useQuery({
+    queryKey: ["dashboard", "core"],
+    queryFn: fetchDashboardCore,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => { fetchDashboardStats(); }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
+  // ── Secondary path: attendance counts, next lecture, recent points
+  const secondaryQuery = useQuery({
+    queryKey: ["dashboard", "secondary", coreQuery.data?.name],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) return;
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("unauthenticated");
+      return fetchDashboardSecondary(userId);
+    },
+    enabled: !coreQuery.isLoading && !coreQuery.isError,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
 
-      const [{ data: profile }, { data: pointsTotal }, { data: streakRaw }, { data: liveList }] =
-        await Promise.all([
-          supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
-          supabase.rpc("get_my_points_total"),
-          supabase.rpc("get_my_streak"),
-          supabase.from("lectures").select("id,topic,lecture_date,start_time,end_time,venue,status").eq("status", "live").limit(1),
-        ]);
+  const core = coreQuery.data;
+  const secondary = secondaryQuery.data;
+  const loading = coreQuery.isLoading;
 
-      setName((profile as any)?.name?.split(" ")[0] || "Student");
-      const sk = streakRaw as any;
-      setStats(prev => ({ ...prev, totalPoints: Number(pointsTotal ?? 0), currentStreak: sk?.current_streak ?? 0, longestStreak: sk?.longest_streak ?? 0 }));
-      setLiveNow(((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null);
-      setLoading(false);
+  const name          = core?.name ?? "Student";
+  const liveNow       = core?.liveNow ?? null;
+  const nextLecture   = secondary?.nextLecture ?? null;
+  const recentPoints  = secondary?.recentPoints ?? [];
+  const stats = useMemo(() => ({
+    totalPoints:      core?.totalPoints       ?? 0,
+    currentStreak:    core?.currentStreak     ?? 0,
+    longestStreak:    core?.longestStreak     ?? 0,
+    lecturesAttended: secondary?.lecturesAttended ?? 0,
+    totalLectures:    secondary?.totalLectures    ?? 0,
+  }), [core, secondary]);
 
-      const [{ data: attendanceData }, { data: allLectures }, { data: upcomingList }, { data: recentPts }] =
-        await Promise.all([
-          supabase.from("attendance").select("id").eq("student_user_id", user.id).eq("status", "present"),
-          supabase.from("lectures").select("id"),
-          supabase.from("lectures").select("id,topic,lecture_date,start_time,end_time,venue,status")
-            .gte("lecture_date", new Date().toISOString().split("T")[0])
-            .neq("status", "ended")
-            .order("lecture_date", { ascending: true })
-            .order("start_time", { ascending: true })
-            .limit(1),
-          supabase.from("points_ledger").select("id,created_at,points,source,note")
-            .eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
-        ]);
-
-      setStats(prev => ({ ...prev, lecturesAttended: attendanceData?.length || 0, totalLectures: allLectures?.length || 0 }));
-      setNextLecture(((upcomingList ?? [])[0] as UpcomingLecture | undefined) ?? null);
-      setRecentPoints((recentPts ?? []) as RecentPoint[]);
-    } catch (e) {
-      console.error("Dashboard fetch error:", e);
-      setLoading(false);
-    }
-  };
-
-  const tierKey = (intelligence.data?.tier ?? "bronze") as TierKey;
+  const tierKey = useMemo(() => (intelligence.data?.tier ?? "bronze") as TierKey, [intelligence.data]);
   const tierData = TIER_CONFIG[tierKey];
-  const tierProgress = getTierProgress(stats.totalPoints, tierKey);
-  const attendancePct = stats.totalLectures > 0
-    ? Math.round((stats.lecturesAttended / stats.totalLectures) * 100) : 0;
+  const tierProgress = useMemo(() => getTierProgress(stats.totalPoints, tierKey), [stats.totalPoints, tierKey]);
+  const attendancePct = useMemo(() =>
+    stats.totalLectures > 0 ? Math.round((stats.lecturesAttended / stats.totalLectures) * 100) : 0,
+    [stats.lecturesAttended, stats.totalLectures],
+  );
 
   const riskLevel = growth.data?.risk_probability ?? "low";
   const riskColor = riskLevel === "high" ? "text-danger" : riskLevel === "medium" ? "text-warning" : "text-success";
