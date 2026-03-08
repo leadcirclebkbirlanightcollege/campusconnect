@@ -58,7 +58,7 @@ export function SlideUp({
   children,
   className,
   delay = 0,
-  duration = 180,
+  duration = MOTION_MS.medium,
 }: SlideUpProps) {
   return (
     <div
