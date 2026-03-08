@@ -762,6 +762,42 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          achievement_alerts: boolean
+          announcements: boolean
+          attendance_alerts: boolean
+          created_at: string
+          id: string
+          lecture_alerts: boolean
+          system_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_alerts?: boolean
+          announcements?: boolean
+          attendance_alerts?: boolean
+          created_at?: string
+          id?: string
+          lecture_alerts?: boolean
+          system_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_alerts?: boolean
+          announcements?: boolean
+          attendance_alerts?: boolean
+          created_at?: string
+          id?: string
+          lecture_alerts?: boolean
+          system_updates?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_recipients: {
         Row: {
           created_at: string
