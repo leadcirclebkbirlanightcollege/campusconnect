@@ -12,7 +12,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Trophy,
-  Star,
+  Flame,
   UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
