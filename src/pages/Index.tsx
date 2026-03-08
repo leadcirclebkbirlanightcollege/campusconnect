@@ -158,7 +158,7 @@ function PreviewCard({
               initial={{ width: "0%" }}
               whileInView={{ width: "72%" }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
               className="h-2 rounded-full bg-primary"
             />
           </div>
