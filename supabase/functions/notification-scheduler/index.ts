@@ -155,31 +155,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (userIds.length > 0 && oneSignalAppId && oneSignalApiKey) {
-        const pushTarget = n.target_user_id
-          ? { include_aliases: { external_id: [n.target_user_id] }, target_channel: "push" }
-          : { include_aliases: { external_id: userIds }, target_channel: "push" };
-
-        const pushRes = await fetch("https://api.onesignal.com/notifications?c=push", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Key ${oneSignalApiKey}`,
-          },
-          body: JSON.stringify({
-            app_id: oneSignalAppId,
-            headings: { en: n.title },
-            contents: { en: n.body },
-            data: { kind: n.kind, notification_id: n.id },
-            ...pushTarget,
-          }),
-        });
-
-        if (!pushRes.ok) {
-          const details = await pushRes.text();
-          console.error("scheduler: onesignal error", n.id, details);
-        }
-      }
+      // Native in-app flow only: recipients are persisted to notification_recipients.
+      // Device push delivery is handled by the dedicated native push pipeline.
 
       processed += 1;
     }
