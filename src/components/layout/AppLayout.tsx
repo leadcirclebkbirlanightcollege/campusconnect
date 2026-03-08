@@ -230,10 +230,46 @@ function ProfileMenu({ userId }: { userId: string }) {
 }
 
 /* ── Main Layout ───────────────────────────────────────────────── */
+
+/* ── Mobile Bottom Nav ─────────────────────────────────────────── */
+const BOTTOM_NAV = [
+  { label: "Home",        icon: LayoutDashboard, href: "/app/dashboard" },
+  { label: "Lectures",    icon: BookOpen,         href: "/app/lectures" },
+  { label: "Leaderboard", icon: Trophy,           href: "/app/leaderboard" },
+  { label: "Achievements",icon: Star,             href: "/app/achievements" },
+  { label: "Profile",     icon: UserCircle,       href: "/app/profile" },
+];
+
+function MobileBottomNav({ path }: { path: string }) {
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl pb-safe">
+      <div className="flex items-center justify-around px-2 py-1">
+        {BOTTOM_NAV.map(({ label, icon: Icon, href }) => {
+          const active = path === href || path.startsWith(href + "/");
+          return (
+            <Link
+              key={href}
+              to={href}
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[44px] transition-all duration-150",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-110")} />
+              <span className={cn("text-[10px] font-medium leading-none", active ? "text-primary" : "text-muted-foreground/70")}>
+                {label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
-  const { branding } = usePlatformBranding();
 
   const { data: user } = useQuery({
     queryKey: ["topbar", "user"],
