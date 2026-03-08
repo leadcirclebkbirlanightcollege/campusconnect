@@ -13,7 +13,7 @@ export async function refreshToLatest() {
     // best effort
   }
 
-  const url = new URL(window.location.href);
-  url.searchParams.set("cc_refresh", String(Date.now()));
-  window.location.replace(url.toString());
+  const rootUrl = new URL("/", window.location.origin);
+  rootUrl.searchParams.set("cc_refresh", String(Date.now()));
+  window.location.replace(rootUrl.toString());
 }

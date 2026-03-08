@@ -24,6 +24,21 @@ type ForceUpdatePayload = {
 
 const SETTING_KEY = "force_update";
 
+function isVersionAtLeast(currentVersion: string, targetVersion: string) {
+  const current = currentVersion.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const target = targetVersion.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const maxLen = Math.max(current.length, target.length);
+
+  for (let i = 0; i < maxLen; i += 1) {
+    const currentPart = current[i] ?? 0;
+    const targetPart = target[i] ?? 0;
+    if (currentPart > targetPart) return true;
+    if (currentPart < targetPart) return false;
+  }
+
+  return true;
+}
+
 /** Reads the stored timestamp from sessionStorage so we don't re-show on refresh */
 function getAckedTimestamp(): string | null {
   try { return sessionStorage.getItem("cc_force_update_acked"); } catch { return null; }
@@ -57,8 +72,14 @@ export default function ForceUpdateBanner() {
     if (!value || typeof value !== "object") return;
     const p = value as ForceUpdatePayload;
     if (!p.triggered_at) return;
-    // Don't re-trigger if already acked in this session
     if (getAckedTimestamp() === p.triggered_at) return;
+
+    // If this client already runs the pushed version, no need to show/update-block again.
+    if (p.version && isVersionAtLeast(APP_VERSION, p.version)) {
+      ackTimestamp(p.triggered_at);
+      return;
+    }
+
     setPayload(p);
   };
 
