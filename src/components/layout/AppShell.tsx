@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, MailOpen, UserRound, LogOut, BadgeCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { BRANDING } from "@/config/branding";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
