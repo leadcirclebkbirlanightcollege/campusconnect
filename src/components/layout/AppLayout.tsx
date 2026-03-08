@@ -333,14 +333,12 @@ export default function AppLayout() {
           </main>
 
           {/* ── Footer ──────────────────────────────────────────── */}
-          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0">
+          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0 hidden md:block">
             <div className="px-4 py-2.5 md:px-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-1.5">
-                <div className="h-4 w-4 rounded-sm bg-primary/15 flex items-center justify-center">
-                  <GraduationCap className="h-2.5 w-2.5 text-primary" />
-                </div>
+                <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-60" />
                 <span className="text-[11px] text-muted-foreground/60 font-medium">
-                  {branding.brand_name}
+                  {BRANDING.name}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground/40 text-right">
@@ -350,6 +348,8 @@ export default function AppLayout() {
           </footer>
         </SidebarInset>
       </div>
+      {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
+      <MobileBottomNav path={location.pathname} />
     </SidebarProvider>
   );
 }
