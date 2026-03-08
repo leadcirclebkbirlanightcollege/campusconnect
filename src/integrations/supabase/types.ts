@@ -1277,6 +1277,16 @@ export type Database = {
           total_count: number
         }[]
       }
+      award_points: {
+        Args: {
+          p_note?: string
+          p_points: number
+          p_source: string
+          p_source_id?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       export_monthly_attendance_combined: {
         Args: {
           p_end_date: string
@@ -1329,6 +1339,22 @@ export type Database = {
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_student: { Args: { check_user_id: string }; Returns: boolean }
       is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_college_id?: string
+          p_details?: Json
+          p_ip_address?: string
+          p_performed_by: string
+          p_target_entity: string
+          p_target_id?: string
+        }
+        Returns: undefined
+      }
+      unlock_achievement: {
+        Args: { p_code: string; p_metadata?: Json; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       account_deletion_status:
