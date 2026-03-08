@@ -327,7 +327,7 @@ export default function Index() {
                     <motion.div
                       initial={{ width: "0%" }}
                       animate={{ width: "92%" }}
-                      transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
                       className="h-2 rounded-full bg-primary"
                     />
                   </div>
