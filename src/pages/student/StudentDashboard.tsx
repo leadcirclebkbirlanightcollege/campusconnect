@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
 import SmartInsightsStrip from "@/components/student/SmartInsightsStrip";
+import ActiveChallengesStrip from "@/components/student/ActiveChallengesStrip";
 import {
   Flame, Zap, TrendingUp, TrendingDown, Minus,
   Clock, CheckCircle2, ChevronRight, BookOpen,
