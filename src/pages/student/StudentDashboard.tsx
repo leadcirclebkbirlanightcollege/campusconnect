@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, memo } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
@@ -19,6 +19,16 @@ import { FadeIn, SlideUp, useMetricCountUp } from "@/components/ui/motion";
 import { IntelligenceBar, LiveIndicator } from "@/components/ui/design-system";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Phase 2 — lazy-loaded analytics panels
+const AcademicRadarChart  = lazy(() => import("@/components/student/AcademicRadarChart"));
+const AttendanceTrendChart = lazy(() => import("@/components/student/AttendanceTrendChart"));
+const StreakHeatmap        = lazy(() => import("@/components/student/StreakHeatmap"));
+const RiskAnalysisPanel    = lazy(() => import("@/components/student/RiskAnalysisPanel"));
+const EngagementScorePanel = lazy(() => import("@/components/student/EngagementScorePanel"));
+const UpcomingEventsStrip  = lazy(() => import("@/components/student/UpcomingEventsStrip"));
+
+const PanelSkeleton = () => <Skeleton className="h-[180px] w-full rounded-2xl" />;
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type UpcomingLecture = {
