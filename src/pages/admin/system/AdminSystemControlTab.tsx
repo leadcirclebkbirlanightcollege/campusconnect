@@ -28,6 +28,8 @@ export default function AdminSystemControlTab() {
   const [settings, setSettings] = useState<PlatformModeSettings>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fuMessage, setFuMessage] = useLocalState("");
+  const [fuPushing, setFuPushing] = useLocalState(false);
 
   useEffect(() => {
     (supabase as any)
