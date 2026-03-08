@@ -167,8 +167,7 @@ export default function AdminAnnouncementsTab() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Students</SelectItem>
-                    <SelectItem value="programme">Programme</SelectItem>
-                    <SelectItem value="class">Class</SelectItem>
+                    <SelectItem value="class">Specific Class</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
