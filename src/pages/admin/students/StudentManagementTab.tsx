@@ -275,6 +275,15 @@ export default function StudentManagementTab() {
               <Button
                 variant="outline"
                 disabled={selectedIds.length === 0 || busy}
+                onClick={() => setAssignCollegeOpen(true)}
+                className="gap-2"
+              >
+                <Building2 className="h-4 w-4" />
+                Assign College
+              </Button>
+              <Button
+                variant="outline"
+                disabled={selectedIds.length === 0 || busy}
                 onClick={() => restoreMutation.mutate(selectedIds)}
                 className="gap-2"
               >
