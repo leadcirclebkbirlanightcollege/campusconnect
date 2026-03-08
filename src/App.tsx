@@ -83,7 +83,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  useWebVitals(); // passive Web Vitals monitoring — no render impact
+  useWebVitals();   // passive Web Vitals monitoring — no render impact
+  useOneSignal();   // OneSignal push notifications
   return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
