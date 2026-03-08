@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  GraduationCap, Loader2, Eye, EyeOff,
+  Loader2, Eye, EyeOff,
   ArrowRight, CheckCircle2, BookOpen, Trophy, Zap,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { BRANDING } from "@/config/branding";
 
 /* ── Feature chip ─────────────────────────────────────────────── */
 const FEATURES = [

@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, Users, BookOpen, CheckSquare, Coins,
-  BarChart3, ShieldCheck, LogOut, Activity, Globe,
+  BarChart3, ShieldCheck, LogOut, Activity,
   UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
-  History, Sliders, AlertTriangle, Flame, Zap, Star,
+  History, Sliders, Flame,
   ArrowUpRight, Plus,
 } from "lucide-react";
+import { BRANDING } from "@/config/branding";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
 import CollegeSwitcher from "./components/CollegeSwitcher";
 import { CollegesTab, AdminManagerTab } from "./components/CollegeManagement";
