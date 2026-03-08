@@ -264,6 +264,13 @@ const StudentDashboard = () => {
       </SlideUp>
 
       {/* ╔═══════════════════════════════════════════╗
+          ║  INTELLIGENCE SCORE & GOAL TRACKER        ║
+          ╚═══════════════════════════════════════════╝ */}
+      <SlideUp delay={55}>
+        <IntelligenceScoreCard />
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════╗
           ║  ACADEMIC INTELLIGENCE PANEL              ║
           ╚═══════════════════════════════════════════╝ */}
       {(intelligence.data || intelligence.isLoading) && (

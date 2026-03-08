@@ -115,6 +115,9 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         <GamificationStatsPanel onNavigateTab={onNavigateTab} />
       </div>
 
+      {/* ── PROGRAMME ANALYTICS ─────────────────────── */}
+      <ProgrammeAnalyticsPanel onNavigateTab={onNavigateTab} />
+
       {/* ── PROGRAMME HEALTH ───────────────────────── */}
       <ProgrammeHealthSection onNavigateTab={onNavigateTab} />
     </div>
