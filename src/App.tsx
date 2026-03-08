@@ -43,6 +43,7 @@ const AdminDashboard           = lazy(() => import("./pages/admin/AdminDashboard
 const SuperAdminDashboard      = lazy(() => import("./pages/platform/SuperAdminDashboard"));
 const NotFound                 = lazy(() => import("./pages/NotFound"));
 const PwaInstallPage           = lazy(() => import("./pages/student/PwaInstallPage"));
+const NotificationSettings     = lazy(() => import("./pages/student/NotificationSettings"));
 
 /* ── Route fallback skeleton ─────────────────────────────────── */
 function RouteSkeleton() {
