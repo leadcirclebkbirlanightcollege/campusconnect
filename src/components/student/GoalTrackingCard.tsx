@@ -57,7 +57,7 @@ function useGoalProgress(userId: string | null) {
         { data: insights },
         { data: streak },
         { data: points },
-        { data: intel },
+        intelRes,
       ] = await Promise.all([
         supabase.rpc("get_growth_insights"),
         supabase.rpc("get_my_streak"),
@@ -65,7 +65,8 @@ function useGoalProgress(userId: string | null) {
         supabase.from("student_intelligence").select("tier").eq("user_id", userId!).single(),
       ]);
 
-      const intelTier = (intel?.data as { tier?: string } | null)?.tier ?? "bronze";
+      const intelRow = intelRes.data as { tier?: string } | null;
+      const intelTier = intelRow?.tier ?? "bronze";
       const tierIndex = ["bronze", "silver", "gold", "elite"].indexOf(intelTier) + 1;
       return {
         attendance_pct: (insights as any)?.last_30_day_attendance_pct ?? 0,
