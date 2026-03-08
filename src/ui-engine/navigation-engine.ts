@@ -25,7 +25,7 @@ export const BOTTOM_NAV_ROUTES = [
   "/app/attendance",
   "/app/lectures",
   "/app/leaderboard",
-  "/app/profile",
+  "/app/settings",
 ] as const;
 
 /** Page metadata registry */
@@ -35,7 +35,8 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/app/lectures":     { title: "Lectures",         description: "Upcoming lecture sessions" },
   "/app/leaderboard":  { title: "Leaderboard",      description: "Student rankings" },
   "/app/achievements": { title: "Achievements",     description: "Your earned badges" },
-  "/app/profile":      { title: "Profile",          description: "Your account settings" },
+  "/app/profile":      { title: "Settings",         description: "Your account control center" },
+  "/app/settings":     { title: "Settings",         description: "Your account control center" },
   "/app/inbox":        { title: "Inbox",            description: "Notifications & messages" },
   "/app/id-card":      { title: "Digital ID",       description: "Your student identity card" },
   "/app/programmes":   { title: "Learning Circles", description: "Enrolled programmes" },

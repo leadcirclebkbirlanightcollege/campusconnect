@@ -149,7 +149,7 @@ export default function AppRouter() {
 
           {/* Legacy redirects */}
           <Route path="/student" element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="/student/profile" element={<Navigate to="/app/profile" replace />} />
+          <Route path="/student/profile" element={<Navigate to="/app/settings" replace />} />
           <Route path="/student/inbox" element={<Navigate to="/app/inbox" replace />} />
           <Route path="/student/scan" element={<Navigate to="/app/scan" replace />} />
           <Route path="/attendance" element={<Navigate to="/app/attendance" replace />} />
