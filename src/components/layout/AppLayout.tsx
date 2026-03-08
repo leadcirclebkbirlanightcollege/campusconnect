@@ -66,53 +66,7 @@ function getPageMeta(pathname: string) {
 
 /* ── Notification Bell ─────────────────────────────────────────── */
 function NotificationBell({ userId }: { userId: string }) {
-  const qc = useQueryClient();
-  const { data: unread = 0 } = useQuery({
-    queryKey: ["topbar", "unread", userId],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("notification_recipients")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .is("read_at", null);
-      return count ?? 0;
-    },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
-
-  // realtime
-  useEffect(() => {
-    const ch = supabase
-      .channel(`topbar_unread_${userId}`)
-      .on("postgres_changes", {
-        event: "*", schema: "public",
-        table: "notification_recipients",
-        filter: `user_id=eq.${userId}`,
-      }, () => qc.invalidateQueries({ queryKey: ["topbar", "unread", userId] }))
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [userId, qc]);
-
-  return (
-    <Link
-      to="/app/inbox"
-      className={cn(
-        "relative flex h-8 w-8 items-center justify-center rounded-lg",
-        "border border-border-subtle bg-surface-2",
-        "text-muted-foreground hover:text-foreground hover:bg-surface-3",
-        "transition-all duration-fast",
-      )}
-      aria-label="Notifications"
-    >
-      <Bell className="h-4 w-4" />
-      {unread > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground px-1 leading-none">
-          {unread > 99 ? "99+" : unread}
-        </span>
-      )}
-    </Link>
-  );
+  return <TopbarNotificationCenter userId={userId} />;
 }
 
 /* ── System Status Dot ─────────────────────────────────────────── */
