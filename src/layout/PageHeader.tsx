@@ -26,6 +26,8 @@ interface PageHeaderProps {
   variant?:    "default" | "large" | "compact";
   /** Gradient title text */
   gradient?:   boolean;
+  /** Keep header visible while scrolling */
+  sticky?:     boolean;
 }
 
 const TITLE_CLASSES = {
@@ -49,12 +51,19 @@ export function PageHeader({
   className,
   variant  = "default",
   gradient = false,
+  sticky   = true,
 }: PageHeaderProps) {
   return (
     <header
       className={cn(
-        "flex items-start justify-between gap-3 mb-6 pt-1",
-        variant === "compact" && "mb-4",
+        "flex items-start justify-between gap-3 pt-1",
+        sticky
+          ? [
+              "sticky z-30 top-[calc(52px+env(safe-area-inset-top,0px))]",
+              "-mx-4 mb-4 border-b border-border-subtle/70 bg-background/80 px-4 py-2",
+              "backdrop-blur-md shadow-[0_8px_24px_-18px_hsl(var(--foreground)/0.35)]",
+            ]
+          : ["mb-6", variant === "compact" && "mb-4"],
         className,
       )}
     >
@@ -66,8 +75,8 @@ export function PageHeader({
             onClick={onBack}
             aria-label="Go back"
             className={cn(
-              "shrink-0 flex items-center justify-center",
-              "h-8 w-8 rounded-xl",
+              "tap-ripple shrink-0 flex items-center justify-center",
+              "h-10 w-10 rounded-xl",
               "bg-surface-2 border border-border-subtle",
               "text-muted-foreground hover:text-foreground hover:bg-surface-3",
               "transition-all duration-[120ms] active:scale-95",
@@ -90,7 +99,7 @@ export function PageHeader({
             {title}
           </h1>
           {subtitle && (
-            <p className={cn(SUBTITLE_CLASSES[variant], "leading-snug")}>
+            <p className={cn(SUBTITLE_CLASSES[variant], "leading-snug")}> 
               {subtitle}
             </p>
           )}

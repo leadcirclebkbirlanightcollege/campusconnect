@@ -17,7 +17,7 @@ import {
   CalendarCheck,
   BookOpen,
   Trophy,
-  Settings,
+  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -29,15 +29,31 @@ interface NavTab {
 }
 
 const TABS: NavTab[] = [
-  { label: "Home",       href: "/app/dashboard",  icon: LayoutDashboard },
-  { label: "Attendance", href: "/app/attendance",  icon: CalendarCheck   },
-  { label: "Lectures",   href: "/app/lectures",    icon: BookOpen        },
-  { label: "Ranks",      href: "/app/leaderboard", icon: Trophy          },
-  { label: "Settings",   href: "/app/settings",    icon: Settings        },
+  { label: "Dashboard",   href: "/app/dashboard",   icon: LayoutDashboard },
+  { label: "Attendance",  href: "/app/attendance",  icon: CalendarCheck },
+  { label: "Lectures",    href: "/app/lectures",    icon: BookOpen },
+  { label: "Leaderboard", href: "/app/leaderboard", icon: Trophy },
+  { label: "Profile",     href: "/app/settings",    icon: UserRound },
 ];
+
+const MotionLink = motion(Link);
 
 function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+function prefetchRoute(path: string): void {
+  if (path.includes("dashboard")) {
+    void import("@/pages/student/StudentDashboard");
+  } else if (path.includes("attendance")) {
+    void import("@/pages/student/StudentAttendanceHistory");
+  } else if (path.includes("lectures")) {
+    void import("@/pages/student/lectures/LecturesList");
+  } else if (path.includes("leaderboard")) {
+    void import("@/pages/Leaderboard");
+  } else if (path.includes("settings")) {
+    void import("@/pages/student/StudentProfile");
+  }
 }
 
 export function BottomNavigation() {
@@ -51,7 +67,11 @@ export function BottomNavigation() {
         "border-t border-border-subtle/60",
         "shadow-[0_-8px_32px_-8px_hsl(var(--bg-base)/0.60)]",
       )}
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      style={{
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        paddingLeft: "env(safe-area-inset-left, 0px)",
+        paddingRight: "env(safe-area-inset-right, 0px)",
+      }}
       aria-label="Main navigation"
     >
       <div className="flex h-16 items-stretch justify-around px-1">
@@ -59,12 +79,15 @@ export function BottomNavigation() {
           const active = isActive(pathname, href);
 
           return (
-            <Link
+            <MotionLink
               key={href}
               to={href}
+              onMouseEnter={() => prefetchRoute(href)}
+              onTouchStart={() => prefetchRoute(href)}
+              whileTap={{ scale: 0.96 }}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex flex-col items-center justify-center",
+                "tap-ripple relative flex flex-col items-center justify-center",
                 "gap-1 flex-1 min-h-[48px] px-1",
                 "rounded-xl mx-0.5 my-1.5",
                 "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
@@ -117,7 +140,7 @@ export function BottomNavigation() {
               >
                 {label}
               </span>
-            </Link>
+            </MotionLink>
           );
         })}
       </div>
