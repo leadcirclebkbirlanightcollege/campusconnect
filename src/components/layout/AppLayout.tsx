@@ -8,8 +8,12 @@ import {
   LogOut,
   CreditCard,
   BadgeCheck,
-  GraduationCap,
   CheckCircle,
+  LayoutDashboard,
+  BookOpen,
+  Trophy,
+  Star,
+  UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
 import {
@@ -28,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
