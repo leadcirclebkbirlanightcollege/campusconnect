@@ -48,6 +48,7 @@ function safeErrorMessage(e: unknown) {
 
 export default function AttendanceMarkingCard({ lectureId, initialToken }: Props) {
   const reduceMotion = useReducedMotion();
+  const { attempt: attemptMark } = useRateLimit("mark-attendance", 5, 60_000);
 
   const [otp, setOtp] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);

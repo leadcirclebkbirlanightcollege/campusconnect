@@ -88,6 +88,7 @@ function FloatingReward({ pts, visible }: { pts: number; visible: boolean }) {
 export function DailyCheckinCard() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useDailyCheckinData();
+  const { attempt: attemptCheckin } = useRateLimit("daily-checkin", 3, 60_000);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [floatingPts, setFloatingPts] = useState<number | null>(null);
   const [milestoneAnim, setMilestoneAnim] = useState(false);
