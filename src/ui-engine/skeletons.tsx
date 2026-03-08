@@ -11,8 +11,8 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /* ── Base Shimmer ─────────────────────────────────────────────── */
-function Shimmer({ className }: { className?: string }) {
-  return <div className={cn("shimmer rounded-lg", className)} />;
+function Shimmer({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <div className={cn("shimmer rounded-lg", className)} style={style} />;
 }
 
 /* ── CardSkeleton ─────────────────────────────────────────────── */
