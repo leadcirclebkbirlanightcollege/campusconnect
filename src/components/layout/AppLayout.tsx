@@ -16,6 +16,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
+import SessionGuard from "@/components/auth/SessionGuard";
 import {
   SidebarInset,
   SidebarProvider,
