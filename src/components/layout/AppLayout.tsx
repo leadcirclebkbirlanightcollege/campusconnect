@@ -206,7 +206,7 @@ export default function AppLayout() {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+                      transition={{ duration: msToSeconds(MOTION_MS.fast), ease: [0, 0, 0.2, 1] }}
                     >
                       <p className="text-[14px] font-semibold text-foreground leading-none truncate">
                         {title}
