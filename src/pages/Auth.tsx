@@ -4,14 +4,63 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { GraduationCap, Loader2 } from "lucide-react";
+import {
+  GraduationCap, Loader2, Eye, EyeOff,
+  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap,
+} from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { cn } from "@/lib/utils";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
 
+/* ── Feature chip ─────────────────────────────────────────────── */
+const FEATURES = [
+  { icon: BookOpen, label: "Track Lectures" },
+  { icon: CheckCircle2, label: "Mark Attendance" },
+  { icon: Trophy, label: "Leaderboard" },
+  { icon: Zap, label: "Earn Points" },
+];
+
+/* ── Input wrapper with show/hide ─────────────────────────────── */
+function PasswordInput({
+  id, placeholder, value, onChange, label,
+}: {
+  id: string; placeholder: string;
+  value: string; onChange: (v: string) => void; label: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-[13px] font-medium text-foreground">{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={show ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="pr-10 bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px]"
+          required
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setShow(!show)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={show ? "Hide password" : "Show password"}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Auth page ─────────────────────────────────────────────────── */
 const Auth = () => {
   const navigate = useNavigate();
+  const { branding } = usePlatformBranding();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -30,71 +79,33 @@ const Auth = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        redirectToDashboard(session.user.id);
-      }
+      if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        redirectToDashboard(session.user.id);
-      }
+      if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch role first, then navigate to the correct dashboard
   const redirectToDashboard = async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
       const role = data?.role;
-      if (role === "super_admin") {
-        navigate("/platform/admin", { replace: true });
-      } else if (role === "admin") {
-        navigate("/app/admin/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
+      if (role === "super_admin") navigate("/platform/admin", { replace: true });
+      else if (role === "admin") navigate("/app/admin/dashboard", { replace: true });
+      else navigate("/app/dashboard", { replace: true });
     } catch {
       navigate("/app/dashboard", { replace: true });
     }
-
-    // Fire-and-forget retention (always runs regardless of role)
+    // Fire-and-forget retention
     setTimeout(() => {
-      supabase.functions
-        .invoke("retention-on-login", { body: {} })
-        .then(({ data: r }) => {
-          if (!r?.success) return;
-          if (r?.streak?.incremented) {
-            toast.success(`🔥 Streak: ${r.streak.current_streak} days`, {
-              description: `Longest: ${r.streak.longest_streak} days`,
-            });
-          }
-          if (r?.daily_reward?.granted) {
-            toast.success("🎁 Daily Reward", {
-              description: r.daily_reward.message || "Daily reward unlocked",
-            });
-          }
-          if (r?.achievements?.granted) {
-            toast.success("🏅 Achievement unlocked", { description: "7-day streak" });
-          }
-        })
-        .catch(() => {/* silent */});
+      supabase.functions.invoke("retention-on-login", { body: {} }).catch(() => {});
     }, 2000);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const identifier = loginIdentifier.trim();
       if (!identifier) throw new Error("Please enter Email or Student ID");
@@ -102,8 +113,7 @@ const Auth = () => {
       let email = identifier;
       if (!identifier.includes("@")) {
         const { data: resolved, error: resolveError } = await supabase.functions.invoke(
-          "auth-resolve-identifier",
-          { body: { identifier } },
+          "auth-resolve-identifier", { body: { identifier } },
         );
         if (resolveError || !resolved?.email) throw new Error("Invalid credentials");
         email = String(resolved.email);
@@ -112,24 +122,17 @@ const Auth = () => {
       const loginTimeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Login timed out. Please try again.")), 8000)
       );
-
       const { data, error } = await Promise.race([
         supabase.auth.signInWithPassword({ email, password: loginPassword }),
         loginTimeout,
       ]);
-
       if (error) throw error;
-
-      toast.success("Login successful!");
+      toast.success("Welcome back! 👋");
       if (data.user) redirectToDashboard(data.user.id);
     } catch (error: any) {
       const msg: string = error?.message || "";
       if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
-        console.error("Network error during login:", {
-          supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-          origin: window.location.origin,
-        });
-        toast.error("Network configuration error. Please check your connection or contact the administrator.");
+        toast.error("Network error. Please check your connection.");
       } else {
         toast.error(msg || "Login failed");
       }
@@ -141,45 +144,36 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const name = signupName.trim();
       const email = signupEmail.trim();
       const password = signupPassword;
-
       if (!name) throw new Error("Name is required");
       if (!email) throw new Error("Email is required");
       if (!password) throw new Error("Password is required");
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email, password,
         options: { emailRedirectTo: window.location.origin },
       });
-
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
       const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: authData.user.id,
-        name,
-        email,
+        user_id: authData.user.id, name, email,
         phone: signupPhone || null,
         student_id: signupStudentId || null,
         department: signupDepartment || null,
         class_name: signupClass || null,
       });
-
       if (profileError) throw profileError;
 
       const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role: "student",
+        user_id: authData.user.id, role: "student",
       });
-
       if (roleError) throw roleError;
 
-      toast.success("Account created successfully!");
+      toast.success("Account created! 🎉");
       navigate("/app/dashboard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
@@ -190,165 +184,259 @@ const Auth = () => {
 
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+          <p className="text-[13px] text-muted-foreground">Redirecting...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-      <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
-      <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
+    <div className="min-h-screen flex bg-background">
+      {/* ── Left Panel (hero — desktop only) ───────────────────── */}
+      <div className="hidden lg:flex lg:w-[42%] xl:w-[45%] bg-surface-1 border-r border-border-subtle flex-col justify-between p-10 relative overflow-hidden">
+        {/* Background grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
+            `,
+            backgroundSize: "40px 40px",
+          }}
+        />
 
-      <Card className="w-full max-w-md shadow-premium relative z-10 border-primary/10">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-premium flex items-center justify-center mb-4 shadow-premium">
-            <GraduationCap className="w-10 h-10 text-primary-foreground" />
+        {/* Glow orb */}
+        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/8 blur-[80px] pointer-events-none" />
+
+        {/* Brand */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-primary">
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt={branding.brand_name} className="h-6 w-6 object-contain" />
+            ) : (
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
+            )}
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-premium bg-clip-text text-transparent">
-            Campus Connect
-          </CardTitle>
-          <CardDescription>Manage lectures, attendance & academic progress</CardDescription>
-        </CardHeader>
+          <div>
+            <p className="text-[15px] font-bold text-foreground leading-tight">{branding.brand_name}</p>
+            <p className="text-[11px] text-muted-foreground">{branding.tagline}</p>
+          </div>
+        </div>
 
-        <CardContent>
+        {/* Hero text */}
+        <div className="relative z-10 space-y-5">
+          <div className="space-y-3">
+            <h2 className="text-[32px] font-semibold text-foreground leading-tight tracking-tight">
+              Your academic<br />intelligence hub
+            </h2>
+            <p className="text-[15px] text-muted-foreground leading-relaxed max-w-[320px]">
+              Track attendance, earn points, climb leaderboards, and monitor your academic performance — all in one place.
+            </p>
+          </div>
+
+          {/* Feature chips */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {FEATURES.map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2.5 rounded-lg border border-border-subtle bg-surface-2 px-3.5 py-2.5"
+              >
+                <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="text-[13px] font-medium text-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer quote */}
+        <p className="relative z-10 text-[11px] text-muted-foreground/50">
+          Developed by Atharv Jadhav · Department of Computer Science
+        </p>
+      </div>
+
+      {/* ── Right Panel (form) ──────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
+        {/* Mobile brand */}
+        <div className="lg:hidden flex items-center gap-2.5 mb-8">
+          <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow-primary">
+            <GraduationCap className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-[16px] font-bold text-foreground">{branding.brand_name}</span>
+        </div>
+
+        <div className="w-full max-w-[380px] space-y-6 animate-fade-in">
+          {/* Heading */}
+          <div className="space-y-1">
+            <h1 className="text-[24px] font-semibold text-foreground tracking-tight">Sign in to continue</h1>
+            <p className="text-[14px] text-muted-foreground">Enter your credentials to access your dashboard</p>
+          </div>
+
+          {/* Tabs */}
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-surface-2 border border-border-subtle p-0.5 rounded-lg h-9">
+              <TabsTrigger
+                value="login"
+                className="rounded-md text-[13px] font-medium data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-xs text-muted-foreground"
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="rounded-md text-[13px] font-medium data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-xs text-muted-foreground"
+              >
+                Create Account
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login">
+            {/* ── Login ── */}
+            <TabsContent value="login" className="mt-5">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-identifier">Email / Student ID</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="login-identifier" className="text-[13px] font-medium text-foreground">
+                    Email or Student ID
+                  </Label>
                   <Input
                     id="login-identifier"
-                    placeholder="your.email@college.edu or CS-2026-001"
+                    placeholder="your@email.com or CS-2024-001"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
+                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                  />
-                </div>
+
+                <PasswordInput
+                  id="login-password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  value={loginPassword}
+                  onChange={setLoginPassword}
+                />
+
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-premium hover:opacity-90 transition-opacity shadow-premium"
+                  className="w-full h-10 gap-2 shadow-primary text-[14px]"
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Login
+                  {loading
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <>Sign In <ArrowRight className="h-4 w-4" /></>
+                  }
                 </Button>
               </form>
             </TabsContent>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name *</Label>
+            {/* ── Signup ── */}
+            <TabsContent value="signup" className="mt-5">
+              <form onSubmit={handleSignup} className="space-y-3.5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-name" className="text-[13px] font-medium text-foreground">
+                    Full Name <span className="text-danger">*</span>
+                  </Label>
                   <Input
                     id="signup-name"
                     placeholder="John Doe"
                     value={signupName}
                     onChange={(e) => setSignupName(e.target.value)}
+                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email *</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-email" className="text-[13px] font-medium text-foreground">
+                    Email <span className="text-danger">*</span>
+                  </Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="your.email@college.edu"
+                    placeholder="your@email.com"
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
+                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password *</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Create a strong password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                  />
-                </div>
+
+                <PasswordInput
+                  id="signup-password"
+                  label="Password *"
+                  placeholder="Create a strong password"
+                  value={signupPassword}
+                  onChange={setSignupPassword}
+                />
+
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone</Label>
-                    <Input
-                      id="signup-phone"
-                      placeholder="1234567890"
-                      value={signupPhone}
-                      onChange={(e) => setSignupPhone(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-student-id">Student ID</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-student-id" className="text-[13px] font-medium text-foreground">Student ID</Label>
                     <Input
                       id="signup-student-id"
                       placeholder="CS-2024-001"
                       value={signupStudentId}
                       onChange={(e) => setSignupStudentId(e.target.value)}
+                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-phone" className="text-[13px] font-medium text-foreground">Phone</Label>
+                    <Input
+                      id="signup-phone"
+                      placeholder="9876543210"
+                      value={signupPhone}
+                      onChange={(e) => setSignupPhone(e.target.value)}
+                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     />
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-department">Department</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-department" className="text-[13px] font-medium text-foreground">Department</Label>
                     <Input
                       id="signup-department"
                       placeholder="Computer Science"
                       value={signupDepartment}
                       onChange={(e) => setSignupDepartment(e.target.value)}
+                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-class">Class</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-class" className="text-[13px] font-medium text-foreground">Class</Label>
                     <Input
                       id="signup-class"
                       placeholder="2024-A"
                       value={signupClass}
                       onChange={(e) => setSignupClass(e.target.value)}
+                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
                     />
                   </div>
                 </div>
+
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-accent hover:opacity-90 transition-opacity shadow-accent"
+                  className="w-full h-10 gap-2 shadow-primary text-[14px] mt-1"
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Create Account
+                  {loading
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <>Create Account <ArrowRight className="h-4 w-4" /></>
+                  }
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-        </CardContent>
 
-        <CardFooter className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </CardFooter>
-      </Card>
-
-      <div className="absolute bottom-6 left-0 right-0 px-4">
-        <p className="text-center text-xs text-muted-foreground">
-          Developed by - Atharv Jadhav - Department Of Computer Science
-        </p>
+          {/* Footer note */}
+          <p className="text-center text-[12px] text-muted-foreground/70">
+            By continuing you agree to our Terms of Service
+          </p>
+        </div>
       </div>
     </div>
   );
