@@ -30,6 +30,8 @@ export default function AdminSystemControlTab() {
   const [saving, setSaving] = useState(false);
   const [fuMessage, setFuMessage] = useLocalState("");
   const [fuPushing, setFuPushing] = useLocalState(false);
+  const [suMessage, setSuMessage] = useLocalState("");
+  const [suPushing, setSuPushing] = useLocalState(false);
 
   useEffect(() => {
     (supabase as any)
