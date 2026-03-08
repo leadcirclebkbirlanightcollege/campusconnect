@@ -1,103 +1,58 @@
-import { lazy, Suspense, useMemo, memo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { memo, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
-import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
-import SmartInsightsStrip from "@/components/student/SmartInsightsStrip";
-import ActiveChallengesStrip from "@/components/student/ActiveChallengesStrip";
 import {
-  Flame, Zap, TrendingUp, TrendingDown, Minus,
-  Clock, CheckCircle2, ChevronRight, BookOpen,
-  Trophy, Shield, Target, BarChart3, Star, Activity,
-  CalendarCheck, Award, Sparkles, ArrowRight, Scan,
+  Activity,
+  ArrowRight,
+  BookOpen,
+  CalendarCheck,
+  CheckCircle2,
+  Clock3,
+  Flame,
+  ShieldAlert,
+  Sparkles,
+  Trophy,
+  User,
+  Zap,
+  Brain,
+  Scan,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
-import { useStudentIntelligence } from "@/hooks/use-intelligence";
+import { motion } from "framer-motion";
+
+import { supabase } from "@/integrations/supabase/client";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
+import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { FadeIn, SlideUp, useMetricCountUp } from "@/components/ui/motion";
-import { IntelligenceBar, LiveIndicator } from "@/components/ui/design-system";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
-// Phase 2 — lazy-loaded analytics panels
-const AcademicRadarChart = lazy(() => import("@/components/student/AcademicRadarChart"));
-const AttendanceTrendChart = lazy(() => import("@/components/student/AttendanceTrendChart"));
-const StreakHeatmap = lazy(() => import("@/components/student/StreakHeatmap"));
-const RiskAnalysisPanel = lazy(() => import("@/components/student/RiskAnalysisPanel"));
-const EngagementScorePanel = lazy(() => import("@/components/student/EngagementScorePanel"));
-const UpcomingEventsStrip = lazy(() => import("@/components/student/UpcomingEventsStrip"));
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
+import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
+import { ActionTile } from "@/components/ui/ActionTile";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { GlowButton } from "@/components/ui/GlowButton";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  SECTION_REVEAL_ITEM,
+  SECTION_REVEAL_PARENT,
+} from "@/motion/microInteractions";
 
-const PanelSkeleton = () => <Skeleton className="h-[180px] w-full rounded-2xl" />;
-
-/* ── Data queries ───────────────────────────────────────────── */
-async function fetchDashboardCore() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) throw new Error("unauthenticated");
-
-  const [{ data: profile }, { data: pointsTotal }, { data: streakRaw }, { data: liveList }] =
-    await Promise.all([
-      supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
-      supabase.rpc("get_my_points_total"),
-      supabase.rpc("get_my_streak"),
-      supabase.from("lectures").select("id,topic,lecture_date,start_time,end_time,venue,status").eq("status", "live").limit(1),
-    ]);
-
-  const sk = streakRaw as any;
-  return {
-    name: (profile as any)?.name?.split(" ")[0] ?? "Student",
-    totalPoints: Number(pointsTotal ?? 0),
-    currentStreak: sk?.current_streak ?? 0,
-    longestStreak: sk?.longest_streak ?? 0,
-    liveNow: ((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null,
-  };
-}
-
-async function fetchDashboardSecondary(userId: string) {
-  const today = new Date().toISOString().split("T")[0];
-  const [{ count: attended }, { count: total }, { data: upcoming }, { data: pts }] =
-    await Promise.all([
-      supabase.from("attendance").select("id", { count: "exact", head: true }).eq("student_user_id", userId).eq("status", "present"),
-      supabase.from("lectures").select("id", { count: "exact", head: true }),
-      supabase
-        .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,status")
-        .gte("lecture_date", today)
-        .neq("status", "ended")
-        .order("lecture_date", { ascending: true })
-        .order("start_time", { ascending: true })
-        .limit(1),
-      supabase
-        .from("points_ledger")
-        .select("id,created_at,points,source,note")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(8),
-    ]);
-
-  return {
-    lecturesAttended: attended ?? 0,
-    totalLectures: total ?? 0,
-    nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
-    recentPoints: (pts ?? []) as RecentPoint[],
-  };
-}
-
-/* ── Types ─────────────────────────────────────────────────────── */
 type UpcomingLecture = {
   id: string;
   topic: string;
   lecture_date: string;
   start_time: string;
-  end_time: string;
   venue: string;
   status?: "scheduled" | "live" | "ended";
 };
+
 type RecentPoint = {
   id: string;
   created_at: string;
@@ -106,67 +61,126 @@ type RecentPoint = {
   note: string | null;
 };
 
+type TierKey = "bronze" | "silver" | "gold" | "elite";
+
 const TIER_THRESHOLDS = { bronze: 0, silver: 100, gold: 250, elite: 500 } as const;
 const TIER_NEXT = { bronze: "silver", silver: "gold", gold: "elite", elite: null } as const;
-type TierKey = keyof typeof TIER_THRESHOLDS;
 
-function getTierProgress(pts: number, tier: TierKey) {
+async function fetchDashboardCore() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user;
+  if (!user) throw new Error("unauthenticated");
+
+  const [{ data: profile }, { data: pointsTotal }, { data: streakRaw }, { data: liveList }] =
+    await Promise.all([
+      supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
+      supabase.rpc("get_my_points_total"),
+      supabase.rpc("get_my_streak"),
+      supabase
+        .from("lectures")
+        .select("id,topic,lecture_date,start_time,venue,status")
+        .eq("status", "live")
+        .limit(1),
+    ]);
+
+  const streak = streakRaw as { current_streak?: number; longest_streak?: number } | null;
+
+  return {
+    userId: user.id,
+    name: profile?.name?.split(" ")[0] ?? "Student",
+    totalPoints: Number(pointsTotal ?? 0),
+    currentStreak: streak?.current_streak ?? 0,
+    longestStreak: streak?.longest_streak ?? 0,
+    liveNow: ((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null,
+  };
+}
+
+async function fetchDashboardSecondary(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+
+  const [{ count: attended }, { count: total }, { data: upcoming }, { data: points }] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select("id", { count: "exact", head: true })
+      .eq("student_user_id", userId)
+      .eq("status", "present"),
+    supabase.from("lectures").select("id", { count: "exact", head: true }),
+    supabase
+      .from("lectures")
+      .select("id,topic,lecture_date,start_time,venue,status")
+      .gte("lecture_date", today)
+      .neq("status", "ended")
+      .order("lecture_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(1),
+    supabase
+      .from("points_ledger")
+      .select("id,created_at,points,source,note")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(8),
+  ]);
+
+  return {
+    attended: attended ?? 0,
+    total: total ?? 0,
+    nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
+    activities: (points ?? []) as RecentPoint[],
+  };
+}
+
+function getTierProgress(points: number, tier: TierKey) {
   const next = TIER_NEXT[tier];
   if (!next) return { pct: 100, remaining: 0, nextLabel: "Max Tier" };
   const from = TIER_THRESHOLDS[tier];
-  const to = TIER_THRESHOLDS[next as TierKey];
-  const pct = Math.min(100, Math.round(((pts - from) / (to - from)) * 100));
-  return { pct, remaining: Math.max(0, to - pts), nextLabel: TIER_CONFIG[next as TierKey].label };
+  const to = TIER_THRESHOLDS[next];
+  const pct = Math.min(100, Math.round(((points - from) / (to - from)) * 100));
+  return {
+    pct,
+    remaining: Math.max(0, to - points),
+    nextLabel: TIER_CONFIG[next].label,
+  };
 }
 
-function getTimeGreeting(now = new Date()) {
+function getGreeting(now = new Date()) {
   const h = now.getHours();
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
 }
 
-function sourceDisplay(source: string): { label: string; icon: React.ReactNode; color: string } {
-  const s = source.toLowerCase();
-  if (s.includes("attendance")) return { label: "Attendance", icon: <CalendarCheck className="h-3.5 w-3.5" />, color: "text-success" };
-  if (s.includes("checkin")) return { label: "Daily Check-In", icon: <Flame className="h-3.5 w-3.5" />, color: "text-warning" };
-  if (s.includes("reward")) return { label: "Daily Reward", icon: <Star className="h-3.5 w-3.5" />, color: "text-premium" };
-  if (s.includes("achievement")) return { label: "Achievement", icon: <Award className="h-3.5 w-3.5" />, color: "text-primary" };
-  if (s.includes("admin")) return { label: "Admin Bonus", icon: <Zap className="h-3.5 w-3.5" />, color: "text-primary" };
-  return { label: source.replace(/_/g, " "), icon: <Activity className="h-3.5 w-3.5" />, color: "text-muted-foreground" };
+function sourceMeta(source: string) {
+  const normalized = source.toLowerCase();
+  if (normalized.includes("attendance")) return { label: "Attendance marked", icon: CalendarCheck };
+  if (normalized.includes("checkin")) return { label: "Daily check-in", icon: Flame };
+  if (normalized.includes("achievement")) return { label: "Achievement unlocked", icon: Trophy };
+  return { label: source.replace(/_/g, " "), icon: Zap };
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════════════════════════ */
-const StudentDashboard = () => {
+export default function StudentDashboard() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const intelligence = useStudentIntelligence();
   const growth = useGrowthInsights();
-  const greeting = useMemo(() => getTimeGreeting(), []);
-  const queryClient = useQueryClient();
 
-  // ── Critical path: name, points, streak, live lecture (shows skeleton)
+  const greeting = useMemo(() => getGreeting(), []);
+
   const coreQuery = useQuery({
     queryKey: ["dashboard", "core"],
     queryFn: fetchDashboardCore,
-    staleTime: 30_000,
+    staleTime: 60_000,
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
 
-  // ── Secondary path: attendance counts, next lecture, recent points
   const secondaryQuery = useQuery({
-    queryKey: ["dashboard", "secondary"],
-    queryFn: async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) throw new Error("unauthenticated");
-      return fetchDashboardSecondary(userId);
-    },
-    enabled: !coreQuery.isLoading && !coreQuery.isError,
-    staleTime: 30_000,
+    queryKey: ["dashboard", "secondary", coreQuery.data?.userId],
+    queryFn: async () => fetchDashboardSecondary(coreQuery.data!.userId),
+    enabled: Boolean(coreQuery.data?.userId),
+    staleTime: 45_000,
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
@@ -177,7 +191,10 @@ const StudentDashboard = () => {
     void queryClient.prefetchQuery({
       queryKey: ["leaderboard", { verifiedOnly: false }],
       queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_leaderboard", { p_limit: 100, p_verified_only: false });
+        const { data, error } = await supabase.rpc("get_leaderboard", {
+          p_limit: 100,
+          p_verified_only: false,
+        });
         if (error) throw error;
         return data ?? [];
       },
@@ -185,30 +202,12 @@ const StudentDashboard = () => {
     });
 
     void queryClient.prefetchQuery({
-      queryKey: ["student", "lectures", "all"],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("lectures")
-          .select("id,topic,lecture_date,start_time,end_time,venue")
-          .order("lecture_date", { ascending: false })
-          .limit(500);
-        if (error) throw error;
-        return data ?? [];
-      },
-      staleTime: 45_000,
-    });
-
-    void queryClient.prefetchQuery({
       queryKey: ["student", "attendance", "all"],
       queryFn: async () => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return [];
         const { data, error } = await supabase
           .from("attendance")
           .select("id,lecture_id,status,marked_at,points_earned")
-          .eq("student_user_id", user.id)
+          .eq("student_user_id", coreQuery.data.userId)
           .order("marked_at", { ascending: false })
           .limit(500);
         if (error) throw error;
@@ -218,671 +217,248 @@ const StudentDashboard = () => {
     });
   }, [coreQuery.data, queryClient]);
 
+  if (coreQuery.isLoading) {
+    return (
+      <PageContainer>
+        <PageSkeleton variant="dashboard" className="px-0" />
+      </PageContainer>
+    );
+  }
 
-  const core = coreQuery.data;
-  const secondary = secondaryQuery.data;
-  const loading = coreQuery.isLoading;
+  if (coreQuery.isError || !coreQuery.data) {
+    return (
+      <PageContainer className="space-y-6">
+        <PageHeader title="Dashboard" subtitle="Unable to load your dashboard right now" variant="large" />
+        <GlassCard>
+          <p className="text-sm text-muted-foreground">Please refresh and try again.</p>
+        </GlassCard>
+      </PageContainer>
+    );
+  }
 
-  const name          = core?.name ?? "Student";
-  const liveNow       = core?.liveNow ?? null;
-  const nextLecture   = secondary?.nextLecture ?? null;
-  const recentPoints  = secondary?.recentPoints ?? [];
-  const stats = useMemo(() => ({
-    totalPoints:      core?.totalPoints       ?? 0,
-    currentStreak:    core?.currentStreak     ?? 0,
-    longestStreak:    core?.longestStreak     ?? 0,
-    lecturesAttended: secondary?.lecturesAttended ?? 0,
-    totalLectures:    secondary?.totalLectures    ?? 0,
-  }), [core, secondary]);
+  const totalLectures = secondaryQuery.data?.total ?? 0;
+  const attended = secondaryQuery.data?.attended ?? 0;
+  const attendancePct = totalLectures > 0 ? Math.round((attended / totalLectures) * 100) : 0;
 
-  const tierKey = useMemo(() => (intelligence.data?.tier ?? "bronze") as TierKey, [intelligence.data]);
-  const tierData = TIER_CONFIG[tierKey];
-  const tierProgress = useMemo(() => getTierProgress(stats.totalPoints, tierKey), [stats.totalPoints, tierKey]);
-  const attendancePct = useMemo(() =>
-    stats.totalLectures > 0 ? Math.round((stats.lecturesAttended / stats.totalLectures) * 100) : 0,
-    [stats.lecturesAttended, stats.totalLectures],
-  );
+  const tier = (intelligence.data?.tier ?? "bronze") as TierKey;
+  const tierConfig = TIER_CONFIG[tier];
+  const tierProgress = getTierProgress(coreQuery.data.totalPoints, tier);
 
+  const lecture = coreQuery.data.liveNow ?? secondaryQuery.data?.nextLecture ?? null;
+  const lectureIsLive = lecture?.status === "live";
   const riskLevel = growth.data?.risk_probability ?? "low";
-  const riskColor = riskLevel === "high" ? "text-danger" : riskLevel === "medium" ? "text-warning" : "text-success";
-  const riskBg = riskLevel === "high" ? "bg-danger/8 border-danger/20" : riskLevel === "medium" ? "bg-warning/8 border-warning/20" : "bg-success/8 border-success/20";
+
+  const insightCards = [
+    growth.data?.trend_direction === "improving"
+      ? { icon: TrendingUp, text: "Attendance is improving this week.", tone: "success" }
+      : growth.data?.trend_direction === "declining"
+      ? { icon: TrendingDown, text: "Risk is rising — attend your next lecture.", tone: "warning" }
+      : null,
+    tierProgress.remaining > 0
+      ? {
+          icon: Sparkles,
+          text: `${tierProgress.remaining} points to reach ${tierProgress.nextLabel}.`,
+          tone: "primary",
+        }
+      : null,
+    {
+      icon: Flame,
+      text:
+        coreQuery.data.currentStreak > 0
+          ? `${coreQuery.data.currentStreak}-day streak active. Keep your momentum.`
+          : "Start your streak with today’s check-in.",
+      tone: "warning",
+    },
+  ].filter(Boolean) as Array<{ icon: typeof Sparkles; text: string; tone: "success" | "warning" | "primary" }>;
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto pb-28 md:pb-8">
+    <PageContainer className="space-y-6" withBottomNav>
+      <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
 
-      {/* ╔═══════════════════════════════════════════╗
-          ║  PREMIUM HERO CARD                        ║
-          ╚═══════════════════════════════════════════╝ */}
-      <FadeIn>
-        <div className="relative rounded-2xl overflow-hidden border border-border-subtle shadow-md">
-          {/* Multi-layer gradient bg */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-surface-1 to-surface-1 pointer-events-none" />
-          {/* Glow orbs */}
-          <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-primary/8 blur-3xl pointer-events-none -translate-y-16 translate-x-16" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-primary/5 blur-2xl pointer-events-none translate-y-8 -translate-x-8" />
-
-          {/* Tier accent top bar */}
-          <div className="h-[3px] w-full relative z-10"
-            style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.15))` }} />
-
-          <div className="relative z-10 p-5 sm:p-6">
-            {/* Row 1: greeting + attendance ring */}
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div className="min-w-0 flex-1 space-y-2">
-                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-muted-foreground leading-none">
-                  {greeting} 👋
-                </p>
-                <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-none">
-                  {name}
-                </h1>
-                {tierData && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border",
-                      tierData.bg, tierData.border, tierData.color,
-                    )}
-                  >
-                    <Star className="h-2.5 w-2.5" />
-                    {tierData.label} Tier
-                  </motion.span>
-                )}
+      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+        <motion.section variants={SECTION_REVEAL_ITEM}>
+          <GlassCard className="space-y-4" padding="lg" elevation="high">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{greeting}</p>
+                <h1 className="text-[28px] font-black leading-none text-foreground truncate">{coreQuery.data.name}</h1>
+                <StatusBadge status="active" className={cn(tierConfig.bg, tierConfig.border, tierConfig.color)}>
+                  {tierConfig.label} Tier
+                </StatusBadge>
               </div>
-
-              {/* Large attendance ring */}
-              <AttendanceRing pct={attendancePct} loading={loading} size={110} />
+              <ProgressRing value={attendancePct} className="shrink-0" size={104} />
             </div>
 
-            {/* Row 2: KPI strip — 3 columns */}
-            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border-subtle/50">
-              <HeroKpi
-                label="Points" value={stats.totalPoints}
-                icon={<Zap className="h-4 w-4" />}
-                loading={loading} color="text-primary" bg="bg-primary/10"
-              />
-              <HeroKpi
-                label="Streak" value={stats.currentStreak} suffix="d"
-                icon={<Flame className="h-4 w-4" />}
-                loading={loading} color="text-warning" bg="bg-warning/10"
-              />
-              <HeroKpi
-                label="Classes" value={stats.lecturesAttended}
-                icon={<CheckCircle2 className="h-4 w-4" />}
-                loading={loading} color="text-success" bg="bg-success/10"
-              />
+            <div className="grid grid-cols-3 gap-3 border-t border-border-subtle pt-4">
+              <HeroStat label="Points" value={coreQuery.data.totalPoints} />
+              <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
+              <HeroStat label="Attendance" value={attendancePct} suffix="%" />
             </div>
+          </GlassCard>
+        </motion.section>
 
-            {/* Row 3: Tier progress bar */}
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">
-                  {tierData?.label} → {tierProgress.nextLabel}
-                </span>
-                <span className="text-[11px] font-semibold text-foreground tabular-nums">
-                  {tierProgress.remaining > 0 ? `${tierProgress.remaining} pts to go` : "🏆 Max Tier"}
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-surface-3 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.55))" }}
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${tierProgress.pct}%` }}
-                  transition={{ duration: 1.3, ease: "easeOut", delay: 0.5 }}
-                />
-              </div>
-            </div>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Quick Actions" subtitle="One-tap shortcuts" />
+          <div className="grid grid-cols-2 gap-3">
+            <ActionTile icon={Flame} label="Daily Check-In" onClick={() => document.getElementById("daily-checkin")?.scrollIntoView({ behavior: "smooth" })} />
+            <ActionTile icon={CalendarCheck} label="Attendance" onClick={() => navigate("/app/attendance")} />
+            <ActionTile icon={Trophy} label="Leaderboard" onClick={() => navigate("/app/leaderboard")} />
+            <ActionTile icon={BookOpen} label="Lectures" onClick={() => navigate("/app/lectures")} />
           </div>
-        </div>
-      </FadeIn>
+        </motion.section>
 
-      {/* ╔═══════════════════════════════════════════╗
-          ║  LIVE / UPCOMING LECTURE BANNER           ║
-          ╚═══════════════════════════════════════════╝ */}
-      <AnimatePresence>
-        {liveNow ? (
-          <motion.div
-            key="live-banner"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="rounded-xl border border-success/30 bg-success/8 overflow-hidden shadow-sm"
-          >
-            <div className="flex items-center justify-between px-4 py-4 gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <LiveIndicator />
-                <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">{liveNow.topic}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{liveNow.venue} · {liveNow.start_time}</p>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Lecture" subtitle={lectureIsLive ? "Happening now" : "Up next"} />
+          <GlassCard className="space-y-3" hover>
+            {lecture ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <StatusBadge status={lectureIsLive ? "live" : "upcoming"}>{lectureIsLive ? "Live" : "Upcoming"}</StatusBadge>
+                  <p className="text-xs text-muted-foreground">{lecture.lecture_date}</p>
                 </div>
-              </div>
-              <Button asChild size="sm" className="shrink-0 h-10 gap-1.5 rounded-xl px-4">
-                <Link to={`/app/lectures/${liveNow.id}`}>
-                  <Scan className="h-3.5 w-3.5" />
-                  Mark
-                </Link>
-              </Button>
-            </div>
-          </motion.div>
-        ) : nextLecture ? (
-          <motion.div
-            key="upcoming-banner"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs"
-          >
-            <div className="flex items-center justify-between px-4 py-4 gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-                  <Clock className="h-4.5 w-4.5 text-primary" />
+                <div>
+                  <p className="text-base font-bold text-foreground truncate">{lecture.topic}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{lecture.venue} · {lecture.start_time}</p>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Next Lecture</p>
-                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">{nextLecture.topic}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{nextLecture.lecture_date} · {nextLecture.start_time} · {nextLecture.venue}</p>
-                </div>
-              </div>
-              <Button asChild variant="outline" size="sm" className="shrink-0 h-10 rounded-xl">
-                <Link to="/app/lectures">View</Link>
-              </Button>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+                <GlowButton className="w-full" onClick={() => navigate(lectureIsLive ? `/app/lectures/${lecture.id}` : "/app/lectures") }>
+                  {lectureIsLive ? <Scan className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                  {lectureIsLive ? "Mark Attendance" : "View Lecture"}
+                </GlowButton>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No upcoming lecture scheduled right now.</p>
+            )}
+          </GlassCard>
+        </motion.section>
 
-      {/* ╔═══════════════════════════════════════════╗
-          ║  QUICK ACTIONS — 4-GRID (2×2)             ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={20}>
-        <div className="grid grid-cols-4 gap-2.5">
-          <QuickActionBtn
-            label="Check In" icon={<Flame className="h-5 w-5" />}
-            color="text-warning" bg="bg-warning/10 group-hover:bg-warning/18"
-            onClick={() => document.getElementById("checkin-card")?.scrollIntoView({ behavior: "smooth" })}
-          />
-          <QuickActionLink label="Attendance" icon={<CalendarCheck className="h-5 w-5" />} color="text-success" bg="bg-success/10 group-hover:bg-success/18" href="/app/attendance" />
-          <QuickActionLink label="Leaderboard" icon={<Trophy className="h-5 w-5" />} color="text-premium" bg="bg-premium/10 group-hover:bg-premium/18" href="/app/leaderboard" />
-          <QuickActionLink label="Lectures" icon={<BookOpen className="h-5 w-5" />} color="text-primary" bg="bg-primary/10 group-hover:bg-primary/18" href="/app/lectures" />
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  DAILY CHECK-IN                           ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={35}>
-        <div id="checkin-card">
+        <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Daily Check-In" subtitle="Keep your streak alive" />
           <DailyCheckinCard />
-        </div>
-      </SlideUp>
+        </motion.section>
 
-      {/* ╔═══════════════════════════════════════════╗
-          ║  SMART INSIGHTS STRIP                     ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={45}>
-        <SmartInsightsStrip />
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  2-COLUMN: STREAK + RISK                  ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={55}>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Streak */}
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs space-y-3 min-h-[110px]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <motion.div animate={{ scale: [1, 1.18, 1] }} transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}>
-                  <Flame className={cn("h-4.5 w-4.5", stats.currentStreak > 0 ? "text-warning" : "text-muted-foreground")} />
-                </motion.div>
-                <p className="text-[13px] font-semibold text-foreground">Streak</p>
-              </div>
-              <Trophy className="h-3.5 w-3.5 text-premium opacity-60" />
-            </div>
-            {loading ? <Skeleton className="h-9 w-20" /> : (
-              <>
-                <div>
-                  <p className="text-[36px] font-black text-foreground tabular-nums leading-none">{stats.currentStreak}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">day streak</p>
-                </div>
-                <div className="flex items-center gap-1.5 pt-2 border-t border-border-subtle">
-                  <Trophy className="h-3 w-3 text-premium" />
-                  <span className="text-[11px] text-muted-foreground">Best: </span>
-                  <span className="text-[11px] font-bold text-foreground tabular-nums">{stats.longestStreak}d</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Risk Level */}
-          <div className={cn("rounded-2xl border p-4 shadow-xs space-y-3 min-h-[110px]", riskBg)}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className={cn("h-4.5 w-4.5", riskColor)} />
-                <p className="text-[13px] font-semibold text-foreground">Risk</p>
-              </div>
-              <span className={cn(
-                "text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border",
-                riskLevel === "high" ? "text-danger border-danger/30 bg-danger/10"
-                : riskLevel === "medium" ? "text-warning border-warning/30 bg-warning/10"
-                : "text-success border-success/30 bg-success/10"
-              )}>{riskLevel}</span>
-            </div>
-            {growth.isLoading || loading ? <Skeleton className="h-9 w-20" /> : (
-              <>
-                <div>
-                  <p className={cn("text-[24px] font-black leading-none capitalize", riskColor)}>
-                    {riskLevel}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-1">academic risk</p>
-                </div>
-                <div className="flex items-center gap-1.5 pt-2 border-t border-border-subtle/50">
-                  <Target className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-[11px] text-muted-foreground capitalize">
-                    {riskLevel === "high" ? "Action needed" : riskLevel === "medium" ? "Stay consistent" : "On track 👍"}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  INTELLIGENCE SCORE CARD                  ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={65}>
-        <IntelligenceScoreCard />
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  ACADEMIC INTELLIGENCE PANEL              ║
-          ╚═══════════════════════════════════════════╝ */}
-      {(intelligence.data || intelligence.isLoading) && (
-        <SlideUp delay={72}>
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border-subtle">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-foreground">Academic Intelligence</p>
-                  <p className="text-[11px] text-muted-foreground">Performance metrics · Live</p>
-                </div>
-              </div>
-              {intelligence.data && tierData && (
-                <div className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold border", tierData.bg, tierData.border, tierData.color)}>
-                  {tierData.label}
-                </div>
-              )}
-            </div>
-
-            <div className="px-5 py-4 space-y-3.5">
-              {intelligence.isLoading ? (
-                <><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-5/6" /><Skeleton className="h-3 w-4/5" /></>
-              ) : intelligence.data ? (
-                <>
-                  <IntelligenceBar value={intelligence.data.attendanceConsistency} label="Attendance Consistency" />
-                  <IntelligenceBar value={intelligence.data.behaviourReliability} label="Behaviour Reliability" />
-                  <IntelligenceBar value={intelligence.data.engagementIndex} label="Engagement Index" />
-                </>
-              ) : null}
-            </div>
-
-            {growth.data && (
-              <div className="border-t border-border-subtle px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <GrowthCell label="30-Day Att." value={`${growth.data.last_30_day_attendance_pct}%`} />
-                <GrowthCell
-                  label="Trend"
-                  value={growth.data.trend_direction}
-                  icon={
-                    growth.data.trend_direction === "improving" ? <TrendingUp className="h-3 w-3 text-success" />
-                    : growth.data.trend_direction === "declining" ? <TrendingDown className="h-3 w-3 text-danger" />
-                    : <Minus className="h-3 w-3 text-muted-foreground" />
-                  }
-                />
-                <GrowthCell
-                  label="Projected Tier"
-                  value={TIER_CONFIG[growth.data.projected_tier_next_month as keyof typeof TIER_CONFIG]?.label ?? growth.data.projected_tier_next_month}
-                />
-                <GrowthCell
-                  label="Risk Level"
-                  value={growth.data.risk_probability}
-                  danger={riskLevel === "high"}
-                  warning={riskLevel === "medium"}
-                />
-              </div>
-            )}
-          </div>
-        </SlideUp>
-      )}
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  SMART INSIGHTS PANEL (detailed)          ║
-          ╚═══════════════════════════════════════════╝ */}
-      {growth.data && !growth.isLoading && (
-        <SlideUp delay={80}>
-          <InsightsPanel growth={growth.data} tierProgress={tierProgress} attendancePct={attendancePct} currentStreak={stats.currentStreak} />
-        </SlideUp>
-      )}
-
-      {/* ╔═══════════════════════════════════════════════╗
-          ║  PHASE 2: UPCOMING EVENTS STRIP               ║
-          ╚═══════════════════════════════════════════════╝ */}
-      <SlideUp delay={85}>
-        <Suspense fallback={<PanelSkeleton />}>
-          <UpcomingEventsStrip />
-        </Suspense>
-      </SlideUp>
-
-      {/* ── Active Challenges strip ─────────────────────────── */}
-      <SlideUp delay={90}>
-        <ActiveChallengesStrip />
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════════╗
-          ║  PHASE 2: PERFORMANCE RADAR + TREND (2-col)   ║
-          ╚═══════════════════════════════════════════════╝ */}
-      <SlideUp delay={90}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Suspense fallback={<PanelSkeleton />}>
-            <AcademicRadarChart />
-          </Suspense>
-          <Suspense fallback={<PanelSkeleton />}>
-            <AttendanceTrendChart />
-          </Suspense>
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════════╗
-          ║  PHASE 2: STREAK HEATMAP                      ║
-          ╚═══════════════════════════════════════════════╝ */}
-      <SlideUp delay={95}>
-        <Suspense fallback={<PanelSkeleton />}>
-          <StreakHeatmap />
-        </Suspense>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════════╗
-          ║  PHASE 2: ENGAGEMENT + RISK (2-col)           ║
-          ╚═══════════════════════════════════════════════╝ */}
-      <SlideUp delay={100}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Suspense fallback={<PanelSkeleton />}>
-            <EngagementScorePanel />
-          </Suspense>
-          <Suspense fallback={<PanelSkeleton />}>
-            <RiskAnalysisPanel />
-          </Suspense>
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  ACTIVITY TIMELINE                        ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={105}>
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-surface-3 flex items-center justify-center">
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-foreground">Activity Feed</p>
-                <p className="text-[11px] text-muted-foreground">Recent points earned</p>
-              </div>
-            </div>
-            <Button asChild variant="ghost" size="sm" className="h-8 text-[12px] gap-1 text-muted-foreground hover:text-foreground rounded-lg">
-              <Link to="/app/attendance">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="px-5 py-4 space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="h-9 w-9 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-1.5"><Skeleton className="h-3 w-28" /><Skeleton className="h-2.5 w-20" /></div>
-                  <Skeleton className="h-3 w-10" />
-                </div>
-              ))}
-            </div>
-          ) : recentPoints.length === 0 ? (
-            <div className="px-5 py-12 text-center space-y-2.5">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-surface-3 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-muted-foreground opacity-50" />
-              </div>
-              <p className="text-[13px] font-medium text-muted-foreground">No activity yet</p>
-              <p className="text-[12px] text-muted-foreground/60">Start by doing your daily check-in!</p>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Academic Intelligence" subtitle="Your performance cockpit" />
+          {intelligence.isLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-36 rounded-2xl" />
+              <Skeleton className="h-36 rounded-2xl" />
+              <Skeleton className="h-36 rounded-2xl" />
+              <Skeleton className="h-36 rounded-2xl" />
             </div>
           ) : (
-            <div className="divide-y divide-border-subtle">
-              {recentPoints.map((p, i) => <ActivityRow key={p.id} item={p} index={i} />)}
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard icon={CalendarCheck} value={intelligence.data?.attendanceConsistency ?? 0} label="Attendance" suffix="%" />
+              <MetricCard icon={Zap} value={intelligence.data?.engagementIndex ?? 0} label="Engagement" suffix="%" />
+              <MetricCard
+                icon={Brain}
+                value={Math.round(
+                  ((intelligence.data?.attendanceConsistency ?? 0) +
+                    (intelligence.data?.behaviourReliability ?? 0) +
+                    (intelligence.data?.engagementIndex ?? 0)) /
+                    3,
+                )}
+                label="Intelligence"
+              />
+              <GlassCard className="flex flex-col justify-between" hover>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Risk</p>
+                  <ShieldAlert className="h-4 w-4 text-warning" />
+                </div>
+                <p className="text-2xl font-black capitalize text-foreground">{riskLevel}</p>
+                <StatusBadge status={riskLevel === "high" ? "upcoming" : "active"}>{riskLevel}</StatusBadge>
+              </GlassCard>
             </div>
           )}
-        </div>
-      </SlideUp>
-    </div>
-  );
-};
+        </motion.section>
 
-/* ══════════════════════════════════════════════
-   SUB-COMPONENTS
-══════════════════════════════════════════════ */
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Smart Insights" subtitle="Actionable nudges" />
+          <div className="space-y-3">
+            {insightCards.map((insight, index) => (
+              <GlassCard key={`${insight.text}-${index}`} className="flex items-start gap-3" hover={false}>
+                <div className={cn(
+                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                  insight.tone === "success" && "bg-success/12 text-success",
+                  insight.tone === "warning" && "bg-warning/12 text-warning",
+                  insight.tone === "primary" && "bg-primary/12 text-primary",
+                )}>
+                  <insight.icon className="h-4 w-4" />
+                </div>
+                <p className="text-sm leading-relaxed text-foreground">{insight.text}</p>
+              </GlassCard>
+            ))}
+          </div>
+        </motion.section>
 
-function AttendanceRing({ pct, loading, size = 110 }: { pct: number; loading: boolean; size?: number }) {
-  const sw = 9;
-  const r = (size - sw) / 2;
-  const circ = 2 * Math.PI * r;
-  const filledDash = ((loading ? 0 : pct) / 100) * circ;
-  const ringColor = pct >= 75 ? "hsl(var(--success))" : pct >= 50 ? "hsl(var(--warning))" : pct > 0 ? "hsl(var(--danger))" : "hsl(var(--muted))";
-
-  return (
-    <div className="relative inline-flex items-center justify-center shrink-0">
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-surface-3 fill-none" />
-        <motion.circle
-          cx={size / 2} cy={size / 2} r={r} strokeWidth={sw}
-          fill="none" strokeLinecap="round"
-          strokeDasharray={circ}
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: circ - filledDash }}
-          transition={{ duration: 1.5, ease: "easeOut", delay: 0.35 }}
-          style={{ stroke: ringColor }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        {loading ? (
-          <Skeleton className="h-6 w-10" />
-        ) : (
-          <>
-            <span className="text-[20px] font-black text-foreground tabular-nums leading-none">{pct}%</span>
-            <span className="text-[9px] text-muted-foreground uppercase tracking-wider leading-none">Att.</span>
-            <span className="text-[10px] text-muted-foreground leading-none mt-0.5 tabular-nums">
-              {stats_display(pct)}
-            </span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function stats_display(pct: number) {
-  if (pct >= 75) return "✓ Good";
-  if (pct >= 50) return "⚠ Fair";
-  if (pct > 0) return "✗ Low";
-  return "—";
-}
-
-function HeroKpi({ label, value, suffix = "", icon, loading, color, bg }: {
-  label: string; value: number; suffix?: string;
-  icon: React.ReactNode; loading: boolean; color: string; bg: string;
-}) {
-  const counted = useMetricCountUp(loading ? 0 : value, 1000);
-  return (
-    <div className="flex flex-col items-center gap-2.5 py-3">
-      <div className={cn(
-        "h-10 w-10 rounded-xl flex items-center justify-center",
-        "transition-transform duration-150 active:scale-95",
-        bg, color,
-      )}>
-        {icon}
-      </div>
-      {loading
-        ? <Skeleton className="h-5 w-12" />
-        : <p className="text-[17px] font-black text-foreground tabular-nums leading-none">{counted}{suffix}</p>
-      }
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
-    </div>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
+          <GlassCard padding="none" className="overflow-hidden" hover={false}>
+            {secondaryQuery.isLoading ? (
+              <div className="space-y-3 p-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 rounded-xl" />
+                ))}
+              </div>
+            ) : (secondaryQuery.data?.activities.length ?? 0) === 0 ? (
+              <div className="p-6 text-center">
+                <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border-subtle">
+                {(secondaryQuery.data?.activities ?? []).map((activity, index) => (
+                  <ActivityRow key={activity.id} activity={activity} index={index} />
+                ))}
+              </div>
+            )}
+          </GlassCard>
+        </motion.section>
+      </motion.div>
+    </PageContainer>
   );
 }
 
-function QuickActionLink({ label, icon, color, bg, href }: {
-  label: string; icon: React.ReactNode; color: string; bg: string; href: string;
-}) {
+const HeroStat = memo(function HeroStat({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
   return (
-    <Link to={href} className={cn(
-      "flex flex-col items-center gap-2 p-3 rounded-xl border border-border-subtle bg-surface-1",
-      "group active:scale-95 transition-all duration-100 cursor-pointer",
-      "hover:border-border-strong hover:shadow-xs",
-    )}>
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-colors duration-150", bg, color)}>
-        {icon}
-      </div>
-      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center group-hover:text-foreground transition-colors">{label}</span>
-    </Link>
-  );
-}
-
-function QuickActionBtn({ label, icon, color, bg, onClick }: {
-  label: string; icon: React.ReactNode; color: string; bg: string; onClick: () => void;
-}) {
-  return (
-    <button onClick={onClick} className={cn(
-      "flex flex-col items-center gap-2 p-3 rounded-xl border border-border-subtle bg-surface-1 w-full",
-      "group active:scale-95 transition-all duration-100 cursor-pointer",
-      "hover:border-border-strong hover:shadow-xs",
-    )}>
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-colors duration-150", bg, color)}>
-        {icon}
-      </div>
-      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center group-hover:text-foreground transition-colors">{label}</span>
-    </button>
-  );
-}
-
-const InsightsPanel = memo(({ growth, tierProgress, attendancePct, currentStreak }: {
-  growth: any; tierProgress: { remaining: number; nextLabel: string; pct: number };
-  attendancePct: number; currentStreak: number;
-}) => {
-  const insights: Array<{ icon: React.ReactNode; text: string; tag?: string }> = [];
-
-  if (growth.trend_direction === "improving")
-    insights.push({ icon: <TrendingUp className="h-4 w-4 shrink-0 text-success" />, text: `Attendance trend is improving — keep it up!`, tag: "Improving" });
-  else if (growth.trend_direction === "declining")
-    insights.push({ icon: <TrendingDown className="h-4 w-4 shrink-0 text-danger" />, text: `Attendance is declining. Don't miss upcoming lectures`, tag: "Alert" });
-
-  if (tierProgress.remaining > 0)
-    insights.push({ icon: <Zap className="h-4 w-4 shrink-0 text-primary" />, text: `${tierProgress.remaining} more points to reach ${tierProgress.nextLabel} tier 🚀`, tag: "Goal" });
-
-  if (currentStreak > 0 && currentStreak < 7)
-    insights.push({ icon: <Flame className="h-4 w-4 shrink-0 text-warning" />, text: `${7 - currentStreak} more check-in${7 - currentStreak > 1 ? "s" : ""} to unlock the 7-day streak bonus (+20 pts)`, tag: "Streak" });
-
-  if (currentStreak >= 7)
-    insights.push({ icon: <Trophy className="h-4 w-4 shrink-0 text-premium" />, text: `🏆 ${currentStreak}-day streak! Incredible consistency — keep going!`, tag: "Milestone" });
-
-  if (attendancePct >= 90)
-    insights.push({ icon: <Star className="h-4 w-4 shrink-0 text-premium" />, text: `Outstanding attendance at ${attendancePct}% — you're in elite territory`, tag: "Elite" });
-
-  if (insights.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
-      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
-        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <div>
-          <p className="text-[14px] font-semibold text-foreground">Smart Insights</p>
-          <p className="text-[11px] text-muted-foreground">Personalised recommendations</p>
-        </div>
-      </div>
-      <div className="divide-y divide-border-subtle">
-        {insights.map((ins, i) => (
-          <FadeIn key={i} delay={i * 40}>
-            <div className="flex items-start gap-3 px-5 py-4">
-              <div className="mt-0.5 shrink-0">{ins.icon}</div>
-              <p className="text-[13px] text-muted-foreground leading-relaxed flex-1">{ins.text}</p>
-              {ins.tag && (
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 bg-surface-3 px-2 py-0.5 rounded-full">
-                  {ins.tag}
-                </span>
-              )}
-            </div>
-          </FadeIn>
-        ))}
-      </div>
+    <div className="rounded-xl bg-surface-2/70 p-3 text-center">
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xl font-black tabular-nums text-foreground">
+        {value}
+        {suffix}
+      </p>
     </div>
   );
 });
-InsightsPanel.displayName = "InsightsPanel";
 
-function GrowthCell({ label, value, icon, danger, warning }: {
-  label: string; value: string; icon?: React.ReactNode; danger?: boolean; warning?: boolean;
-}) {
-  return (
-    <div className="space-y-0.5">
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
-      <div className="flex items-center gap-1">
-        {icon}
-        <p className={cn("text-[12px] font-semibold capitalize", danger ? "text-danger" : warning ? "text-warning" : "text-foreground")}>
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ActivityRow({ item, index }: { item: RecentPoint; index: number }) {
-  const isPositive = item.points > 0;
-  const { label, icon, color } = sourceDisplay(item.source);
-  const date = new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  const time = new Date(item.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: RecentPoint; index: number }) {
+  const meta = sourceMeta(activity.source);
+  const Icon = meta.icon;
+  const isPositive = activity.points >= 0;
+  const date = new Date(activity.created_at).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
-    <FadeIn delay={index * 20}>
-      <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-surface-2 transition-colors duration-100">
-        <div className={cn(
-          "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
-          "transition-transform duration-150 group-hover:scale-110",
-          isPositive ? "bg-success/10" : "bg-danger/10",
-        )}>
-          <span className={cn(isPositive ? "text-success" : "text-danger")}>{icon}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-medium text-foreground capitalize">{label}</p>
-          {item.note && <p className="text-[11px] text-muted-foreground truncate">{item.note}</p>}
-          <p className="text-[11px] text-muted-foreground/70">{date} · {time}</p>
-        </div>
-        <motion.span
-          className={cn("text-[13px] font-bold tabular-nums shrink-0", isPositive ? "text-success" : "text-danger")}
-          initial={{ opacity: 0, x: 4 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.05 }}
-        >
-          {isPositive ? `+${item.points}` : item.points}
-        </motion.span>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+      className="flex items-center gap-3 px-4 py-3"
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-muted-foreground">
+        <Icon className="h-4 w-4" />
       </div>
-    </FadeIn>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground">{meta.label}</p>
+        <p className="truncate text-xs text-muted-foreground">{activity.note ?? date}</p>
+      </div>
+      <div className={cn("text-sm font-bold tabular-nums", isPositive ? "text-success" : "text-danger")}>
+        {isPositive ? "+" : ""}
+        {activity.points}
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground/60" />
+    </motion.div>
   );
-}
-
-export default StudentDashboard;
+});
