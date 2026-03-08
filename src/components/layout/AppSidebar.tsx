@@ -249,16 +249,11 @@ export default function AppSidebar() {
         "flex h-[52px] items-center gap-2.5 border-b border-sidebar-border shrink-0",
         collapsed ? "justify-center px-2" : "px-3.5",
       )}>
-        <div className={cn(
-          "flex items-center justify-center rounded-lg bg-primary shadow-primary shrink-0 overflow-hidden",
-          collapsed ? "h-7 w-7" : "h-7 w-7",
-        )}>
-          {branding.logo_url ? (
-            <img src={branding.logo_url} alt={branding.brand_name} className="w-5 h-5 object-contain" />
-          ) : (
-            <GraduationCap className="h-4 w-4 text-primary-foreground" />
-          )}
-        </div>
+        <img
+          src={branding.logo_url ?? BRANDING.logo}
+          alt={branding.brand_name}
+          className={cn("object-contain rounded shrink-0", collapsed ? "h-7 w-7" : "h-7 w-7")}
+        />
 
         {!collapsed && (
           <div className="min-w-0 flex-1 overflow-hidden">
