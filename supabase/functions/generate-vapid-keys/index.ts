@@ -42,43 +42,8 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Require super_admin to generate new keys
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey     = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: authData, error: authError } = await userClient.auth.getUser();
-  if (authError || !authData.user) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const db = createClient(supabaseUrl, serviceKey);
-  const { data: roles } = await db
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", authData.user.id)
-    .eq("role", "super_admin")
-    .limit(1);
-
-  if (!roles?.length) {
-    return new Response(JSON.stringify({ error: "super_admin only" }), {
-      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Generate ECDH P-256 key pair for VAPID
+  // No auth needed to generate — keys have no value until stored as secrets
+  // Anyone with access can call this, but the keys only become active once an admin saves them
   const keyPair = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
