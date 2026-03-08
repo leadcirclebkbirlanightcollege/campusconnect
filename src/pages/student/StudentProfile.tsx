@@ -284,8 +284,96 @@ export default function StudentProfile() {
     );
   }
 
+  // ── intelligence data ──
+  const intel   = useStudentIntelligence();
+  const growth  = useGrowthInsights();
+  const streakQ = useQuery({
+    queryKey: ["student", "my-streak-profile"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_my_streak");
+      return (data as any) ?? null;
+    },
+  });
+  const totalPtsQ = useQuery({
+    queryKey: ["student", "points-total-profile"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_my_points_total");
+      return Number(data ?? 0);
+    },
+  });
+  const achieveQ = useQuery({
+    queryKey: ["student", "my-achievements-profile"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_my_achievements", { p_limit: 50 });
+      return ((data as unknown as any[]) ?? []);
+    },
+  });
+
+  const tierKey  = (intel.data?.tier ?? "bronze") as keyof typeof TIER_CONFIG;
+  const tierData = TIER_CONFIG[tierKey];
+
   return (
     <div className="space-y-6">
+
+      {/* ── Performance Portfolio Banner ──────────────── */}
+      <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
+        <div className="h-1" style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--premium)))" }} />
+        <div className="p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <BarChart3 className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-foreground">Performance Portfolio</p>
+              <p className="text-[11px] text-muted-foreground">Your academic intelligence overview</p>
+            </div>
+            {tierData && (
+              <span className={cn("ml-auto inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border", tierData.color, tierData.bg, tierData.border)}>
+                {tierData.label} Tier
+              </span>
+            )}
+          </div>
+
+          {/* KPI strip */}
+          <div className="grid grid-cols-4 gap-3 mb-5">
+            {[
+              { label: "Points",       value: totalPtsQ.data?.toLocaleString() ?? "—",  icon: <Flame className="h-3.5 w-3.5" />,  color: "text-warning" },
+              { label: "Streak",       value: `${streakQ.data?.current_streak ?? 0}d`,  icon: <Trophy className="h-3.5 w-3.5" />, color: "text-premium" },
+              { label: "Achievements", value: String(achieveQ.data?.length ?? 0),        icon: <Award className="h-3.5 w-3.5" />,  color: "text-primary" },
+              { label: "30d Att.",     value: `${growth.data?.last_30_day_attendance_pct ?? 0}%`, icon: <BarChart3 className="h-3.5 w-3.5" />, color: "text-success" },
+            ].map(({ label, value, icon, color }) => (
+              <div key={label} className="rounded-xl border border-border-subtle bg-surface-2 p-3 text-center">
+                <span className={cn("flex justify-center mb-1", color)}>{icon}</span>
+                <p className="text-[14px] font-bold text-foreground tabular-nums">{value}</p>
+                <p className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Intelligence bars */}
+          {intel.data && (
+            <div className="space-y-3 mb-4">
+              <IntelligenceBar value={intel.data.attendanceConsistency} label="Attendance Consistency" />
+              <IntelligenceBar value={intel.data.behaviourReliability}  label="Behaviour Reliability" />
+              <IntelligenceBar value={intel.data.engagementIndex}       label="Engagement Index" />
+            </div>
+          )}
+
+          {/* Links */}
+          <div className="flex gap-2 flex-wrap">
+            <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+              <Link to="/app/achievements"><Award className="h-3.5 w-3.5" /> Achievements</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+              <Link to="/app/attendance"><BarChart3 className="h-3.5 w-3.5" /> Attendance</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 h-8">
+              <Link to="/app/leaderboard"><Trophy className="h-3.5 w-3.5" /> Leaderboard</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Two column: Personal + Academic */}
       <div className="grid gap-6 lg:grid-cols-[1fr,1fr]">
         {/* Personal Information */}
