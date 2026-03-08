@@ -1,0 +1,46 @@
+import * as React from "react";
+import type { LucideIcon } from "lucide-react";
+import { useMetricCountUp } from "@/components/ui/motion";
+import { cn } from "@/lib/utils";
+
+interface MetricCardProps {
+  icon: LucideIcon;
+  value: number;
+  label: string;
+  prefix?: string;
+  suffix?: string;
+  className?: string;
+}
+
+const MetricCard = React.memo(function MetricCard({
+  icon: Icon,
+  value,
+  label,
+  prefix = "",
+  suffix = "",
+  className,
+}: MetricCardProps) {
+  const animatedValue = useMetricCountUp(value, 720);
+
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border border-border-subtle bg-surface-1/90 p-4 shadow-card",
+        "transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated",
+        className,
+      )}
+    >
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+        <Icon className="h-5 w-5" />
+      </div>
+      <p className="text-[28px] font-black leading-none text-foreground tabular-nums">
+        {prefix}
+        {animatedValue}
+        {suffix}
+      </p>
+      <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+    </article>
+  );
+});
+
+export { MetricCard };
