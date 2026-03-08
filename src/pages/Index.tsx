@@ -337,7 +337,7 @@ export default function Index() {
               aria-hidden
               className="pointer-events-none absolute -bottom-7 -right-4 hidden h-24 w-24 rounded-full border border-primary/35 bg-primary/15 blur-sm md:block"
               animate={{ rotate: [0, 8, -8, 0], y: [0, -4, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
         </motion.section>
