@@ -3,16 +3,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, useMemo } from "react";
 import {
   Bell,
-  Search,
   ChevronDown,
   UserRound,
   LogOut,
-  Settings,
   CreditCard,
   BadgeCheck,
   GraduationCap,
   CheckCircle,
 } from "lucide-react";
+import PageTransition from "@/components/layout/PageTransition";
 import {
   SidebarInset,
   SidebarProvider,
