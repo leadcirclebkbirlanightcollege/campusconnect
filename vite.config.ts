@@ -28,7 +28,6 @@ export default defineConfig(({ mode }) => ({
           short_name: "Campus Connect",
           description:
             "College lecture, attendance & points management for your campus.",
-          version: "3.0.0",
           start_url: "/",
           scope: "/",
         display: "standalone",
