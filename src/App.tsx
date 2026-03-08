@@ -10,6 +10,7 @@ import NetworkHealthDot from "@/components/layout/NetworkHealthDot";
 import SwUpdateManager from "@/components/pwa/SwUpdateManager";
 import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 import PlatformModeGuard from "@/components/platform/PlatformModeGuard";
+import OneSignalManager from "@/components/notifications/OneSignalManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -95,6 +96,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <PlatformModeGuard>
+            <OneSignalManager />
             <Suspense fallback={<RouteSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />

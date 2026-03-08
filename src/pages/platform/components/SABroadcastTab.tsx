@@ -58,18 +58,44 @@ export default function SABroadcastTab() {
 
   const send = useMutation({
     mutationFn: async () => {
-      if (!form.title.trim() || !form.description.trim()) throw new Error("Title and message are required");
+      const trimmedTitle = form.title.trim();
+      const trimmedDescription = form.description.trim();
+      if (!trimmedTitle || !trimmedDescription) throw new Error("Title and message are required");
+      if (form.target === "college" && form.college_id === "all") throw new Error("Select a college target");
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
       const { error } = await supabase.from("announcements").insert({
-        title: form.title.trim(),
-        description: form.description.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
         priority: form.priority,
         target: form.target,
         created_by: user.id,
         is_pinned: form.priority === "critical",
       });
       if (error) throw error;
+
+      const targetType =
+        form.target === "all"
+          ? "all_colleges"
+          : form.target === "students"
+            ? "students_only"
+            : form.target === "admin"
+              ? "admins_only"
+              : "college";
+
+      const { error: pushError } = await supabase.functions.invoke("send-notification", {
+        body: {
+          title: trimmedTitle,
+          message: trimmedDescription,
+          kind: "announcement",
+          target_type: targetType,
+          target_value: form.target === "college" ? form.college_id : null,
+        },
+      });
+
+      if (pushError) throw pushError;
     },
     onSuccess: () => {
       toast.success("Broadcast sent successfully");
@@ -143,13 +169,30 @@ export default function SABroadcastTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-1 border-border-subtle">
-                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="all">All Colleges</SelectItem>
                     <SelectItem value="students">Students Only</SelectItem>
                     <SelectItem value="admin">Admins Only</SelectItem>
+                    <SelectItem value="college">Specific College</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {form.target === "college" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">College</Label>
+                <Select value={form.college_id} onValueChange={v => setForm(p => ({ ...p, college_id: v }))}>
+                  <SelectTrigger className="bg-background border-border-subtle text-xs h-9">
+                    <SelectValue placeholder="Select college" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-1 border-border-subtle">
+                    {colleges.map((college) => (
+                      <SelectItem key={college.id} value={college.id}>{college.college_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {form.priority === "critical" && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 flex gap-2">
@@ -161,10 +204,10 @@ export default function SABroadcastTab() {
             <Button
               className="w-full gap-2"
               onClick={() => send.mutate()}
-              disabled={send.isPending || !form.title.trim() || !form.description.trim()}
+              disabled={send.isPending || !form.title.trim() || !form.description.trim() || (form.target === "college" && form.college_id === "all")}
             >
               <Send className="w-3.5 h-3.5" />
-              {send.isPending ? "Sending…" : "Send Broadcast"}
+              {send.isPending ? "Sending…" : "Send Broadcast + Push"}
             </Button>
           </CardContent>
         </Card>

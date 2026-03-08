@@ -20,7 +20,8 @@ export default function AdminAnnouncementsTab() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
-  const [target, setTarget] = useState<"all" | "programme" | "class">("all");
+  const [target, setTarget] = useState<"all" | "class">("all");
+  const [targetClass, setTargetClass] = useState("");
   const [isPinned, setIsPinned] = useState(false);
 
   const announcementsQuery = useQuery({
@@ -40,15 +41,31 @@ export default function AdminAnnouncementsTab() {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      const trimmedTitle = title.trim();
+      const trimmedDescription = description.trim();
+      const trimmedClass = targetClass.trim();
+
       const { error } = await supabase.from("announcements").insert({
-        title: title.trim(),
-        description: description.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
         priority,
         target,
+        target_class: target === "class" ? trimmedClass : null,
         is_pinned: isPinned,
         created_by: user.id,
       });
       if (error) throw error;
+
+      const { error: pushError } = await supabase.functions.invoke("send-notification", {
+        body: {
+          title: trimmedTitle,
+          message: trimmedDescription,
+          kind: "announcement",
+          target_type: target === "class" ? "class" : "college_students",
+          target_value: target === "class" ? trimmedClass : null,
+        },
+      });
+      if (pushError) throw pushError;
     },
     onSuccess: () => {
       toast.success("Announcement created");
@@ -57,6 +74,7 @@ export default function AdminAnnouncementsTab() {
       setDescription("");
       setPriority("normal");
       setTarget("all");
+      setTargetClass("");
       setIsPinned(false);
       qc.invalidateQueries({ queryKey: ["admin", "announcements"] });
     },
@@ -149,12 +167,17 @@ export default function AdminAnnouncementsTab() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Students</SelectItem>
-                    <SelectItem value="programme">Programme</SelectItem>
-                    <SelectItem value="class">Class</SelectItem>
+                    <SelectItem value="class">Specific Class</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+            {target === "class" && (
+              <div className="space-y-2">
+                <Label>Class Name</Label>
+                <Input value={targetClass} onChange={(e) => setTargetClass(e.target.value)} placeholder="e.g. CSE-A" />
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Switch checked={isPinned} onCheckedChange={setIsPinned} />
               <Label>Pin to top</Label>
@@ -162,8 +185,8 @@ export default function AdminAnnouncementsTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate()} disabled={!title.trim() || !description.trim() || createMutation.isPending}>
-              Publish
+            <Button onClick={() => createMutation.mutate()} disabled={!title.trim() || !description.trim() || (target === "class" && !targetClass.trim()) || createMutation.isPending}>
+              Publish + Push
             </Button>
           </DialogFooter>
         </DialogContent>

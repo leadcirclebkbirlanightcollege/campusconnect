@@ -8,6 +8,9 @@ const corsHeaders = {
 type ScheduledNotificationRow = {
   id: string;
   status: "scheduled";
+  title: string;
+  body: string;
+  kind: string;
   scheduled_for: string | null;
   target_role: "admin" | "student" | null;
   target_user_id: string | null;
@@ -21,6 +24,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const oneSignalAppId = Deno.env.get("ONESIGNAL_APP_ID");
+    const oneSignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
     // ── Security: NOTIFICATION_CRON_SECRET is REQUIRED ──────────────────────
     // If the secret is not configured, reject all requests to prevent
@@ -63,7 +68,7 @@ Deno.serve(async (req) => {
 
     const { data: due, error: dueError } = await supabase
       .from("notifications")
-      .select("id,status,scheduled_for,target_role,target_user_id")
+      .select("id,status,title,body,kind,scheduled_for,target_role,target_user_id")
       .eq("status", "scheduled")
       .lte("scheduled_for", nowIso)
       .limit(50);
@@ -150,6 +155,32 @@ Deno.serve(async (req) => {
           } else {
             recipientsInserted += toInsert.length;
           }
+        }
+      }
+
+      if (userIds.length > 0 && oneSignalAppId && oneSignalApiKey) {
+        const pushTarget = n.target_user_id
+          ? { include_aliases: { external_id: [n.target_user_id] }, target_channel: "push" }
+          : { include_aliases: { external_id: userIds }, target_channel: "push" };
+
+        const pushRes = await fetch("https://api.onesignal.com/notifications?c=push", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Key ${oneSignalApiKey}`,
+          },
+          body: JSON.stringify({
+            app_id: oneSignalAppId,
+            headings: { en: n.title },
+            contents: { en: n.body },
+            data: { kind: n.kind, notification_id: n.id },
+            ...pushTarget,
+          }),
+        });
+
+        if (!pushRes.ok) {
+          const details = await pushRes.text();
+          console.error("scheduler: onesignal error", n.id, details);
         }
       }
 
