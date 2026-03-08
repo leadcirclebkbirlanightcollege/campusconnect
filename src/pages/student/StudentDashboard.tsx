@@ -146,7 +146,7 @@ const StudentDashboard = () => {
 
   // ── Secondary path: attendance counts, next lecture, recent points
   const secondaryQuery = useQuery({
-    queryKey: ["dashboard", "secondary", coreQuery.data?.name],
+    queryKey: ["dashboard", "secondary"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
