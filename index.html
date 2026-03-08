@@ -3,34 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="https://storage.googleapis.com/gpt-engineer-file-uploads/sA2DHO1NzWSjaa60UPvarZCK2uR2/uploads/1768822844653-pwa-512.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>Campus Connect - College Lecture &amp; Attendance Management</title>
     <meta name="description" content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community.">
     <meta name="author" content="Campus Connect" />
 
+    <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#0b0f17" />
+    <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Campus Connect" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/pwa-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/pwa-512.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512.png" />
 
-    
-    
+    <!-- Prevent FOUC on iOS safe-area -->
+    <style>
+      body { background-color: #0b0f17; }
+      html.light body { background-color: #ffffff; }
+    </style>
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:title" content="Campus Connect - College Lecture &amp; Attendance Management" />
+    <meta property="og:description" content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community." />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@CampusConnect" />
+    <meta name="twitter:title" content="Campus Connect - College Lecture &amp; Attendance Management" />
+    <meta name="twitter:description" content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community." />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <meta property="og:title" content="Campus Connect - College Lecture &amp; Attendance Management">
-  <meta name="twitter:title" content="Campus Connect - College Lecture &amp; Attendance Management">
-  <meta property="og:description" content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community.">
-  <meta name="twitter:description" content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community.">
-</head>
+  </head>
 
   <body>
     <div id="root"></div>
