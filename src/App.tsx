@@ -17,7 +17,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWebVitals } from "@/hooks/use-web-vitals";
-import { useOneSignal } from "@/hooks/use-onesignal";
 
 /* ── Eager (critical path) ───────────────────────────────────── */
 import Index from "./pages/Index";
