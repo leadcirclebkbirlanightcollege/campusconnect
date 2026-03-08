@@ -143,9 +143,10 @@ export default function SABroadcastTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-1 border-border-subtle">
-                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="all">All Colleges</SelectItem>
                     <SelectItem value="students">Students Only</SelectItem>
                     <SelectItem value="admin">Admins Only</SelectItem>
+                    <SelectItem value="college">Specific College</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
