@@ -19,6 +19,7 @@ type TargetType =
   | "students_only"
   | "college_students"
   | "class"
+  | "programme"
   | "user";
 
 function json(status: number, body: Record<string, unknown>) {
