@@ -86,8 +86,17 @@ function ChallengeForm({
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, target_value: initial.target_value, bonus_points: initial.bonus_points }
-      : { challenge_type: "attendance", target_value: 5, bonus_points: 50, is_active: true },
+      ? {
+          title:          initial.title,
+          description:    initial.description ?? "",
+          challenge_type: initial.challenge_type as "attendance" | "checkin" | "points" | "streak",
+          target_value:   initial.target_value,
+          bonus_points:   initial.bonus_points,
+          start_date:     initial.start_date,
+          end_date:       initial.end_date,
+          is_active:      initial.is_active,
+        }
+      : { challenge_type: "attendance" as const, target_value: 5, bonus_points: 50, is_active: true },
   });
 
   const challengeType = watch("challenge_type");

@@ -65,7 +65,8 @@ function useGoalProgress(userId: string | null) {
         supabase.from("student_intelligence").select("tier").eq("user_id", userId!).single(),
       ]);
 
-      const tierIndex = ["bronze", "silver", "gold", "elite"].indexOf(intel?.data?.tier ?? "bronze") + 1;
+      const intelTier = (intel?.data as { tier?: string } | null)?.tier ?? "bronze";
+      const tierIndex = ["bronze", "silver", "gold", "elite"].indexOf(intelTier) + 1;
       return {
         attendance_pct: (insights as any)?.last_30_day_attendance_pct ?? 0,
         streak_days:    (streak as any)?.current_streak ?? 0,
