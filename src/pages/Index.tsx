@@ -214,7 +214,7 @@ export default function Index() {
         animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.62, 0.45] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.15)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.15)_1px,transparent_1px)] bg-[size:30px_30px] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.1)_1px,transparent_1px)] bg-[size:44px_44px] opacity-20" />
 
       <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/72 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-6xl">
