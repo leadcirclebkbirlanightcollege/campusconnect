@@ -1,6 +1,6 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import {
   Bell,
   ChevronDown,
