@@ -6,6 +6,7 @@ import KpiCards from "./KpiCards";
 import LiveOperationsPanel from "./LiveOperationsPanel";
 import QuickActionsGrid from "./QuickActionsGrid";
 import ProgrammeHealthSection from "./ProgrammeHealthSection";
+import ProgrammeAnalyticsPanel from "./ProgrammeAnalyticsPanel";
 import AdminAnalyticsChart from "./AdminAnalyticsChart";
 import RiskMonitorPanel from "./RiskMonitorPanel";
 import GamificationStatsPanel from "./GamificationStatsPanel";
