@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Camera, Save, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles, BarChart3, Award, Trophy, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
+import PwaStatusCard from "@/components/pwa/PwaStatusCard";
 import { cn } from "@/lib/utils";
 
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
