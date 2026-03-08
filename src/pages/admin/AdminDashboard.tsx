@@ -36,8 +36,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-/* ── Tab groups for a cleaner sidebar-style navigation ── */
-const TAB_GROUPS = [
+/* ── Tab item type ── */
+type TabItem = { value: string; label: string; icon: React.ElementType };
+type TabGroup = { group: string; items: TabItem[] };
+
+/* ── Tab groups for a cleaner grouped navigation ── */
+const TAB_GROUPS: TabGroup[] = [
   {
     group: "Command",
     items: [
@@ -84,9 +88,9 @@ const TAB_GROUPS = [
       { value: "admin_profile",  label: "My Profile",    icon: Shield },
     ],
   },
-] as const;
+];
 
-const ALL_TABS = TAB_GROUPS.flatMap((g) => g.items);
+const ALL_TABS: TabItem[] = TAB_GROUPS.flatMap((g) => g.items);
 
 const AdminDashboard = () => {
   const location = useLocation();
