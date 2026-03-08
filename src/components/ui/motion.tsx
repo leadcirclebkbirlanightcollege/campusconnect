@@ -29,7 +29,7 @@ export function FadeIn({
   children,
   className,
   delay = 0,
-  duration = 150,
+  duration = MOTION_MS.medium,
   as: Tag = "div",
 }: FadeInProps) {
   return (
