@@ -264,6 +264,13 @@ const StudentDashboard = () => {
       </SlideUp>
 
       {/* ╔═══════════════════════════════════════════╗
+          ║  SMART INSIGHTS STRIP                     ║
+          ╚═══════════════════════════════════════════╝ */}
+      <SlideUp delay={48}>
+        <SmartInsightsStrip />
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════╗
           ║  INTELLIGENCE SCORE & GOAL TRACKER        ║
           ╚═══════════════════════════════════════════╝ */}
       <SlideUp delay={55}>
