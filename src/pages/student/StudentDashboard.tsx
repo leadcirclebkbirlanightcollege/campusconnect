@@ -201,6 +201,11 @@ const StudentDashboard = () => {
         </div>
       </FadeIn>
 
+      {/* ── DAILY CHECK-IN ───────────────────────────────────────── */}
+      <SlideUp delay={30}>
+        <DailyCheckinCard />
+      </SlideUp>
+
       {/* ── LIVE ACTION ZONE ─────────────────────────────────────── */}
       {liveNow ? (
         <SlideUp delay={40}>
