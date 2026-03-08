@@ -563,6 +563,9 @@ export default function StudentProfile() {
         </Card>
       </div>
 
+      {/* PWA Status */}
+      <PwaStatusCard />
+
       {/* Platform Updates */}
       <Card>
         <CardContent className="py-3 flex items-center justify-between">
