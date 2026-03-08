@@ -21,7 +21,25 @@ export async function initializeOneSignal(): Promise<boolean> {
 
     await OneSignal.init({
       appId: ONE_SIGNAL_APP_ID,
-      notifyButton: { enable: true },
+      notifyButton: {
+        enable: true,
+        prenotify: true,
+        showCredit: false,
+        text: {
+          "tip.state.unsubscribed": "Subscribe to notifications",
+          "tip.state.subscribed": "You're subscribed",
+          "tip.state.blocked": "Enable browser notifications",
+          "message.prenotify": "Click to stay updated",
+          "message.action.subscribed": "Subscribed",
+          "message.action.resubscribed": "Resubscribed",
+          "message.action.unsubscribed": "Unsubscribed",
+          "dialog.main.title": "Manage notifications",
+          "dialog.main.button.subscribe": "Subscribe",
+          "dialog.main.button.unsubscribe": "Unsubscribe",
+          "dialog.blocked.title": "Enable Notifications",
+          "dialog.blocked.message": "Unblock notifications in your browser settings",
+        },
+      },
       autoResubscribe: true,
       serviceWorkerPath: "OneSignalSDKWorker.js",
       serviceWorkerParam: { scope: "/" },
