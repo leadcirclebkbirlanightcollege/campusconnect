@@ -6,11 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
 import {
   Building2, Users, BookOpen, CheckSquare, Coins,
   BarChart3, ShieldCheck, LogOut, Activity, Globe,
-  UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
+  UserCog, Radio, Trophy, Settings2, Shield, TrendingUp, History, Sliders,
 } from "lucide-react";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
 import CollegeSwitcher from "./components/CollegeSwitcher";
@@ -21,6 +20,10 @@ import SAAchievementsTab from "./components/SAAchievementsTab";
 import SAPlatformModeTab from "./components/SAPlatformModeTab";
 import SAAnalyticsTab from "./components/SAAnalyticsTab";
 import SASecurityTab from "./components/SASecurityTab";
+import SABroadcastTab from "./components/SABroadcastTab";
+import SAActivityLogsTab from "./components/SAActivityLogsTab";
+import SAPlatformSettingsTab from "./components/SAPlatformSettingsTab";
+import SAGlobalSearch from "./components/SAGlobalSearch";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -92,16 +95,19 @@ function LiveCount() {
 
 // ── Tab Nav ─────────────────────────────────────────────────────────────────
 const TABS = [
-  { value: "overview",   icon: BarChart3,   label: "Overview" },
-  { value: "analytics",  icon: TrendingUp,  label: "Analytics" },
-  { value: "colleges",   icon: Building2,   label: "Colleges" },
-  { value: "admins",     icon: ShieldCheck, label: "Admins" },
-  { value: "students",   icon: Users,       label: "Students" },
-  { value: "lectures",   icon: BookOpen,    label: "Lectures" },
-  { value: "achievements",icon: Trophy,     label: "Achievements" },
-  { value: "platform",   icon: Settings2,   label: "Platform" },
-  { value: "security",   icon: Shield,      label: "Security" },
-  { value: "health",     icon: Activity,    label: "Health" },
+  { value: "overview",       icon: BarChart3,   label: "Overview" },
+  { value: "analytics",      icon: TrendingUp,  label: "Analytics" },
+  { value: "colleges",       icon: Building2,   label: "Colleges" },
+  { value: "admins",         icon: ShieldCheck, label: "Admins" },
+  { value: "students",       icon: Users,       label: "Students" },
+  { value: "lectures",       icon: BookOpen,    label: "Lectures" },
+  { value: "achievements",   icon: Trophy,      label: "Achievements" },
+  { value: "broadcast",      icon: Radio,       label: "Broadcast" },
+  { value: "activity",       icon: History,     label: "Activity Logs" },
+  { value: "settings",       icon: Sliders,     label: "Settings" },
+  { value: "platform",       icon: Settings2,   label: "Platform Mode" },
+  { value: "security",       icon: Shield,      label: "Security" },
+  { value: "health",         icon: Activity,    label: "Health" },
 ] as const;
 
 // ── Inner Dashboard (needs CollegeContext) ───────────────────────────────────
@@ -125,8 +131,8 @@ function DashboardInner() {
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
       <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 shrink-0">
             <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-4 h-4 text-primary" />
             </div>
@@ -136,20 +142,20 @@ function DashboardInner() {
             </div>
           </div>
 
-          {/* College Switcher — center */}
-          <div className="flex-1 flex justify-center">
-            <CollegeSwitcher />
+          {/* Global search — center */}
+          <div className="flex-1 flex justify-center px-2">
+            <SAGlobalSearch />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* College Switcher + actions — right */}
+          <div className="flex items-center gap-2 shrink-0">
+            <CollegeSwitcher />
             <Button
               variant="ghost" size="sm"
-              className="gap-1.5 text-xs text-muted-foreground hidden sm:flex"
+              className="gap-1.5 text-xs text-muted-foreground hidden lg:flex"
               onClick={async () => {
                 const { data } = await supabase.auth.getSession();
-                if (data.session) {
-                  window.location.href = "/app/admin/dashboard";
-                }
+                if (data.session) window.location.href = "/app/admin/dashboard";
               }}
             >
               <UserCog className="w-3.5 h-3.5" />
@@ -161,7 +167,7 @@ function DashboardInner() {
               onClick={async () => { await supabase.auth.signOut(); window.location.href = "/auth"; }}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden sm:inline text-xs">Sign Out</span>
             </Button>
           </div>
         </div>
@@ -183,8 +189,8 @@ function DashboardInner() {
 
         <Tabs value={tab} onValueChange={setTab}>
           {/* Scrollable tab list */}
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="bg-surface-2 border border-border-subtle h-auto p-1 flex w-max min-w-full sm:w-auto sm:flex-wrap gap-0">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            <TabsList className="bg-surface-2 border border-border-subtle h-auto p-1 flex w-max gap-0">
               {TABS.map(({ value, icon: Icon, label }) => (
                 <TabsTrigger
                   key={value}
@@ -283,6 +289,21 @@ function DashboardInner() {
             <SAAchievementsTab />
           </TabsContent>
 
+          {/* ── BROADCAST ── */}
+          <TabsContent value="broadcast" className="mt-6">
+            <SABroadcastTab />
+          </TabsContent>
+
+          {/* ── ACTIVITY LOGS ── */}
+          <TabsContent value="activity" className="mt-6">
+            <SAActivityLogsTab />
+          </TabsContent>
+
+          {/* ── PLATFORM SETTINGS ── */}
+          <TabsContent value="settings" className="mt-6">
+            <SAPlatformSettingsTab />
+          </TabsContent>
+
           {/* ── PLATFORM MODE ── */}
           <TabsContent value="platform" className="mt-6">
             <SAPlatformModeTab />
@@ -298,7 +319,7 @@ function DashboardInner() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-base font-semibold text-foreground">System Health</h2>
-                <p className="text-xs text-muted-foreground">Real-time platform diagnostics</p>
+                <p className="text-xs text-muted-foreground">Real-time platform diagnostics — auto-refreshes every 30s</p>
               </div>
               <SystemHealthPanel />
             </div>
