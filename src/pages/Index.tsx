@@ -105,9 +105,9 @@ function NeonFrame({ children, className }: { children: React.ReactNode; classNa
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[22px] border border-primary/30 bg-surface-1/80",
-        "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_15%_15%,hsl(var(--primary)/0.22),transparent_45%)]",
-        "after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(120deg,transparent_18%,hsl(var(--primary)/0.14)_50%,transparent_82%)]",
+        "relative overflow-hidden rounded-[22px] border border-border-subtle bg-surface-1/90",
+        "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_12%_12%,hsl(var(--primary)/0.14),transparent_46%)]",
+        "after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(140deg,transparent_15%,hsl(var(--primary)/0.08)_50%,transparent_85%)]",
         className,
       )}
     >
@@ -207,14 +207,14 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.24),transparent_42%),radial-gradient(circle_at_100%_35%,hsl(var(--primary)/0.16),transparent_38%),radial-gradient(circle_at_0%_55%,hsl(var(--primary)/0.11),transparent_34%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.16),transparent_44%),radial-gradient(circle_at_100%_35%,hsl(var(--primary)/0.1),transparent_40%),radial-gradient(circle_at_0%_55%,hsl(var(--primary)/0.08),transparent_36%)]" />
       <motion.div
         aria-hidden
-        className="pointer-events-none fixed left-1/2 top-[-120px] -z-10 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl"
-        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none fixed left-1/2 top-[-120px] -z-10 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.62, 0.45] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.15)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.15)_1px,transparent_1px)] bg-[size:30px_30px] opacity-35" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.1)_1px,transparent_1px)] bg-[size:44px_44px] opacity-20" />
 
       <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/72 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-6xl">
@@ -244,7 +244,7 @@ export default function Index() {
               </Button>
             </Link>
             <Link to="/auth" aria-label="Get started">
-              <Button size="sm" className="h-12 px-4 text-xs shadow-glow">
+              <Button size="sm" className="h-12 px-4 text-xs">
                 Get Started
               </Button>
             </Link>
@@ -260,22 +260,21 @@ export default function Index() {
           className="grid gap-4 md:grid-cols-[1.05fr_0.95fr] md:items-center"
         >
           <motion.div variants={ENTER} className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/12 px-3 py-1 text-[11px] text-primary-foreground/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-glow" />
-              Cyber-neon campus operations
+            <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1/90 px-3 py-1 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Unified campus operations
             </div>
 
             <h1 className="text-[36px] font-black leading-[0.98] tracking-[-0.04em] text-foreground md:text-[56px]">
-              Your Campus.
+              Modern Campus
               <br />
-              <span className="bg-[linear-gradient(92deg,hsl(var(--foreground)),hsl(var(--primary))_50%,hsl(var(--foreground)))] bg-clip-text text-transparent">
-                Fully Synced.
+              <span className="bg-[linear-gradient(92deg,hsl(var(--foreground)),hsl(var(--primary))_60%)] bg-clip-text text-transparent">
+                Intelligence.
               </span>
             </h1>
 
             <p className="max-w-[46ch] text-sm leading-relaxed text-muted-foreground md:text-base">
-              Manage lectures, attendance, achievements, and campus life in one intelligent platform built for speed,
-              clarity, and momentum.
+              Campus Connect unifies lectures, attendance, engagement, and communication in one clean, fast, mobile-first experience.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -336,9 +335,9 @@ export default function Index() {
 
             <motion.div
               aria-hidden
-              className="pointer-events-none absolute -bottom-7 -right-4 hidden h-24 w-24 rounded-full border border-primary/35 bg-primary/15 blur-sm md:block"
-              animate={{ rotate: [0, 8, -8, 0], y: [0, -4, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute -bottom-7 -right-4 hidden h-20 w-20 rounded-full border border-border-subtle bg-primary/10 blur-sm md:block"
+              animate={{ rotate: [0, 6, -6, 0], y: [0, -3, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
         </motion.section>
@@ -354,7 +353,7 @@ export default function Index() {
           <div className="space-y-3">
             {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
               <motion.div key={title} variants={ENTER}>
-                <GlassCard className="flex items-start gap-3 border-primary/20" padding="lg">
+                <GlassCard className="flex items-start gap-3 border-border-subtle" padding="lg">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/12 text-primary shadow-glow">
                     <Icon className="h-5 w-5" />
                   </div>
