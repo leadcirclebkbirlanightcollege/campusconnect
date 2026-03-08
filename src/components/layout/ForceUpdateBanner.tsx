@@ -168,7 +168,7 @@ export default function ForceUpdateBanner() {
             Update Available
           </h2>
           <p className="text-sm text-muted-foreground text-center max-w-xs mb-1 px-6">
-            {payload.message ?? `${BRANDING.appName} has been updated to a new version.`}
+            {payload.message ?? `${BRANDING.name} has been updated to a new version.`}
           </p>
           <p className="text-xs text-muted-foreground/60 mb-6">
             v{payload.version || APP_VERSION}
