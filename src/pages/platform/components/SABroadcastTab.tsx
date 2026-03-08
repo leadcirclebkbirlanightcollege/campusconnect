@@ -204,7 +204,7 @@ export default function SABroadcastTab() {
             <Button
               className="w-full gap-2"
               onClick={() => send.mutate()}
-              disabled={send.isPending || !form.title.trim() || !form.description.trim()}
+              disabled={send.isPending || !form.title.trim() || !form.description.trim() || (form.target === "college" && form.college_id === "all")}
             >
               <Send className="w-3.5 h-3.5" />
               {send.isPending ? "Sending…" : "Send Broadcast + Push"}
