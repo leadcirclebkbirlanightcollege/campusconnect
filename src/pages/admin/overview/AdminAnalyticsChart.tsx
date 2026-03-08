@@ -91,7 +91,7 @@ export default function AdminAnalyticsChart() {
   const weekly = useLast4WeeksLectures();
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       {/* 7-day attendance trend */}
       <div className="rounded-2xl border border-border-subtle bg-surface-1 p-5 shadow-xs dashboard-panel">
         <div className="flex items-center gap-2.5 mb-5">
