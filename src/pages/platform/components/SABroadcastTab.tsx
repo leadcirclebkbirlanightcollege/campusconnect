@@ -152,6 +152,22 @@ export default function SABroadcastTab() {
               </div>
             </div>
 
+            {form.target === "college" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">College</Label>
+                <Select value={form.college_id} onValueChange={v => setForm(p => ({ ...p, college_id: v }))}>
+                  <SelectTrigger className="bg-background border-border-subtle text-xs h-9">
+                    <SelectValue placeholder="Select college" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-1 border-border-subtle">
+                    {colleges.map((college) => (
+                      <SelectItem key={college.id} value={college.id}>{college.college_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {form.priority === "critical" && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 flex gap-2">
                 <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
