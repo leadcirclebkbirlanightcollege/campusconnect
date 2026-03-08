@@ -79,6 +79,21 @@ const Auth = () => {
   const [signupStudentId, setSignupStudentId] = useState("");
   const [signupDepartment, setSignupDepartment] = useState("");
   const [signupClass, setSignupClass] = useState("");
+  const [signupCollegeId, setSignupCollegeId] = useState("");
+
+  // Load active colleges for signup dropdown
+  const { data: colleges = [] } = useQuery({
+    queryKey: ["auth", "colleges"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id,college_name")
+        .eq("is_active", true)
+        .order("college_name");
+      return data ?? [];
+    },
+    staleTime: 300_000,
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
