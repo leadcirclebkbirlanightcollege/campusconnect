@@ -94,7 +94,7 @@ export default function SAPlatformSettingsTab() {
     mutationFn: async ({ key, value }: { key: string; value: unknown }) => {
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase.from("platform_settings").upsert(
-        { key, value, updated_by: user?.id, updated_at: new Date().toISOString() },
+        [{ key, value: value as import("@/integrations/supabase/types").Json, updated_by: user?.id, updated_at: new Date().toISOString() }],
         { onConflict: "key" }
       );
       if (error) throw error;
