@@ -248,9 +248,9 @@ export default function Leaderboard() {
   const weeklyQuery = useQuery({
     queryKey: ["leaderboard", "weekly", visibleCount],
     queryFn: async (): Promise<LeaderboardRow[]> => {
-      const { data, error } = await supabase.rpc("get_weekly_leaderboard" as never, {
+      const { data, error } = await supabase.rpc("get_weekly_leaderboard" as any, {
         p_limit: visibleCount,
-      });
+      } as any);
       if (error) throw error;
       return ((data ?? []) as WeeklyRow[]).map((row) => ({
         user_id: row.user_id,
