@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
 import SmartInsightsStrip from "@/components/student/SmartInsightsStrip";
-import {
-  Flame, Zap, TrendingUp, TrendingDown, Minus,
+import { Flame, Zap, TrendingUp, TrendingDown, Minus,
   Clock, CheckCircle2, ChevronRight, BookOpen,
   Trophy, Shield, Target, BarChart3, Star, Activity,
-  CalendarCheck, Award, Sparkles,
+  CalendarCheck, Award, Sparkles, ArrowRight,
 } from "lucide-react";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
