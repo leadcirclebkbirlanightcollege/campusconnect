@@ -172,6 +172,12 @@ export default function AdminAnnouncementsTab() {
                 </Select>
               </div>
             </div>
+            {target === "class" && (
+              <div className="space-y-2">
+                <Label>Class Name</Label>
+                <Input value={targetClass} onChange={(e) => setTargetClass(e.target.value)} placeholder="e.g. CSE-A" />
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Switch checked={isPinned} onCheckedChange={setIsPinned} />
               <Label>Pin to top</Label>
