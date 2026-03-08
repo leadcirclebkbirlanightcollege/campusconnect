@@ -267,9 +267,7 @@ const Auth = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
         {/* Mobile brand */}
         <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={branding.logo_url ?? BRANDING.logo} alt={branding.brand_name} className="h-8 w-8 object-contain" />
           <span className="text-[16px] font-bold text-foreground">{branding.brand_name}</span>
         </div>
 

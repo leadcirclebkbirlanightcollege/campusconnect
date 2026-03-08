@@ -8,9 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, Users, BookOpen, CheckSquare, Coins,
-  BarChart3, ShieldCheck, LogOut, Activity,
+  BarChart3, ShieldCheck, LogOut, Activity, Globe,
   UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
-  History, Sliders, Flame,
+  History, Sliders, AlertTriangle, Flame, Zap,
   ArrowUpRight, Plus,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
