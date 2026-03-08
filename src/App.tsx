@@ -137,9 +137,10 @@ const App = () => {
                   <Route path="announcements"  element={<StudentAnnouncementsFeed />} />
                   <Route path="events"         element={<StudentEventsList />} />
                   <Route path="polls"          element={<StudentPollsList />} />
-                  <Route path="daily"          element={<StudentDailyContent />} />
-                <Route path="achievements"   element={<StudentAchievements />} />
-                  <Route path="install"         element={<PwaInstallPage />} />
+                  <Route path="daily"              element={<StudentDailyContent />} />
+                  <Route path="achievements"      element={<StudentAchievements />} />
+                  <Route path="settings/notifications" element={<NotificationSettings />} />
+                  <Route path="install"            element={<PwaInstallPage />} />
 
                   <Route
                     path="admin/dashboard"
