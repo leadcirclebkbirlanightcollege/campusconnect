@@ -12,7 +12,7 @@ export const queryClient = new QueryClient({
       },
       retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 8000),
       refetchOnWindowFocus: false,
-      refetchOnMount: true,
+      refetchOnMount: false,
       refetchOnReconnect: true,
       staleTime: STALE_TIME.attendance,
       gcTime: GC_TIME.medium,
