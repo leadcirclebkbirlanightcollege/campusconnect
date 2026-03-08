@@ -396,6 +396,8 @@ export default function AppLayout() {
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
       {/* Floating feedback button — visible for all authenticated users */}
       <FeedbackButton />
+      {/* Force update overlay — listens to platform_settings realtime */}
+      <ForceUpdateBanner />
     </SidebarProvider>
     </>
   );
