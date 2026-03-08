@@ -15,6 +15,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWebVitals } from "@/hooks/use-web-vitals";
 
 /* ── Eager (critical path) ───────────────────────────────────── */
 import Index from "./pages/Index";
