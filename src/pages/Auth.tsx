@@ -97,10 +97,14 @@ const Auth = () => {
     } catch {
       navigate("/app/dashboard", { replace: true });
     }
-    // Fire-and-forget retention
+    // Fire-and-forget: log login activity + retention
     setTimeout(() => {
+      supabase.from("login_activity").insert({
+        user_id: userId,
+        user_agent: navigator.userAgent.slice(0, 255),
+      }).then(() => {}).catch(() => {});
       supabase.functions.invoke("retention-on-login", { body: {} }).catch(() => {});
-    }, 2000);
+    }, 1500);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
