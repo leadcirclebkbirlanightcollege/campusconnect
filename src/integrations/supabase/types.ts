@@ -314,6 +314,59 @@ export type Database = {
           },
         ]
       }
+      challenges: {
+        Row: {
+          bonus_points: number
+          challenge_type: string
+          college_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          start_date: string
+          target_value: number
+          title: string
+        }
+        Insert: {
+          bonus_points?: number
+          challenge_type?: string
+          college_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          start_date: string
+          target_value?: number
+          title: string
+        }
+        Update: {
+          bonus_points?: number
+          challenge_type?: string
+          college_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          target_value?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           college_name: string
@@ -1173,6 +1226,42 @@ export type Database = {
           id?: string
           reason?: string | null
           resolved_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_goals: {
+        Row: {
+          achieved_at: string | null
+          created_at: string
+          deadline: string | null
+          goal_type: string
+          id: string
+          status: string
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          goal_type: string
+          id?: string
+          status?: string
+          target_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          goal_type?: string
+          id?: string
+          status?: string
+          target_value?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
