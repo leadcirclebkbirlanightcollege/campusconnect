@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ElementType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BookOpen, Megaphone, Trophy, AlertTriangle, Settings2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
