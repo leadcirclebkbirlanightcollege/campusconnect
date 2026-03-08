@@ -2,7 +2,9 @@ import * as React from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-type GlowButtonProps = HTMLMotionProps<"button">;
+type GlowButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
+  children?: React.ReactNode;
+};
 
 const GlowButton = React.memo(
   React.forwardRef<HTMLButtonElement, GlowButtonProps>(({ className, children, ...props }, ref) => {
