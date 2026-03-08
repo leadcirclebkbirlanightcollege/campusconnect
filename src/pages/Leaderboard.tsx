@@ -271,6 +271,14 @@ export default function Leaderboard() {
   const isLoading = allTimeQuery.isLoading || weeklyQuery.isLoading || meQuery.isLoading;
   const myId = meQuery.data?.id;
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      meQuery.refetch(),
+      allTimeQuery.refetch(),
+      weeklyQuery.refetch(),
+    ]);
+  }, [allTimeQuery, meQuery, weeklyQuery]);
+
   const movementMap = useMemo(() => {
     const compareRankByUser = new Map(compareRows.map((row) => [row.user_id, row.rank]));
     return new Map(

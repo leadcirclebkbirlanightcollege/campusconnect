@@ -168,6 +168,14 @@ export default function StudentAttendanceHistory() {
     [historyQuery.data],
   );
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      totalsQuery.refetch(),
+      historyQuery.refetch(),
+      growth.refetch(),
+    ]);
+  }, [growth, historyQuery, totalsQuery]);
+
   const totals = totalsQuery.data;
   const isInitialLoading =
     userQuery.isLoading ||

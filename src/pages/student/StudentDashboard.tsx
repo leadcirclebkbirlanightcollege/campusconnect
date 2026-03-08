@@ -187,6 +187,15 @@ export default function StudentDashboard() {
     refetchOnWindowFocus: false,
   });
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      coreQuery.refetch(),
+      secondaryQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ["student", "growth-insights"] }),
+      queryClient.invalidateQueries({ queryKey: ["student", "intelligence"] }),
+    ]);
+  }, [coreQuery, queryClient, secondaryQuery]);
+
   useEffect(() => {
     if (!coreQuery.data) return;
 

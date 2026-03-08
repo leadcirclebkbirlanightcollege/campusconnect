@@ -168,6 +168,16 @@ export default function LecturesList() {
     return Math.round((attended / historyRows.length) * 100);
   }, [historyRows]);
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      liveLectureQuery.refetch(),
+      growthQuery.refetch(),
+      programmeFilterQuery.refetch(),
+      upcomingQuery.refetch(),
+      historyQuery.refetch(),
+    ]);
+  }, [growthQuery, historyQuery, liveLectureQuery, programmeFilterQuery, upcomingQuery]);
+
   const recentMissed = historyRows[0]?.attendance_status === "missed";
   const trendDirection = (growthQuery.data?.trend_direction ?? "stable") as
     | "improving"
