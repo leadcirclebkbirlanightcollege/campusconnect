@@ -108,10 +108,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    target: "es2020",
+    cssMinify: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-react":    ["react", "react-dom", "react-router-dom"],
           "vendor-ui": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",
@@ -120,15 +122,20 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-popover",
             "@radix-ui/react-toast",
             "@radix-ui/react-tooltip",
+            "@radix-ui/react-scroll-area",
+            "@radix-ui/react-separator",
           ],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-charts": ["recharts"],
+          "vendor-query":    ["@tanstack/react-query"],
+          "vendor-charts":   ["recharts"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-          "vendor-motion": ["framer-motion"],
+          "vendor-forms":    ["react-hook-form", "@hookform/resolvers", "zod"],
+          "vendor-motion":   ["framer-motion"],
+          "vendor-scanner":  ["@zxing/browser", "@zxing/library"],
+          "vendor-qr":       ["qrcode.react"],
         },
       },
     },
-    chunkSizeWarningLimit: 1000,
+    // Warn only if a chunk exceeds 1.2 MiB (post-split chunks should be ~200-400 KB each)
+    chunkSizeWarningLimit: 1200,
   },
 }));
