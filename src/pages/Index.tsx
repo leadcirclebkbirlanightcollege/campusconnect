@@ -23,24 +23,7 @@ import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ActionTile } from "@/components/ui/ActionTile";
 import { cn } from "@/lib/utils";
-
-const ENTER = {
-  hidden: { opacity: 0, y: 14, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-  },
-};
-
-const STAGGER = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.07,
-    },
-  },
-};
+import heroImage from "@/assets/landing-hero-modern.jpg";
 
 const HIGHLIGHTS = [
   {
@@ -95,23 +78,8 @@ const WORKFLOW = [
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/80">{eyebrow}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">{eyebrow}</p>
       <h2 className="text-xl font-black tracking-tight text-foreground">{title}</h2>
-    </div>
-  );
-}
-
-function NeonFrame({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[22px] border border-border-subtle bg-surface-1/90",
-        "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_12%_12%,hsl(var(--primary)/0.14),transparent_46%)]",
-        "after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(140deg,transparent_15%,hsl(var(--primary)/0.08)_50%,transparent_85%)]",
-        className,
-      )}
-    >
-      <div className="relative">{children}</div>
     </div>
   );
 }
@@ -119,50 +87,39 @@ function NeonFrame({ children, className }: { children: React.ReactNode; classNa
 function PreviewCard({
   title,
   subtitle,
-  accentClass,
   statA,
   statB,
 }: {
   title: string;
   subtitle: string;
-  accentClass: string;
   statA: string;
   statB: string;
 }) {
   return (
     <article className="min-w-[300px] snap-start">
-      <NeonFrame className="p-4">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+      <GlassCard className="overflow-hidden" padding="none" hover>
+        <div className="relative h-32">
+          <img src={heroImage} alt="Campus Connect interface preview" className="h-full w-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background)/0.92),hsl(var(--background)/0.2))]" />
+          <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <p className="text-[10px] text-muted-foreground">{subtitle}</p>
+              <h3 className="text-xs font-semibold text-foreground">{title}</h3>
             </div>
-            <span className={cn("h-2.5 w-2.5 rounded-full shadow-glow", accentClass)} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-              <p className="text-[11px] text-muted-foreground">Metric</p>
-              <p className="text-lg font-black text-foreground">{statA}</p>
-            </div>
-            <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-              <p className="text-[11px] text-muted-foreground">Status</p>
-              <p className="text-lg font-black text-foreground">{statB}</p>
-            </div>
-          </div>
-
-          <div className="h-2 rounded-full bg-surface-3">
-            <motion.div
-              initial={{ width: "0%" }}
-              whileInView={{ width: "72%" }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="h-2 rounded-full bg-primary"
-            />
+            <span className="rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">Live</span>
           </div>
         </div>
-      </NeonFrame>
+        <div className="grid grid-cols-2 gap-2 p-3">
+          <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
+            <p className="text-[11px] text-muted-foreground">Metric</p>
+            <p className="text-lg font-black text-foreground">{statA}</p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
+            <p className="text-[11px] text-muted-foreground">Status</p>
+            <p className="text-lg font-black text-foreground">{statB}</p>
+          </div>
+        </div>
+      </GlassCard>
     </article>
   );
 }
@@ -207,26 +164,15 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.16),transparent_44%),radial-gradient(circle_at_100%_35%,hsl(var(--primary)/0.1),transparent_40%),radial-gradient(circle_at_0%_55%,hsl(var(--primary)/0.08),transparent_36%)]" />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none fixed left-1/2 top-[-120px] -z-10 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
-        animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.62, 0.45] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.1)_1px,transparent_1px)] bg-[size:44px_44px] opacity-20" />
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--primary)/0.16),transparent_36%),radial-gradient(circle_at_90%_20%,hsl(var(--primary)/0.1),transparent_38%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.08)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.08)_1px,transparent_1px)] bg-[size:42px_42px] opacity-20" />
 
-      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/72 backdrop-blur-xl safe-area-top">
+      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/80 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-6xl">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/40 bg-primary/15 shadow-glow">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
               {branding.logo_url ? (
-                <img
-                  src={branding.logo_url}
-                  alt={`${branding.brand_name} logo`}
-                  className="h-5 w-5 object-contain"
-                  loading="eager"
-                />
+                <img src={branding.logo_url} alt={`${branding.brand_name} logo`} className="h-5 w-5 object-contain" loading="eager" />
               ) : (
                 <GraduationCap className="h-4.5 w-4.5 text-primary" />
               )}
@@ -253,206 +199,103 @@ export default function Index() {
       </header>
 
       <main className="mx-auto w-full max-w-[420px] space-y-8 px-4 py-8 md:max-w-6xl">
-        <motion.section
-          initial="hidden"
-          animate="show"
-          variants={STAGGER}
-          className="grid gap-4 md:grid-cols-[1.05fr_0.95fr] md:items-center"
-        >
-          <motion.div variants={ENTER} className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1/90 px-3 py-1 text-[11px] text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Unified campus operations
-            </div>
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+          <div className="relative overflow-hidden rounded-[24px] border border-border-subtle bg-surface-1">
+            <img src={heroImage} alt="Futuristic connected campus visualization" className="h-[520px] w-full object-cover" loading="eager" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background)/0.95)_14%,hsl(var(--background)/0.56)_44%,hsl(var(--background)/0.12)_72%)]" />
 
-            <h1 className="text-[36px] font-black leading-[0.98] tracking-[-0.04em] text-foreground md:text-[56px]">
-              Modern Campus
-              <br />
-              <span className="bg-[linear-gradient(92deg,hsl(var(--foreground)),hsl(var(--primary))_60%)] bg-clip-text text-transparent">
-                Intelligence.
-              </span>
-            </h1>
-
-            <p className="max-w-[46ch] text-sm leading-relaxed text-muted-foreground md:text-base">
-              Campus Connect unifies lectures, attendance, engagement, and communication in one clean, fast, mobile-first experience.
-            </p>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <GlowButton className="h-12 w-full sm:w-auto">
-                  Get Started
-                  <ArrowRight className="h-4 w-4" />
-                </GlowButton>
-              </Link>
-              <a href="#features" className="w-full sm:w-auto">
-                <Button variant="outline" className="h-12 w-full sm:w-auto border-primary/35 bg-surface-1/70">
-                  Explore Features
-                </Button>
-              </a>
-            </div>
-          </motion.div>
-
-          <motion.div variants={ENTER} className="relative">
-            <NeonFrame className="p-4 md:p-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-foreground">Live Operations Pulse</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                    Active
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Attendance", value: "78%" },
-                    { label: "Streak", value: "9d" },
-                    { label: "Rank", value: "#4" },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-                      <p className="text-[10px] text-muted-foreground">{item.label}</p>
-                      <p className="text-base font-black text-foreground">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 rounded-xl border border-border-subtle bg-surface-2/80 p-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>Engagement Throughput</span>
-                    <span className="text-foreground">92%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-surface-4">
-                    <motion.div
-                      initial={{ width: "0%" }}
-                      animate={{ width: "92%" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      className="h-2 rounded-full bg-primary"
-                    />
-                  </div>
-                </div>
+            <div className="absolute inset-x-4 bottom-4 space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-surface-1/85 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur-md">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Next-generation campus operations
               </div>
-            </NeonFrame>
 
-            <motion.div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-7 -right-4 hidden h-20 w-20 rounded-full border border-border-subtle bg-primary/10 blur-sm md:block"
-              animate={{ rotate: [0, 6, -6, 0], y: [0, -3, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
+              <div className="space-y-2">
+                <h1 className="max-w-[16ch] text-[34px] font-black leading-[1] tracking-[-0.04em] text-foreground md:text-[56px]">
+                  Your Campus.
+                  <br />
+                  Connected in Real Time.
+                </h1>
+                <p className="max-w-[44ch] text-sm leading-relaxed text-muted-foreground md:text-base">
+                  Manage lectures, attendance, achievements, and campus communication in one modern mobile-first platform.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <GlowButton className="h-12 w-full sm:w-auto">
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </GlowButton>
+                </Link>
+                <a href="#features" className="w-full sm:w-auto">
+                  <Button variant="outline" className="h-12 w-full border-primary/25 bg-surface-1/80 sm:w-auto">
+                    Explore Features
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
         </motion.section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={STAGGER}
-          className="space-y-3"
-        >
+        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
           <SectionTitle eyebrow="Highlights" title="Product Highlights" />
           <div className="space-y-3">
             {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
-              <motion.div key={title} variants={ENTER}>
-                <GlassCard className="flex items-start gap-3 border-border-subtle" padding="lg">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/12 text-primary shadow-glow">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-                  </div>
-                </GlassCard>
-              </motion.div>
+              <GlassCard key={title} className="flex items-start gap-3" padding="lg">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/12 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </GlassCard>
             ))}
           </div>
         </motion.section>
 
-        <motion.section
-          id="features"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={STAGGER}
-          className="space-y-3"
-        >
+        <motion.section id="features" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
           <SectionTitle eyebrow="Capabilities" title="Features" />
-          <motion.div variants={ENTER} className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {FEATURES.map((feature) => (
               <ActionTile key={feature.label} icon={feature.icon} label={feature.label} onClick={() => undefined} />
             ))}
-          </motion.div>
+          </div>
         </motion.section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={STAGGER}
-          className="space-y-3"
-        >
-          <SectionTitle eyebrow="Flow" title="How It Works" />
+        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
+          <SectionTitle eyebrow="Workflow" title="How It Works" />
           <div className="space-y-3">
             {WORKFLOW.map(({ icon: Icon, title, description }, index) => (
-              <motion.div key={title} variants={ENTER}>
-                <GlassCard key={title} className="flex items-start gap-3 border-border-subtle/90" padding="lg" hover>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/12 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
-                    <h3 className="mt-0.5 text-sm font-semibold text-foreground">{title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-                  </div>
-                </GlassCard>
-              </motion.div>
+              <GlassCard key={title} className="flex items-start gap-3" padding="lg" hover>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/12 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
+                  <h3 className="mt-0.5 text-sm font-semibold text-foreground">{title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </GlassCard>
             ))}
           </div>
         </motion.section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={ENTER}
-          className="space-y-3"
-        >
-          <SectionTitle eyebrow="Preview" title="App Screens" />
+        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
+          <SectionTitle eyebrow="Preview" title="Screenshots" />
           <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 no-scrollbar">
-            <PreviewCard
-              title="Student Dashboard"
-              subtitle="Daily performance"
-              accentClass="bg-primary"
-              statA="240"
-              statB="Active"
-            />
-            <PreviewCard
-              title="Leaderboard"
-              subtitle="Campus rankings"
-              accentClass="bg-warning"
-              statA="#4"
-              statB="Rising"
-            />
-            <PreviewCard
-              title="Admin Dashboard"
-              subtitle="Operations control"
-              accentClass="bg-success"
-              statA="89%"
-              statB="Stable"
-            />
+            <PreviewCard title="Student Dashboard" subtitle="Daily performance" statA="240" statB="Active" />
+            <PreviewCard title="Leaderboard" subtitle="Campus rankings" statA="#4" statB="Rising" />
+            <PreviewCard title="Admin Dashboard" subtitle="Operations control" statA="89%" statB="Stable" />
           </div>
         </motion.section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={ENTER}
-        >
-          <GlassCard padding="lg" className="space-y-3 border-primary/20" hover={false}>
+        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }}>
+          <GlassCard padding="lg" className="space-y-3" hover={false}>
             <SectionTitle eyebrow="Community" title="Campus Community" />
             <p className="text-xs leading-relaxed text-muted-foreground">
-              From lectures to events, {branding.brand_name} keeps students, admins, and programmes connected with one
-              shared campus rhythm.
+              From lectures to events, {branding.brand_name} keeps students, admins, and programmes connected with one shared campus rhythm.
             </p>
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -469,26 +312,17 @@ export default function Index() {
           </GlassCard>
         </motion.section>
 
-        <motion.section
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={ENTER}
-        >
-          <NeonFrame className="p-6 text-center">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-black tracking-tight text-foreground md:text-[30px]">
-                Start Connecting Your Campus Today
-              </h2>
-              <p className="text-xs text-muted-foreground md:text-sm">Launch a smarter campus experience in minutes.</p>
-              <Link to="/auth" className="inline-block">
-                <GlowButton className="h-12 px-8">
-                  Get Started
-                  <ArrowRight className="h-4 w-4" />
-                </GlowButton>
-              </Link>
-            </div>
-          </NeonFrame>
+        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }}>
+          <GlassCard className="space-y-4 text-center" padding="lg" hover={false}>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Start Connecting Your Campus Today</h2>
+            <p className="text-xs text-muted-foreground">Launch a smarter campus experience in minutes.</p>
+            <Link to="/auth" className="inline-block">
+              <GlowButton className="h-12 px-8">
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </GlowButton>
+            </Link>
+          </GlassCard>
         </motion.section>
       </main>
 
@@ -497,12 +331,7 @@ export default function Index() {
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/12">
               {branding.logo_url ? (
-                <img
-                  src={branding.logo_url}
-                  alt={`${branding.brand_name} logo`}
-                  className="h-4.5 w-4.5 object-contain"
-                  loading="lazy"
-                />
+                <img src={branding.logo_url} alt={`${branding.brand_name} logo`} className="h-4.5 w-4.5 object-contain" loading="lazy" />
               ) : (
                 <GraduationCap className="h-4 w-4 text-primary" />
               )}
@@ -523,10 +352,11 @@ export default function Index() {
           </div>
 
           <p className="text-xs text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">Developed by - Atharv Jadhav - Department Of Computer Science</p>
         </div>
       </footer>
 
-      <div className="safe-area-bottom" />
+      <div className={cn("safe-area-bottom")} />
     </div>
   );
 }
