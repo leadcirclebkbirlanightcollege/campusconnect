@@ -21,84 +21,6 @@ function json(status: number, body: Record<string, unknown>) {
   });
 }
 
-function buildOneSignalTarget(
-  role: "admin" | "super_admin",
-  callerCollegeId: string | null,
-  targetType: TargetType,
-  targetValue?: string | null,
-) {
-  const trimmedValue = targetValue?.trim() || null;
-
-  if (role === "admin") {
-    if (targetType !== "college_students" && targetType !== "class") {
-      throw new Error("Admins can only notify college students or a specific class");
-    }
-    if (!callerCollegeId) throw new Error("Admin college context missing");
-  }
-
-  if (targetType === "all_colleges") {
-    return { included_segments: ["Subscribed Users"] };
-  }
-
-  if (targetType === "admins_only") {
-    return {
-      filters: [
-        { field: "tag", key: "role", relation: "=", value: "admin" },
-      ],
-    };
-  }
-
-  if (targetType === "students_only") {
-    return {
-      filters: [{ field: "tag", key: "role", relation: "=", value: "student" }],
-    };
-  }
-
-  if (targetType === "college") {
-    if (!trimmedValue) throw new Error("target_value is required for college targeting");
-    return {
-      filters: [{ field: "tag", key: "college_id", relation: "=", value: trimmedValue }],
-    };
-  }
-
-  if (targetType === "college_students") {
-    const collegeId = role === "admin" ? callerCollegeId : trimmedValue;
-    if (!collegeId) throw new Error("College target is required");
-    return {
-      filters: [
-        { field: "tag", key: "role", relation: "=", value: "student" },
-        { operator: "AND" },
-        { field: "tag", key: "college_id", relation: "=", value: collegeId },
-      ],
-    };
-  }
-
-  if (targetType === "class") {
-    if (!trimmedValue) throw new Error("Class target is required");
-    const collegeId = callerCollegeId;
-    if (!collegeId) throw new Error("Admin college context missing");
-    return {
-      filters: [
-        { field: "tag", key: "role", relation: "=", value: "student" },
-        { operator: "AND" },
-        { field: "tag", key: "college_id", relation: "=", value: collegeId },
-        { operator: "AND" },
-        { field: "tag", key: "class_name", relation: "=", value: trimmedValue },
-      ],
-    };
-  }
-
-  if (targetType === "user") {
-    if (!trimmedValue) throw new Error("target_value is required for user targeting");
-    return {
-      include_aliases: { external_id: [trimmedValue] },
-      target_channel: "push",
-    };
-  }
-
-  throw new Error("Unsupported target type");
-}
-
 async function resolveRecipientIds(
   db: ReturnType<typeof createClient>,
   role: "admin" | "super_admin",
@@ -173,12 +95,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const oneSignalAppId = Deno.env.get("ONESIGNAL_APP_ID");
-    const oneSignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
-
-    if (!oneSignalAppId || !oneSignalApiKey) {
-      return json(503, { success: false, error: "Push service is not configured" });
-    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json(401, { success: false, error: "Unauthorized" });
@@ -224,7 +140,6 @@ Deno.serve(async (req) => {
       return json(400, { success: false, error: "title, message and target_type are required" });
     }
 
-    const target = buildOneSignalTarget(role, callerCollegeId, targetType, targetValue);
     const recipients = await resolveRecipientIds(db, role, callerCollegeId, targetType, targetValue);
 
     const nowIso = new Date().toISOString();
@@ -263,39 +178,10 @@ Deno.serve(async (req) => {
       if (recipientError) throw recipientError;
     }
 
-    const response = await fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Key ${oneSignalApiKey}`,
-      },
-      body: JSON.stringify({
-        app_id: oneSignalAppId,
-        headings: { en: title },
-        contents: { en: message },
-        data: {
-          kind,
-          notification_id: notification.id,
-        },
-        ...target,
-      }),
-    });
-
-    const oneSignalResult = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      return json(502, {
-        success: false,
-        error: "OneSignal delivery failed",
-        details: oneSignalResult,
-      });
-    }
-
     return json(200, {
       success: true,
       notification_id: notification.id,
       recipients: uniqRecipients.length,
-      oneSignal: oneSignalResult,
     });
   } catch (error) {
     console.error("send-notification error", error);
