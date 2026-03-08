@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 const ENTER = {
   hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0, 0, 0.2, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
 };
 
 const HIGHLIGHTS = [
