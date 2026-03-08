@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import LiveBadge from "@/components/lectures/LiveBadge";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { GlowButton } from "@/components/ui/GlowButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -77,9 +76,9 @@ export function LectureLiveBanner({ lecture, className }: LectureLiveBannerProps
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <GlowButton asChild className="w-full">
+        <Button asChild className="h-12 w-full">
           <Link to={`/app/lectures/${lecture.id}`}>{isLive ? "Mark Attendance" : "View Lecture"}</Link>
-        </GlowButton>
+        </Button>
         <Button asChild variant="secondary" className="h-12 w-full">
           <Link to={`/app/lectures/${lecture.id}`}>View Details</Link>
         </Button>
