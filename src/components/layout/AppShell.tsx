@@ -349,10 +349,10 @@ const AppShell = ({ children }: AppShellProps) => {
 
                 {/* Inbox nav item (mobile) */}
                 <div className="sm:hidden">
-                  <NavItem to="/student/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/student/inbox")} badge={unread} />
+                  <NavItem to="/app/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/app/inbox")} badge={unread} />
                 </div>
 
-                <NavItem to="/student/profile" label="Profile" icon={UserRound} active={path.startsWith("/student/profile")} />
+                <NavItem to="/app/profile" label="Profile" icon={UserRound} active={path.startsWith("/app/profile")} />
 
                 {/* Avatar dropdown */}
                 <DropdownMenu>
@@ -375,9 +375,10 @@ const AppShell = ({ children }: AppShellProps) => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-50 w-48 bg-popover text-popover-foreground">
-                    <DropdownMenuItem asChild><Link to="/student/profile">Profile</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to="/student/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to="/leaderboard">Leaderboard</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/profile">Profile</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/settings/notifications">Notification Settings</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/leaderboard">Leaderboard</Link></DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleStudentLogout(); }} className="gap-2">
                       <LogOut className="h-4 w-4" /> Logout
