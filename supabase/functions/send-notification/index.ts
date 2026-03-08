@@ -173,12 +173,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const oneSignalAppId = Deno.env.get("ONESIGNAL_APP_ID");
-    const oneSignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
-
-    if (!oneSignalAppId || !oneSignalApiKey) {
-      return json(503, { success: false, error: "Push service is not configured" });
-    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json(401, { success: false, error: "Unauthorized" });
@@ -224,7 +218,6 @@ Deno.serve(async (req) => {
       return json(400, { success: false, error: "title, message and target_type are required" });
     }
 
-    const target = buildOneSignalTarget(role, callerCollegeId, targetType, targetValue);
     const recipients = await resolveRecipientIds(db, role, callerCollegeId, targetType, targetValue);
 
     const nowIso = new Date().toISOString();
@@ -263,39 +256,10 @@ Deno.serve(async (req) => {
       if (recipientError) throw recipientError;
     }
 
-    const response = await fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Key ${oneSignalApiKey}`,
-      },
-      body: JSON.stringify({
-        app_id: oneSignalAppId,
-        headings: { en: title },
-        contents: { en: message },
-        data: {
-          kind,
-          notification_id: notification.id,
-        },
-        ...target,
-      }),
-    });
-
-    const oneSignalResult = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      return json(502, {
-        success: false,
-        error: "OneSignal delivery failed",
-        details: oneSignalResult,
-      });
-    }
-
     return json(200, {
       success: true,
       notification_id: notification.id,
       recipients: uniqRecipients.length,
-      oneSignal: oneSignalResult,
     });
   } catch (error) {
     console.error("send-notification error", error);
