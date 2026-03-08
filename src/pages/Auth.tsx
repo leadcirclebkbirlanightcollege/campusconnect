@@ -99,10 +99,10 @@ const Auth = () => {
     }
     // Fire-and-forget: log login activity + retention
     setTimeout(() => {
-      supabase.from("login_activity").insert({
+      void supabase.from("login_activity").insert({
         user_id: userId,
         user_agent: navigator.userAgent.slice(0, 255),
-      }).then(() => {}).catch(() => {});
+      });
       supabase.functions.invoke("retention-on-login", { body: {} }).catch(() => {});
     }, 1500);
   };
