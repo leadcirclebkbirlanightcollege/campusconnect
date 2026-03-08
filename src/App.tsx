@@ -69,7 +69,8 @@ const queryClient = new QueryClient({
       },
       retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 8000),
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      // Allow remount refetch when data is stale — prevents "frozen" dashboards
+      refetchOnMount: true,
       refetchOnReconnect: true,
       staleTime: 30_000,
       gcTime: 5 * 60_000,
