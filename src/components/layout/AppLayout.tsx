@@ -2,20 +2,14 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
-  Bell,
   ChevronDown,
   UserRound,
   LogOut,
   CreditCard,
   BadgeCheck,
   CheckCircle,
-  LayoutDashboard,
-  BookOpen,
-  Trophy,
-  Flame,
-  UserCircle,
 } from "lucide-react";
-import PageTransition from "@/components/layout/PageTransition";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
@@ -40,41 +34,22 @@ import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
+import { BottomNavigation } from "@/layout/BottomNavigation";
+import { getPageMeta } from "@/ui-engine/navigation-engine";
 
-const PAGE_META: Record<string, { title: string; description: string }> = {
-  "/app/dashboard":    { title: "Dashboard",        description: "Your academic overview at a glance" },
-  "/app/admin":        { title: "Command Center",    description: "System administration and management" },
-  "/app/attendance":   { title: "Attendance",        description: "View your attendance history and records" },
-  "/app/programmes":   { title: "Learning Circles",  description: "Browse and track your enrolled programmes" },
-  "/app/lectures":     { title: "Lectures",          description: "Upcoming and past lecture sessions" },
-  "/app/inbox":        { title: "Inbox",             description: "Your notifications and messages" },
-  "/app/id-card":      { title: "Digital ID",        description: "Your institutional identity card" },
-  "/app/profile":      { title: "Profile",           description: "Manage your personal information" },
-  "/app/leaderboard":  { title: "Leaderboard",       description: "Student rankings by points earned" },
-  "/app/announcements":{ title: "Announcements",     description: "Important notices and updates" },
-  "/app/events":       { title: "Events",            description: "Upcoming campus events" },
-  "/app/polls":        { title: "Polls",             description: "Active polls and surveys" },
-  "/app/daily":        { title: "Daily",             description: "Daily content and inspiration" },
+/* ── Page transition variants ─────────────────────────────────── */
+const PAGE_VARIANTS: Variants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
+  exit:    { opacity: 0, y: -4, transition: { duration: 0.12, ease: "easeIn" } },
 };
-
-function getPageMeta(pathname: string) {
-  for (const [prefix, meta] of Object.entries(PAGE_META)) {
-    if (pathname.startsWith(prefix)) return meta;
-  }
-  return { title: "Dashboard", description: "Your academic overview at a glance" };
-}
-
-/* ── Notification Bell ─────────────────────────────────────────── */
-function NotificationBell({ userId }: { userId: string }) {
-  return <TopbarNotificationCenter userId={userId} />;
-}
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
   return (
-    <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/8 border border-success/20">
+    <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/8 border border-success/20">
       <span className="h-1.5 w-1.5 rounded-full bg-success live-dot" />
-      <span className="text-[11px] font-medium text-success leading-none">Operational</span>
+      <span className="text-[11px] font-semibold text-success leading-none">Live</span>
     </div>
   );
 }
@@ -95,9 +70,7 @@ function ProfileMenu({ userId }: { userId: string }) {
     staleTime: 60_000,
   });
 
-  const initial = useMemo(() => {
-    return (profile?.name ?? "U")[0].toUpperCase();
-  }, [profile?.name]);
+  const initial = useMemo(() => (profile?.name ?? "U")[0].toUpperCase(), [profile?.name]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -110,17 +83,18 @@ function ProfileMenu({ userId }: { userId: string }) {
         <button
           type="button"
           className={cn(
-            "flex items-center gap-2 rounded-lg pl-1 pr-2 py-1",
+            "flex items-center gap-2 rounded-xl pl-1 pr-2.5 py-1",
             "border border-border-subtle bg-surface-2",
             "hover:bg-surface-3 hover:border-border-strong",
             "transition-all duration-fast focus:outline-none",
+            "min-h-[36px]",
           )}
           aria-label="Profile menu"
         >
           <div className="relative">
             <Avatar className="h-6 w-6">
               <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name} />
-              <AvatarFallback className="text-[11px] bg-primary/15 text-primary font-bold">
+              <AvatarFallback className="text-[10px] bg-primary/15 text-primary font-bold">
                 {initial}
               </AvatarFallback>
             </Avatar>
@@ -130,10 +104,10 @@ function ProfileMenu({ userId }: { userId: string }) {
               </span>
             )}
           </div>
-          <span className="hidden sm:block text-[13px] font-medium text-foreground leading-none max-w-[80px] truncate">
+          <span className="hidden sm:block text-[12px] font-medium text-foreground leading-none max-w-[72px] truncate">
             {profile?.name?.split(" ")[0] ?? "Student"}
           </span>
-          <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
+          <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block shrink-0" />
         </button>
       </DropdownMenuTrigger>
 
@@ -152,9 +126,9 @@ function ProfileMenu({ userId }: { userId: string }) {
             </div>
           </div>
           {profile?.is_verified && (
-            <div className="mt-2 flex items-center gap-1.5 rounded-md bg-success/8 border border-success/20 px-2 py-1">
+            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-success/8 border border-success/20 px-2 py-1">
               <CheckCircle className="h-3 w-3 text-success" />
-              <span className="text-[11px] font-medium text-success">Verified Student</span>
+              <span className="text-[11px] font-semibold text-success">Verified Student</span>
             </div>
           )}
         </DropdownMenuLabel>
@@ -189,66 +163,6 @@ function ProfileMenu({ userId }: { userId: string }) {
 }
 
 /* ── Main Layout ───────────────────────────────────────────────── */
-
-/* ── Mobile Bottom Nav ─────────────────────────────────────────── */
-type BottomNavItem = {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-  badge?: number;
-};
-
-function MobileBottomNav({ path, unread }: { path: string; unread: number }) {
-  const BOTTOM_NAV: BottomNavItem[] = [
-    { label: "Home",        icon: LayoutDashboard, href: "/app/dashboard" },
-    { label: "Lectures",    icon: BookOpen,         href: "/app/lectures" },
-    { label: "Inbox",       icon: Bell,             href: "/app/inbox",         badge: unread },
-    { label: "Leaderboard", icon: Trophy,           href: "/app/leaderboard" },
-    { label: "Profile",     icon: UserCircle,       href: "/app/profile" },
-  ];
-
-  return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-    >
-      <div className="flex items-stretch justify-around px-1 pt-1 pb-1">
-        {BOTTOM_NAV.map(({ label, icon: Icon, href, badge }) => {
-          const active = path === href || path.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              to={href}
-              className={cn(
-                "relative flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl min-w-[52px] min-h-[52px] justify-center transition-all duration-150",
-                active
-                  ? "text-primary bg-primary/8"
-                  : "text-muted-foreground active:bg-surface-3",
-              )}
-            >
-              {/* Active indicator dot */}
-              {active && (
-                <span className="absolute top-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
-              )}
-              <div className="relative">
-                <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-110")} />
-                {typeof badge === "number" && badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-danger text-white text-[9px] font-black flex items-center justify-center leading-none">
-                    {badge > 99 ? "99+" : badge}
-                  </span>
-                )}
-              </div>
-              <span className={cn("text-[9px] font-semibold leading-none", active ? "text-primary" : "text-muted-foreground/60")}>
-                {label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
@@ -262,101 +176,105 @@ export default function AppLayout() {
     staleTime: 120_000,
   });
 
-  // Unread count for mobile bottom nav bell badge
-  const { data: bottomNavUnread = 0 } = useQuery({
-    queryKey: ["topbar", "unread", user?.id],
-    enabled: Boolean(user?.id),
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("notification_recipients")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id)
-        .is("read_at", null);
-      return count ?? 0;
-    },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
-
   return (
     <>
-    <SessionGuard />
-    <SidebarProvider defaultOpen>
-      <div className="min-h-svh flex w-full bg-background">
-        <AppSidebar />
+      <SessionGuard />
+      <SidebarProvider defaultOpen>
+        <div className="min-h-svh flex w-full bg-background">
+          {/* Desktop sidebar */}
+          <AppSidebar />
 
-        <SidebarInset className="flex flex-col">
-          {/* ── Premium Topbar ──────────────────────────────────── */}
-          <header className={cn(
-            "sticky top-0 z-40 border-b border-border-subtle",
-            "bg-surface-1/85 backdrop-blur-xl",
-            "shadow-[0_1px_0_hsl(var(--border-subtle))]",
-          )}>
-            <div className="flex h-[52px] items-center gap-3 px-3 md:px-5">
-              {/* Mobile sidebar trigger */}
-              <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+          <SidebarInset className="flex flex-col min-w-0">
 
-              {/* Divider */}
-              <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+            {/* ── Command Header ─────────────────────────────────── */}
+            <header
+              className={cn(
+                "sticky top-0 z-40",
+                "glass-surface border-b border-border-subtle/70",
+                "shadow-[0_1px_0_hsl(var(--border-subtle)/0.8)]",
+              )}
+            >
+              <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
+                {/* Mobile: sidebar trigger */}
+                <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
 
-              {/* Page title */}
-              <div className="min-w-0 flex-1">
-                <h1 className="truncate text-[14px] font-semibold text-foreground leading-none">
-                  {title}
-                </h1>
-                <p className="hidden sm:block truncate text-[11px] text-muted-foreground mt-0.5 leading-none">
-                  {description}
+                {/* Desktop: vertical divider */}
+                <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
+                {/* Page title area */}
+                <div className="min-w-0 flex-1">
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={location.pathname}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+                    >
+                      <p className="text-[14px] font-semibold text-foreground leading-none truncate">
+                        {title}
+                      </p>
+                      {description && (
+                        <p className="hidden sm:block text-[11px] text-muted-foreground mt-0.5 leading-none truncate">
+                          {description}
+                        </p>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                {/* Right controls */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <SystemStatus />
+                  {user && (
+                    <>
+                      <TopbarNotificationCenter userId={user.id} />
+                      <ProfileMenu userId={user.id} />
+                    </>
+                  )}
+                </div>
+              </div>
+            </header>
+
+            {/* ── Workspace ──────────────────────────────────────── */}
+            <main className="flex-1 min-w-0 py-5 md:px-6 md:pb-6 pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={location.pathname}
+                  variants={PAGE_VARIANTS}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="w-full h-full"
+                >
+                  <Outlet />
+                </motion.div>
+              </AnimatePresence>
+            </main>
+
+            {/* Desktop footer */}
+            <footer className="border-t border-border-subtle/60 bg-surface-1/50 shrink-0 hidden md:block">
+              <div className="px-5 py-2.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1.5">
+                  <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-50" />
+                  <span className="text-[11px] text-muted-foreground/50 font-medium">{BRANDING.name}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground/35 text-right">
+                  Developed by Atharv Jadhav · CS Dept.
                 </p>
               </div>
+            </footer>
+          </SidebarInset>
+        </div>
 
-              {/* Right side controls */}
-              <div className="flex items-center gap-2 shrink-0">
-                <SystemStatus />
+        {/* Mobile bottom navigation — new layout engine component */}
+        <BottomNavigation />
 
-                {user && (
-                  <>
-                    <NotificationBell userId={user.id} />
-                    <ProfileMenu userId={user.id} />
-                  </>
-                )}
-              </div>
-            </div>
-          </header>
-
-          {/* ── Workspace ───────────────────────────────────────── */}
-          <main className="flex-1 px-4 py-5 md:px-6 md:py-6 pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-6">
-            <div className="mx-auto max-w-[1280px]">
-              <PageTransition>
-                <Outlet />
-              </PageTransition>
-            </div>
-          </main>
-
-          {/* ── Footer ──────────────────────────────────────────── */}
-          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0 hidden md:block">
-            <div className="px-4 py-2.5 md:px-6 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-1.5">
-                <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-60" />
-                <span className="text-[11px] text-muted-foreground/60 font-medium">
-                  {BRANDING.name}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground/40 text-right">
-                Developed by Atharv Jadhav · CS Dept.
-              </p>
-            </div>
-          </footer>
-        </SidebarInset>
-      </div>
-      {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
-      <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
-      {/* Floating feedback button — visible for all authenticated users */}
-      <FeedbackButton />
-      {/* Force update overlay — listens to platform_settings realtime */}
-      <ForceUpdateBanner />
-      {/* Soft update banner — dismissible refresh prompt */}
-      <SoftUpdateBanner />
-    </SidebarProvider>
+        {/* Floating utilities */}
+        <FeedbackButton />
+        <ForceUpdateBanner />
+        <SoftUpdateBanner />
+      </SidebarProvider>
     </>
   );
 }
