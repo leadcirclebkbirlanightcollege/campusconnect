@@ -1,12 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyStateCard } from "@/components/ui/empty-state";
+import { FadeIn } from "@/components/ui/motion";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { BarChart2, Users, CheckCircle2 } from "lucide-react";
 
 export default function StudentPollsList() {
   const qc = useQueryClient();
@@ -17,6 +20,7 @@ export default function StudentPollsList() {
       const { data } = await supabase.auth.getUser();
       return data.user;
     },
+    staleTime: 120_000,
   });
 
   const pollsQuery = useQuery({
@@ -71,67 +75,120 @@ export default function StudentPollsList() {
   if (pollsQuery.isLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        {[1, 2].map((i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
       </div>
     );
   }
 
+  const polls = pollsQuery.data ?? [];
+
   return (
-    <div className="space-y-4">
-      {pollsQuery.data?.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No active polls.
-          </CardContent>
-        </Card>
-      )}
+    <div className="space-y-5 page-enter">
+      {/* Header */}
+      <FadeIn>
+        <div className="flex items-center gap-2">
+          <BarChart2 className="h-4 w-4 text-muted-foreground" />
+          <h1 className="text-heading text-foreground">Polls</h1>
+        </div>
+      </FadeIn>
 
-      {pollsQuery.data?.map((p: any) => {
-        const opts = Array.isArray(p.options) ? p.options as string[] : [];
-        const allVotes = (votesQuery.data ?? []).filter((v: any) => v.poll_id === p.id);
-        const total = allVotes.length;
-        const myVote = allVotes.find((v: any) => v.user_id === userId);
-        const hasVoted = Boolean(myVote);
+      {polls.length === 0 ? (
+        <EmptyStateCard
+          emoji="🗳️"
+          title="No active polls"
+          description="Polls and surveys from your college will appear here. Cast your vote and share your opinion!"
+        />
+      ) : (
+        <div className="space-y-3">
+          {polls.map((p: any, i: number) => {
+            const opts = Array.isArray(p.options) ? p.options as string[] : [];
+            const allVotes = (votesQuery.data ?? []).filter((v: any) => v.poll_id === p.id);
+            const total = allVotes.length;
+            const myVote = allVotes.find((v: any) => v.user_id === userId);
+            const hasVoted = Boolean(myVote);
 
-        return (
-          <Card key={p.id}>
-            <CardContent className="py-5 space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-medium text-foreground">{p.question}</h3>
-                {hasVoted && <Badge variant="secondary" className="text-[10px] h-4 shrink-0">Voted</Badge>}
-              </div>
-              <div className="space-y-2">
-                {opts.map((opt: string, i: number) => {
-                  const count = allVotes.filter((v: any) => v.option_index === i).length;
-                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                  const isMyChoice = myVote?.option_index === i;
-
-                  return hasVoted ? (
-                    <div key={i} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className={isMyChoice ? "font-medium text-primary" : "text-muted-foreground"}>{opt}</span>
-                        <span className="text-xs font-medium tabular-nums">{pct}%</span>
-                      </div>
-                      <Progress value={pct} className="h-1.5" />
+            return (
+              <FadeIn key={p.id} delay={i * 30}>
+                <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+                  {/* Poll header */}
+                  <div className="px-5 pt-5 pb-3 border-b border-border-subtle">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-[14px] font-semibold text-foreground leading-snug flex-1">{p.question}</h3>
+                      {hasVoted && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 border border-success/20 rounded-full px-2 py-0.5 shrink-0">
+                          <CheckCircle2 className="h-2.5 w-2.5" /> Voted
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      className="w-full justify-start text-sm h-9"
-                      onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: i })}
-                      disabled={voteMutation.isPending}
-                    >
-                      {opt}
-                    </Button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-muted-foreground">{total} votes · {format(new Date(p.created_at), "PP")}</p>
-            </CardContent>
-          </Card>
-        );
-      })}
+                  </div>
+
+                  {/* Options */}
+                  <div className="px-5 py-4 space-y-2.5">
+                    {opts.map((opt: string, idx: number) => {
+                      const count = allVotes.filter((v: any) => v.option_index === idx).length;
+                      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                      const isMyChoice = myVote?.option_index === idx;
+
+                      return hasVoted ? (
+                        <div key={idx} className="space-y-1.5">
+                          <div className="flex justify-between text-[12px]">
+                            <span className={cn(
+                              "font-medium flex items-center gap-1.5",
+                              isMyChoice ? "text-primary" : "text-foreground",
+                            )}>
+                              {isMyChoice && <CheckCircle2 className="h-3 w-3" />}
+                              {opt}
+                            </span>
+                            <span className="text-muted-foreground font-semibold tabular-nums">{pct}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
+                            <div
+                              className={cn(
+                                "h-full rounded-full transition-all duration-slow",
+                                isMyChoice ? "bg-primary" : "bg-surface-4",
+                              )}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          key={idx}
+                          className={cn(
+                            "w-full text-left px-4 py-2.5 rounded-lg border text-[13px] font-medium",
+                            "border-border-subtle bg-surface-2 text-foreground",
+                            "hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
+                            "transition-fast press-scale",
+                            "disabled:opacity-50 disabled:cursor-not-allowed",
+                          )}
+                          onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: idx })}
+                          disabled={voteMutation.isPending}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-5 pb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    <span>{total} vote{total !== 1 ? "s" : ""}</span>
+                    <span className="text-border-strong">·</span>
+                    <span>{format(new Date(p.created_at), "dd MMM")}</span>
+                    {p.is_anonymous && (
+                      <>
+                        <span className="text-border-strong">·</span>
+                        <Badge variant="secondary" className="text-[9px] h-4">Anonymous</Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,24 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, ArrowRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { EmptyStateCard } from "@/components/ui/empty-state";
+import { FadeIn } from "@/components/ui/motion";
+import { cn } from "@/lib/utils";
+import { BookOpen, ChevronRight, Tag } from "lucide-react";
 
 type Programme = {
   id: string;
   name: string;
   description: string | null;
-  color: string;
+  color: string | null;
 };
 
 export default function ProgrammesList() {
@@ -71,73 +65,72 @@ export default function ProgrammesList() {
   if (programmesQuery.isLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
+        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
       </div>
     );
   }
 
-  if (programmesQuery.data?.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <AlertCircle className="h-8 w-8 text-muted-foreground mb-3" />
-          <h3 className="text-sm font-medium mb-1">No Programmes Assigned</h3>
-          <p className="text-xs text-muted-foreground max-w-sm">
-            You haven't been assigned to any learning circles yet. Please contact the administrator.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const programmes = programmesQuery.data ?? [];
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Programme</TableHead>
-                <TableHead className="w-32">Lectures</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {programmesQuery.data?.map((p) => {
-                const lectureCount = lectureCountsQuery.data?.[p.id] || 0;
-                return (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: p.color }}
-                        />
-                        <div>
-                          <p className="text-sm font-medium">{p.name}</p>
-                          {p.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">{p.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground tabular-nums">
-                      {lectureCount}
-                    </TableCell>
-                    <TableCell>
-                      <Button asChild variant="ghost" size="sm" className="h-7 text-xs gap-1">
-                        <Link to={`/app/programmes/${p.id}`}>
-                          View <ArrowRight className="h-3 w-3" />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+    <div className="space-y-5 page-enter">
+      {/* Header */}
+      <FadeIn>
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <h1 className="text-heading text-foreground">Learning Circles</h1>
         </div>
-      </CardContent>
-    </Card>
+      </FadeIn>
+
+      {programmes.length === 0 ? (
+        <EmptyStateCard
+          emoji="📖"
+          title="No programmes assigned"
+          description="You haven't been enrolled in any learning circles yet. Contact your administrator to get assigned."
+        />
+      ) : (
+        <div className="space-y-2">
+          {programmes.map((p, i) => {
+            const lectureCount = lectureCountsQuery.data?.[p.id] ?? 0;
+            const color = p.color ?? "#6366f1";
+
+            return (
+              <FadeIn key={p.id} delay={i * 25}>
+                <Link
+                  to={`/app/programmes/${p.id}`}
+                  className={cn(
+                    "group flex items-center gap-4 rounded-xl border border-border-subtle px-5 py-4",
+                    "bg-surface-1 shadow-xs hover:shadow-sm hover:border-border-strong",
+                    "transition-fast",
+                  )}
+                >
+                  {/* Color dot */}
+                  <div
+                    className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}
+                  >
+                    <Tag className="h-4 w-4" style={{ color }} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <p className="text-[14px] font-semibold text-foreground truncate">{p.name}</p>
+                    {p.description && (
+                      <p className="text-[12px] text-muted-foreground line-clamp-1">{p.description}</p>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      {lectureCount} lecture{lectureCount !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+
+                  {/* Arrow */}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-fast" />
+                </Link>
+              </FadeIn>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
