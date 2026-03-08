@@ -221,13 +221,11 @@ const Auth = () => {
 
         {/* Brand */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-primary">
-            {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.brand_name} className="h-6 w-6 object-contain" />
-            ) : (
-              <GraduationCap className="h-5 w-5 text-primary-foreground" />
-            )}
-          </div>
+          <img
+            src={branding.logo_url ?? BRANDING.logo}
+            alt={branding.brand_name}
+            className="h-9 w-9 object-contain"
+          />
           <div>
             <p className="text-[15px] font-bold text-foreground leading-tight">{branding.brand_name}</p>
             <p className="text-[11px] text-muted-foreground">{branding.tagline}</p>
