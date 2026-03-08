@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Camera, Save, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles } from "lucide-react";
+import { Camera, Save, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles, BarChart3, Award, Trophy, Flame } from "lucide-react";
+import { motion } from "framer-motion";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
+import { useStudentIntelligence } from "@/hooks/use-intelligence";
+import { useGrowthInsights } from "@/hooks/use-growth-insights";
+import { TIER_CONFIG } from "@/lib/intelligenceEngine";
+import { IntelligenceBar } from "@/components/ui/design-system";
+import { Progress } from "@/components/ui/progress";
 import { APP_VERSION } from "@/config/version";
 
 import { supabase } from "@/integrations/supabase/client";
