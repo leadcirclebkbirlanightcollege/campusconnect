@@ -10,6 +10,18 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // Require a shared secret to prevent unauthenticated calls.
+  // Set SETUP_SECRET in project secrets; callers must pass it as Bearer token.
+  const setupSecret = Deno.env.get('SETUP_SECRET')
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const callerSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+  if (!setupSecret || callerSecret !== setupSecret) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   try {
     const adminEmail = Deno.env.get('ADMIN_EMAIL')
     const adminPassword = Deno.env.get('ADMIN_PASSWORD')
