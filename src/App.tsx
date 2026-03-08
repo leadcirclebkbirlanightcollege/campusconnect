@@ -27,6 +27,7 @@ import StudentAnnouncementsFeed from "./pages/student/announcements/StudentAnnou
 import StudentEventsList from "./pages/student/events/StudentEventsList";
 import StudentPollsList from "./pages/student/polls/StudentPollsList";
 import StudentDailyContent from "./pages/student/content/StudentDailyContent";
+import StudentAchievements from "./pages/student/StudentAchievements";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
