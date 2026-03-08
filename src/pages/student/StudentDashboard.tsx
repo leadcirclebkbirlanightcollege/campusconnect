@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useMemo, useState, memo } from "react";
+import { lazy, Suspense, useMemo, memo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
@@ -29,6 +30,61 @@ const EngagementScorePanel = lazy(() => import("@/components/student/EngagementS
 const UpcomingEventsStrip  = lazy(() => import("@/components/student/UpcomingEventsStrip"));
 
 const PanelSkeleton = () => <Skeleton className="h-[180px] w-full rounded-2xl" />;
+
+/* ── Data queries ───────────────────────────────────────────── */
+async function fetchDashboardCore() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("unauthenticated");
+
+  const [{ data: profile }, { data: pointsTotal }, { data: streakRaw }, { data: liveList }] =
+    await Promise.all([
+      supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
+      supabase.rpc("get_my_points_total"),
+      supabase.rpc("get_my_streak"),
+      supabase.from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .eq("status", "live").limit(1),
+    ]);
+
+  const sk = streakRaw as any;
+  return {
+    name: (profile as any)?.name?.split(" ")[0] ?? "Student",
+    totalPoints: Number(pointsTotal ?? 0),
+    currentStreak: sk?.current_streak ?? 0,
+    longestStreak: sk?.longest_streak ?? 0,
+    liveNow: ((liveList ?? [])[0] as UpcomingLecture | undefined) ?? null,
+  };
+}
+
+async function fetchDashboardSecondary(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const [{ count: attended }, { count: total }, { data: upcoming }, { data: pts }] =
+    await Promise.all([
+      supabase.from("attendance")
+        .select("id", { count: "exact", head: true })
+        .eq("student_user_id", userId).eq("status", "present"),
+      supabase.from("lectures")
+        .select("id", { count: "exact", head: true }),
+      supabase.from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .gte("lecture_date", today).neq("status", "ended")
+        .order("lecture_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(1),
+      supabase.from("points_ledger")
+        .select("id,created_at,points,source,note")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }).limit(8),
+    ]);
+
+  return {
+    lecturesAttended: attended ?? 0,
+    totalLectures: total ?? 0,
+    nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
+    recentPoints: (pts ?? []) as RecentPoint[],
+  };
+}
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type UpcomingLecture = {

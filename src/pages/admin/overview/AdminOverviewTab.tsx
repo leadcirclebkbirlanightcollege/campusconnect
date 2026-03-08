@@ -59,14 +59,17 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         supabase.from("points_ledger").select("id", { count: "exact", head: true }).in("source", ["admin_adjustment", "manual"]),
         supabase.from("student_intelligence").select("user_id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
         supabase.from("lectures").select("id", { count: "exact", head: true }),
-        supabase.from("points_ledger").select("points"),
+        // Use server-side SUM instead of fetching all rows for aggregation
+        supabase.rpc("get_platform_analytics"),
       ]);
 
       const students = studentsCount ?? 0;
       const monthAtt = monthAttendanceCount ?? 0;
       const daysElapsed = Math.max(1, new Date().getDate());
       const avgPct = students > 0 ? Math.min(100, Math.round((monthAtt / (students * daysElapsed)) * 100)) : 0;
-      const totalPoints = (pointsData ?? []).reduce((s, r) => s + (r.points ?? 0), 0);
+      // get_platform_analytics returns total_points_awarded server-side
+      const analytics = pointsData as any;
+      const totalPoints = Number(analytics?.total_points_awarded ?? 0);
 
       return {
         students,
