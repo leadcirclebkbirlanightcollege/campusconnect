@@ -8,6 +8,9 @@ const corsHeaders = {
 type ScheduledNotificationRow = {
   id: string;
   status: "scheduled";
+  title: string;
+  body: string;
+  kind: string;
   scheduled_for: string | null;
   target_role: "admin" | "student" | null;
   target_user_id: string | null;
