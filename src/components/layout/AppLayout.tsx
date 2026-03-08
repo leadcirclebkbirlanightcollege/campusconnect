@@ -8,8 +8,12 @@ import {
   LogOut,
   CreditCard,
   BadgeCheck,
-  GraduationCap,
   CheckCircle,
+  LayoutDashboard,
+  BookOpen,
+  Trophy,
+  Star,
+  UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
 import {
@@ -28,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -226,10 +230,46 @@ function ProfileMenu({ userId }: { userId: string }) {
 }
 
 /* ── Main Layout ───────────────────────────────────────────────── */
+
+/* ── Mobile Bottom Nav ─────────────────────────────────────────── */
+const BOTTOM_NAV = [
+  { label: "Home",        icon: LayoutDashboard, href: "/app/dashboard" },
+  { label: "Lectures",    icon: BookOpen,         href: "/app/lectures" },
+  { label: "Leaderboard", icon: Trophy,           href: "/app/leaderboard" },
+  { label: "Achievements",icon: Star,             href: "/app/achievements" },
+  { label: "Profile",     icon: UserCircle,       href: "/app/profile" },
+];
+
+function MobileBottomNav({ path }: { path: string }) {
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl pb-safe">
+      <div className="flex items-center justify-around px-2 py-1">
+        {BOTTOM_NAV.map(({ label, icon: Icon, href }) => {
+          const active = path === href || path.startsWith(href + "/");
+          return (
+            <Link
+              key={href}
+              to={href}
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[44px] transition-all duration-150",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-110")} />
+              <span className={cn("text-[10px] font-medium leading-none", active ? "text-primary" : "text-muted-foreground/70")}>
+                {label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
-  const { branding } = usePlatformBranding();
 
   const { data: user } = useQuery({
     queryKey: ["topbar", "user"],
@@ -293,14 +333,12 @@ export default function AppLayout() {
           </main>
 
           {/* ── Footer ──────────────────────────────────────────── */}
-          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0">
+          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0 hidden md:block">
             <div className="px-4 py-2.5 md:px-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-1.5">
-                <div className="h-4 w-4 rounded-sm bg-primary/15 flex items-center justify-center">
-                  <GraduationCap className="h-2.5 w-2.5 text-primary" />
-                </div>
+                <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-60" />
                 <span className="text-[11px] text-muted-foreground/60 font-medium">
-                  {branding.brand_name}
+                  {BRANDING.name}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground/40 text-right">
@@ -310,6 +348,8 @@ export default function AppLayout() {
           </footer>
         </SidebarInset>
       </div>
+      {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
+      <MobileBottomNav path={location.pathname} />
     </SidebarProvider>
   );
 }
