@@ -90,30 +90,7 @@ export function MetricCountUp({
   duration = MOTION_SPECIAL_MS.metricCount,
   className,
 }: MetricCountUpProps) {
-  const [display, setDisplay] = React.useState(0);
-  const frameRef = React.useRef<number | null>(null);
-  const startRef = React.useRef<number | null>(null);
-
-  React.useEffect(() => {
-    const start = performance.now();
-    startRef.current = start;
-
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // ease-out quad
-      const eased = 1 - Math.pow(1 - progress, 2);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-    };
-  }, [value, duration]);
+  const display = useCountUp(value, duration);
 
   return (
     <span
