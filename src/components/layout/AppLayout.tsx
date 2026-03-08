@@ -2,7 +2,6 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
-  Bell,
   ChevronDown,
   UserRound,
   LogOut,
