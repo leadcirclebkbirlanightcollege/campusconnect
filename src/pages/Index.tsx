@@ -244,7 +244,7 @@ export default function Index() {
               </Button>
             </Link>
             <Link to="/auth" aria-label="Get started">
-              <Button size="sm" className="h-12 px-4 text-xs shadow-glow">
+              <Button size="sm" className="h-12 px-4 text-xs">
                 Get Started
               </Button>
             </Link>
