@@ -23,8 +23,10 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
-        // Never cache OAuth redirect routes
+        // Never cache OAuth redirect routes or OneSignal worker
         navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
+        // Don't let Vite's SW intercept the OneSignal worker
+        exclude: [/OneSignalSDKWorker\.js/],
         // Runtime caching: API + image responses
         runtimeCaching: [
           {
