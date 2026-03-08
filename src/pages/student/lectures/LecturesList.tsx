@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { BookOpen, ChevronRight, MapPin, Clock, Info } from "lucide-react";
+import { BookOpen, ChevronRight, MapPin, Clock } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { FadeIn } from "@/components/ui/motion";
 import { StatusChip, LiveIndicator } from "@/components/ui/design-system";
+import { EmptyStateCard } from "@/components/ui/empty-state";
 
 type LectureRow = {
   id: string;
