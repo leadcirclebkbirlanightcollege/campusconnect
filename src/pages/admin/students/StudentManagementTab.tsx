@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound } from "lucide-react";
+import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import StudentProfileDialog from "./StudentProfileDialog";
