@@ -34,7 +34,7 @@ function getTier(pts: number) {
   return [...TIERS].reverse().find((t) => pts >= t.min) ?? TIERS[0];
 }
 
-function TierBadge({ pts, size = "sm" }: { pts: number; size?: "sm" | "md" }) {
+const TierBadge = memo(function TierBadge({ pts, size = "sm" }: { pts: number; size?: "sm" | "md" }) {
   const t = getTier(pts);
   return (
     <span className={cn(
@@ -47,7 +47,7 @@ function TierBadge({ pts, size = "sm" }: { pts: number; size?: "sm" | "md" }) {
       {t.label}
     </span>
   );
-}
+});
 
 /* ── Rank delta ─────────────────────────────────────────────────── */
 function RankDelta({ delta }: { delta: number }) {
