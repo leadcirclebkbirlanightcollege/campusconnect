@@ -1,0 +1,44 @@
+/**
+ * PAGE TRANSITION WRAPPER
+ * Smooth fade + slight translateY transition between route changes.
+ * Drop this around <Outlet /> to get SPA-quality page transitions.
+ */
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { ReactNode } from "react";
+
+const variants = {
+  initial:  { opacity: 0, y: 6 },
+  animate:  { opacity: 1, y: 0 },
+  exit:     { opacity: 0, y: -4 },
+};
+
+const transition = {
+  duration: 0.18,
+  ease: [0.0, 0, 0.2, 1] as const,
+};
+
+interface PageTransitionProps {
+  children: ReactNode;
+}
+
+export default function PageTransition({ children }: PageTransitionProps) {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        variants={variants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={transition}
+        style={{ width: "100%" }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
