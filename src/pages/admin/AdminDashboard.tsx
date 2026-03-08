@@ -221,6 +221,7 @@ const AdminDashboard = () => {
         <TabsContent value="polls"><AdminPollsTab /></TabsContent>
         <TabsContent value="daily_content"><AdminDailyContentTab /></TabsContent>
         <TabsContent value="notifications"><AdminNotificationCenterTab /></TabsContent>
+        <TabsContent value="challenges"><AdminChallengesTab /></TabsContent>
         <TabsContent value="points"><AdminPointsAdjustmentsTab /></TabsContent>
         <TabsContent value="admin_profile"><AdminProfileSettings /></TabsContent>
         <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
