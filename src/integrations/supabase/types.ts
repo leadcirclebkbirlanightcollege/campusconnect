@@ -270,6 +270,50 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          college_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          performed_by: string
+          target_entity: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          performed_by: string
+          target_entity: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          performed_by?: string
+          target_entity?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           college_name: string
@@ -576,6 +620,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "lectures_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      login_activity: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_activity_college_id_fkey"
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
@@ -955,6 +1034,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      security_alerts: {
+        Row: {
+          alert_type: string
+          college_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_alerts_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_achievements: {
         Row: {
