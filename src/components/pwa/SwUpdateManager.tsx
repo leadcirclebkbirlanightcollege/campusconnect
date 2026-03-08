@@ -1,82 +1,115 @@
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { refreshToLatest } from "@/lib/refresh-to-latest";
-
-const RELOAD_KEY    = "cc_reload_count";
-const RELOAD_TS_KEY = "cc_reload_ts";
-const MAX_RELOADS   = 1; // only ever auto-reload ONCE per 60 s window
-const WINDOW_MS     = 60_000;
-
 /**
- * Service-worker update manager — autoUpdate mode.
+ * SwUpdateManager — Safe Service Worker update handler.
  *
- * When the SW detects a new version it calls skipWaiting and claims all
- * clients automatically (vite-plugin-pwa registerType: "autoUpdate").
- * We listen for the controllerchange event and do a single hard reload.
+ * Strategy: "prompt" mode (no auto-reload).
+ * When a new SW finishes installing and is waiting, we show a soft
+ * "New version available" banner. The user decides when to refresh.
  *
- * A reload-loop guard (sessionStorage counter) prevents infinite cycling:
- * if a reload already happened within the last 60 s we skip and just
- * unregister the SW as a last resort.
+ * This prevents infinite reload loops caused by the old autoUpdate approach
+ * where controllerchange → window.location.reload() could cycle indefinitely.
  */
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCw, Sparkles, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 export default function SwUpdateManager() {
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    const now   = Date.now();
-    const count = Number(sessionStorage.getItem(RELOAD_KEY)  ?? 0);
-    const ts    = Number(sessionStorage.getItem(RELOAD_TS_KEY) ?? 0);
-    const withinWindow = now - ts < WINDOW_MS;
+    const checkForWaiting = async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) return;
 
-    if (withinWindow && count >= MAX_RELOADS) {
-      // Already reloaded once — bail out safely
-      navigator.serviceWorker.getRegistrations().then((regs) =>
-        regs.forEach((r) => r.unregister())
-      );
-      toast.error("Update loop detected", {
-        description: "Please clear your browser cache and refresh manually.",
-        duration: 0,
-      });
-      return;
-    }
+        // Already a waiting worker when we mount
+        if (reg.waiting) {
+          setWaitingWorker(reg.waiting);
+        }
 
-    let refreshing = false;
-
-    const handleControllerChange = () => {
-      if (refreshing) return;
-      refreshing = true;
-
-      // Record this reload attempt
-      sessionStorage.setItem(
-        RELOAD_KEY,
-        String(withinWindow ? count + 1 : 1)
-      );
-      sessionStorage.setItem(RELOAD_TS_KEY, String(now));
-
-      toast.success("Updating Campus Connect…", {
-        description: "Loading the latest version now.",
-        duration: 2000,
-      });
-
-      // Small delay so the toast is visible before the page reloads
-      setTimeout(() => {
-        void refreshToLatest();
-      }, 1200);
+        // A new SW finishes installing and enters "waiting" state
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              // New version ready — prompt user, don't auto-reload
+              setWaitingWorker(newWorker);
+            }
+          });
+        });
+      } catch {
+        // SW not available — app still loads normally
+      }
     };
 
-    navigator.serviceWorker.addEventListener(
-      "controllerchange",
-      handleControllerChange
-    );
+    void checkForWaiting();
 
-    return () => {
-      navigator.serviceWorker.removeEventListener(
-        "controllerchange",
-        handleControllerChange
-      );
-    };
+    // Trigger SW update check on mount
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      reg?.update().catch(() => undefined);
+    });
   }, []);
 
-  // No UI — updates are fully automatic
-  return null;
-}
+  const handleRefresh = () => {
+    if (!waitingWorker) return;
+    // Tell the waiting SW to take control
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    // Listen for controller change then reload ONCE
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    }, { once: true });
+    setWaitingWorker(null);
+  };
 
+  const handleDismiss = () => {
+    setWaitingWorker(null);
+  };
+
+  return (
+    <AnimatePresence>
+      {waitingWorker && (
+        <motion.div
+          key="sw-update-banner"
+          initial={{ opacity: 0, y: -48 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -48 }}
+          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          className="fixed top-0 left-0 right-0 z-[9997] flex items-center justify-between gap-3
+                     px-4 py-2.5 bg-primary text-primary-foreground shadow-lg"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="shrink-0 h-6 w-6 rounded-full bg-primary-foreground/15 flex items-center justify-center">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <p className="text-[13px] font-medium leading-snug truncate">
+              New version available — tap Refresh to update
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 px-3 text-xs font-semibold gap-1.5 bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground border-0"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </Button>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-primary-foreground/15 transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
