@@ -18,6 +18,7 @@ import {
 import PageTransition from "@/components/layout/PageTransition";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
+import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
 import {
   SidebarInset,
   SidebarProvider,
