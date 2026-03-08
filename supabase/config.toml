@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.daily-checkin]
 verify_jwt = false
+
+[functions.subscribe-web-push]
+verify_jwt = false
+
+[functions.generate-vapid-keys]
+verify_jwt = false
