@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
 import { toast } from "sonner";
+import { refreshToLatest } from "@/lib/refresh-to-latest";
 
 type ForceUpdatePayload = {
   triggered_at: string;   // ISO timestamp
@@ -22,7 +23,6 @@ type ForceUpdatePayload = {
 };
 
 const SETTING_KEY = "force_update";
-const POLL_INTERVAL_MS = 30_000;
 
 /** Reads the stored timestamp from sessionStorage so we don't re-show on refresh */
 function getAckedTimestamp(): string | null {
@@ -128,7 +128,7 @@ export default function ForceUpdateBanner() {
         if (c <= 1) {
           clearInterval(timerRef.current!);
           ackTimestamp(payload.triggered_at);
-          window.location.reload();
+          void refreshToLatest();
           return 0;
         }
         return c - 1;
@@ -141,7 +141,7 @@ export default function ForceUpdateBanner() {
   const handleReloadNow = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (payload) ackTimestamp(payload.triggered_at);
-    window.location.reload();
+    void refreshToLatest();
   };
 
   return (
@@ -204,3 +204,4 @@ export default function ForceUpdateBanner() {
     </AnimatePresence>
   );
 }
+

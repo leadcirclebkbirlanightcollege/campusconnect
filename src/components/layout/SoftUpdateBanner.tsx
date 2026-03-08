@@ -11,6 +11,7 @@ import { RefreshCw, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION } from "@/config/version";
 import { toast } from "sonner";
+import { refreshToLatest } from "@/lib/refresh-to-latest";
 
 type SoftUpdatePayload = {
   triggered_at: string;
@@ -98,7 +99,7 @@ export default function SoftUpdateBanner() {
 
   const handleRefresh = () => {
     if (payload) ackTimestamp(payload.triggered_at);
-    window.location.reload();
+    void refreshToLatest();
   };
 
   const handleDismiss = () => {
@@ -153,3 +154,4 @@ export default function SoftUpdateBanner() {
     </AnimatePresence>
   );
 }
+

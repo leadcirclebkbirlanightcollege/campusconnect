@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { refreshToLatest } from "@/lib/refresh-to-latest";
 
 const RELOAD_KEY    = "cc_reload_count";
 const RELOAD_TS_KEY = "cc_reload_ts";
@@ -57,7 +58,9 @@ export default function SwUpdateManager() {
       });
 
       // Small delay so the toast is visible before the page reloads
-      setTimeout(() => window.location.reload(), 1200);
+      setTimeout(() => {
+        void refreshToLatest();
+      }, 1200);
     };
 
     navigator.serviceWorker.addEventListener(
@@ -76,3 +79,4 @@ export default function SwUpdateManager() {
   // No UI — updates are fully automatic
   return null;
 }
+
