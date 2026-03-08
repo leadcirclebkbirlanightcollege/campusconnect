@@ -26,7 +26,7 @@ const TIERS = [
 ] as const;
 
 function getTier(pts: number) {
-  return TIERS.findLast((t) => pts >= t.min) ?? TIERS[0];
+  return [...TIERS].reverse().find((t) => pts >= t.min) ?? TIERS[0];
 }
 
 function TierBadge({ pts }: { pts: number }) {
