@@ -19,6 +19,8 @@ interface OverviewStats {
   manualOverrides: number;
   avgAttendancePct: number;
   riskCount: number;
+  totalLectures: number;
+  totalPoints: number;
 }
 
 export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (tab: string) => void }) {
@@ -38,7 +40,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
   }, []);
 
   const statsQuery = useQuery({
-    queryKey: ["admin", "overview-v3", todayDate],
+    queryKey: ["admin", "overview-v4", todayDate],
     queryFn: async (): Promise<OverviewStats> => {
       const [
         { count: studentsCount },
@@ -47,6 +49,8 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         { count: monthAttendanceCount },
         { count: manualCount },
         { count: riskCount },
+        { count: lecturesCount },
+        { data: pointsData },
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_deleted", false),
         supabase.from("programmes").select("id", { count: "exact", head: true }).eq("is_active", true),
@@ -54,12 +58,15 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         supabase.from("attendance").select("id", { count: "exact", head: true }).eq("status", "present").gte("marked_at", monthStart),
         supabase.from("points_ledger").select("id", { count: "exact", head: true }).in("source", ["admin_adjustment", "manual"]),
         supabase.from("student_intelligence").select("user_id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
+        supabase.from("lectures").select("id", { count: "exact", head: true }),
+        supabase.from("points_ledger").select("points"),
       ]);
 
       const students = studentsCount ?? 0;
       const monthAtt = monthAttendanceCount ?? 0;
       const daysElapsed = Math.max(1, new Date().getDate());
       const avgPct = students > 0 ? Math.min(100, Math.round((monthAtt / (students * daysElapsed)) * 100)) : 0;
+      const totalPoints = (pointsData ?? []).reduce((s, r) => s + (r.points ?? 0), 0);
 
       return {
         students,
@@ -69,6 +76,8 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         manualOverrides: manualCount ?? 0,
         avgAttendancePct: avgPct,
         riskCount: riskCount ?? 0,
+        totalLectures: lecturesCount ?? 0,
+        totalPoints,
       };
     },
     staleTime: 15_000,
@@ -88,6 +97,8 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         manualOverrides={stats?.manualOverrides ?? 0}
         attendanceToday={stats?.attendanceToday ?? 0}
         riskCount={stats?.riskCount ?? 0}
+        totalLectures={stats?.totalLectures ?? 0}
+        totalPoints={stats?.totalPoints ?? 0}
         loading={loading}
       />
 

@@ -1,4 +1,4 @@
-import { Users, GraduationCap, TrendingUp, ShieldCheck, AlertTriangle, Flame } from "lucide-react";
+import { Users, GraduationCap, TrendingUp, ShieldCheck, AlertTriangle, Flame, BookOpen, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -11,52 +11,54 @@ interface KpiCardsProps {
   manualOverrides: number;
   attendanceToday: number;
   riskCount?: number;
+  totalLectures?: number;
+  totalPoints?: number;
   loading: boolean;
 }
 
 function KpiCard({
-  label, context, value, suffix = "", icon: Icon, colorClass, bgClass, loading, index, trend, danger,
+  label, value, suffix = "", icon: Icon, colorClass, bgClass, loading, index, trend, danger,
 }: {
-  label: string; context: string; value: number; suffix?: string;
+  label: string; value: number; suffix?: string;
   icon: React.ElementType; colorClass: string; bgClass: string;
   loading: boolean; index: number; trend?: string; danger?: boolean;
 }) {
-  const counted = useMetricCountUp(loading ? 0 : value, 900 + index * 100);
+  const counted = useMetricCountUp(loading ? 0 : value, 900 + index * 80);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: index * 0.05, ease: "easeOut" }}
+      transition={{ duration: 0.2, delay: index * 0.045, ease: "easeOut" }}
       className={cn(
-        "rounded-xl border bg-surface-1 p-4 sm:p-5 shadow-xs transition-all duration-150 active:scale-[0.98] min-h-[120px] flex flex-col justify-between",
-        danger ? "border-danger/30 bg-danger/5" : "border-border-subtle"
+        "rounded-2xl border bg-surface-1 p-4 shadow-xs flex flex-col justify-between min-h-[116px] transition-all duration-150 hover:shadow-sm active:scale-[0.98]",
+        danger && value > 0 ? "border-danger/30 bg-danger/5" : "border-border-subtle",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
-        <div className={cn("rounded-lg p-2 shrink-0", bgClass)}>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
+        <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center shrink-0", bgClass)}>
           <Icon className={cn("h-4 w-4", colorClass)} />
         </div>
       </div>
 
       <div>
         {loading ? (
-          <Skeleton className="h-9 w-20 mt-2" />
+          <Skeleton className="h-9 w-20" />
         ) : (
           <p className={cn(
-            "text-4xl font-bold tracking-tight tabular-nums leading-none mt-2",
-            danger && value > 0 ? "text-danger" : "text-foreground"
+            "text-[36px] font-black tracking-tight tabular-nums leading-none",
+            danger && value > 0 ? "text-danger" : "text-foreground",
           )}>
-            {counted}{suffix}
+            {counted.toLocaleString()}{suffix}
           </p>
         )}
-        {!loading && (
+        {!loading && trend && (
           <p className={cn(
-            "text-xs mt-1.5 leading-tight",
-            danger && value > 0 ? "text-danger/70" : "text-muted-foreground"
+            "text-[11px] mt-1.5 leading-tight font-medium",
+            danger && value > 0 ? "text-danger/70" : "text-muted-foreground",
           )}>
-            {trend ?? context}
+            {trend}
           </p>
         )}
       </div>
@@ -64,44 +66,58 @@ function KpiCard({
   );
 }
 
-export default function KpiCards({ students, programmes, avgAttendancePct, manualOverrides, attendanceToday, riskCount = 0, loading }: KpiCardsProps) {
+export default function KpiCards({
+  students, programmes, avgAttendancePct, manualOverrides,
+  attendanceToday, riskCount = 0, totalLectures = 0, totalPoints = 0, loading,
+}: KpiCardsProps) {
   const kpis = [
     {
-      key: "students", label: "Total Students", context: "Registered & active",
+      key: "students",
+      label: "Total Students",
       icon: Users, colorClass: "text-primary", bgClass: "bg-primary/10",
-      value: students, trend: "Active accounts",
+      value: students,
+      trend: students > 0 ? `${students} registered` : "No students yet",
     },
     {
-      key: "programmes", label: "Programmes", context: "Learning circles running",
-      icon: GraduationCap, colorClass: "text-accent", bgClass: "bg-accent/10",
-      value: programmes, trend: programmes > 0 ? `${programmes} active` : "None yet",
+      key: "lectures",
+      label: "Total Lectures",
+      icon: BookOpen, colorClass: "text-accent", bgClass: "bg-accent/10",
+      value: totalLectures,
+      trend: totalLectures > 0 ? `${totalLectures} scheduled` : "None created yet",
     },
     {
-      key: "attendanceToday", label: "Attendance Today", context: "Marks recorded today",
+      key: "attendanceToday",
+      label: "Attendance Today",
       icon: TrendingUp, colorClass: "text-success", bgClass: "bg-success/10",
-      value: attendanceToday, trend: attendanceToday > 0 ? "Recorded today" : "No records yet",
+      value: attendanceToday,
+      trend: attendanceToday > 0 ? "Records today" : "No records yet",
     },
     {
-      key: "avgAttendancePct", label: "Avg. Attendance", context: "This month",
-      icon: Flame, colorClass: "text-warning", bgClass: "bg-warning/10",
-      value: avgAttendancePct, suffix: "%",
-      trend: avgAttendancePct >= 75 ? "On target" : avgAttendancePct >= 50 ? "Needs attention" : "Critical",
+      key: "programmes",
+      label: "Programmes",
+      icon: GraduationCap, colorClass: "text-premium", bgClass: "bg-premium/10",
+      value: programmes,
+      trend: programmes > 0 ? `${programmes} active circles` : "None yet",
     },
     {
-      key: "riskCount", label: "At-Risk Students", context: "Low engagement or attendance",
+      key: "totalPoints",
+      label: "Points Awarded",
+      icon: Zap, colorClass: "text-warning", bgClass: "bg-warning/10",
+      value: totalPoints,
+      trend: "All-time total",
+    },
+    {
+      key: "riskCount",
+      label: "At-Risk Students",
       icon: AlertTriangle, colorClass: "text-danger", bgClass: "bg-danger/10",
-      value: riskCount, trend: riskCount > 0 ? `${riskCount} flagged` : "All clear",
+      value: riskCount,
+      trend: riskCount > 0 ? `${riskCount} need attention` : "✓ All clear",
       danger: true,
-    },
-    {
-      key: "manualOverrides", label: "Manual Overrides", context: "Admin adjustments total",
-      icon: ShieldCheck, colorClass: "text-premium", bgClass: "bg-premium/10",
-      value: manualOverrides, trend: "Total adjustments",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
       {kpis.map((kpi, i) => (
         <KpiCard key={kpi.key} index={i} loading={loading} {...kpi} />
       ))}
