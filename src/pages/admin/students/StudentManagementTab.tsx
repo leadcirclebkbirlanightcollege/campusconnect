@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound } from "lucide-react";
+import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import StudentProfileDialog from "./StudentProfileDialog";
@@ -94,7 +102,23 @@ export default function StudentManagementTab() {
   const [filters, setFilters] = useState<StudentFilters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [openStudentUserId, setOpenStudentUserId] = useState<string | null>(null);
+  const [assignCollegeOpen, setAssignCollegeOpen] = useState(false);
+  const [assignCollegeId, setAssignCollegeId] = useState("");
   const debouncedQ = useDebounce(filters.q, 300);
+
+  // Load colleges for bulk-assign dropdown
+  const collegesQuery = useQuery({
+    queryKey: ["admin", "colleges_list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id,college_name")
+        .eq("is_active", true)
+        .order("college_name");
+      return (data ?? []) as { id: string; college_name: string }[];
+    },
+    staleTime: 300_000,
+  });
 
   const studentsQuery = useQuery({
     queryKey: ["admin", "students"],
@@ -198,11 +222,38 @@ export default function StudentManagementTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update verification"),
   });
 
+  // Bulk assign college
+  const bulkAssignCollegeMutation = useMutation({
+    mutationFn: async ({ userIds, collegeId }: { userIds: string[]; collegeId: string }) => {
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({ college_id: collegeId })
+        .in("user_id", userIds);
+      if (profileErr) throw profileErr;
+
+      const { error: roleErr } = await supabase
+        .from("user_roles")
+        .update({ college_id: collegeId })
+        .in("user_id", userIds)
+        .eq("role", "student");
+      if (roleErr) throw roleErr;
+    },
+    onSuccess: async () => {
+      toast.success(`College assigned to ${selectedIds.length} student(s)`);
+      setAssignCollegeOpen(false);
+      setAssignCollegeId("");
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to assign college"),
+  });
+
   const busy =
     studentsQuery.isLoading ||
     softDeleteMutation.isPending ||
     restoreMutation.isPending ||
-    toggleVerifyMutation.isPending;
+    toggleVerifyMutation.isPending ||
+    bulkAssignCollegeMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -221,6 +272,15 @@ export default function StudentManagementTab() {
 
             <div className="flex flex-wrap items-center gap-2">
               <CreateStudentDialog />
+              <Button
+                variant="outline"
+                disabled={selectedIds.length === 0 || busy}
+                onClick={() => setAssignCollegeOpen(true)}
+                className="gap-2"
+              >
+                <Building2 className="h-4 w-4" />
+                Assign College
+              </Button>
               <Button
                 variant="outline"
                 disabled={selectedIds.length === 0 || busy}
@@ -469,6 +529,48 @@ export default function StudentManagementTab() {
         userId={openStudentUserId}
         onOpenChange={(open) => setOpenStudentUserId(open ? openStudentUserId : null)}
       />
+
+      {/* ── Bulk Assign College Dialog ── */}
+      <Dialog open={assignCollegeOpen} onOpenChange={setAssignCollegeOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" />
+              Assign College
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Assign a college to <span className="font-semibold text-foreground">{selectedIds.length} selected student(s)</span>.
+              This updates both their profile and role record.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-medium">College</Label>
+              <Select value={assignCollegeId} onValueChange={setAssignCollegeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select college…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(collegesQuery.data ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.college_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignCollegeOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!assignCollegeId || bulkAssignCollegeMutation.isPending}
+              onClick={() => bulkAssignCollegeMutation.mutate({ userIds: selectedIds, collegeId: assignCollegeId })}
+              className="gap-2"
+            >
+              <Building2 className="h-4 w-4" />
+              Assign to {selectedIds.length} student{selectedIds.length !== 1 ? "s" : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

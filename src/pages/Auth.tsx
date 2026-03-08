@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   Loader2, Eye, EyeOff,
@@ -77,6 +79,21 @@ const Auth = () => {
   const [signupStudentId, setSignupStudentId] = useState("");
   const [signupDepartment, setSignupDepartment] = useState("");
   const [signupClass, setSignupClass] = useState("");
+  const [signupCollegeId, setSignupCollegeId] = useState("");
+
+  // Load active colleges for signup dropdown
+  const { data: colleges = [] } = useQuery({
+    queryKey: ["auth", "colleges"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id,college_name")
+        .eq("is_active", true)
+        .order("college_name");
+      return data ?? [];
+    },
+    staleTime: 300_000,
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -170,11 +187,13 @@ const Auth = () => {
         student_id: signupStudentId || null,
         department: signupDepartment || null,
         class_name: signupClass || null,
+        college_id: signupCollegeId || null,
       });
       if (profileError) throw profileError;
 
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: authData.user.id, role: "student",
+        college_id: signupCollegeId || null,
       });
       if (roleError) throw roleError;
 
@@ -373,6 +392,26 @@ const Auth = () => {
                   onChange={setSignupPassword}
                 />
 
+                {/* College selector */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-college" className="text-[13px] font-medium text-foreground">
+                    College <span className="text-danger">*</span>
+                  </Label>
+                  <Select value={signupCollegeId} onValueChange={setSignupCollegeId} required>
+                    <SelectTrigger
+                      id="signup-college"
+                      className="bg-surface-2 border-border-subtle text-[14px] h-10"
+                    >
+                      <SelectValue placeholder="Select your college" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colleges.map((c: { id: string; college_name: string }) => (
+                        <SelectItem key={c.id} value={c.id}>{c.college_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="signup-student-id" className="text-[13px] font-medium text-foreground">Student ID</Label>
@@ -422,7 +461,7 @@ const Auth = () => {
                 <Button
                   type="submit"
                   className="w-full h-10 gap-2 shadow-primary text-[14px] mt-1"
-                  disabled={loading}
+                  disabled={loading || !signupCollegeId}
                 >
                   {loading
                     ? <Loader2 className="h-4 w-4 animate-spin" />
