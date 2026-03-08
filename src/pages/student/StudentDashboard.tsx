@@ -419,11 +419,13 @@ export default function StudentDashboard() {
 }
 
 const HeroStat = memo(function HeroStat({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
+  const count = useMetricCountUp(value, 800);
+
   return (
     <div className="rounded-xl bg-surface-2/70 p-3 text-center">
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-xl font-black tabular-nums text-foreground">
-        {value}
+        {count}
         {suffix}
       </p>
     </div>
