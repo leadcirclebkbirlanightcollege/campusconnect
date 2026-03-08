@@ -12,8 +12,8 @@ const GlowButton = React.memo(
     return (
       <motion.button
         ref={ref}
-        whileTap={{ scale: 0.97 }}
-        transition={{ duration: 0.12 }}
+        whileTap={BUTTON_TAP_ANIMATION}
+        transition={PRESS_TRANSITION}
         className={cn(
           "relative isolate inline-flex h-12 min-w-[120px] items-center justify-center overflow-hidden rounded-xl px-5",
           "text-sm font-semibold text-primary-foreground",

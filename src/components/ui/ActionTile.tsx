@@ -14,8 +14,8 @@ const ActionTile = React.memo(
     return (
       <motion.button
         ref={ref}
-        whileTap={{ scale: 0.96 }}
-        transition={{ duration: 0.12 }}
+        whileTap={CARD_TAP_ANIMATION}
+        transition={PRESS_TRANSITION}
         className={cn(
           "group flex aspect-square min-h-24 w-full flex-col items-center justify-center gap-3 rounded-2xl",
           "border border-border-subtle bg-gradient-to-b from-surface-2 to-surface-1 p-4",

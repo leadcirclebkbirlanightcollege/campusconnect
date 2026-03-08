@@ -238,10 +238,11 @@ export default function AppLayout() {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}
-                  variants={PAGE_VARIANTS}
+                  variants={PAGE_TRANSITION_VARIANTS}
                   initial="initial"
                   animate="animate"
                   exit="exit"
+                  transition={PAGE_TRANSITION}
                   className="w-full h-full"
                 >
                   <Outlet />

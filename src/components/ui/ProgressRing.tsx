@@ -44,7 +44,7 @@ const ProgressRing = React.memo(function ProgressRing({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={PROGRESS_RING_TRANSITION}
         />
       </svg>
 

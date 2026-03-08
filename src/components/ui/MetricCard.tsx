@@ -20,7 +20,7 @@ const MetricCard = React.memo(function MetricCard({
   suffix = "",
   className,
 }: MetricCardProps) {
-  const animatedValue = useMetricCountUp(value, 720);
+  const animatedValue = useMetricCountUp(value);
 
   return (
     <article

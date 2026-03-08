@@ -24,12 +24,12 @@ export default function PageTransition({ children }: PageTransitionProps) {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        variants={variants}
+        variants={PAGE_TRANSITION_VARIANTS}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={transition}
-        style={{ width: "100%" }}
+        transition={PAGE_TRANSITION}
+        style={PAGE_TRANSITION_STYLE}
       >
         {children}
       </motion.div>
