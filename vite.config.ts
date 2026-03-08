@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "prompt",
       manifestFilename: "manifest.webmanifest",
       includeAssets: ["favicon.ico", "pwa-512.png"],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+      },
       manifest: {
         name: "Campus Connect",
         short_name: "Campus Connect",
@@ -50,5 +54,29 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-select",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-tooltip",
+          ],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-charts": ["recharts"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+          "vendor-motion": ["framer-motion"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
 }));
