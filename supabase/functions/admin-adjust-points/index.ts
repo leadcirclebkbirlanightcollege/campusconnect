@@ -62,14 +62,22 @@ Deno.serve(async (req) => {
     if (claimsError || !claimsData?.claims?.sub) return json(401, { error: "Unauthorized" });
     const adminUserId = claimsData.claims.sub;
 
-    const { data: isAdmin, error: isAdminError } = await admin.rpc("is_admin", {
+    const { data: isAdminResult, error: isAdminError } = await admin.rpc("is_admin", {
       check_user_id: adminUserId,
     });
+    const { data: isSuperAdminResult } = await admin.rpc("is_super_admin", {
+      check_user_id: adminUserId,
+    });
+
     if (isAdminError) {
       console.error("admin-adjust-points: admin check failed", isAdminError);
       return json(500, { error: "Failed to verify admin role" });
     }
-    if (!isAdmin) return json(403, { error: "Admin access required" });
+    if (!isAdminResult && !isSuperAdminResult) return json(403, { error: "Admin access required" });
+
+    // Get admin college for audit context
+    const { data: adminProfile } = await admin.from("profiles").select("college_id").eq("user_id", adminUserId).maybeSingle();
+    const collegeId = (adminProfile as any)?.college_id ?? null;
 
     const { error: insertError } = await admin.from("points_ledger").insert({
       user_id: userId,
@@ -77,6 +85,7 @@ Deno.serve(async (req) => {
       source: "admin_adjustment",
       note: reason,
       created_by: adminUserId,
+      college_id: collegeId,
       metadata: {
         kind: pointsDelta > 0 ? "add" : "deduct",
         reason,
@@ -85,6 +94,20 @@ Deno.serve(async (req) => {
     if (insertError) {
       console.error("admin-adjust-points: insert failed", insertError);
       return json(400, { error: insertError.message });
+    }
+
+    // Write audit log (best-effort, non-blocking)
+    try {
+      await admin.rpc("log_audit_event", {
+        p_action: "points_adjusted",
+        p_performed_by: adminUserId,
+        p_target_entity: "points_ledger",
+        p_target_id: userId,
+        p_college_id: collegeId,
+        p_details: { points_delta: pointsDelta, reason, target_user_id: userId },
+      });
+    } catch (e) {
+      console.error("admin-adjust-points: audit log failed (non-blocking)", e);
     }
 
     // Trigger intelligence recomputation (best-effort)
