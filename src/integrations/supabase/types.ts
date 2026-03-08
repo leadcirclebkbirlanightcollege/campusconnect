@@ -350,6 +350,30 @@ export type Database = {
           },
         ]
       }
+      daily_checkins: {
+        Row: {
+          checkin_date: string
+          college_id: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_content: {
         Row: {
           body: string | null
