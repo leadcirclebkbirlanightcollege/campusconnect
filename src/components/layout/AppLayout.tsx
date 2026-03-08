@@ -16,6 +16,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
+import SessionGuard from "@/components/auth/SessionGuard";
 import {
   SidebarInset,
   SidebarProvider,
@@ -320,6 +321,8 @@ export default function AppLayout() {
   });
 
   return (
+    <>
+    <SessionGuard />
     <SidebarProvider defaultOpen>
       <div className="min-h-svh flex w-full bg-background">
         <AppSidebar />
@@ -390,5 +393,6 @@ export default function AppLayout() {
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
     </SidebarProvider>
+    </>
   );
 }

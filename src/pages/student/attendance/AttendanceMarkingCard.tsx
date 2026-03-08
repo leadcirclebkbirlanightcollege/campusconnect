@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRateLimit } from "@/hooks/use-rate-limit";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ function safeErrorMessage(e: unknown) {
 
 export default function AttendanceMarkingCard({ lectureId, initialToken }: Props) {
   const reduceMotion = useReducedMotion();
+  const { attempt: attemptMark } = useRateLimit("mark-attendance", 5, 60_000);
 
   const [otp, setOtp] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -110,6 +112,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
       if (scanLock) throw new Error("Already processing");
+      if (!attemptMark()) throw new Error("rate_limited");  // client-side rate limit
       setScanLock(true);
 
       const { data: sessionData } = await supabase.auth.getSession();

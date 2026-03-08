@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useRateLimit } from "@/hooks/use-rate-limit";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ function FloatingReward({ pts, visible }: { pts: number; visible: boolean }) {
 export function DailyCheckinCard() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useDailyCheckinData();
+  const { attempt: attemptCheckin } = useRateLimit("daily-checkin", 3, 60_000);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [floatingPts, setFloatingPts] = useState<number | null>(null);
   const [milestoneAnim, setMilestoneAnim] = useState(false);
@@ -134,8 +136,9 @@ export function DailyCheckinCard() {
 
   const handleCheckin = useCallback(() => {
     if (checkinMutation.isPending) return;
+    if (!attemptCheckin()) return;  // rate-limit guard
     checkinMutation.mutate();
-  }, [checkinMutation]);
+  }, [checkinMutation, attemptCheckin]);
 
   const checkedInToday = data?.checkedInToday || justCheckedIn;
   const streak = data?.currentStreak ?? 0;
