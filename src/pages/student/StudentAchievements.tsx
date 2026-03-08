@@ -652,9 +652,14 @@ export default function StudentAchievements() {
                   transition={{ delay: 0.24 + i * 0.03 }}
                   className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-surface-2 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${src?.color}20` }}>
-                    <span style={{ color: src?.color }}>{src?.icon}</span>
+                  <div className={cn(
+                    "h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0",
+                    getSourceKey(row.source) === "attendance"    && "bg-success/10 text-success",
+                    getSourceKey(row.source) === "daily_checkin" && "bg-warning/10 text-warning",
+                    getSourceKey(row.source) === "daily_reward"  && "bg-primary/10 text-primary",
+                    getSourceKey(row.source) === "manual"        && "bg-premium/10 text-premium",
+                  )}>
+                    {src?.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-semibold text-foreground truncate">
