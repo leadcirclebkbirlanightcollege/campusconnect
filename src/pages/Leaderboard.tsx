@@ -65,11 +65,10 @@ function RankDelta({ delta }: { delta: number }) {
 }
 
 /* ── Podium card ─────────────────────────────────────────────────── */
-function PodiumCard({ row, myId, position, featured }: {
+const PodiumCard = memo(function PodiumCard({ row, myId, position, featured }: {
   row: LeaderRow; myId?: string; position: 1 | 2 | 3; featured?: boolean;
 }) {
   const isMe = row.user_id === myId;
-  const tier = getTier(row.points_total);
   const meta = {
     1: { Icon: Crown,  label: "1st", height: "h-[186px]", ring: "ring-gold/40", avatarSize: "h-14 w-14", accent: "border-gold/30 bg-gradient-to-b from-gold/8 via-surface-1 to-surface-1", glow: "shadow-[0_0_28px_hsl(var(--gold)/0.3)]" },
     2: { Icon: Medal,  label: "2nd", height: "h-[152px]", ring: "ring-border-subtle", avatarSize: "h-11 w-11", accent: "border-border-subtle bg-surface-1", glow: "" },
@@ -88,14 +87,12 @@ function PodiumCard({ row, myId, position, featured }: {
         "hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
-      {/* Rank icon */}
       <div className={cn("absolute top-2.5 left-1/2 -translate-x-1/2 h-7 w-7 rounded-full flex items-center justify-center border shadow-xs",
         position === 1 ? "bg-gold/15 border-gold/40" : "bg-surface-3 border-border-subtle"
       )}>
         <meta.Icon className={cn("h-3.5 w-3.5", position === 1 ? "text-gold" : "text-muted-foreground")} />
       </div>
 
-      {/* Podium step accent (1st only) */}
       {position === 1 && (
         <motion.div
           className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gold/5 to-transparent pointer-events-none"
@@ -122,7 +119,7 @@ function PodiumCard({ row, myId, position, featured }: {
       <div className="mt-1"><TierBadge pts={row.points_total} /></div>
     </motion.div>
   );
-}
+});
 
 /* ── Streak badge ─────────────────────────────────────────────────── */
 function StreakBadge({ streak }: { streak: number }) {
