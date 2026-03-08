@@ -18,6 +18,7 @@ import {
 import PageTransition from "@/components/layout/PageTransition";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
+import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
 import {
   SidebarInset,
   SidebarProvider,
@@ -395,6 +396,8 @@ export default function AppLayout() {
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
       {/* Floating feedback button — visible for all authenticated users */}
       <FeedbackButton />
+      {/* Force update overlay — listens to platform_settings realtime */}
+      <ForceUpdateBanner />
     </SidebarProvider>
     </>
   );

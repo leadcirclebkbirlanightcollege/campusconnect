@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette } from "lucide-react";
+import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette, RefreshCw, Zap } from "lucide-react";
+import { useState as useLocalState } from "react";
+import { APP_VERSION } from "@/config/version";
 import { invalidatePlatformModeCache, PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 const DEFAULT: PlatformModeSettings = {
@@ -26,6 +28,8 @@ export default function AdminSystemControlTab() {
   const [settings, setSettings] = useState<PlatformModeSettings>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fuMessage, setFuMessage] = useLocalState("");
+  const [fuPushing, setFuPushing] = useLocalState(false);
 
   useEffect(() => {
     (supabase as any)
@@ -258,6 +262,75 @@ export default function AdminSystemControlTab() {
         <Save className="w-4 h-4" />
         {saving ? "Saving…" : "Save Platform Mode"}
       </Button>
+
+      {/* ── Force Update ─────────────────────────────────────── */}
+      <Card className="border-danger/20 bg-danger/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-danger/15 flex items-center justify-center">
+              <RefreshCw className="h-4 w-4 text-danger" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold text-foreground">Push Force Update</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Instantly refreshes all active student sessions to load the latest version.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-2">
+          <div className="flex items-start gap-2 rounded-lg border border-warning/25 bg-warning/10 p-2.5">
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+            <p className="text-[11px] text-warning leading-relaxed">
+              This will immediately interrupt active sessions and force all students to reload.
+              Use only after deploying a critical update.
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="fu-msg" className="text-xs text-muted-foreground mb-1.5 block">
+              Optional message to students
+            </Label>
+            <Input
+              id="fu-msg"
+              value={fuMessage}
+              onChange={(e) => setFuMessage(e.target.value)}
+              placeholder="e.g. Critical security update applied. Please reload."
+              className="text-xs"
+              maxLength={120}
+            />
+          </div>
+          <Button
+            variant="destructive"
+            className="w-full gap-2"
+            disabled={fuPushing}
+            onClick={async () => {
+              setFuPushing(true);
+              const payload = {
+                triggered_at: new Date().toISOString(),
+                version: APP_VERSION,
+                message: fuMessage.trim() || undefined,
+              };
+              const { error } = await (supabase as any)
+                .from("platform_settings")
+                .upsert({
+                  key: "force_update",
+                  value: payload,
+                  updated_at: new Date().toISOString(),
+                });
+              setFuPushing(false);
+              if (error) {
+                toast.error("Failed: " + error.message);
+              } else {
+                setFuMessage("");
+                toast.success("Force update pushed — all student sessions will refresh within 30s.");
+              }
+            }}
+          >
+            <Zap className="h-4 w-4" />
+            {fuPushing ? "Pushing…" : "Push Force Update Now"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
