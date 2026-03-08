@@ -1,5 +1,6 @@
-import { RouteSkeleton } from "@/ui-engine/skeletons";
+import { PageSkeleton } from "@/components/skeleton";
 
 export default function RouteLoader() {
-  return <RouteSkeleton />;
+  return <PageSkeleton variant="dashboard" />;
 }
+

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -51,7 +51,7 @@ function downloadCsv(rows: { date: string; topic: string; status: string; points
 }
 
 /* ── KPI Card ── */
-function KpiCard({ icon: Icon, label, value, sub, accent }: {
+const KpiCard = memo(function KpiCard({ icon: Icon, label, value, sub, accent }: {
   icon: React.ElementType; label: string; value: string; sub?: string;
   accent: "success" | "danger" | "warning" | "primary";
 }) {
@@ -72,7 +72,7 @@ function KpiCard({ icon: Icon, label, value, sub, accent }: {
       {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
     </div>
   );
-}
+});
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function StudentAttendanceHistory() {

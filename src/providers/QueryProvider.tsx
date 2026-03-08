@@ -1,5 +1,6 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GC_TIME, STALE_TIME } from "@/ui-engine/performance-engine";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,8 +14,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: true,
       refetchOnReconnect: true,
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
+      staleTime: STALE_TIME.attendance,
+      gcTime: GC_TIME.medium,
     },
     mutations: { retry: 0 },
   },
@@ -23,3 +24,4 @@ export const queryClient = new QueryClient({
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
+
