@@ -412,12 +412,12 @@ export default function StudentProfile() {
   const activityIcon = (type: string) => {
     if (type === "points")     return <Zap className="h-3.5 w-3.5 text-warning" />;
     if (type === "attendance") return <CheckCircle2 className="h-3.5 w-3.5 text-success" />;
-    return <Flame className="h-3.5 w-3.5 text-orange-400" />;
+    return <Flame className="h-3.5 w-3.5 text-warning" />;
   };
   const activityBg = (type: string) => {
     if (type === "points")     return "bg-warning/10";
     if (type === "attendance") return "bg-success/10";
-    return "bg-orange-400/10";
+    return "bg-warning/10";
   };
   const timeAgo = (ts: string) => {
     const diff = (Date.now() - new Date(ts).getTime()) / 1000;
