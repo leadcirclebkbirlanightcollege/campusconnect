@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
 import RouteLoader from "@/router/RouteLoader";
 
-export default function PublicRoute({ children }: { children: React.ReactNode }) {
+export default function PublicRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return <RouteLoader />;
@@ -10,3 +11,4 @@ export default function PublicRoute({ children }: { children: React.ReactNode })
 
   return <>{children}</>;
 }
+
