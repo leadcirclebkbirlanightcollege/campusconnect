@@ -1,589 +1,406 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { motion } from "framer-motion";
 import {
-  ArrowRight, GraduationCap, CheckCircle, Trophy, Bell,
-  Shield, Users, Zap, ChevronUp, BarChart3
+  ArrowRight,
+  Bell,
+  CalendarCheck,
+  CheckCircle2,
+  GraduationCap,
+  LayoutDashboard,
+  Megaphone,
+  Shield,
+  Sparkles,
+  Star,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react";
 
-/* ── Intro Splash ─────────────────────────────────────────── */
-function useIntroSeen() {
-  const key = "cc_intro_seen";
-  const [seen, setSeen] = useState(() => {
-    try { return sessionStorage.getItem(key) === "1"; } catch { return false; }
-  });
-  const markSeen = () => {
-    try { sessionStorage.setItem(key, "1"); } catch {}
-    setSeen(true);
-  };
-  return { seen, markSeen };
-}
+import { supabase } from "@/integrations/supabase/client";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { Button } from "@/components/ui/button";
+import { GlowButton } from "@/components/ui/GlowButton";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { ActionTile } from "@/components/ui/ActionTile";
+import { cn } from "@/lib/utils";
 
-function IntroSplash({
-  onDone, brandName, tagline, logoUrl,
-}: { onDone: () => void; brandName: string; tagline: string; logoUrl: string | null }) {
-  const [phase, setPhase] = useState<0 | 1 | 2 | 3 | 4>(0);
+const ENTER = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
 
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 200);   // logo
-    const t2 = setTimeout(() => setPhase(2), 700);   // name
-    const t3 = setTimeout(() => setPhase(3), 1100);  // tagline + sweep
-    const t4 = setTimeout(() => setPhase(4), 1900);  // fade out
-    const t5 = setTimeout(onDone, 2300);
-    return () => [t1,t2,t3,t4,t5].forEach(clearTimeout);
-  }, [onDone]);
+const HIGHLIGHTS = [
+  {
+    icon: CalendarCheck,
+    title: "Smart Attendance",
+    description: "Live QR/OTP attendance with secure verification and instant status sync.",
+  },
+  {
+    icon: Trophy,
+    title: "Gamified Leaderboard",
+    description: "Boost engagement with points, streaks, tiers, and healthy competition.",
+  },
+  {
+    icon: Bell,
+    title: "Campus Notifications",
+    description: "Announcements, lecture alerts, and reminders delivered in one inbox.",
+  },
+] as const;
 
+const FEATURES = [
+  { icon: LayoutDashboard, label: "Lecture Management" },
+  { icon: CalendarCheck, label: "Attendance Tracking" },
+  { icon: Trophy, label: "Student Leaderboard" },
+  { icon: Star, label: "Achievements System" },
+  { icon: Shield, label: "Admin Dashboard" },
+  { icon: Megaphone, label: "Announcements" },
+] as const;
+
+const WORKFLOW = [
+  {
+    icon: Users,
+    title: "Students join",
+    description: "Onboarding is fast with role-ready access and profile setup.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Lectures scheduled",
+    description: "Admins publish structured lecture sessions in seconds.",
+  },
+  {
+    icon: Zap,
+    title: "Attendance tracked",
+    description: "Real-time attendance updates keep students and teams aligned.",
+  },
+  {
+    icon: Sparkles,
+    title: "Rewards unlocked",
+    description: "Points, achievements, and tiers keep campus momentum high.",
+  },
+] as const;
+
+function PreviewCard({
+  title,
+  subtitle,
+  accentClass,
+  statA,
+  statB,
+}: {
+  title: string;
+  subtitle: string;
+  accentClass: string;
+  statA: string;
+  statB: string;
+}) {
   return (
-    <div
-      aria-hidden
-      style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "hsl(var(--background))",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        gap: 20,
-        opacity: phase === 4 ? 0 : 1,
-        transition: "opacity 350ms ease",
-        pointerEvents: phase === 4 ? "none" : "all",
-        overflow: "hidden",
-      }}
-    >
-      {/* light sweep */}
-      {phase >= 3 && (
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(105deg, transparent 30%, hsl(var(--primary)/0.06) 50%, transparent 70%)",
-          animation: "cc-sweep 1.2s ease forwards",
-          pointerEvents: "none",
-        }} />
-      )}
+    <article className="min-w-[280px] snap-start">
+      <GlassCard className="space-y-3" padding="md" hover>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          </div>
+          <span className={cn("h-2.5 w-2.5 rounded-full", accentClass)} />
+        </div>
 
-      {/* logo */}
-      <div style={{
-        width: 72, height: 72, borderRadius: 20,
-        background: "hsl(var(--primary))",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 8px 40px hsl(var(--primary)/0.3)",
-        opacity: phase >= 1 ? 1 : 0,
-        transform: phase >= 1 ? "scale(1)" : "scale(0.85)",
-        transition: "opacity 400ms ease, transform 400ms cubic-bezier(.22,.97,.44,1)",
-      }}>
-        {logoUrl ? (
-          <img src={logoUrl} alt={brandName} style={{ width: 44, height: 44, objectFit: "contain" }} />
-        ) : (
-          <GraduationCap style={{ width: 36, height: 36, color: "hsl(var(--primary-foreground))" }} />
-        )}
-      </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
+            <p className="text-[11px] text-muted-foreground">Metric</p>
+            <p className="text-lg font-black text-foreground">{statA}</p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
+            <p className="text-[11px] text-muted-foreground">Status</p>
+            <p className="text-lg font-black text-foreground">{statB}</p>
+          </div>
+        </div>
 
-      {/* brand name */}
-      <div style={{
-        textAlign: "center",
-        opacity: phase >= 2 ? 1 : 0,
-        transform: phase >= 2 ? "translateY(0)" : "translateY(8px)",
-        transition: "opacity 350ms ease 0.1s, transform 350ms ease 0.1s",
-      }}>
-        <div style={{
-          fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em",
-          color: "hsl(var(--foreground))", lineHeight: 1.2,
-        }}>{brandName}</div>
-        <div style={{
-          fontSize: 11, fontWeight: 500, letterSpacing: "0.14em",
-          textTransform: "uppercase", color: "hsl(var(--muted-foreground))",
-          marginTop: 6,
-          opacity: phase >= 3 ? 1 : 0,
-          transition: "opacity 300ms ease 0.15s",
-        }}>{tagline}</div>
-      </div>
-
-      <style>{`
-        @keyframes cc-sweep {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(100%); }
-        }
-      `}</style>
-    </div>
+        <div className="h-2 rounded-full bg-surface-3">
+          <div className="h-2 w-2/3 rounded-full bg-primary" />
+        </div>
+      </GlassCard>
+    </article>
   );
 }
 
-/* ── Count-up on scroll ───────────────────────────────────── */
-function StatCounter({ value, label, suffix = "" }: { value: number; label: string; suffix?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [count, setCount] = useState(0);
-  const started = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true;
-        const dur = 1200;
-        const start = performance.now();
-        const tick = (now: number) => {
-          const p = Math.min((now - start) / dur, 1);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setCount(Math.round(eased * value));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      }
-    }, { threshold: 0.4 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [value]);
-
-  return (
-    <div ref={ref} className="text-center space-y-1">
-      <div className="text-4xl md:text-5xl font-bold text-foreground tabular-nums">
-        {count.toLocaleString()}{suffix}
-      </div>
-      <div className="text-sm text-muted-foreground">{label}</div>
-    </div>
-  );
-}
-
-/* ── Fade-in on scroll ────────────────────────────────────── */
-function FadeOnScroll({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.1 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <div ref={ref} className={className} style={{
-      opacity: visible ? 1 : 0,
-      transform: visible ? "translateY(0)" : "translateY(20px)",
-      transition: `opacity 500ms ease ${delay}ms, transform 500ms ease ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-/* ── Main Component ───────────────────────────────────────── */
 export default function Index() {
   const navigate = useNavigate();
   const { branding } = usePlatformBranding();
-  const { seen, markSeen } = useIntroSeen();
-  const [introPlaying, setIntroPlaying] = useState(!seen);
-  const [scrollY, setScrollY] = useState(0);
   const [authChecking, setAuthChecking] = useState(true);
 
-  /* redirect logged-in users */
   useEffect(() => {
     let mounted = true;
+
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
         if (!session || !mounted) return;
-        const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
+
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
         if (!mounted) return;
         navigate(data?.role === "admin" ? "/app/admin/dashboard" : "/app/dashboard", { replace: true });
       } finally {
         if (mounted) setAuthChecking(false);
       }
     })();
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
-  /* scroll progress */
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const handleIntroDone = () => { markSeen(); setIntroPlaying(false); };
-
-  const scrollProgress = Math.min(scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1), 1);
+  const year = useMemo(() => new Date().getFullYear(), []);
 
   if (authChecking) return null;
 
   return (
-    <>
-      {/* Intro */}
-      {introPlaying && (
-        <IntroSplash
-          onDone={handleIntroDone}
-          brandName={branding.brand_name}
-          tagline={branding.tagline}
-          logoUrl={branding.logo_url}
-        />
-      )}
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.14),transparent_58%)]" />
 
-      {/* Scroll progress */}
-      <div className="fixed top-0 left-0 h-[2px] bg-primary z-50 transition-all duration-100" style={{ width: `${scrollProgress * 100}%` }} />
-
-      {/* Navbar */}
-      <header className="fixed top-0 inset-x-0 z-40 h-14 flex items-center border-b border-border/30 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/80 backdrop-blur-md safe-area-top">
+        <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-5xl">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              {branding.logo_url
-                ? <img src={branding.logo_url} alt={branding.brand_name} className="w-5 h-5 object-contain" />
-                : <GraduationCap className="w-4 h-4 text-primary-foreground" />
-              }
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 border border-primary/20">
+              {branding.logo_url ? (
+                <img
+                  src={branding.logo_url}
+                  alt={`${branding.brand_name} logo`}
+                  className="h-5 w-5 object-contain"
+                  loading="eager"
+                />
+              ) : (
+                <GraduationCap className="h-4.5 w-4.5 text-primary" />
+              )}
             </div>
-            <span className="text-sm font-semibold tracking-tight text-foreground">{branding.brand_name}</span>
+            <div>
+              <p className="text-sm font-semibold leading-none text-foreground">{branding.brand_name}</p>
+              <p className="text-[10px] text-muted-foreground leading-none mt-1">Campus platform</p>
+            </div>
           </div>
-          <Link to="/auth">
-            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-              Sign in <ArrowRight className="w-3 h-3" />
-            </Button>
-          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link to="/auth" aria-label="Login">
+              <Button variant="ghost" size="sm" className="h-12 px-3 text-xs">
+                Login
+              </Button>
+            </Link>
+            <Link to="/auth" aria-label="Get started">
+              <Button size="sm" className="h-12 px-4 text-xs">
+                Get Started
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="min-h-screen bg-background text-foreground overflow-x-hidden pt-14">
-
-        {/* subtle noise layer */}
-        <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.025] pointer-events-none z-0" />
-
-        {/* radial ambient */}
-        <div className="fixed inset-0 pointer-events-none z-0"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, hsl(var(--primary)/0.07), transparent)" }} />
-
-        {/* ── HERO ──────────────────────────────────────────── */}
-        <section className="relative z-10 container mx-auto px-5 pt-20 pb-24 md:pt-28 md:pb-32">
-          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-
-            {/* Left */}
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/60 bg-surface-1 text-xs text-muted-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                Live platform · {new Date().getFullYear()}
-              </div>
-
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl font-bold leading-[1.1] tracking-tight text-foreground">
-                  Your Campus.<br />
-                  <span className="text-primary">Intelligently</span><br />
-                  Connected.
-                </h1>
-                <p className="text-base text-muted-foreground leading-relaxed max-w-md">
-                  {branding.brand_name} is the institutional platform built for serious academic management — attendance, analytics, gamification, and command control.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link to="/auth">
-                  <Button size="lg" className="h-11 px-6 gap-2 font-medium shadow-lg shadow-primary/20">
-                    Get Started <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button size="lg" variant="outline" className="h-11 px-6 font-medium">
-                    Student Login
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="flex items-center gap-6 pt-2">
-                {[
-                  { v: "99%", l: "Uptime" },
-                  { v: "60fps", l: "Performance" },
-                  { v: "Live", l: "Attendance" },
-                ].map(({ v, l }) => (
-                  <div key={l} className="text-center">
-                    <div className="text-lg font-bold text-foreground">{v}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — glass dashboard mock */}
-            <div className="relative hidden md:block">
-              <div className="relative rounded-2xl border border-border/50 bg-surface-1/90 backdrop-blur-sm shadow-2xl overflow-hidden p-5 space-y-4"
-                style={{ transform: "perspective(1000px) rotateY(-4deg) rotateX(2deg)" }}>
-
-                {/* mock header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <span className="text-xs font-semibold text-foreground">Student Dashboard</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-success font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                    LIVE
-                  </div>
-                </div>
-
-                {/* mock attendance ring */}
-                <div className="flex items-center gap-4 p-3 rounded-xl bg-surface-2 border border-border/40">
-                  <div className="w-14 h-14 rounded-full border-4 border-primary/20 flex items-center justify-center relative">
-                    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
-                      <circle cx="28" cy="28" r="24" fill="none" stroke="hsl(var(--primary)/0.15)" strokeWidth="4" />
-                      <circle cx="28" cy="28" r="24" fill="none" stroke="hsl(var(--primary))" strokeWidth="4"
-                        strokeDasharray="150.8" strokeDashoffset="37.7" strokeLinecap="round" />
-                    </svg>
-                    <span className="text-xs font-bold text-primary">75%</span>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Attendance</div>
-                    <div className="text-xl font-bold text-foreground">75%</div>
-                    <div className="text-[10px] text-muted-foreground">9 of 12 lectures</div>
-                  </div>
-                  <div className="ml-auto text-right">
-                    <div className="text-[10px] text-muted-foreground">Points</div>
-                    <div className="text-lg font-bold text-foreground">240</div>
-                    <div className="text-[10px] text-success">Silver Tier</div>
-                  </div>
-                </div>
-
-                {/* mock mini stats */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { l: "Streak", v: "7d", c: "text-warning" },
-                    { l: "Rank", v: "#4", c: "text-primary" },
-                    { l: "Risk", v: "Low", c: "text-success" },
-                  ].map(({ l, v, c }) => (
-                    <div key={l} className="p-2 rounded-lg bg-surface-2 border border-border/30 text-center">
-                      <div className={`text-sm font-bold ${c}`}>{v}</div>
-                      <div className="text-[10px] text-muted-foreground">{l}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* mock live lecture */}
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/8 border border-primary/20">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[11px] text-primary font-medium">Lecture in progress — Mark attendance now</span>
-                </div>
-              </div>
-
-              {/* depth shadow */}
-              <div className="absolute -inset-4 rounded-3xl bg-primary/5 blur-3xl -z-10" />
-            </div>
-          </div>
-        </section>
-
-        {/* ── STATS ─────────────────────────────────────────── */}
-        <section className="relative z-10 border-y border-border/40 bg-surface-1/60 backdrop-blur-sm">
-          <div className="container mx-auto px-5 py-16">
-            <FadeOnScroll>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <StatCounter value={500} suffix="+" label="Active Students" />
-                <StatCounter value={120} suffix="+" label="Lectures Conducted" />
-                <StatCounter value={8500} suffix="+" label="Attendance Marks" />
-                <StatCounter value={24000} suffix="+" label="Points Awarded" />
-              </div>
-            </FadeOnScroll>
-          </div>
-        </section>
-
-        {/* ── FEATURES ──────────────────────────────────────── */}
-        <section className="relative z-10 container mx-auto px-5 py-24">
-          <FadeOnScroll className="text-center mb-16 space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-widest text-primary">Platform Capabilities</div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">Built for institutional scale</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto text-sm">
-              Every feature designed with clarity, structure, and performance at its core.
-            </p>
-          </FadeOnScroll>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { icon: CheckCircle, title: "QR & OTP Attendance", desc: "Mark attendance in seconds with secure QR codes or 6-digit OTP. Live session monitoring.", color: "text-primary" },
-              { icon: BarChart3, title: "Performance Analytics", desc: "Tier progression, risk detection, attendance consistency scores and smart projections.", color: "text-accent" },
-              { icon: Trophy, title: "Competitive Leaderboard", desc: "Live ranked standings with podium, tier badges, weekly resets and point animations.", color: "text-warning" },
-              { icon: Shield, title: "Admin Command Center", desc: "Full operational control — platform modes, student management, audit logs, analytics.", color: "text-success" },
-              { icon: Bell, title: "Smart Notifications", desc: "Scheduled and live alerts for lectures, announcements, and critical updates.", color: "text-primary" },
-              { icon: Zap, title: "Intelligence Engine", desc: "Automated risk flagging, behaviour reliability scoring, and engagement index per student.", color: "text-accent" },
-              { icon: Users, title: "Programme Management", desc: "Allot students to learning circles, tag lectures to programmes, track cohort-level data.", color: "text-warning" },
-              { icon: GraduationCap, title: "Digital Identity", desc: "Verified student digital ID cards with QR scan, profile management, and tier display.", color: "text-success" },
-            ].map(({ icon: Icon, title, desc, color }, i) => (
-              <FadeOnScroll key={title} delay={i * 40}>
-                <div className="group p-5 rounded-xl border border-border/40 bg-surface-1 hover:border-border/80 hover:bg-surface-2 transition-all duration-150 h-full space-y-3">
-                  <div className={`w-9 h-9 rounded-lg bg-current/8 flex items-center justify-center ${color}`}>
-                    <Icon className={`w-4.5 h-4.5 ${color}`} />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-                </div>
-              </FadeOnScroll>
-            ))}
-          </div>
-        </section>
-
-        {/* ── ADMIN COMMAND CENTER SPOTLIGHT ────────────────── */}
-        <section className="relative z-10 border-y border-border/40 bg-surface-1/40 py-24">
-          <div className="container mx-auto px-5">
-            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-              <FadeOnScroll className="space-y-6">
-                <div className="text-xs font-semibold uppercase tracking-widest text-primary">Admin Command Center</div>
-                <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                  Total operational control.<br />Zero friction.
-                </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  The admin panel is an operations war room — real-time attendance monitoring, platform mode control, student intelligence, audit logs, and a full analytics suite.
-                </p>
-                <ul className="space-y-2">
-                  {[
-                    "Platform mode switchboard (Normal / Maintenance / Launch)",
-                    "Live attendance session monitoring with student list",
-                    "Student intelligence scoring — risk, tier, engagement",
-                    "Audit log for every attendance correction",
-                    "Scheduled notification delivery",
-                  ].map(c => (
-                    <li key={c} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </FadeOnScroll>
-
-              {/* mock admin panel */}
-              <FadeOnScroll delay={100}>
-                <div className="rounded-2xl border border-border/50 bg-surface-1 p-5 space-y-3 shadow-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-foreground">Command Center</span>
-                    <span className="ml-auto text-[10px] text-success font-medium flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />Systems Operational
-                    </span>
-                  </div>
-                  {[
-                    { label: "Total Students", value: "500+", delta: "+12 this week" },
-                    { label: "Active Lectures", value: "3", delta: "Live now" },
-                    { label: "Attendance Today", value: "89%", delta: "+4% vs avg" },
-                    { label: "At-Risk Students", value: "6", delta: "Flagged" },
-                  ].map(({ label, value, delta }) => (
-                    <div key={label} className="flex items-center justify-between p-2.5 rounded-lg bg-surface-2 border border-border/30">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-foreground">{value}</div>
-                        <div className="text-[10px] text-muted-foreground">{delta}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </FadeOnScroll>
-            </div>
-          </div>
-        </section>
-
-        {/* ── CORE TEAM ─────────────────────────────────────── */}
-        <CoreTeamSection brandName={branding.brand_name} />
-
-        {/* ── CTA ───────────────────────────────────────────── */}
-        <section className="relative z-10 container mx-auto px-5 py-24">
-          <FadeOnScroll>
-            <div className="max-w-2xl mx-auto text-center space-y-6 p-10 rounded-2xl border border-primary/20 bg-primary/5">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                Ready to join {branding.brand_name}?
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Your academic life — intelligently managed.
-              </p>
-              <Link to="/auth">
-                <Button size="lg" className="h-11 px-8 gap-2 shadow-lg shadow-primary/20">
-                  Create Account <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </FadeOnScroll>
-        </section>
-
-        {/* Footer */}
-        <footer className="relative z-10 border-t border-border/40 bg-surface-1/60 py-6">
-          <div className="container mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{branding.brand_name} · {branding.tagline}</span>
-            <span>Department of Computer Science · Built with precision.</span>
-          </div>
-        </footer>
-      </main>
-
-      {/* Back to top */}
-      {scrollY > 400 && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 w-9 h-9 rounded-lg border border-border/60 bg-surface-1/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-md"
-          aria-label="Back to top"
+      <main className="mx-auto w-full max-w-[420px] space-y-8 px-4 py-8 md:max-w-5xl">
+        <motion.section
+          initial="hidden"
+          animate="show"
+          variants={ENTER}
+          className="space-y-5"
         >
-          <ChevronUp className="w-4 h-4" />
-        </button>
-      )}
-    </>
-  );
-}
+          <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-3 py-1 text-[11px] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            Ultra-fast campus operations
+          </div>
 
-/* ── Core Team Section ──────────────────────────────────────── */
-function CoreTeamSection({ brandName }: { brandName: string }) {
-  const [members, setMembers] = useState<any[]>([]);
-  const [loaded, setLoaded] = useState(false);
+          <h1 className="text-[34px] font-black leading-[1.02] tracking-[-0.03em] text-foreground">
+            Your Campus. Connected.
+          </h1>
 
-  useEffect(() => {
-    (supabase as any)
-      .from("core_team_members")
-      .select("*")
-      .eq("is_active", true)
-      .order("order_index", { ascending: true })
-      .then(({ data }: any) => {
-        if (data) setMembers(data);
-        setLoaded(true);
-      });
-  }, []);
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Manage lectures, attendance, achievements, and campus life in one intelligent platform.
+          </p>
 
-  if (loaded && members.length === 0) return null;
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link to="/auth" className="w-full sm:w-auto">
+              <GlowButton className="h-12 w-full sm:w-auto">
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </GlowButton>
+            </Link>
+            <a href="#features" className="w-full sm:w-auto">
+              <Button variant="outline" className="h-12 w-full sm:w-auto">
+                Explore Features
+              </Button>
+            </a>
+          </div>
 
-  return (
-    <section className="relative z-10 container mx-auto px-5 py-24">
-      <FadeOnScroll className="text-center mb-14 space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-widest text-primary">The People Behind It</div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Meet Our Core Team</h2>
-        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-          The students who built {brandName} from the ground up.
-        </p>
-      </FadeOnScroll>
-
-      {!loaded ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="rounded-xl border border-border/40 bg-surface-1 p-5 animate-pulse space-y-3">
-              <div className="w-16 h-16 rounded-full bg-surface-3 mx-auto" />
-              <div className="h-3 bg-surface-3 rounded mx-auto w-3/4" />
-              <div className="h-2.5 bg-surface-3 rounded mx-auto w-1/2" />
+          <GlassCard className="overflow-hidden" padding="none" hover={false}>
+            <div className="relative p-5">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),transparent_45%,hsl(var(--primary)/0.08))]" />
+              <div className="relative space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-foreground">Live Student Dashboard</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                    Real-time
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border border-border-subtle bg-surface-1/90 p-3">
+                    <p className="text-[10px] text-muted-foreground">Attendance</p>
+                    <p className="text-base font-black text-foreground">78%</p>
+                  </div>
+                  <div className="rounded-xl border border-border-subtle bg-surface-1/90 p-3">
+                    <p className="text-[10px] text-muted-foreground">Streak</p>
+                    <p className="text-base font-black text-foreground">9d</p>
+                  </div>
+                  <div className="rounded-xl border border-border-subtle bg-surface-1/90 p-3">
+                    <p className="text-[10px] text-muted-foreground">Rank</p>
+                    <p className="text-base font-black text-foreground">#4</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {members.map((m, i) => (
-            <FadeOnScroll key={m.id} delay={i * 50}>
-              <div className="group p-5 rounded-xl border border-border/40 bg-surface-1 hover:border-border/80 hover:bg-surface-2 hover:-translate-y-1 transition-all duration-150 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full border-2 border-border/40 bg-surface-2 mx-auto overflow-hidden">
-                  {m.photo_url ? (
-                    <img src={m.photo_url} alt={m.name} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-muted-foreground">
-                      {m.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+          </GlassCard>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER} className="space-y-3">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Product Highlights</h2>
+          <div className="space-y-3">
+            {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
+              <GlassCard key={title} className="flex items-start gap-3" padding="lg">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/12 text-primary">
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-foreground">{m.name}</div>
-                  {m.class && <div className="text-xs text-muted-foreground mt-0.5">{m.class}</div>}
-                  {m.designation && (
-                    <div className="mt-1.5 inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
-                      {m.designation}
-                    </div>
-                  )}
+                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
                 </div>
-              </div>
-            </FadeOnScroll>
-          ))}
+              </GlassCard>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section id="features" initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER} className="space-y-3">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Features</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {FEATURES.map((feature) => (
+              <ActionTile key={feature.label} icon={feature.icon} label={feature.label} onClick={() => {}} />
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER} className="space-y-3">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">How It Works</h2>
+          <div className="space-y-3">
+            {WORKFLOW.map(({ icon: Icon, title, description }, index) => (
+              <GlassCard key={title} className="flex items-start gap-3" padding="lg" hover>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
+                  <h3 className="text-sm font-semibold text-foreground mt-0.5">{title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER} className="space-y-3">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">App Preview</h2>
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 no-scrollbar">
+            <PreviewCard
+              title="Student Dashboard"
+              subtitle="Daily performance"
+              accentClass="bg-primary"
+              statA="240"
+              statB="Active"
+            />
+            <PreviewCard
+              title="Leaderboard"
+              subtitle="Campus rankings"
+              accentClass="bg-warning"
+              statA="#4"
+              statB="Rising"
+            />
+            <PreviewCard
+              title="Admin Dashboard"
+              subtitle="Operations control"
+              accentClass="bg-success"
+              statA="89%"
+              statB="Stable"
+            />
+          </div>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER}>
+          <GlassCard padding="lg" className="space-y-3" hover={false}>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Campus Community</h2>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              From lectures to events, {branding.brand_name} keeps students, admins, and programmes connected with one shared campus rhythm.
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Students", value: "500+" },
+                { label: "Events", value: "120+" },
+                { label: "Engagement", value: "92%" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-xl border border-border-subtle bg-surface-2 p-3 text-center">
+                  <p className="text-sm font-black text-foreground">{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={ENTER}>
+          <GlassCard className="space-y-4 text-center" padding="lg" hover={false}>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Start Connecting Your Campus Today</h2>
+            <p className="text-xs text-muted-foreground">Launch a smarter campus experience in minutes.</p>
+            <Link to="/auth" className="inline-block">
+              <GlowButton className="h-12 px-8">
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </GlowButton>
+            </Link>
+          </GlassCard>
+        </motion.section>
+      </main>
+
+      <footer className="border-t border-border-subtle/70 bg-surface-1/80">
+        <div className="mx-auto w-full max-w-[420px] space-y-3 px-4 py-6 md:max-w-5xl">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 border border-primary/20">
+              {branding.logo_url ? (
+                <img
+                  src={branding.logo_url}
+                  alt={`${branding.brand_name} logo`}
+                  className="h-4.5 w-4.5 object-contain"
+                  loading="lazy"
+                />
+              ) : (
+                <GraduationCap className="h-4 w-4 text-primary" />
+              )}
+            </div>
+            <p className="text-sm font-semibold text-foreground">{branding.brand_name}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <a href="#features" className="story-link">Features</a>
+            <a href="#" className="story-link">Community</a>
+            <Link to="/auth" className="story-link">Login</Link>
+          </div>
+
+          <p className="text-xs text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">Developed by - Atharv Jadhav - Department Of Computer Science</p>
         </div>
-      )}
-    </section>
+      </footer>
+
+      <div className="safe-area-bottom" />
+    </div>
   );
 }
