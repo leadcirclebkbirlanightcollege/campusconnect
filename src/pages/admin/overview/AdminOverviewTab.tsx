@@ -78,9 +78,9 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
   const loading = statsQuery.isLoading;
 
   return (
-    <div className="space-y-6 px-4 sm:px-0">
+    <div className="space-y-4">
 
-      {/* ── KPI COMMAND METRICS ─────────────────────── */}
+      {/* ── KPI METRICS ─────────────────────────────── */}
       <KpiCards
         students={stats?.students ?? 0}
         programmes={stats?.programmes ?? 0}
@@ -91,29 +91,25 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
         loading={loading}
       />
 
-      {/* ── LIVE OPERATIONS + QUICK ACTIONS ─────────── */}
-      <div className="grid gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <LiveOperationsPanel
-            attendanceToday={stats?.attendanceToday ?? 0}
-            totalStudents={stats?.attendanceTotal ?? 0}
-            loading={loading}
-            onGoToAttendance={() => onNavigateTab("attendance")}
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <QuickActionsGrid onNavigateTab={onNavigateTab} />
-        </div>
-      </div>
+      {/* ── LIVE OPERATIONS ─────────────────────────── */}
+      <LiveOperationsPanel
+        attendanceToday={stats?.attendanceToday ?? 0}
+        totalStudents={stats?.attendanceTotal ?? 0}
+        loading={loading}
+        onGoToAttendance={() => onNavigateTab("attendance")}
+      />
+
+      {/* ── QUICK ACTIONS ───────────────────────────── */}
+      <QuickActionsGrid onNavigateTab={onNavigateTab} />
 
       {/* ── ANALYTICS CHARTS ────────────────────────── */}
       <AdminAnalyticsChart />
 
-      {/* ── RISK MONITOR + GAMIFICATION SIDE BY SIDE ── */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        <RiskMonitorPanel onNavigateTab={onNavigateTab} />
-        <GamificationStatsPanel onNavigateTab={onNavigateTab} />
-      </div>
+      {/* ── RISK MONITOR ────────────────────────────── */}
+      <RiskMonitorPanel onNavigateTab={onNavigateTab} />
+
+      {/* ── GAMIFICATION ────────────────────────────── */}
+      <GamificationStatsPanel onNavigateTab={onNavigateTab} />
 
       {/* ── PROGRAMME ANALYTICS ─────────────────────── */}
       <ProgrammeAnalyticsPanel onNavigateTab={onNavigateTab} />
