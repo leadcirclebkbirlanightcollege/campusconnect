@@ -375,7 +375,7 @@ const AppShell = ({ children }: AppShellProps) => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-50 w-48 bg-popover text-popover-foreground">
-                    <DropdownMenuItem asChild><Link to="/app/profile">Profile</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/settings">Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/settings/notifications">Notification Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/leaderboard">Leaderboard</Link></DropdownMenuItem>
