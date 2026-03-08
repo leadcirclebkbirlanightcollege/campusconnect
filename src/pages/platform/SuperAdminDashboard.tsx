@@ -1,45 +1,52 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Suspense, lazy, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  Activity,
+  Building2,
+  CheckSquare,
+  ChevronRight,
+  Clock3,
+  Globe,
+  GraduationCap,
+  Megaphone,
+  MonitorCog,
+  Plus,
+  Radio,
+  Shield,
+  UserCog,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
+import { PageContainer, PageHeader } from "@/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { ActionTile } from "@/components/ui/ActionTile";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
-  Building2, Users, BookOpen, CheckSquare, Coins,
-  BarChart3, ShieldCheck, LogOut, Activity, Globe,
-  UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
-  History, Sliders, AlertTriangle, Flame, Zap,
-  ArrowUpRight, Plus, ChevronRight, Layers, LayoutDashboard,
-  ServerCrash, Bell, GraduationCap, Sparkles, Network, MessageSquare,
-} from "lucide-react";
-import { BRANDING } from "@/config/branding";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
 import CollegeSwitcher from "./components/CollegeSwitcher";
-import { CollegesTab, AdminManagerTab } from "./components/CollegeManagement";
-import SAStudentsTab from "./components/SAStudentsTab";
-import SALecturesTab from "./components/SALecturesTab";
-import SAAchievementsTab from "./components/SAAchievementsTab";
-import SAPlatformModeTab from "./components/SAPlatformModeTab";
-import SAAnalyticsTab from "./components/SAAnalyticsTab";
-import SASecurityTab from "./components/SASecurityTab";
-import SABroadcastTab from "./components/SABroadcastTab";
-import SAActivityLogsTab from "./components/SAActivityLogsTab";
-import SAPlatformSettingsTab from "./components/SAPlatformSettingsTab";
-import SAGlobalSearch from "./components/SAGlobalSearch";
-import SAFeedbackTab from "./components/SAFeedbackTab";
-import SAMonitoringTab from "./components/SAMonitoringTab";
-import { useMetricCountUp } from "@/components/ui/motion";
-import { cn } from "@/lib/utils";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-type PlatformAnalytics = {
+const SAAnalyticsTab = lazy(() => import("./components/SAAnalyticsTab"));
+const SABroadcastTab = lazy(() => import("./components/SABroadcastTab"));
+
+type PlatformOverview = {
   total_colleges: number;
-  active_colleges: number;
   total_students: number;
   total_lectures: number;
   total_attendance: number;
-  total_points_awarded: number;
+  active_admins: number;
+  active_sessions: number;
 };
 
 type College = {
@@ -47,705 +54,659 @@ type College = {
   college_name: string;
   subdomain: string | null;
   logo_url: string | null;
-  tagline: string | null;
-  primary_color: string | null;
   is_active: boolean;
+};
+
+type CollegeAdmin = {
+  user_id: string;
+  college_id: string | null;
+  college_name: string | null;
+  name: string | null;
+  email: string | null;
   created_at: string;
 };
 
-// ── Tab groups ───────────────────────────────────────────────────────────────
-type NavItem = { value: string; icon: React.ElementType; label: string };
-type NavGroup = { label: string; items: NavItem[] };
+type SecurityLog = {
+  id: string;
+  action: string;
+  performed_by: string;
+  created_at: string;
+  performer_name?: string;
+};
 
-const TAB_GROUPS: NavGroup[] = [
-  {
-    label: "Overview",
-    items: [
-      { value: "overview",  icon: LayoutDashboard, label: "Command Center" },
-      { value: "analytics", icon: BarChart3,        label: "Analytics" },
-    ],
-  },
-  {
-    label: "Institutions",
-    items: [
-      { value: "colleges",  icon: Building2,   label: "Colleges" },
-      { value: "admins",    icon: ShieldCheck, label: "Admins" },
-      { value: "students",  icon: Users,       label: "Students" },
-    ],
-  },
-  {
-    label: "Academic",
-    items: [
-      { value: "lectures",     icon: BookOpen, label: "Lectures" },
-      { value: "achievements", icon: Trophy,   label: "Achievements" },
-    ],
-  },
-  {
-    label: "Communications",
-    items: [
-      { value: "broadcast", icon: Radio,   label: "Broadcast" },
-      { value: "activity",  icon: History, label: "Activity" },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { value: "monitoring", icon: Activity,      label: "Monitoring" },
-      { value: "feedback",   icon: MessageSquare, label: "Feedback" },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { value: "settings",  icon: Sliders,   label: "Settings" },
-      { value: "platform",  icon: Settings2, label: "Platform Mode" },
-      { value: "security",  icon: Shield,    label: "Security" },
-    ],
-  },
-];
+const SECTION_ANIM = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.18 },
+};
 
-// ── Hooks ────────────────────────────────────────────────────────────────────
-function usePlatformAnalytics() {
-  return useQuery<PlatformAnalytics>({
-    queryKey: ["super_admin", "analytics"],
+function usePlatformOverview() {
+  return useQuery<PlatformOverview>({
+    queryKey: ["super_admin", "command_center", "overview"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_platform_analytics" as any);
-      if (error) throw error;
-      return data as PlatformAnalytics;
-    },
-    staleTime: 60_000,
-  });
-}
+      const now = new Date();
+      const activeSessionThreshold = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
 
-function usePlatformGamStats() {
-  return useQuery({
-    queryKey: ["sa_gam_stats"],
-    queryFn: async () => {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const ws = weekStart.toISOString().slice(0, 10);
       const [
-        { count: streaks },
-        { data: pts },
-        { count: achievements },
-        { count: risk },
-        { count: adminsCount },
+        { data: analytics, error: analyticsError },
+        { count: adminCount, error: adminError },
+        { count: activeSessions, error: sessionError },
       ] = await Promise.all([
-        supabase.from("student_streaks").select("user_id", { count: "exact", head: true }).gt("current_streak", 0),
-        supabase.from("points_ledger").select("points").gte("created_at", ws + "T00:00:00Z"),
-        supabase.from("student_achievements").select("id", { count: "exact", head: true }).gte("awarded_at", ws + "T00:00:00Z"),
-        supabase.from("student_intelligence").select("user_id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
-        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).in("role", ["admin", "super_admin"]),
+        supabase.rpc("get_platform_analytics" as any),
+        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "admin" as any),
+        supabase.from("login_activity").select("id", { count: "exact", head: true }).gte("created_at", activeSessionThreshold),
       ]);
+
+      if (analyticsError) throw analyticsError;
+      if (adminError) throw adminError;
+      if (sessionError) throw sessionError;
+
       return {
-        activeStreaks:       streaks ?? 0,
-        weeklyPoints:        (pts ?? []).reduce((s, r) => s + (r.points ?? 0), 0),
-        weeklyAchievements:  achievements ?? 0,
-        riskCount:           risk ?? 0,
-        activeAdmins:        adminsCount ?? 0,
+        total_colleges: analytics?.total_colleges ?? 0,
+        total_students: analytics?.total_students ?? 0,
+        total_lectures: analytics?.total_lectures ?? 0,
+        total_attendance: analytics?.total_attendance ?? 0,
+        active_admins: adminCount ?? 0,
+        active_sessions: activeSessions ?? 0,
       };
     },
     staleTime: 60_000,
   });
 }
 
-// ── Live lecture count badge ─────────────────────────────────────────────────
-function LiveCount() {
-  const { data } = useQuery({
-    queryKey: ["sa_live_count"],
+function usePaginatedColleges(page: number, pageSize: number) {
+  return useQuery({
+    queryKey: ["super_admin", "command_center", "colleges", page, pageSize],
     queryFn: async () => {
-      const { count } = await supabase.from("lectures").select("id", { count: "exact", head: true }).eq("status", "live");
-      return count ?? 0;
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+
+      const [{ data: colleges, error: collegesError, count: total }, { data: adminsData }, { data: studentsData }] = await Promise.all([
+        supabase
+          .from("colleges")
+          .select("id,college_name,subdomain,logo_url,is_active", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .range(from, to),
+        supabase.from("user_roles").select("college_id,user_id").eq("role", "admin" as any),
+        supabase.from("profiles").select("college_id,user_id").eq("is_deleted", false),
+      ]);
+
+      if (collegesError) throw collegesError;
+
+      const adminCounts = new Map<string, number>();
+      const studentCounts = new Map<string, number>();
+
+      (adminsData ?? []).forEach((row) => {
+        if (!row.college_id) return;
+        adminCounts.set(row.college_id, (adminCounts.get(row.college_id) ?? 0) + 1);
+      });
+
+      (studentsData ?? []).forEach((row) => {
+        if (!row.college_id) return;
+        studentCounts.set(row.college_id, (studentCounts.get(row.college_id) ?? 0) + 1);
+      });
+
+      return {
+        rows: (colleges ?? []).map((college) => ({
+          ...college,
+          student_count: studentCounts.get(college.id) ?? 0,
+          admin_count: adminCounts.get(college.id) ?? 0,
+        })),
+        total: total ?? 0,
+      };
     },
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    staleTime: 45_000,
   });
-  if (!data) return null;
-  return (
-    <motion.span
-      animate={{ opacity: [1, 0.55, 1] }}
-      transition={{ repeat: Infinity, duration: 1.8 }}
-      className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] bg-danger/15 text-danger border border-danger/20 rounded-full px-1.5 py-0.5 font-bold"
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-danger" />
-      {data}
-    </motion.span>
-  );
 }
 
-// ── KPI Card ─────────────────────────────────────────────────────────────────
-function KpiCard({
-  label, value, suffix = "", icon: Icon, bgClass, colorClass, sublabel,
-  loading, index, trend, danger,
-}: {
-  label: string; value: number; suffix?: string; icon: React.ElementType;
-  bgClass: string; colorClass: string; sublabel?: string;
-  loading: boolean; index: number; trend?: string; danger?: boolean;
-}) {
-  const counted = useMetricCountUp(loading ? 0 : value, 900 + index * 70);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05, ease: "easeOut" }}
-      className={cn(
-        "rounded-2xl border bg-surface-1 p-4 shadow-xs flex flex-col justify-between min-h-[110px] transition-all duration-150 hover:shadow-sm group",
-        danger && value > 0 ? "border-danger/30" : "border-border-subtle",
-      )}
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
-        <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-110", bgClass)}>
-          <Icon className={cn("h-3.5 w-3.5", colorClass)} />
-        </div>
-      </div>
-      {loading ? (
-        <Skeleton className="h-8 w-20" />
-      ) : (
-        <p className={cn("text-[32px] font-black tracking-tight tabular-nums leading-none", danger && value > 0 ? "text-danger" : "text-foreground")}>
-          {counted.toLocaleString()}{suffix}
-        </p>
-      )}
-      {!loading && (sublabel || trend) && (
-        <p className={cn("text-[10px] mt-1.5 font-medium", danger && value > 0 ? "text-danger/70" : "text-muted-foreground")}>
-          {trend ?? sublabel}
-        </p>
-      )}
-    </motion.div>
-  );
+function useAdminManager() {
+  return useQuery<CollegeAdmin[]>({
+    queryKey: ["super_admin", "command_center", "admins"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_college_admins" as any);
+      if (error) throw error;
+      return (data as CollegeAdmin[]) ?? [];
+    },
+    staleTime: 45_000,
+  });
 }
 
-// ── College Snapshot Row ─────────────────────────────────────────────────────
-function CollegeRow({ college, onView }: { college: College; onView: () => void }) {
-  return (
-    <motion.div
-      whileHover={{ x: 2 }}
-      transition={{ duration: 0.1 }}
-      onClick={onView}
-      className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-surface-2 transition-colors cursor-pointer group"
-    >
-      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: college.primary_color ?? "hsl(var(--primary))" }} />
-      <span className="text-[13px] font-medium text-foreground flex-1 truncate">{college.college_name}</span>
-      {college.subdomain && (
-        <span className="text-[10px] text-muted-foreground hidden sm:block">{college.subdomain}</span>
-      )}
-      <span className={cn(
-        "text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
-        college.is_active ? "bg-success/10 text-success" : "bg-surface-3 text-muted-foreground",
-      )}>
-        {college.is_active ? "Active" : "Inactive"}
-      </span>
-      <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
-    </motion.div>
-  );
+function useSystemHealth() {
+  return useQuery({
+    queryKey: ["super_admin", "command_center", "health"],
+    queryFn: async () => {
+      const sessionThreshold = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+      const dbStart = performance.now();
+      const dbResult = await supabase.from("platform_settings").select("key").limit(1);
+      const dbLatency = Math.round(performance.now() - dbStart);
+
+      const apiStart = performance.now();
+      const { error: apiError } = await supabase.functions.invoke("health-check");
+      const apiLatency = Math.round(performance.now() - apiStart);
+
+      const [{ count: activeSessions }, { count: liveLectures }] = await Promise.all([
+        supabase.from("login_activity").select("id", { count: "exact", head: true }).gte("created_at", sessionThreshold),
+        supabase.from("lectures").select("id", { count: "exact", head: true }).eq("status", "live"),
+      ]);
+
+      return {
+        db_ok: !dbResult.error,
+        db_latency_ms: dbLatency,
+        api_ok: !apiError,
+        api_latency_ms: apiLatency,
+        active_sessions: activeSessions ?? 0,
+        live_lectures: liveLectures ?? 0,
+      };
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
 }
 
-// ── Engagement Row ───────────────────────────────────────────────────────────
-function EngRow({ icon: Icon, iconBg, iconColor, label, value, loading }: {
-  icon: React.ElementType; iconBg: string; iconColor: string;
-  label: string; value: number; loading: boolean;
-}) {
-  const counted = useMetricCountUp(loading ? 0 : value, 800);
-  return (
-    <div className="flex items-center gap-3 py-3 border-b border-border-subtle last:border-0">
-      <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
-        <Icon className={cn("h-4 w-4", iconColor)} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{label}</p>
-        {loading ? <Skeleton className="h-5 w-12 mt-0.5" /> : (
-          <p className="text-[20px] font-black text-foreground tabular-nums leading-tight">{counted.toLocaleString()}</p>
-        )}
-      </div>
-    </div>
-  );
+function useSecurityLogs(page: number, pageSize: number) {
+  return useQuery<{ rows: SecurityLog[]; hasMore: boolean }>({
+    queryKey: ["super_admin", "command_center", "security_logs", page, pageSize],
+    queryFn: async () => {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const sensitiveActions = ["attendance_corrected", "admin_created", "lecture_created", "announcement_created", "admin_role_updated"];
+
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("id,action,performed_by,created_at")
+        .in("action", sensitiveActions)
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      const rows = (data ?? []) as SecurityLog[];
+      const userIds = [...new Set(rows.map((row) => row.performed_by))];
+      const { data: profiles } = userIds.length
+        ? await supabase.from("profiles").select("user_id,name").in("user_id", userIds)
+        : { data: [] as Array<{ user_id: string; name: string | null }> };
+
+      const nameMap = new Map((profiles ?? []).map((p) => [p.user_id, p.name ?? "Unknown User"]));
+
+      return {
+        rows: rows.map((row) => ({ ...row, performer_name: nameMap.get(row.performed_by) ?? "System" })),
+        hasMore: rows.length === pageSize,
+      };
+    },
+    staleTime: 30_000,
+  });
 }
 
-// ── Sidebar Nav ──────────────────────────────────────────────────────────────
-function SideNav({ tab, onTab }: { tab: string; onTab: (v: string) => void }) {
+function SectionFrame({ id, title, subtitle, children }: { id: string; title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <nav className="hidden xl:flex flex-col w-[200px] shrink-0 space-y-0.5">
-      {TAB_GROUPS.map((group) => (
-        <div key={group.label} className="mb-2">
-          <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold px-3 mb-1">{group.label}</p>
-          {group.items.map((item) => {
-            const Icon = item.icon;
-            const isActive = tab === item.value;
-            return (
-              <button
-                key={item.value}
-                onClick={() => onTab(item.value)}
-                className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all duration-120 text-left",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-surface-2",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{item.label}</span>
-                {item.value === "lectures" && <LiveCount />}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
-  );
-}
-
-// ── Mobile top scroll tab bar ────────────────────────────────────────────────
-function MobileTabBar({ tab, onTab }: { tab: string; onTab: (v: string) => void }) {
-  const allItems = TAB_GROUPS.flatMap((g) => g.items);
-  return (
-    <div className="xl:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
-      <div className="flex gap-1.5 w-max py-1">
-        {allItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = tab === item.value;
-          return (
-            <button
-              key={item.value}
-              onClick={() => onTab(item.value)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-120",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-surface-2 text-muted-foreground hover:text-foreground border border-border-subtle",
-              )}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              {item.label}
-              {item.value === "lectures" && <LiveCount />}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Section Shell ─────────────────────────────────────────────────────────────
-function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-[17px] font-black text-foreground">{title}</h2>
-          {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
-        </div>
+    <motion.section id={id} {...SECTION_ANIM} className="space-y-3">
+      <div>
+        <h2 className="text-sm font-bold text-foreground">{title}</h2>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
       </div>
       {children}
-    </div>
+    </motion.section>
   );
 }
 
-// ── Quick Action Button ───────────────────────────────────────────────────────
-function QA({ icon: Icon, label, color, bg, onClick }: {
-  icon: React.ElementType; label: string; color: string; bg: string; onClick: () => void;
-}) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.96 }}
-      onClick={onClick}
-      className="flex flex-col items-center gap-2 p-3 rounded-2xl border border-border-subtle bg-surface-1 hover:bg-surface-2 hover:border-primary/20 transition-all duration-120 cursor-pointer group"
-    >
-      <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-120", bg)}>
-        <Icon className={cn("h-4 w-4", color)} />
-      </div>
-      <span className="text-[10px] text-muted-foreground font-semibold text-center group-hover:text-foreground transition-colors leading-tight">{label}</span>
-    </motion.button>
-  );
+function HealthBadge({ label, tone }: { label: string; tone: "operational" | "warning" | "critical" }) {
+  const status = tone === "operational" ? "active" : tone === "warning" ? "upcoming" : "completed";
+  return <StatusBadge status={status}>{label}</StatusBadge>;
 }
 
-// ── Inner Dashboard ───────────────────────────────────────────────────────────
 function DashboardInner() {
-  const [tab, setTab] = useState<string>("overview");
-  const { colleges, isLoading: collegesLoading } = useCollegeContext();
-  const analyticsQ = usePlatformAnalytics();
-  const gamStats = usePlatformGamStats();
-  const analytics = analyticsQ.data;
-  const loading = analyticsQ.isLoading;
+  const queryClient = useQueryClient();
+  const { activeCollege, setActiveCollegeId, colleges } = useCollegeContext();
 
-  const kpis = [
-    {
-      label: "Total Colleges",
-      value: analytics?.total_colleges ?? 0,
-      icon: Building2,
-      bgClass: "bg-primary/10",
-      colorClass: "text-primary",
-      trend: `${analytics?.active_colleges ?? 0} active`,
+  const [collegePage, setCollegePage] = useState(0);
+  const [adminPage, setAdminPage] = useState(0);
+  const [logsPage, setLogsPage] = useState(0);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
+
+  const COLLEGE_PAGE_SIZE = 20;
+  const ADMIN_PAGE_SIZE = 20;
+  const LOGS_PAGE_SIZE = 10;
+
+  const overviewQ = usePlatformOverview();
+  const collegeQ = usePaginatedColleges(collegePage, COLLEGE_PAGE_SIZE);
+  const adminQ = useAdminManager();
+  const healthQ = useSystemHealth();
+  const logsQ = useSecurityLogs(logsPage, LOGS_PAGE_SIZE);
+
+  const admins = adminQ.data ?? [];
+  const visibleAdmins = useMemo(() => {
+    const from = adminPage * ADMIN_PAGE_SIZE;
+    const to = from + ADMIN_PAGE_SIZE;
+    return admins.slice(from, to);
+  }, [admins, adminPage]);
+
+  const reassignCollege = useMutation({
+    mutationFn: async ({ userId, collegeId }: { userId: string; collegeId: string }) => {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ college_id: collegeId })
+        .eq("user_id", userId)
+        .eq("role", "admin" as any);
+      if (error) throw error;
     },
-    {
-      label: "Active Admins",
-      value: gamStats.data?.activeAdmins ?? 0,
-      icon: ShieldCheck,
-      bgClass: "bg-purple-500/10",
-      colorClass: "text-purple-400",
-      trend: "Across all colleges",
+    onSuccess: () => {
+      toast.success("Admin reassigned");
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "command_center", "admins"] });
     },
-    {
-      label: "Total Students",
-      value: analytics?.total_students ?? 0,
-      icon: Users,
-      bgClass: "bg-success/10",
-      colorClass: "text-success",
-      trend: "Registered users",
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const removeAdminRole = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as any);
+      if (error) throw error;
     },
-    {
-      label: "Total Lectures",
-      value: analytics?.total_lectures ?? 0,
-      icon: BookOpen,
-      bgClass: "bg-accent/10",
-      colorClass: "text-accent",
-      trend: "All time",
+    onSuccess: () => {
+      toast.success("Admin role removed");
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "command_center", "admins"] });
     },
-    {
-      label: "Attendance Records",
-      value: analytics?.total_attendance ?? 0,
-      icon: CheckSquare,
-      bgClass: "bg-warning/10",
-      colorClass: "text-warning",
-      trend: "Present marks",
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deactivateAdmin = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .eq("user_id", userId);
+      if (error) throw error;
     },
-    {
-      label: "Points Awarded",
-      value: analytics?.total_points_awarded ?? 0,
-      icon: Coins,
-      bgClass: "bg-premium/10",
-      colorClass: "text-premium",
-      trend: "Total economy",
+    onSuccess: () => {
+      toast.success("Admin account deactivated");
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "command_center", "admins"] });
     },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const toggleCollegeStatus = useMutation({
+    mutationFn: async ({ collegeId, isActive }: { collegeId: string; isActive: boolean }) => {
+      const { error } = await supabase
+        .from("colleges")
+        .update({ is_active: !isActive, updated_at: new Date().toISOString() })
+        .eq("id", collegeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("College status updated");
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "command_center", "colleges"] });
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "command_center", "overview"] });
+      queryClient.invalidateQueries({ queryKey: ["super_admin", "colleges_ctx"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const overviewMetrics = [
+    { icon: Building2, value: overviewQ.data?.total_colleges ?? 0, label: "Total Colleges" },
+    { icon: Users, value: overviewQ.data?.total_students ?? 0, label: "Total Students" },
+    { icon: GraduationCap, value: overviewQ.data?.total_lectures ?? 0, label: "Total Lectures" },
+    { icon: CheckSquare, value: overviewQ.data?.total_attendance ?? 0, label: "Attendance Records" },
+    { icon: UserCog, value: overviewQ.data?.active_admins ?? 0, label: "Active Admins" },
+    { icon: Activity, value: overviewQ.data?.active_sessions ?? 0, label: "Active Sessions" },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageContainer size="tablet" withBottomNav={false} className="space-y-6 py-4">
+      <PageHeader
+        title="Platform Command Center"
+        subtitle="Mission control for colleges, admins, analytics, health, and security"
+        action={<CollegeSwitcher className="max-w-[200px]" />}
+      />
 
-      {/* ── HEADER ── */}
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/90 backdrop-blur-md">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-          {/* Brand */}
-          <div className="flex items-center gap-3 shrink-0">
-            <img src={BRANDING.logo} alt={BRANDING.name} className="w-7 h-7 object-contain" />
-            <div className="hidden sm:block">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-foreground tracking-tight">{BRANDING.name}</span>
-                <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 rounded-full px-2 py-0.5 font-black tracking-widest uppercase">
-                  Super Admin
-                </span>
+      <SectionFrame
+        id="platform-overview"
+        title="Platform Overview Metrics"
+        subtitle="Live platform-wide command metrics"
+      >
+        <div className="grid grid-cols-2 gap-3">
+          {overviewQ.isLoading
+            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-2xl" />)
+            : overviewMetrics.map((metric) => (
+                <MetricCard
+                  key={metric.label}
+                  icon={metric.icon}
+                  value={metric.value}
+                  label={metric.label}
+                />
+              ))}
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        id="college-context"
+        title="College Context Switcher"
+        subtitle="Switch platform perspective instantly"
+      >
+        <GlassCard padding="md" radius="xl" className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {activeCollege?.logo_url ? (
+                <img
+                  src={activeCollege.logo_url}
+                  alt={activeCollege.college_name}
+                  className="h-10 w-10 rounded-xl object-cover border border-border-subtle"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-xl border border-border-subtle bg-surface-3 flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {activeCollege?.college_name ?? "All Colleges"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {activeCollege?.subdomain ? `${activeCollege.subdomain}.campusconnect.app` : "Global command scope"}
+                </p>
               </div>
-              <p className="text-[10px] text-muted-foreground">Platform Command Center</p>
             </div>
+            <Badge variant="secondary" className="text-[10px]">Context</Badge>
           </div>
+          <CollegeSwitcher />
+        </GlassCard>
+      </SectionFrame>
 
-          {/* Search */}
-          <div className="flex-1 flex justify-center px-2 max-w-sm">
-            <SAGlobalSearch />
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <CollegeSwitcher />
-            <Button
-              variant="ghost" size="sm"
-              className="gap-1.5 text-xs text-muted-foreground hidden lg:flex"
-              onClick={() => setTab("colleges")}
-            >
-              <Plus className="w-3.5 h-3.5" /> College
-            </Button>
-            <Button
-              variant="ghost" size="sm"
-              className="gap-1.5 text-xs text-muted-foreground hidden lg:flex"
-              onClick={async () => {
-                const { data } = await supabase.auth.getSession();
-                if (data.session) window.location.href = "/app/admin/dashboard";
-              }}
-            >
-              <UserCog className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Admin View</span>
-            </Button>
-            <Button
-              variant="ghost" size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={async () => { await supabase.auth.signOut(); window.location.href = "/auth"; }}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-xs">Sign Out</span>
-            </Button>
-          </div>
+      <SectionFrame
+        id="quick-actions"
+        title="Quick Admin Actions"
+        subtitle="Fast controls for high-priority platform tasks"
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <ActionTile icon={Plus} label="Create College" onClick={() => scrollToSection("college-manager")} />
+          <ActionTile icon={UserCog} label="Create Admin" onClick={() => scrollToSection("admin-manager")} />
+          <ActionTile icon={Megaphone} label="Send Platform Announcement" onClick={() => { setShowBroadcast(true); scrollToSection("announcement-control"); }} />
+          <ActionTile icon={Shield} label="View Logs" onClick={() => scrollToSection("security-logs")} />
         </div>
-      </header>
+      </SectionFrame>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
-
-        {/* Page heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18 }}
-          className="flex items-center justify-between mb-4"
-        >
-          <div>
-            <h1 className="text-[20px] font-black text-foreground tracking-tight">Enterprise Command Center</h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Platform-wide visibility · {colleges.length} institution{colleges.length !== 1 ? "s" : ""} registered</p>
-          </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-[11px] text-muted-foreground font-medium">All systems operational</span>
-          </div>
-        </motion.div>
-
-        {/* Mobile tab bar */}
-        <div className="mb-4">
-          <MobileTabBar tab={tab} onTab={setTab} />
-        </div>
-
-        {/* Layout: sidebar + content */}
-        <div className="flex gap-6 items-start">
-
-          {/* Desktop sidebar nav */}
-          <SideNav tab={tab} onTab={setTab} />
-
-          {/* Main content area */}
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-              >
-
-                {/* ── OVERVIEW ── */}
-                {tab === "overview" && (
-                  <div className="space-y-5">
-                    {/* KPI Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
-                      {kpis.map((kpi, i) => (
-                        <KpiCard key={kpi.label} index={i} loading={loading} {...kpi} />
-                      ))}
+      <SectionFrame
+        id="college-manager"
+        title="College Manager"
+        subtitle="Manage college identity, status, and command jump"
+      >
+        <div className="space-y-3">
+          {collegeQ.isLoading
+            ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)
+            : collegeQ.data?.rows.map((college) => (
+                <GlassCard key={college.id} padding="md" radius="xl" className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    {college.logo_url ? (
+                      <img
+                        src={college.logo_url}
+                        alt={college.college_name}
+                        className="h-10 w-10 rounded-xl object-cover border border-border-subtle"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-xl border border-border-subtle bg-surface-3 flex items-center justify-center">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground truncate">{college.college_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{college.subdomain ? `${college.subdomain}.campusconnect.app` : "No subdomain"}</p>
                     </div>
+                    <StatusBadge status={college.is_active ? "active" : "completed"}>
+                      {college.is_active ? "Active" : "Inactive"}
+                    </StatusBadge>
+                  </div>
 
-                    {/* College Snapshot + Engagement side by side */}
-                    <div className="grid gap-4 lg:grid-cols-5">
-                      {/* College Snapshot */}
-                      <div className="lg:col-span-3 rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                              <Globe className="h-4 w-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-[13px] font-bold text-foreground">Institutions</p>
-                              <p className="text-[11px] text-muted-foreground">{colleges.length} colleges registered</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setTab("colleges")}
-                            className="flex items-center gap-1 text-[11px] text-primary font-semibold hover:underline"
-                          >
-                            Manage <ArrowUpRight className="h-3 w-3" />
-                          </button>
-                        </div>
-                        <div className="px-3 py-2 max-h-[280px] overflow-y-auto">
-                          {collegesLoading ? (
-                            <div className="space-y-1 p-2">
-                              {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-xl" />)}
-                            </div>
-                          ) : colleges.length === 0 ? (
-                            <div className="py-10 text-center">
-                              <Building2 className="h-7 w-7 text-muted-foreground/30 mx-auto mb-2" />
-                              <p className="text-[12px] text-muted-foreground">No colleges yet</p>
-                            </div>
-                          ) : (
-                            <div>
-                              {colleges.map((college) => (
-                                <CollegeRow key={college.id} college={college as College} onView={() => setTab("colleges")} />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Platform Engagement */}
-                      <div className="lg:col-span-2 rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
-                        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
-                          <div className="h-8 w-8 rounded-xl bg-warning/10 flex items-center justify-center">
-                            <Sparkles className="h-4 w-4 text-warning" />
-                          </div>
-                          <div>
-                            <p className="text-[13px] font-bold text-foreground">Platform Pulse</p>
-                            <p className="text-[11px] text-muted-foreground">This week's engagement</p>
-                          </div>
-                        </div>
-                        <div className="px-5 py-1">
-                          <EngRow icon={Flame} iconBg="bg-warning/10" iconColor="text-warning" label="Active Streaks" value={gamStats.data?.activeStreaks ?? 0} loading={gamStats.isLoading} />
-                          <EngRow icon={Zap} iconBg="bg-primary/10" iconColor="text-primary" label="Points This Week" value={gamStats.data?.weeklyPoints ?? 0} loading={gamStats.isLoading} />
-                          <EngRow icon={Trophy} iconBg="bg-premium/10" iconColor="text-premium" label="Achievements Unlocked" value={gamStats.data?.weeklyAchievements ?? 0} loading={gamStats.isLoading} />
-                          <div className="flex items-center gap-3 py-3">
-                            <div className="h-8 w-8 rounded-xl bg-danger/10 flex items-center justify-center shrink-0">
-                              <AlertTriangle className="h-4 w-4 text-danger" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">At-Risk Students</p>
-                              {gamStats.isLoading ? <Skeleton className="h-5 w-10 mt-0.5" /> : (
-                                <p className={cn("text-[20px] font-black tabular-nums leading-tight", (gamStats.data?.riskCount ?? 0) > 0 ? "text-danger" : "text-foreground")}>
-                                  {gamStats.data?.riskCount ?? 0}
-                                </p>
-                              )}
-                            </div>
-                            {(gamStats.data?.riskCount ?? 0) > 0 && (
-                              <button onClick={() => setTab("students")} className="text-[10px] text-danger border border-danger/25 rounded-full px-2 py-0.5 hover:bg-danger/10 transition-colors">
-                                View →
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Students</p>
+                      <p className="text-base font-bold text-foreground tabular-nums">{college.student_count.toLocaleString()}</p>
                     </div>
-
-                    {/* Quick Actions Grid */}
-                    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 px-1">Quick Actions</p>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                        <QA icon={Building2}   label="Colleges"      color="text-primary"      bg="bg-primary/10"       onClick={() => setTab("colleges")} />
-                        <QA icon={ShieldCheck} label="Admins"        color="text-purple-400"   bg="bg-purple-500/10"    onClick={() => setTab("admins")} />
-                        <QA icon={Users}       label="Students"      color="text-success"      bg="bg-success/10"       onClick={() => setTab("students")} />
-                        <QA icon={BookOpen}    label="Lectures"      color="text-accent"       bg="bg-accent/10"        onClick={() => setTab("lectures")} />
-                        <QA icon={Radio}       label="Broadcast"     color="text-warning"      bg="bg-warning/10"       onClick={() => setTab("broadcast")} />
-                        <QA icon={Settings2}   label="Platform Mode" color="text-muted-foreground" bg="bg-surface-3"   onClick={() => setTab("platform")} />
-                        <QA icon={Shield}      label="Security"      color="text-danger"       bg="bg-danger/10"        onClick={() => setTab("security")} />
-                      </div>
-                    </div>
-
-                    {/* Status footer strip */}
-                    <div className="rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3 shadow-xs flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-4 flex-wrap">
-                        {[
-                          { icon: Network,      label: "Database",      status: "Operational", color: "text-success" },
-                          { icon: ServerCrash,  label: "Edge Functions", status: "Running",     color: "text-success" },
-                          { icon: Activity,     label: "Realtime",       status: "Connected",   color: "text-success" },
-                        ].map(({ icon: Icon, label, status, color }) => (
-                          <div key={label} className="flex items-center gap-2">
-                            <Icon className={cn("h-3.5 w-3.5", color)} />
-                            <span className="text-[11px] text-muted-foreground">{label}:</span>
-                            <span className={cn("text-[11px] font-semibold", color)}>{status}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => setTab("health")}
-                        className="text-[11px] text-primary font-semibold hover:underline flex items-center gap-1"
-                      >
-                        Full Health Report <ChevronRight className="h-3 w-3" />
-                      </button>
+                    <div className="rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Admins</p>
+                      <p className="text-base font-bold text-foreground tabular-nums">{college.admin_count.toLocaleString()}</p>
                     </div>
                   </div>
-                )}
 
-                {/* ── ANALYTICS ── */}
-                {tab === "analytics" && (
-                  <Section title="Platform Analytics" subtitle="Cross-college performance, trends & engagement metrics">
-                    <SAAnalyticsTab />
-                  </Section>
-                )}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" className="h-12 text-xs" onClick={() => toast.message("Use College settings in this card to edit details")}>Edit College</Button>
+                    <Button
+                      variant="outline"
+                      className="h-12 text-xs"
+                      onClick={() => toggleCollegeStatus.mutate({ collegeId: college.id, isActive: college.is_active })}
+                    >
+                      {college.is_active ? "Deactivate" : "Activate"}
+                    </Button>
+                    <Button
+                      className="h-12 text-xs"
+                      onClick={() => {
+                        setActiveCollegeId(college.id);
+                        window.location.href = "/app/admin/dashboard";
+                      }}
+                    >
+                      View Dashboard
+                    </Button>
+                  </div>
+                </GlassCard>
+              ))}
+        </div>
 
-                {/* ── COLLEGES ── */}
-                {tab === "colleges" && (
-                  <Section title="College Management" subtitle="Create, configure, and manage institutions on the platform">
-                    <CollegesTab colleges={colleges as College[]} isLoading={collegesLoading} />
-                  </Section>
-                )}
-
-                {/* ── ADMINS ── */}
-                {tab === "admins" && (
-                  <Section title="Admin Management" subtitle="Assign admin roles and manage college administrators">
-                    <AdminManagerTab />
-                  </Section>
-                )}
-
-                {/* ── STUDENTS ── */}
-                {tab === "students" && (
-                  <Section title="Global Student Manager" subtitle="Search, monitor, and manage students across all colleges">
-                    <SAStudentsTab />
-                  </Section>
-                )}
-
-                {/* ── LECTURES ── */}
-                {tab === "lectures" && (
-                  <Section title="Global Lecture Monitor" subtitle="View and control lectures across all institutions">
-                    <SALecturesTab />
-                  </Section>
-                )}
-
-                {/* ── ACHIEVEMENTS ── */}
-                {tab === "achievements" && (
-                  <Section title="Achievement Manager" subtitle="Create, edit, and manage student achievement definitions">
-                    <SAAchievementsTab />
-                  </Section>
-                )}
-
-                {/* ── BROADCAST ── */}
-                {tab === "broadcast" && (
-                  <Section title="Broadcast Center" subtitle="Send platform-wide announcements and emergency alerts">
-                    <SABroadcastTab />
-                  </Section>
-                )}
-
-                {/* ── ACTIVITY ── */}
-                {tab === "activity" && (
-                  <Section title="Activity Logs" subtitle="Historical record of admin actions and system events">
-                    <SAActivityLogsTab />
-                  </Section>
-                )}
-
-                {/* ── SETTINGS ── */}
-                {tab === "settings" && (
-                  <Section title="Platform Settings" subtitle="Configure global platform parameters and defaults">
-                    <SAPlatformSettingsTab />
-                  </Section>
-                )}
-
-                {/* ── PLATFORM MODE ── */}
-                {tab === "platform" && (
-                  <Section title="Platform Mode Switchboard" subtitle="Control system-wide access modes — students affected, admins bypass all modes">
-                    <SAPlatformModeTab />
-                  </Section>
-                )}
-
-                {/* ── SECURITY ── */}
-                {tab === "security" && (
-                  <Section title="Security Monitor" subtitle="Audit logs, login activity, attendance corrections, and security alerts">
-                    <SASecurityTab />
-                  </Section>
-                )}
-
-                {/* ── MONITORING ── */}
-                {tab === "monitoring" && (
-                  <Section title="Platform Monitoring" subtitle="Live metrics: logins, lectures, attendance, feedback, and system health">
-                    <SAMonitoringTab />
-                  </Section>
-                )}
-
-                {/* ── FEEDBACK ── */}
-                {tab === "feedback" && (
-                  <Section title="User Feedback" subtitle="Bug reports, feature suggestions, and UI issues from students and admins">
-                    <SAFeedbackTab />
-                  </Section>
-                )}
-
-              </motion.div>
-            </AnimatePresence>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Showing {(collegePage * COLLEGE_PAGE_SIZE) + 1}–{Math.min((collegePage + 1) * COLLEGE_PAGE_SIZE, collegeQ.data?.total ?? 0)} of {(collegeQ.data?.total ?? 0).toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-10 text-xs" disabled={collegePage === 0} onClick={() => setCollegePage((p) => p - 1)}>Previous</Button>
+            <Button
+              variant="outline"
+              className="h-10 text-xs"
+              disabled={((collegePage + 1) * COLLEGE_PAGE_SIZE) >= (collegeQ.data?.total ?? 0)}
+              onClick={() => setCollegePage((p) => p + 1)}
+            >
+              Next
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </SectionFrame>
+
+      <SectionFrame
+        id="admin-manager"
+        title="Admin Manager"
+        subtitle="Reassign, deactivate, or remove admin privileges"
+      >
+        <div className="space-y-3">
+          {adminQ.isLoading
+            ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)
+            : visibleAdmins.map((admin) => (
+                <GlassCard key={admin.user_id} padding="md" radius="xl" className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{admin.name ?? "Unknown"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{admin.email ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{admin.college_name ?? "Unassigned college"}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px]">Admin</Badge>
+                  </div>
+
+                  <Select
+                    value={admin.college_id ?? "unassigned"}
+                    onValueChange={(value) => {
+                      if (value === "unassigned") return;
+                      reassignCollege.mutate({ userId: admin.user_id, collegeId: value });
+                    }}
+                  >
+                    <SelectTrigger className="h-12 bg-surface-2 border-border-subtle text-xs">
+                      <SelectValue placeholder="Reassign college" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-1 border-border-subtle">
+                      {colleges.map((college) => (
+                        <SelectItem key={college.id} value={college.id}>{college.college_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" className="h-12 text-xs" onClick={() => deactivateAdmin.mutate(admin.user_id)}>Deactivate Admin</Button>
+                    <Button variant="outline" className="h-12 text-xs" onClick={() => removeAdminRole.mutate(admin.user_id)}>Remove Role</Button>
+                  </div>
+                </GlassCard>
+              ))}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Showing {(adminPage * ADMIN_PAGE_SIZE) + 1}–{Math.min((adminPage + 1) * ADMIN_PAGE_SIZE, admins.length)} of {admins.length.toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-10 text-xs" disabled={adminPage === 0} onClick={() => setAdminPage((p) => p - 1)}>Previous</Button>
+            <Button
+              variant="outline"
+              className="h-10 text-xs"
+              disabled={((adminPage + 1) * ADMIN_PAGE_SIZE) >= admins.length}
+              onClick={() => setAdminPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        id="platform-analytics"
+        title="Platform Analytics"
+        subtitle="Growth, activity, attendance trends, and points distribution"
+      >
+        {!showAnalytics ? (
+          <GlassCard padding="md" radius="xl" className="space-y-3">
+            <p className="text-xs text-muted-foreground">Analytics charts are lazy-loaded for faster initial dashboard performance.</p>
+            <Button className="h-12" onClick={() => setShowAnalytics(true)}>Load Platform Analytics</Button>
+          </GlassCard>
+        ) : (
+          <Suspense fallback={<Skeleton className="h-80 rounded-2xl" />}>
+            <SAAnalyticsTab />
+          </Suspense>
+        )}
+      </SectionFrame>
+
+      <SectionFrame
+        id="system-health"
+        title="System Health Panel"
+        subtitle="Database, API latency, sessions, and live platform state"
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <GlassCard padding="md" radius="xl" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted-foreground">Database Status</p>
+              <HealthBadge label={healthQ.data?.db_ok ? "Operational" : "Critical"} tone={healthQ.data?.db_ok ? "operational" : "critical"} />
+            </div>
+            {healthQ.isLoading ? <Skeleton className="h-6 w-20" /> : <p className="text-lg font-bold text-foreground tabular-nums">{healthQ.data?.db_latency_ms ?? 0}ms</p>}
+          </GlassCard>
+
+          <GlassCard padding="md" radius="xl" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted-foreground">API Latency</p>
+              <HealthBadge
+                label={
+                  (healthQ.data?.api_latency_ms ?? 0) > 900
+                    ? "Critical"
+                    : (healthQ.data?.api_latency_ms ?? 0) > 500
+                    ? "Warning"
+                    : "Operational"
+                }
+                tone={
+                  (healthQ.data?.api_latency_ms ?? 0) > 900
+                    ? "critical"
+                    : (healthQ.data?.api_latency_ms ?? 0) > 500
+                    ? "warning"
+                    : "operational"
+                }
+              />
+            </div>
+            {healthQ.isLoading ? <Skeleton className="h-6 w-20" /> : <p className="text-lg font-bold text-foreground tabular-nums">{healthQ.data?.api_latency_ms ?? 0}ms</p>}
+          </GlassCard>
+
+          <GlassCard padding="md" radius="xl" className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Active Sessions</p>
+            {healthQ.isLoading ? <Skeleton className="h-6 w-20" /> : <p className="text-lg font-bold text-foreground tabular-nums">{(healthQ.data?.active_sessions ?? 0).toLocaleString()}</p>}
+          </GlassCard>
+
+          <GlassCard padding="md" radius="xl" className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Live Lectures</p>
+            {healthQ.isLoading ? <Skeleton className="h-6 w-20" /> : <p className="text-lg font-bold text-foreground tabular-nums">{(healthQ.data?.live_lectures ?? 0).toLocaleString()}</p>}
+          </GlassCard>
+        </div>
+      </SectionFrame>
+
+      <SectionFrame
+        id="announcement-control"
+        title="Announcement Control"
+        subtitle="Broadcast platform-wide announcements instantly"
+      >
+        {!showBroadcast ? (
+          <GlassCard padding="md" radius="xl" className="space-y-3">
+            <p className="text-xs text-muted-foreground">Broadcast composer is lazy-loaded to keep the command center fast.</p>
+            <Button className="h-12" onClick={() => setShowBroadcast(true)}>Open Broadcast Composer</Button>
+          </GlassCard>
+        ) : (
+          <Suspense fallback={<Skeleton className="h-80 rounded-2xl" />}>
+            <SABroadcastTab />
+          </Suspense>
+        )}
+      </SectionFrame>
+
+      <SectionFrame
+        id="security-logs"
+        title="Security Logs"
+        subtitle="Recent sensitive actions across platform operations"
+      >
+        <GlassCard padding="none" radius="xl" className="overflow-hidden">
+          {logsQ.isLoading ? (
+            <div className="space-y-3 p-4">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            </div>
+          ) : (
+            <div className="divide-y divide-border-subtle">
+              {(logsQ.data?.rows ?? []).map((log) => (
+                <div key={log.id} className="flex items-start gap-3 p-4">
+                  <div className="h-9 w-9 rounded-xl bg-surface-3 border border-border-subtle flex items-center justify-center shrink-0">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">{log.action.replace(/_/g, " ")}</p>
+                    <p className="text-xs text-muted-foreground truncate">{log.performer_name}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassCard>
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">Latest sensitive actions</p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-10 text-xs" disabled={logsPage === 0} onClick={() => setLogsPage((p) => p - 1)}>Previous</Button>
+            <Button variant="outline" className="h-10 text-xs" disabled={!logsQ.data?.hasMore} onClick={() => setLogsPage((p) => p + 1)}>
+              Next <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </SectionFrame>
+
+      <div className="h-6" />
+    </PageContainer>
   );
 }
 
-// ── Main Export ───────────────────────────────────────────────────────────────
 export default function SuperAdminDashboard() {
   return (
     <CollegeProvider>
