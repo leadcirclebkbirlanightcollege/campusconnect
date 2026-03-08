@@ -88,12 +88,18 @@ const TAB_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Operations",
+    items: [
+      { value: "monitoring", icon: Activity,      label: "Monitoring" },
+      { value: "feedback",   icon: MessageSquare, label: "Feedback" },
+    ],
+  },
+  {
     label: "System",
     items: [
-      { value: "settings",  icon: Sliders,  label: "Settings" },
+      { value: "settings",  icon: Sliders,   label: "Settings" },
       { value: "platform",  icon: Settings2, label: "Platform Mode" },
-      { value: "security",  icon: Shield,   label: "Security" },
-      { value: "health",    icon: Activity, label: "Health" },
+      { value: "security",  icon: Shield,    label: "Security" },
     ],
   },
 ];
