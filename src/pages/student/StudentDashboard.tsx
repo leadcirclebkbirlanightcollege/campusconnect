@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import { ActionTile } from "@/components/ui/ActionTile";
@@ -186,6 +187,15 @@ export default function StudentDashboard() {
     refetchOnWindowFocus: false,
   });
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      coreQuery.refetch(),
+      secondaryQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ["student", "growth-insights"] }),
+      queryClient.invalidateQueries({ queryKey: ["student", "intelligence"] }),
+    ]);
+  }, [coreQuery, queryClient, secondaryQuery]);
+
   useEffect(() => {
     if (!coreQuery.data) return;
 
@@ -273,148 +283,150 @@ export default function StudentDashboard() {
   ].filter(Boolean) as Array<{ icon: typeof Sparkles; text: string; tone: "success" | "warning" | "primary" }>;
 
   return (
-    <PageContainer className="space-y-6" withBottomNav>
-      <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <PageContainer className="space-y-6" withBottomNav>
+        <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
 
-      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-        <motion.section variants={SECTION_REVEAL_ITEM}>
-          <GlassCard className="space-y-4" padding="lg" elevation="high">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{greeting}</p>
-                <h1 className="text-[28px] font-black leading-none text-foreground truncate">{coreQuery.data.name}</h1>
-                <StatusBadge status="active" className={cn(tierConfig.bg, tierConfig.border, tierConfig.color)}>
-                  {tierConfig.label} Tier
-                </StatusBadge>
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            <GlassCard className="space-y-4" padding="lg" elevation="high">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{greeting}</p>
+                  <h1 className="text-[28px] font-black leading-none text-foreground truncate">{coreQuery.data.name}</h1>
+                  <StatusBadge status="active" className={cn(tierConfig.bg, tierConfig.border, tierConfig.color)}>
+                    {tierConfig.label} Tier
+                  </StatusBadge>
+                </div>
+                <ProgressRing value={attendancePct} className="shrink-0" size={104} />
               </div>
-              <ProgressRing value={attendancePct} className="shrink-0" size={104} />
-            </div>
 
-            <div className="grid grid-cols-3 gap-3 border-t border-border-subtle pt-4">
-              <HeroStat label="Points" value={coreQuery.data.totalPoints} />
-              <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
-              <HeroStat label="Attendance" value={attendancePct} suffix="%" />
-            </div>
-          </GlassCard>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Quick Actions" subtitle="One-tap shortcuts" />
-          <div className="grid grid-cols-2 gap-3">
-            <ActionTile icon={Flame} label="Daily Check-In" onClick={() => document.getElementById("daily-checkin")?.scrollIntoView({ behavior: "smooth" })} />
-            <ActionTile icon={CalendarCheck} label="Attendance" onClick={() => navigate("/app/attendance")} />
-            <ActionTile icon={Trophy} label="Leaderboard" onClick={() => navigate("/app/leaderboard")} />
-            <ActionTile icon={BookOpen} label="Lectures" onClick={() => navigate("/app/lectures")} />
-          </div>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Lecture" subtitle={lectureIsLive ? "Happening now" : "Up next"} />
-          <GlassCard className="space-y-3" hover>
-            {lecture ? (
-              <>
-                <div className="flex items-center justify-between gap-2">
-                  <StatusBadge status={lectureIsLive ? "live" : "upcoming"}>{lectureIsLive ? "Live" : "Upcoming"}</StatusBadge>
-                  <p className="text-xs text-muted-foreground">{lecture.lecture_date}</p>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-foreground truncate">{lecture.topic}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{lecture.venue} · {lecture.start_time}</p>
-                </div>
-                <GlowButton className="w-full" onClick={() => navigate(lectureIsLive ? `/app/lectures/${lecture.id}` : "/app/lectures") }>
-                  {lectureIsLive ? <Scan className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-                  {lectureIsLive ? "Mark Attendance" : "View Lecture"}
-                </GlowButton>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No upcoming lecture scheduled right now.</p>
-            )}
-          </GlassCard>
-        </motion.section>
-
-        <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Daily Check-In" subtitle="Keep your streak alive" />
-          <DailyCheckinCard />
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Academic Intelligence" subtitle="Your performance cockpit" />
-          {intelligence.isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
-              <Skeleton className="h-36 rounded-2xl" />
-              <Skeleton className="h-36 rounded-2xl" />
-              <Skeleton className="h-36 rounded-2xl" />
-              <Skeleton className="h-36 rounded-2xl" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={CalendarCheck} value={intelligence.data?.attendanceConsistency ?? 0} label="Attendance" suffix="%" />
-              <MetricCard icon={Zap} value={intelligence.data?.engagementIndex ?? 0} label="Engagement" suffix="%" />
-              <MetricCard
-                icon={Brain}
-                value={Math.round(
-                  ((intelligence.data?.attendanceConsistency ?? 0) +
-                    (intelligence.data?.behaviourReliability ?? 0) +
-                    (intelligence.data?.engagementIndex ?? 0)) /
-                    3,
-                )}
-                label="Intelligence"
-              />
-              <GlassCard className="flex flex-col justify-between" hover>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Risk</p>
-                  <ShieldAlert className="h-4 w-4 text-warning" />
-                </div>
-                <p className="text-2xl font-black capitalize text-foreground">{riskLevel}</p>
-                <StatusBadge status={riskLevel === "high" ? "upcoming" : "active"}>{riskLevel}</StatusBadge>
-              </GlassCard>
-            </div>
-          )}
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Smart Insights" subtitle="Actionable nudges" />
-          <div className="space-y-3">
-            {insightCards.map((insight, index) => (
-              <GlassCard key={`${insight.text}-${index}`} className="flex items-start gap-3" hover={false}>
-                <div className={cn(
-                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                  insight.tone === "success" && "bg-success/12 text-success",
-                  insight.tone === "warning" && "bg-warning/12 text-warning",
-                  insight.tone === "primary" && "bg-primary/12 text-primary",
-                )}>
-                  <insight.icon className="h-4 w-4" />
-                </div>
-                <p className="text-sm leading-relaxed text-foreground">{insight.text}</p>
-              </GlassCard>
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
-          <GlassCard padding="none" className="overflow-hidden" hover={false}>
-            {secondaryQuery.isLoading ? (
-              <div className="space-y-3 p-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 rounded-xl" />
-                ))}
+              <div className="grid grid-cols-3 gap-3 border-t border-border-subtle pt-4">
+                <HeroStat label="Points" value={coreQuery.data.totalPoints} />
+                <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
+                <HeroStat label="Attendance" value={attendancePct} suffix="%" />
               </div>
-            ) : (secondaryQuery.data?.activities.length ?? 0) === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+            </GlassCard>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Quick Actions" subtitle="One-tap shortcuts" />
+            <div className="grid grid-cols-2 gap-3">
+              <ActionTile icon={Flame} label="Daily Check-In" onClick={() => document.getElementById("daily-checkin")?.scrollIntoView({ behavior: "smooth" })} />
+              <ActionTile icon={CalendarCheck} label="Attendance" onClick={() => navigate("/app/attendance")} />
+              <ActionTile icon={Trophy} label="Leaderboard" onClick={() => navigate("/app/leaderboard")} />
+              <ActionTile icon={BookOpen} label="Lectures" onClick={() => navigate("/app/lectures")} />
+            </div>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Lecture" subtitle={lectureIsLive ? "Happening now" : "Up next"} />
+            <GlassCard className="space-y-3" hover>
+              {lecture ? (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <StatusBadge status={lectureIsLive ? "live" : "upcoming"}>{lectureIsLive ? "Live" : "Upcoming"}</StatusBadge>
+                    <p className="text-xs text-muted-foreground">{lecture.lecture_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-foreground truncate">{lecture.topic}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{lecture.venue} · {lecture.start_time}</p>
+                  </div>
+                  <GlowButton className="w-full" onClick={() => navigate(lectureIsLive ? `/app/lectures/${lecture.id}` : "/app/lectures") }>
+                    {lectureIsLive ? <Scan className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                    {lectureIsLive ? "Mark Attendance" : "View Lecture"}
+                  </GlowButton>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No upcoming lecture scheduled right now.</p>
+              )}
+            </GlassCard>
+          </motion.section>
+
+          <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Daily Check-In" subtitle="Keep your streak alive" />
+            <DailyCheckinCard />
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Academic Intelligence" subtitle="Your performance cockpit" />
+            {intelligence.isLoading ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-36 rounded-2xl" />
+                <Skeleton className="h-36 rounded-2xl" />
+                <Skeleton className="h-36 rounded-2xl" />
+                <Skeleton className="h-36 rounded-2xl" />
               </div>
             ) : (
-              <div className="divide-y divide-border-subtle">
-                {(secondaryQuery.data?.activities ?? []).map((activity, index) => (
-                  <ActivityRow key={activity.id} activity={activity} index={index} />
-                ))}
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard icon={CalendarCheck} value={intelligence.data?.attendanceConsistency ?? 0} label="Attendance" suffix="%" />
+                <MetricCard icon={Zap} value={intelligence.data?.engagementIndex ?? 0} label="Engagement" suffix="%" />
+                <MetricCard
+                  icon={Brain}
+                  value={Math.round(
+                    ((intelligence.data?.attendanceConsistency ?? 0) +
+                      (intelligence.data?.behaviourReliability ?? 0) +
+                      (intelligence.data?.engagementIndex ?? 0)) /
+                      3,
+                  )}
+                  label="Intelligence"
+                />
+                <GlassCard className="flex flex-col justify-between" hover>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Risk</p>
+                    <ShieldAlert className="h-4 w-4 text-warning" />
+                  </div>
+                  <p className="text-2xl font-black capitalize text-foreground">{riskLevel}</p>
+                  <StatusBadge status={riskLevel === "high" ? "upcoming" : "active"}>{riskLevel}</StatusBadge>
+                </GlassCard>
               </div>
             )}
-          </GlassCard>
-        </motion.section>
-      </motion.div>
-    </PageContainer>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Smart Insights" subtitle="Actionable nudges" />
+            <div className="space-y-3">
+              {insightCards.map((insight, index) => (
+                <GlassCard key={`${insight.text}-${index}`} className="flex items-start gap-3" hover={false}>
+                  <div className={cn(
+                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                    insight.tone === "success" && "bg-success/12 text-success",
+                    insight.tone === "warning" && "bg-warning/12 text-warning",
+                    insight.tone === "primary" && "bg-primary/12 text-primary",
+                  )}>
+                    <insight.icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground">{insight.text}</p>
+                </GlassCard>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
+            <GlassCard padding="none" className="overflow-hidden" hover={false}>
+              {secondaryQuery.isLoading ? (
+                <div className="space-y-3 p-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 rounded-xl" />
+                  ))}
+                </div>
+              ) : (secondaryQuery.data?.activities.length ?? 0) === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border-subtle">
+                  {(secondaryQuery.data?.activities ?? []).map((activity, index) => (
+                    <ActivityRow key={activity.id} activity={activity} index={index} />
+                  ))}
+                </div>
+              )}
+            </GlassCard>
+          </motion.section>
+        </motion.div>
+      </PageContainer>
+    </PullToRefresh>
   );
 }
 

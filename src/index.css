@@ -588,11 +588,38 @@
 }
 
 /* ══════════════════════════════════════════════
-   SAFE AREA UTILITIES
-══════════════════════════════════════════════ */
+   MOBILE TOUCH + SAFE AREA UTILITIES
+══════════════════════════════════════ */
+.tap-ripple {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.tap-ripple::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: hsl(var(--primary) / 0.18);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+.tap-ripple:active::after {
+  transform: translate(-50%, -50%) scale(14);
+  opacity: 1;
+}
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .safe-area-bottom-nav {
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+

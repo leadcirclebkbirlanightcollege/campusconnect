@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   useInfiniteQuery,
   useQuery,
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
@@ -167,6 +168,14 @@ export default function StudentAttendanceHistory() {
     [historyQuery.data],
   );
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([
+      totalsQuery.refetch(),
+      historyQuery.refetch(),
+      growth.refetch(),
+    ]);
+  }, [growth, historyQuery, totalsQuery]);
+
   const totals = totalsQuery.data;
   const isInitialLoading =
     userQuery.isLoading ||
@@ -255,150 +264,152 @@ export default function StudentAttendanceHistory() {
   ] as const;
 
   return (
-    <PageContainer className="space-y-6" withBottomNav>
-      <PageHeader
-        title="Attendance"
-        subtitle="Track your attendance health"
-        variant="large"
-        gradient
-      />
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <PageContainer className="space-y-6" withBottomNav>
+        <PageHeader
+          title="Attendance"
+          subtitle="Track your attendance health"
+          variant="large"
+          gradient
+        />
 
-      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Attendance Overview" subtitle="Performance at a glance" />
-          <GlassCard padding="lg" className="space-y-4" elevation="high">
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Attended" />
-              <MetricCard icon={BookOpen} value={totals.totalCount} label="Conducted" />
-            </div>
-            <MetricCard icon={TrendingUp} value={totals.percentage} suffix="%" label="Attendance" />
-          </GlassCard>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Attendance Ring" subtitle="Visual attendance health" />
-          <GlassCard className="flex items-center justify-center" padding="lg">
-            <div className="flex flex-col items-center gap-3">
-              <ProgressRing value={totals.percentage} size={120} />
-              <p className="text-sm font-semibold text-foreground">{totals.percentage}% overall attendance</p>
-            </div>
-          </GlassCard>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Summary Metrics" subtitle="Academic attendance breakdown" />
-          <div className="grid grid-cols-2 gap-3">
-            <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Lectures Attended" />
-            <MetricCard icon={UserX} value={totals.missedCount} label="Lectures Missed" />
-            <MetricCard icon={BookOpen} value={totals.percentage} suffix="%" label="Attendance %" />
-            <GlassCard className="flex flex-col justify-between" padding="md">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Trend</p>
-                {(() => {
-                  const TrendIcon = trendIcon;
-                  return <TrendIcon className="h-4 w-4 text-primary" />;
-                })()}
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Attendance Overview" subtitle="Performance at a glance" />
+            <GlassCard padding="lg" className="space-y-4" elevation="high">
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Attended" />
+                <MetricCard icon={BookOpen} value={totals.totalCount} label="Conducted" />
               </div>
-              <p className="text-2xl font-black text-foreground">{trendLabel}</p>
-              <StatusBadge status={trendDirection === "declining" ? "upcoming" : "active"}>
-                {trendLabel}
-              </StatusBadge>
+              <MetricCard icon={TrendingUp} value={totals.percentage} suffix="%" label="Attendance" />
             </GlassCard>
-          </div>
-        </motion.section>
+          </motion.section>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Lecture Timeline" subtitle="Latest attendance records" />
-          <div className="space-y-3">
-            {timelineRows.length === 0 ? (
-              <GlassCard>
-                <p className="text-sm text-muted-foreground">No attendance records yet.</p>
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Attendance Ring" subtitle="Visual attendance health" />
+            <GlassCard className="flex items-center justify-center" padding="lg">
+              <div className="flex flex-col items-center gap-3">
+                <ProgressRing value={totals.percentage} size={120} />
+                <p className="text-sm font-semibold text-foreground">{totals.percentage}% overall attendance</p>
+              </div>
+            </GlassCard>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Summary Metrics" subtitle="Academic attendance breakdown" />
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Lectures Attended" />
+              <MetricCard icon={UserX} value={totals.missedCount} label="Lectures Missed" />
+              <MetricCard icon={BookOpen} value={totals.percentage} suffix="%" label="Attendance %" />
+              <GlassCard className="flex flex-col justify-between" padding="md">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Trend</p>
+                  {(() => {
+                    const TrendIcon = trendIcon;
+                    return <TrendIcon className="h-4 w-4 text-primary" />;
+                  })()}
+                </div>
+                <p className="text-2xl font-black text-foreground">{trendLabel}</p>
+                <StatusBadge status={trendDirection === "declining" ? "upcoming" : "active"}>
+                  {trendLabel}
+                </StatusBadge>
               </GlassCard>
-            ) : (
-              timelineRows.map((row, index) => (
-                <motion.div
-                  key={row.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, delay: Math.min(index * 0.03, 0.18) }}
-                >
-                  <GlassCard className="space-y-3" hover={false}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {row.lectures?.topic ?? "Lecture"}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatDateTime(row.marked_at)}
-                        </p>
+            </div>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Lecture Timeline" subtitle="Latest attendance records" />
+            <div className="space-y-3">
+              {timelineRows.length === 0 ? (
+                <GlassCard>
+                  <p className="text-sm text-muted-foreground">No attendance records yet.</p>
+                </GlassCard>
+              ) : (
+                timelineRows.map((row, index) => (
+                  <motion.div
+                    key={row.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, delay: Math.min(index * 0.03, 0.18) }}
+                  >
+                    <GlassCard className="space-y-3" hover={false}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {row.lectures?.topic ?? "Lecture"}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatDateTime(row.marked_at)}
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={getStatusTone(row.status)}
+                          className={cn(
+                            row.status.toLowerCase() === "absent" &&
+                              "border-danger/30 bg-danger/12 text-danger",
+                          )}
+                        >
+                          {getStatusLabel(row.status)}
+                        </StatusBadge>
                       </div>
-                      <StatusBadge
-                        status={getStatusTone(row.status)}
-                        className={cn(
-                          row.status.toLowerCase() === "absent" &&
-                            "border-danger/30 bg-danger/12 text-danger",
-                        )}
-                      >
-                        {getStatusLabel(row.status)}
-                      </StatusBadge>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span className="truncate">{row.lectures?.venue ?? "Venue TBA"}</span>
-                      <span className="tabular-nums">{row.points_earned > 0 ? `+${row.points_earned} pts` : "0 pts"}</span>
-                    </div>
-                  </GlassCard>
-                </motion.div>
-              ))
-            )}
+                      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                        <span className="truncate">{row.lectures?.venue ?? "Venue TBA"}</span>
+                        <span className="tabular-nums">{row.points_earned > 0 ? `+${row.points_earned} pts` : "0 pts"}</span>
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                ))
+              )}
 
-            {historyQuery.hasNextPage && (
-              <GlowButton
-                onClick={() => historyQuery.fetchNextPage()}
-                disabled={historyQuery.isFetchingNextPage}
-                className="w-full"
-              >
-                {historyQuery.isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading more
-                  </>
-                ) : (
-                  <>
-                    <Clock3 className="h-4 w-4" />
-                    Load more history
-                  </>
-                )}
-              </GlowButton>
-            )}
-          </div>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Attendance Insights" subtitle="Personalized guidance" />
-          <div className="space-y-3">
-            {insights.map((insight, idx) => (
-              <GlassCard key={`${insight.title}-${idx}`} className="flex items-start gap-3" hover={false}>
-                <div
-                  className={cn(
-                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                    insight.tone === "success" && "bg-success/12 text-success",
-                    insight.tone === "warning" && "bg-warning/12 text-warning",
-                    insight.tone === "danger" && "bg-danger/12 text-danger",
-                    insight.tone === "primary" && "bg-primary/12 text-primary",
-                  )}
+              {historyQuery.hasNextPage && (
+                <GlowButton
+                  onClick={() => historyQuery.fetchNextPage()}
+                  disabled={historyQuery.isFetchingNextPage}
+                  className="w-full"
                 >
-                  <insight.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{insight.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{insight.text}</p>
-                </div>
-              </GlassCard>
-            ))}
-          </div>
-        </motion.section>
-      </motion.div>
-    </PageContainer>
+                  {historyQuery.isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading more
+                    </>
+                  ) : (
+                    <>
+                      <Clock3 className="h-4 w-4" />
+                      Load more history
+                    </>
+                  )}
+                </GlowButton>
+              )}
+            </div>
+          </motion.section>
+
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Attendance Insights" subtitle="Personalized guidance" />
+            <div className="space-y-3">
+              {insights.map((insight, idx) => (
+                <GlassCard key={`${insight.title}-${idx}`} className="flex items-start gap-3" hover={false}>
+                  <div
+                    className={cn(
+                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                      insight.tone === "success" && "bg-success/12 text-success",
+                      insight.tone === "warning" && "bg-warning/12 text-warning",
+                      insight.tone === "danger" && "bg-danger/12 text-danger",
+                      insight.tone === "primary" && "bg-primary/12 text-primary",
+                    )}
+                  >
+                    <insight.icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{insight.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{insight.text}</p>
+                  </div>
+                </GlassCard>
+              ))}
+            </div>
+          </motion.section>
+        </motion.div>
+      </PageContainer>
+    </PullToRefresh>
   );
 }
