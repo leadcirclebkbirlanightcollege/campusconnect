@@ -303,6 +303,22 @@ export default function AppLayout() {
     staleTime: 120_000,
   });
 
+  // Unread count for mobile bottom nav bell badge
+  const { data: bottomNavUnread = 0 } = useQuery({
+    queryKey: ["topbar", "unread", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("notification_recipients")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .is("read_at", null);
+      return count ?? 0;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-svh flex w-full bg-background">
@@ -347,7 +363,7 @@ export default function AppLayout() {
           </header>
 
           {/* ── Workspace ───────────────────────────────────────── */}
-          <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
+          <main className="flex-1 px-4 py-5 md:px-6 md:py-6 pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-6">
             <div className="mx-auto max-w-[1280px]">
               <PageTransition>
                 <Outlet />
@@ -372,7 +388,7 @@ export default function AppLayout() {
         </SidebarInset>
       </div>
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
-      <MobileBottomNav path={location.pathname} />
+      <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
     </SidebarProvider>
   );
 }
