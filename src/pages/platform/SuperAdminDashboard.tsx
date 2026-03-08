@@ -53,7 +53,10 @@ type College = {
 };
 
 // ── Tab groups ───────────────────────────────────────────────────────────────
-const TAB_GROUPS = [
+type NavItem = { value: string; icon: React.ElementType; label: string };
+type NavGroup = { label: string; items: NavItem[] };
+
+const TAB_GROUPS: NavGroup[] = [
   {
     label: "Overview",
     items: [
@@ -72,8 +75,8 @@ const TAB_GROUPS = [
   {
     label: "Academic",
     items: [
-      { value: "lectures",      icon: BookOpen, label: "Lectures" },
-      { value: "achievements",  icon: Trophy,   label: "Achievements" },
+      { value: "lectures",     icon: BookOpen, label: "Lectures" },
+      { value: "achievements", icon: Trophy,   label: "Achievements" },
     ],
   },
   {
@@ -86,15 +89,13 @@ const TAB_GROUPS = [
   {
     label: "System",
     items: [
-      { value: "settings",  icon: Sliders,     label: "Settings" },
-      { value: "platform",  icon: Settings2,   label: "Platform Mode" },
-      { value: "security",  icon: Shield,      label: "Security" },
-      { value: "health",    icon: Activity,    label: "Health" },
+      { value: "settings",  icon: Sliders,  label: "Settings" },
+      { value: "platform",  icon: Settings2, label: "Platform Mode" },
+      { value: "security",  icon: Shield,   label: "Security" },
+      { value: "health",    icon: Activity, label: "Health" },
     ],
   },
-] as const;
-
-type TabValue = typeof TAB_GROUPS[number]["items"][number]["value"];
+];
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 function usePlatformAnalytics() {
