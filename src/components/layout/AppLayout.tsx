@@ -35,14 +35,11 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
 import { BottomNavigation } from "@/layout/BottomNavigation";
-import { getPageMeta } from "@/ui-engine/navigation-engine";
-
-/* ── Page transition variants ─────────────────────────────────── */
-const PAGE_VARIANTS: Variants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -4, transition: { duration: 0.12, ease: "easeIn" } },
-};
+import {
+  PAGE_TRANSITION,
+  PAGE_TRANSITION_VARIANTS,
+} from "@/motion/pageTransitions";
+import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
