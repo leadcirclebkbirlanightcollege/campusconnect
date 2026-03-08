@@ -335,8 +335,8 @@ export default function Index() {
 
             <motion.div
               aria-hidden
-              className="pointer-events-none absolute -bottom-7 -right-4 hidden h-24 w-24 rounded-full border border-primary/35 bg-primary/15 blur-sm md:block"
-              animate={{ rotate: [0, 8, -8, 0], y: [0, -4, 0] }}
+              className="pointer-events-none absolute -bottom-7 -right-4 hidden h-20 w-20 rounded-full border border-border-subtle bg-primary/10 blur-sm md:block"
+              animate={{ rotate: [0, 6, -6, 0], y: [0, -3, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
