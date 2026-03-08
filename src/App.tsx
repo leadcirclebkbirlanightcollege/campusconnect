@@ -17,6 +17,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWebVitals } from "@/hooks/use-web-vitals";
+import { useOneSignal } from "@/hooks/use-onesignal";
 
 /* ── Eager (critical path) ───────────────────────────────────── */
 import Index from "./pages/Index";
@@ -82,7 +83,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  useWebVitals(); // passive Web Vitals monitoring — no render impact
+  useWebVitals();   // passive Web Vitals monitoring — no render impact
+  useOneSignal();   // OneSignal push notifications
   return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
