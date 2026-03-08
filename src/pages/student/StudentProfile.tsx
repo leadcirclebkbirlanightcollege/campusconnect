@@ -5,6 +5,8 @@ import { z } from "zod";
 import { Camera, Save, KeyRound, ShieldAlert, Monitor, LogOutIcon, Sparkles, BarChart3, Award, Trophy, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
+import { cn } from "@/lib/utils";
+
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
