@@ -17,7 +17,6 @@ import {
   Calendar,
   Moon,
   Sun,
-  GraduationCap,
   Flame,
 } from "lucide-react";
 
