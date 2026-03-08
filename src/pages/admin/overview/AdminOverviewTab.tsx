@@ -403,7 +403,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (ta
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground line-clamp-1">
-                        {item.action.replaceAll("_", " ")} • {item.target_entity}
+                        {item.action.replace(/_/g, " ")} • {item.target_entity}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(item.created_at)}</p>
                     </div>
