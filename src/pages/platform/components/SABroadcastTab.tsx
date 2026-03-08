@@ -181,7 +181,7 @@ export default function SABroadcastTab() {
               disabled={send.isPending || !form.title.trim() || !form.description.trim()}
             >
               <Send className="w-3.5 h-3.5" />
-              {send.isPending ? "Sending…" : "Send Broadcast"}
+              {send.isPending ? "Sending…" : "Send Broadcast + Push"}
             </Button>
           </CardContent>
         </Card>
