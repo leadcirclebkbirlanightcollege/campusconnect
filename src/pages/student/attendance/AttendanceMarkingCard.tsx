@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRateLimit } from "@/hooks/use-rate-limit";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
