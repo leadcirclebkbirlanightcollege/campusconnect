@@ -204,7 +204,7 @@ function BellPopover({ userId, unreadCount }: { userId: string; unreadCount: num
                         onClick={() => {
                           if (isUnread) markOneRead.mutate(item.rec.id);
                           setOpen(false);
-                          navigate("/student/inbox");
+                          navigate("/app/inbox");
                         }}
                       >
                         <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5", cfg.bg)}>
@@ -231,7 +231,7 @@ function BellPopover({ userId, unreadCount }: { userId: string; unreadCount: num
               {/* Footer */}
               <div className="px-4 py-2.5 border-t border-border-subtle">
                 <button
-                  onClick={() => { setOpen(false); navigate("/student/inbox"); }}
+                  onClick={() => { setOpen(false); navigate("/app/inbox"); }}
                   className="w-full flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   View all notifications <ChevronRight className="h-3.5 w-3.5" />
@@ -349,10 +349,10 @@ const AppShell = ({ children }: AppShellProps) => {
 
                 {/* Inbox nav item (mobile) */}
                 <div className="sm:hidden">
-                  <NavItem to="/student/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/student/inbox")} badge={unread} />
+                  <NavItem to="/app/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/app/inbox")} badge={unread} />
                 </div>
 
-                <NavItem to="/student/profile" label="Profile" icon={UserRound} active={path.startsWith("/student/profile")} />
+                <NavItem to="/app/profile" label="Profile" icon={UserRound} active={path.startsWith("/app/profile")} />
 
                 {/* Avatar dropdown */}
                 <DropdownMenu>
@@ -375,9 +375,10 @@ const AppShell = ({ children }: AppShellProps) => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-50 w-48 bg-popover text-popover-foreground">
-                    <DropdownMenuItem asChild><Link to="/student/profile">Profile</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to="/student/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to="/leaderboard">Leaderboard</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/profile">Profile</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/settings/notifications">Notification Settings</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/app/leaderboard">Leaderboard</Link></DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleStudentLogout(); }} className="gap-2">
                       <LogOut className="h-4 w-4" /> Logout

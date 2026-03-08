@@ -10,7 +10,7 @@ import NetworkHealthDot from "@/components/layout/NetworkHealthDot";
 import SwUpdateManager from "@/components/pwa/SwUpdateManager";
 import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 import PlatformModeGuard from "@/components/platform/PlatformModeGuard";
-import OneSignalManager from "@/components/notifications/OneSignalManager";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -43,6 +43,7 @@ const AdminDashboard           = lazy(() => import("./pages/admin/AdminDashboard
 const SuperAdminDashboard      = lazy(() => import("./pages/platform/SuperAdminDashboard"));
 const NotFound                 = lazy(() => import("./pages/NotFound"));
 const PwaInstallPage           = lazy(() => import("./pages/student/PwaInstallPage"));
+const NotificationSettings     = lazy(() => import("./pages/student/NotificationSettings"));
 
 /* ── Route fallback skeleton ─────────────────────────────────── */
 function RouteSkeleton() {
@@ -96,7 +97,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <PlatformModeGuard>
-            <OneSignalManager />
+            
             <Suspense fallback={<RouteSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -136,9 +137,10 @@ const App = () => {
                   <Route path="announcements"  element={<StudentAnnouncementsFeed />} />
                   <Route path="events"         element={<StudentEventsList />} />
                   <Route path="polls"          element={<StudentPollsList />} />
-                  <Route path="daily"          element={<StudentDailyContent />} />
-                <Route path="achievements"   element={<StudentAchievements />} />
-                  <Route path="install"         element={<PwaInstallPage />} />
+                  <Route path="daily"              element={<StudentDailyContent />} />
+                  <Route path="achievements"      element={<StudentAchievements />} />
+                  <Route path="settings/notifications" element={<NotificationSettings />} />
+                  <Route path="install"            element={<PwaInstallPage />} />
 
                   <Route
                     path="admin/dashboard"

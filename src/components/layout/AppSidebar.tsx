@@ -18,6 +18,7 @@ import {
   Moon,
   Sun,
   Flame,
+  Settings,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -139,14 +140,15 @@ export default function AppSidebar() {
         items: [
           { title: "Announcements", url: "/app/announcements", icon: Megaphone },
           { title: "Events",        url: "/app/events",        icon: CalendarDays },
-          { title: "Inbox",         url: "/app/inbox",         icon: Bell },
+          { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
         label: "Identity",
         items: [
-          { title: "Digital ID", url: "/app/id-card", icon: CreditCard },
-          { title: "Profile",    url: "/app/profile",  icon: UserRound },
+          { title: "Digital ID",         url: "/app/id-card",                   icon: CreditCard },
+          { title: "Profile",            url: "/app/profile",                   icon: UserRound },
+          { title: "Notif. Settings",    url: "/app/settings/notifications",    icon: Settings },
         ],
       },
     ],
@@ -188,8 +190,7 @@ export default function AppSidebar() {
           {section.items.map((item) => {
             const active = isActive(item.url);
             const Icon = item.icon;
-            const isInbox = item.url === "/app/inbox";
-            const badgeCount = isInbox ? unreadCount : 0;
+            const badgeCount = item.badge ?? (item.url === "/app/inbox" ? unreadCount : 0);
 
             return (
               <SidebarMenuItem key={item.title}>
