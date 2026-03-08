@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { BUTTON_TAP_ANIMATION, PRESS_TRANSITION } from "@/motion/gestureAnimations";
 
 type GlowButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   children?: React.ReactNode;

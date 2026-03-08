@@ -13,6 +13,8 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { MOTION_MS, MOTION_SPECIAL_MS } from "@/motion/motionTokens";
+import { useCountUp } from "@/motion/microInteractions";
 
 /* ── FadeIn ── */
 interface FadeInProps {

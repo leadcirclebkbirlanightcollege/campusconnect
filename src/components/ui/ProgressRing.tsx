@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { PROGRESS_RING_TRANSITION } from "@/motion/microInteractions";
 
 interface ProgressRingProps {
   value: number;

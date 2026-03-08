@@ -9,7 +9,7 @@ import {
   BadgeCheck,
   CheckCircle,
 } from "lucide-react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
