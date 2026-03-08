@@ -1,9 +1,9 @@
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface ActionTileProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ActionTileProps extends Omit<HTMLMotionProps<"button">, "children"> {
   icon: LucideIcon;
   label: string;
 }
@@ -37,3 +37,4 @@ const ActionTile = React.memo(
 ActionTile.displayName = "ActionTile";
 
 export { ActionTile };
+
