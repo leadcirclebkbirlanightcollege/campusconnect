@@ -141,7 +141,7 @@ export default function StudentDigitalId() {
     <div className="flex flex-col items-center gap-6 py-6">
       {/* Visible card */}
       <div ref={cardRef} className="w-full max-w-sm">
-        <div className="rounded-xl border bg-card overflow-hidden shadow-sm" style={{ aspectRatio: "1.586 / 1", minHeight: 0 }}>
+        <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
           {/* Top institution bar */}
           <div className="bg-primary px-5 pt-4 pb-3 text-center">
             <p className="text-[11px] font-bold tracking-[0.25em] text-primary-foreground uppercase">
