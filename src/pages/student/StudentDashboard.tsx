@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import {
   ArrowRight,
   Flame,
@@ -199,6 +200,11 @@ const StudentDashboard = () => {
           </div>
         </div>
       </FadeIn>
+
+      {/* ── DAILY CHECK-IN ───────────────────────────────────────── */}
+      <SlideUp delay={30}>
+        <DailyCheckinCard />
+      </SlideUp>
 
       {/* ── LIVE ACTION ZONE ─────────────────────────────────────── */}
       {liveNow ? (

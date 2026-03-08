@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.retention-on-login]
 verify_jwt = false
+
+[functions.daily-checkin]
+verify_jwt = false
