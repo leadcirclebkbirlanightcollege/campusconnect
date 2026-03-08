@@ -131,7 +131,8 @@ const App = () => (
                   <Route path="events"         element={<StudentEventsList />} />
                   <Route path="polls"          element={<StudentPollsList />} />
                   <Route path="daily"          element={<StudentDailyContent />} />
-                  <Route path="achievements"   element={<StudentAchievements />} />
+                <Route path="achievements"   element={<StudentAchievements />} />
+                  <Route path="install"         element={<PwaInstallPage />} />
 
                   <Route
                     path="admin/dashboard"
