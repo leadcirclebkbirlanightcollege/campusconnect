@@ -207,12 +207,12 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.24),transparent_42%),radial-gradient(circle_at_100%_35%,hsl(var(--primary)/0.16),transparent_38%),radial-gradient(circle_at_0%_55%,hsl(var(--primary)/0.11),transparent_34%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.16),transparent_44%),radial-gradient(circle_at_100%_35%,hsl(var(--primary)/0.1),transparent_40%),radial-gradient(circle_at_0%_55%,hsl(var(--primary)/0.08),transparent_36%)]" />
       <motion.div
         aria-hidden
-        className="pointer-events-none fixed left-1/2 top-[-120px] -z-10 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl"
-        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none fixed left-1/2 top-[-120px] -z-10 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.62, 0.45] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.15)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.15)_1px,transparent_1px)] bg-[size:30px_30px] opacity-35" />
 
