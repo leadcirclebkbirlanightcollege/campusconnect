@@ -27,6 +27,7 @@ import StudentAnnouncementsFeed from "./pages/student/announcements/StudentAnnou
 import StudentEventsList from "./pages/student/events/StudentEventsList";
 import StudentPollsList from "./pages/student/polls/StudentPollsList";
 import StudentDailyContent from "./pages/student/content/StudentDailyContent";
+import StudentAchievements from "./pages/student/StudentAchievements";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -98,6 +99,7 @@ const App = () => (
             <Route path="events" element={<StudentEventsList />} />
             <Route path="polls" element={<StudentPollsList />} />
             <Route path="daily" element={<StudentDailyContent />} />
+            <Route path="achievements" element={<StudentAchievements />} />
 
             <Route
               path="admin/dashboard"
