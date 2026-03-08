@@ -24,12 +24,13 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
       },
       manifest: {
-        name: "Campus Connect",
-        short_name: "Campus Connect",
-        description:
-          "College lecture, attendance & points management for your campus.",
-        start_url: "/",
-        scope: "/",
+          name: "Campus Connect",
+          short_name: "Campus Connect",
+          description:
+            "College lecture, attendance & points management for your campus.",
+          version: "3.0.0",
+          start_url: "/",
+          scope: "/",
         display: "standalone",
         background_color: "#0b0f17",
         theme_color: "#0b0f17",
