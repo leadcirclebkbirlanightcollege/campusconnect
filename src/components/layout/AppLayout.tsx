@@ -1,29 +1,52 @@
-import { Outlet, useLocation } from "react-router-dom";
-
+import { Outlet, useLocation, Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Bell,
+  Search,
+  ChevronDown,
+  UserRound,
+  LogOut,
+  Settings,
+  CreditCard,
+  BadgeCheck,
+  GraduationCap,
+  CheckCircle,
+} from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
 import AppSidebar from "@/components/layout/AppSidebar";
-
-const FOOTER_LINE = "Developed by - Atharv Jadhav - Department Of Computer Science";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const PAGE_META: Record<string, { title: string; description: string }> = {
-  "/app/dashboard": { title: "Dashboard", description: "Your academic overview at a glance" },
-  "/app/admin": { title: "Admin", description: "System administration and management" },
-  "/app/attendance": { title: "Attendance", description: "View your attendance history and records" },
-  "/app/programmes": { title: "Learning Circles", description: "Browse and track your enrolled programmes" },
-  "/app/lectures": { title: "Lectures", description: "Upcoming and past lecture sessions" },
-  "/app/inbox": { title: "Inbox", description: "Your notifications and messages" },
-  "/app/id-card": { title: "Digital ID", description: "Your institutional identity card" },
-  "/app/profile": { title: "Profile", description: "Manage your personal information" },
-  "/app/leaderboard": { title: "Leaderboard", description: "Student rankings by points earned" },
-  "/app/announcements": { title: "Announcements", description: "Important notices and updates" },
-  "/app/events": { title: "Events", description: "Upcoming campus events" },
-  "/app/polls": { title: "Polls", description: "Active polls and surveys" },
-  "/app/daily": { title: "Daily", description: "Daily content and inspiration" },
+  "/app/dashboard":    { title: "Dashboard",        description: "Your academic overview at a glance" },
+  "/app/admin":        { title: "Command Center",    description: "System administration and management" },
+  "/app/attendance":   { title: "Attendance",        description: "View your attendance history and records" },
+  "/app/programmes":   { title: "Learning Circles",  description: "Browse and track your enrolled programmes" },
+  "/app/lectures":     { title: "Lectures",          description: "Upcoming and past lecture sessions" },
+  "/app/inbox":        { title: "Inbox",             description: "Your notifications and messages" },
+  "/app/id-card":      { title: "Digital ID",        description: "Your institutional identity card" },
+  "/app/profile":      { title: "Profile",           description: "Manage your personal information" },
+  "/app/leaderboard":  { title: "Leaderboard",       description: "Student rankings by points earned" },
+  "/app/announcements":{ title: "Announcements",     description: "Important notices and updates" },
+  "/app/events":       { title: "Events",            description: "Upcoming campus events" },
+  "/app/polls":        { title: "Polls",             description: "Active polls and surveys" },
+  "/app/daily":        { title: "Daily",             description: "Daily content and inspiration" },
 };
 
 function getPageMeta(pathname: string) {
@@ -33,36 +56,255 @@ function getPageMeta(pathname: string) {
   return { title: "Dashboard", description: "Your academic overview at a glance" };
 }
 
+/* ── Notification Bell ─────────────────────────────────────────── */
+function NotificationBell({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const { data: unread = 0 } = useQuery({
+    queryKey: ["topbar", "unread", userId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("notification_recipients")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .is("read_at", null);
+      return count ?? 0;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  // realtime
+  useEffect(() => {
+    const ch = supabase
+      .channel(`topbar_unread_${userId}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public",
+        table: "notification_recipients",
+        filter: `user_id=eq.${userId}`,
+      }, () => qc.invalidateQueries({ queryKey: ["topbar", "unread", userId] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, qc]);
+
+  return (
+    <Link
+      to="/app/inbox"
+      className={cn(
+        "relative flex h-8 w-8 items-center justify-center rounded-lg",
+        "border border-border-subtle bg-surface-2",
+        "text-muted-foreground hover:text-foreground hover:bg-surface-3",
+        "transition-all duration-fast",
+      )}
+      aria-label="Notifications"
+    >
+      <Bell className="h-4 w-4" />
+      {unread > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground px-1 leading-none">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/* ── System Status Dot ─────────────────────────────────────────── */
+function SystemStatus() {
+  return (
+    <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/8 border border-success/20">
+      <span className="h-1.5 w-1.5 rounded-full bg-success live-dot" />
+      <span className="text-[11px] font-medium text-success leading-none">Operational</span>
+    </div>
+  );
+}
+
+/* ── Profile Menu ──────────────────────────────────────────────── */
+function ProfileMenu({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+  const { data: profile } = useQuery({
+    queryKey: ["topbar", "profile", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("name, avatar_url, is_verified, student_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 60_000,
+  });
+
+  const initial = useMemo(() => {
+    return (profile?.name ?? "U")[0].toUpperCase();
+  }, [profile?.name]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth", { replace: true });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-2 rounded-lg pl-1 pr-2 py-1",
+            "border border-border-subtle bg-surface-2",
+            "hover:bg-surface-3 hover:border-border-strong",
+            "transition-all duration-fast focus:outline-none",
+          )}
+          aria-label="Profile menu"
+        >
+          <div className="relative">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name} />
+              <AvatarFallback className="text-[11px] bg-primary/15 text-primary font-bold">
+                {initial}
+              </AvatarFallback>
+            </Avatar>
+            {profile?.is_verified && (
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary flex items-center justify-center">
+                <BadgeCheck className="h-2 w-2 text-primary-foreground" />
+              </span>
+            )}
+          </div>
+          <span className="hidden sm:block text-[13px] font-medium text-foreground leading-none max-w-[80px] truncate">
+            {profile?.name?.split(" ")[0] ?? "Student"}
+          </span>
+          <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-52 bg-surface-1 border-border-subtle shadow-lg">
+        <DropdownMenuLabel className="pb-2">
+          <div className="flex items-center gap-2.5">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile?.avatar_url ?? undefined} />
+              <AvatarFallback className="text-[11px] bg-primary/15 text-primary font-bold">{initial}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-foreground truncate">{profile?.name ?? "Student"}</p>
+              {profile?.student_id && (
+                <p className="text-[11px] text-muted-foreground">{profile.student_id}</p>
+              )}
+            </div>
+          </div>
+          {profile?.is_verified && (
+            <div className="mt-2 flex items-center gap-1.5 rounded-md bg-success/8 border border-success/20 px-2 py-1">
+              <CheckCircle className="h-3 w-3 text-success" />
+              <span className="text-[11px] font-medium text-success">Verified Student</span>
+            </div>
+          )}
+        </DropdownMenuLabel>
+
+        <DropdownMenuSeparator className="bg-border-subtle" />
+
+        <DropdownMenuItem asChild className="gap-2.5 text-[13px] cursor-pointer">
+          <Link to="/app/profile">
+            <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
+            My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="gap-2.5 text-[13px] cursor-pointer">
+          <Link to="/app/id-card">
+            <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+            Digital ID
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="bg-border-subtle" />
+
+        <DropdownMenuItem
+          onSelect={(e) => { e.preventDefault(); handleLogout(); }}
+          className="gap-2.5 text-[13px] text-danger focus:text-danger focus:bg-danger/8 cursor-pointer"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* ── Main Layout ───────────────────────────────────────────────── */
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
+  const { branding } = usePlatformBranding();
+
+  const { data: user } = useQuery({
+    queryKey: ["topbar", "user"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user ?? null;
+    },
+    staleTime: 120_000,
+  });
 
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-svh flex w-full bg-background">
         <AppSidebar />
 
-        <SidebarInset>
-          <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/90 backdrop-blur-md shadow-xs">
-            <div className="flex h-[52px] items-center gap-3 px-4 md:px-5">
-              <SidebarTrigger className="-ml-1 md:hidden h-8 w-8" />
-              <div className="h-4 w-px bg-border-subtle hidden md:block" />
+        <SidebarInset className="flex flex-col">
+          {/* ── Premium Topbar ──────────────────────────────────── */}
+          <header className={cn(
+            "sticky top-0 z-40 border-b border-border-subtle",
+            "bg-surface-1/85 backdrop-blur-xl",
+            "shadow-[0_1px_0_hsl(var(--border-subtle))]",
+          )}>
+            <div className="flex h-[52px] items-center gap-3 px-3 md:px-5">
+              {/* Mobile sidebar trigger */}
+              <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+
+              {/* Divider */}
+              <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
+              {/* Page title */}
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-[14px] font-semibold text-foreground leading-none">{title}</h1>
-                <p className="truncate text-[11px] text-muted-foreground mt-0.5 leading-none hidden sm:block">{description}</p>
+                <h1 className="truncate text-[14px] font-semibold text-foreground leading-none">
+                  {title}
+                </h1>
+                <p className="hidden sm:block truncate text-[11px] text-muted-foreground mt-0.5 leading-none">
+                  {description}
+                </p>
+              </div>
+
+              {/* Right side controls */}
+              <div className="flex items-center gap-2 shrink-0">
+                <SystemStatus />
+
+                {user && (
+                  <>
+                    <NotificationBell userId={user.id} />
+                    <ProfileMenu userId={user.id} />
+                  </>
+                )}
               </div>
             </div>
           </header>
 
+          {/* ── Workspace ───────────────────────────────────────── */}
           <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
             <div className="mx-auto max-w-[1280px]">
               <Outlet />
             </div>
           </main>
 
-          <footer className="border-t border-border-subtle bg-surface-1/60">
-            <div className="px-4 py-2.5 md:px-6">
-              <p className="text-center text-[11px] text-muted-foreground/60">{FOOTER_LINE}</p>
+          {/* ── Footer ──────────────────────────────────────────── */}
+          <footer className="border-t border-border-subtle bg-surface-1/60 shrink-0">
+            <div className="px-4 py-2.5 md:px-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-1.5">
+                <div className="h-4 w-4 rounded-sm bg-primary/15 flex items-center justify-center">
+                  <GraduationCap className="h-2.5 w-2.5 text-primary" />
+                </div>
+                <span className="text-[11px] text-muted-foreground/60 font-medium">
+                  {branding.brand_name}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/40 text-right">
+                Developed by Atharv Jadhav · CS Dept.
+              </p>
             </div>
           </footer>
         </SidebarInset>
