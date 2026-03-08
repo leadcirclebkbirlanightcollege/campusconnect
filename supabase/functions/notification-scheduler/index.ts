@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
     const { data: due, error: dueError } = await supabase
       .from("notifications")
-      .select("id,status,scheduled_for,target_role,target_user_id")
+      .select("id,status,title,body,kind,scheduled_for,target_role,target_user_id")
       .eq("status", "scheduled")
       .lte("scheduled_for", nowIso)
       .limit(50);
