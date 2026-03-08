@@ -1,230 +1,256 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { BookOpen, ChevronRight, MapPin, Clock } from "lucide-react";
+import { useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { BookOpen, CalendarClock, Clock3, Radio, TrendingUp } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { FadeIn } from "@/components/ui/motion";
-import { StatusChip, LiveIndicator } from "@/components/ui/design-system";
-import { EmptyStateCard } from "@/components/ui/empty-state";
+import { useLiveLecture } from "@/hooks/use-live-lecture";
+import { useGrowthInsights } from "@/hooks/use-growth-insights";
 
-type LectureRow = {
-  id: string;
-  topic: string;
-  lecture_date: string;
-  start_time: string;
-  end_time: string;
-  venue: string;
-  flyer_object_path: string | null;
-  status?: "scheduled" | "live" | "ended";
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import {
+  SECTION_REVEAL_ITEM,
+  SECTION_REVEAL_PARENT,
+} from "@/motion/microInteractions";
+
+import { LectureCalendarPreview } from "./components/LectureCalendarPreview";
+import { LectureHistorySection } from "./components/LectureHistorySection";
+import { LectureInsightsPanel } from "./components/LectureInsightsPanel";
+import { LectureLiveBanner } from "./components/LectureLiveBanner";
+import { UpcomingLecturesSection } from "./components/UpcomingLecturesSection";
+import type { HistoryLectureRecord, LectureRecord } from "./types";
+
+const HISTORY_PAGE_SIZE = 10;
+
+type ProgrammeFilter = {
+  allottedProgrammeIds: Set<string>;
+  lectureProgrammeMap: Map<string, string>;
 };
 
-export default function LecturesList() {
-  const qc = useQueryClient();
-  const [view, setView] = useState<"upcoming" | "past">("upcoming");
+function applyProgrammeFilter(lectures: LectureRecord[], filter: ProgrammeFilter | undefined) {
+  if (!filter) return lectures;
 
-  const lecturesQuery = useQuery({
-    queryKey: ["student", "lectures", view],
-    queryFn: async (): Promise<LectureRow[]> => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-
-      let allottedProgrammeIds: string[] = [];
-      if (userId) {
-        const { data: allotments } = await supabase
-          .from("student_programme_allotments")
-          .select("programme_id")
-          .eq("student_user_id", userId);
-        allottedProgrammeIds = (allotments ?? []).map((a) => a.programme_id);
-      }
-
-      const { data: tags } = await supabase
-        .from("lecture_programme_tags")
-        .select("lecture_id, programme_id");
-
-      const tagMap = new Map<string, string>();
-      (tags ?? []).forEach((t) => tagMap.set(t.lecture_id, t.programme_id));
-
-      let q = supabase
-        .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status");
-
-      if (view === "upcoming") {
-        q = q.gte("lecture_date", today).order("lecture_date", { ascending: true });
-      } else {
-        q = q.lt("lecture_date", today).order("lecture_date", { ascending: false });
-      }
-
-      q = q.order("start_time", { ascending: true }).limit(200);
-
-      const { data, error } = await q;
-      if (error) throw error;
-
-      return ((data ?? []) as LectureRow[]).filter((l) => {
-        const taggedProgramme = tagMap.get(l.id);
-        if (!taggedProgramme) return true;
-        return allottedProgrammeIds.includes(taggedProgramme);
-      });
-    },
+  return lectures.filter((lecture) => {
+    const taggedProgramme = filter.lectureProgrammeMap.get(lecture.id);
+    if (!taggedProgramme) return true;
+    return filter.allottedProgrammeIds.has(taggedProgramme);
   });
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("student_lectures_list")
-      .on("postgres_changes", { event: "*", schema: "public", table: "lectures" }, async () => {
-        await qc.invalidateQueries({ queryKey: ["student", "lectures"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [qc]);
-
-  const lectures = lecturesQuery.data ?? [];
-
-  return (
-    <div className="space-y-5 page-enter">
-
-      {/* ── Header ── */}
-      <FadeIn>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <h1 className="text-heading text-foreground">Lectures</h1>
-          </div>
-
-          {/* Toggle */}
-          <div className="flex rounded-lg border border-border-subtle bg-surface-2 p-0.5">
-            <button
-              onClick={() => setView("upcoming")}
-              className={cn(
-                "px-3 py-1 rounded-md text-caption font-medium transition-fast",
-                view === "upcoming"
-                  ? "bg-surface-1 text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Upcoming
-            </button>
-            <button
-              onClick={() => setView("past")}
-              className={cn(
-                "px-3 py-1 rounded-md text-caption font-medium transition-fast",
-                view === "past"
-                  ? "bg-surface-1 text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Past
-            </button>
-          </div>
-        </div>
-      </FadeIn>
-
-      {/* ── Content ── */}
-      {lecturesQuery.isLoading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : lectures.length === 0 ? (
-        <EmptyStateCard
-          emoji={view === "upcoming" ? "📅" : "📚"}
-          title={view === "upcoming" ? "No upcoming lectures" : "No past lectures"}
-          description={
-            view === "upcoming"
-              ? "Your schedule is clear. Upcoming lectures will appear here once created."
-              : "Past lectures will show up here after sessions end."
-          }
-        />
-      ) : (
-        <div className="space-y-2">
-          {lectures.map((l, i) => (
-            <FadeIn key={l.id} delay={i * 20}>
-              <LectureCard lecture={l} />
-            </FadeIn>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
-/* ── Lecture Card ─────────────────────────────────────────── */
-function LectureCard({ lecture }: { lecture: LectureRow }) {
-  const isLive = lecture.status === "live";
-  const isEnded = lecture.status === "ended";
+export default function LecturesList() {
+  const liveLectureQuery = useLiveLecture();
+  const growthQuery = useGrowthInsights();
 
-  const dateFmt = useMemo(() => {
-    const d = new Date(lecture.lecture_date + "T00:00:00");
-    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-  }, [lecture.lecture_date]);
+  const userQuery = useQuery({
+    queryKey: ["student", "auth-user-id"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user?.id ?? null;
+    },
+    staleTime: 60_000,
+  });
+
+  const userId = userQuery.data;
+
+  const programmeFilterQuery = useQuery({
+    queryKey: ["student", "lectures", "programme-filter", userId],
+    enabled: Boolean(userId),
+    queryFn: async (): Promise<ProgrammeFilter> => {
+      const [{ data: allotments }, { data: tags }] = await Promise.all([
+        supabase
+          .from("student_programme_allotments")
+          .select("programme_id")
+          .eq("student_user_id", userId),
+        supabase
+          .from("lecture_programme_tags")
+          .select("lecture_id,programme_id"),
+      ]);
+
+      return {
+        allottedProgrammeIds: new Set((allotments ?? []).map((item) => item.programme_id)),
+        lectureProgrammeMap: new Map((tags ?? []).map((item) => [item.lecture_id, item.programme_id])),
+      };
+    },
+    staleTime: 120_000,
+    gcTime: 10 * 60_000,
+  });
+
+  const upcomingQuery = useQuery({
+    queryKey: ["student", "lectures", "upcoming", userId],
+    enabled: !userQuery.isLoading,
+    queryFn: async (): Promise<LectureRecord[]> => {
+      const today = new Date().toISOString().slice(0, 10);
+
+      const { data, error } = await supabase
+        .from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .gte("lecture_date", today)
+        .in("status", ["scheduled", "live"])
+        .order("lecture_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(12);
+
+      if (error) throw error;
+      return applyProgrammeFilter((data ?? []) as LectureRecord[], programmeFilterQuery.data);
+    },
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const historyQuery = useInfiniteQuery({
+    queryKey: ["student", "lectures", "history", userId],
+    enabled: !userQuery.isLoading,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }): Promise<HistoryLectureRecord[]> => {
+      const today = new Date().toISOString().slice(0, 10);
+      const start = Number(pageParam);
+      const end = start + HISTORY_PAGE_SIZE - 1;
+
+      const { data: historyRows, error: historyError } = await supabase
+        .from("lectures")
+        .select("id,topic,lecture_date,start_time,end_time,venue,status")
+        .lt("lecture_date", today)
+        .order("lecture_date", { ascending: false })
+        .order("start_time", { ascending: false })
+        .range(start, end);
+
+      if (historyError) throw historyError;
+
+      const filteredRows = applyProgrammeFilter((historyRows ?? []) as LectureRecord[], programmeFilterQuery.data);
+      if (!filteredRows.length || !userId) {
+        return filteredRows.map((row) => ({ ...row, attendance_status: "missed" }));
+      }
+
+      const { data: attendanceRows } = await supabase
+        .from("attendance")
+        .select("lecture_id,status")
+        .eq("student_user_id", userId)
+        .in("lecture_id", filteredRows.map((row) => row.id));
+
+      const attendanceMap = new Map((attendanceRows ?? []).map((row) => [row.lecture_id, row.status]));
+
+      return filteredRows.map((row) => {
+        const status = (attendanceMap.get(row.id) ?? "absent").toLowerCase();
+
+        if (status === "present") {
+          return { ...row, attendance_status: "attended" as const };
+        }
+
+        if (status === "late") {
+          return { ...row, attendance_status: "late" as const };
+        }
+
+        return { ...row, attendance_status: "missed" as const };
+      });
+    },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < HISTORY_PAGE_SIZE ? undefined : allPages.length * HISTORY_PAGE_SIZE,
+    staleTime: 45_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const historyRows = useMemo(
+    () => historyQuery.data?.pages.flatMap((page) => page) ?? [],
+    [historyQuery.data],
+  );
+
+  const attendanceRate = useMemo(() => {
+    if (historyRows.length === 0) return 0;
+    const attended = historyRows.filter((row) => row.attendance_status !== "missed").length;
+    return Math.round((attended / historyRows.length) * 100);
+  }, [historyRows]);
+
+  const recentMissed = historyRows[0]?.attendance_status === "missed";
+  const trendDirection = (growthQuery.data?.trend_direction ?? "stable") as
+    | "improving"
+    | "declining"
+    | "stable";
+
+  const isInitialLoading =
+    userQuery.isLoading ||
+    (programmeFilterQuery.isLoading && !!userId) ||
+    (upcomingQuery.isLoading && !upcomingQuery.data) ||
+    (historyQuery.isLoading && historyRows.length === 0);
+
+  if (isInitialLoading) {
+    return (
+      <PageContainer>
+        <PageSkeleton variant="dashboard" className="px-0" />
+      </PageContainer>
+    );
+  }
 
   return (
-    <Link
-      to={`/app/lectures/${lecture.id}`}
-      className={cn(
-        "group flex items-center gap-4 rounded-xl border px-5 py-4 transition-fast",
-        "bg-surface-1 shadow-xs",
-        isLive
-          ? "border-success/25 hover:border-success/40"
-          : isEnded
-          ? "border-border-subtle opacity-80 hover:opacity-100"
-          : "border-border-subtle hover:border-border-strong hover:shadow-sm",
-      )}
-    >
-      {/* Date column */}
-      <div className="flex-shrink-0 w-12 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none">
-          {dateFmt.split(" ")[0]}
-        </p>
-        <p className="text-[20px] font-bold text-foreground leading-tight tabular-nums">
-          {dateFmt.split(" ")[1]}
-        </p>
-        <p className="text-[10px] text-muted-foreground leading-none">
-          {dateFmt.split(" ")[2]}
-        </p>
-      </div>
+    <PageContainer className="space-y-6" withBottomNav>
+      <PageHeader
+        title="Lectures"
+        subtitle="Live, upcoming, and past sessions in one place"
+        variant="large"
+        gradient
+      />
 
-      {/* Divider */}
-      <div className={cn(
-        "w-px self-stretch rounded-full",
-        isLive ? "bg-success/30" : "bg-border-subtle",
-      )} />
+      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Live Lecture" subtitle="Jump into active sessions instantly" />
+          <LectureLiveBanner lecture={(liveLectureQuery.data as LectureRecord | null) ?? null} />
+        </motion.section>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 space-y-1.5">
-        <div className="flex items-start gap-2">
-          <p className="text-body font-medium text-foreground leading-snug flex-1 min-w-0">
-            {lecture.topic}
-          </p>
-          {isLive && <LiveIndicator className="shrink-0" />}
-          {!isLive && (
-            <StatusChip
-              variant={isEnded ? "ended" : "scheduled"}
-              label={isEnded ? "Ended" : "Scheduled"}
-              className="shrink-0"
-            />
-          )}
-        </div>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Lecture Snapshot" subtitle="Your academic pulse today" />
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard icon={BookOpen} value={upcomingQuery.data?.length ?? 0} label="Upcoming" />
+            <MetricCard icon={Clock3} value={historyRows.length} label="History Loaded" />
+            <MetricCard icon={TrendingUp} value={attendanceRate} suffix="%" label="Attendance Rate" />
+            <GlassCard className="space-y-2" hover={false}>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Current State</p>
+              <p className="text-sm font-semibold text-foreground">
+                {liveLectureQuery.data ? "Live lecture available" : "No live lecture"}
+              </p>
+              <div className="inline-flex items-center gap-1 text-xs text-primary">
+                <Radio className="h-3.5 w-3.5" />
+                Central academic timeline
+              </div>
+            </GlassCard>
+          </div>
+        </motion.section>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="flex items-center gap-1 text-caption text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            {lecture.start_time}–{lecture.end_time}
-          </span>
-          <span className="flex items-center gap-1 text-caption text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            {lecture.venue}
-          </span>
-        </div>
-      </div>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Upcoming Lectures" subtitle="Your next academic sessions" />
+          <UpcomingLecturesSection lectures={upcomingQuery.data ?? []} isLoading={upcomingQuery.isLoading} />
+        </motion.section>
 
-      {/* Arrow */}
-      <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-fast" />
-    </Link>
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Weekly Calendar" subtitle="Next 7 days preview" />
+          <LectureCalendarPreview lectures={upcomingQuery.data ?? []} />
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Lecture History" subtitle="Past sessions and attendance status" />
+          <LectureHistorySection
+            rows={historyRows}
+            isLoading={historyQuery.isLoading}
+            hasNextPage={Boolean(historyQuery.hasNextPage)}
+            isFetchingNextPage={historyQuery.isFetchingNextPage}
+            onLoadMore={() => historyQuery.fetchNextPage()}
+          />
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Lecture Insights" subtitle="Smart guidance from your lecture patterns" />
+          <LectureInsightsPanel
+            attendanceRate={attendanceRate}
+            recentMissed={Boolean(recentMissed)}
+            trendDirection={trendDirection}
+          />
+        </motion.section>
+      </motion.div>
+    </PageContainer>
   );
 }
