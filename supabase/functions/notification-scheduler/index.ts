@@ -22,23 +22,40 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Optional hardening: if a secret is provided in env + request body, validate it.
-    // We keep it OPTIONAL so scheduling can work even if the cron payload doesn't include it.
+    // ── Security: NOTIFICATION_CRON_SECRET is REQUIRED ──────────────────────
+    // If the secret is not configured, reject all requests to prevent
+    // unauthenticated execution with service-role privileges.
     const expected = Deno.env.get("NOTIFICATION_CRON_SECRET");
-    if (expected) {
-      try {
-        const body = await req.clone().json().catch(() => null);
-        const got = body?.secret as string | undefined;
-        if (got && got !== expected) {
-          return new Response(JSON.stringify({ error: "Invalid scheduler secret" }), {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch {
-        // ignore
+    if (!expected) {
+      console.error("notification-scheduler: NOTIFICATION_CRON_SECRET env var is not set");
+      return new Response(JSON.stringify({ error: "Scheduler misconfigured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate secret from request body OR Authorization header
+    let secretProvided: string | undefined;
+    try {
+      const body = await req.clone().json().catch(() => null);
+      secretProvided = body?.secret as string | undefined;
+    } catch { /* ignore parse errors */ }
+
+    // Also accept secret as Bearer token for cron jobs that use auth headers
+    if (!secretProvided) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        secretProvided = authHeader.slice("Bearer ".length);
       }
     }
+
+    if (!secretProvided || secretProvided !== expected) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
@@ -71,7 +88,6 @@ Deno.serve(async (req) => {
     let recipientsInserted = 0;
 
     for (const n of dueRows) {
-      // Mark as sent
       const { error: updError } = await supabase
         .from("notifications")
         .update({ status: "sent", sent_at: nowIso })
@@ -83,7 +99,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Determine recipient user ids
       let userIds: string[] = [];
 
       if (n.target_user_id) {
@@ -100,7 +115,6 @@ Deno.serve(async (req) => {
         }
         const roleUserIds = (roles ?? []).map((r: any) => r.user_id) as string[];
         if (roleUserIds.length > 0) {
-          // Exclude soft-deleted profiles
           const { data: profiles, error: profilesError } = await supabase
             .from("profiles")
             .select("user_id,is_deleted")
@@ -115,7 +129,6 @@ Deno.serve(async (req) => {
       }
 
       if (userIds.length > 0) {
-        // Avoid duplicate inserts by removing existing rows for that notification
         const { data: existing, error: existingError } = await supabase
           .from("notification_recipients")
           .select("user_id")
