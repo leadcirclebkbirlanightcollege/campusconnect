@@ -187,11 +187,13 @@ const Auth = () => {
         student_id: signupStudentId || null,
         department: signupDepartment || null,
         class_name: signupClass || null,
+        college_id: signupCollegeId || null,
       });
       if (profileError) throw profileError;
 
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: authData.user.id, role: "student",
+        college_id: signupCollegeId || null,
       });
       if (roleError) throw roleError;
 
