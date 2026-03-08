@@ -260,22 +260,21 @@ export default function Index() {
           className="grid gap-4 md:grid-cols-[1.05fr_0.95fr] md:items-center"
         >
           <motion.div variants={ENTER} className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/12 px-3 py-1 text-[11px] text-primary-foreground/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-glow" />
-              Cyber-neon campus operations
+            <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1/90 px-3 py-1 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Unified campus operations
             </div>
 
             <h1 className="text-[36px] font-black leading-[0.98] tracking-[-0.04em] text-foreground md:text-[56px]">
-              Your Campus.
+              Modern Campus
               <br />
-              <span className="bg-[linear-gradient(92deg,hsl(var(--foreground)),hsl(var(--primary))_50%,hsl(var(--foreground)))] bg-clip-text text-transparent">
-                Fully Synced.
+              <span className="bg-[linear-gradient(92deg,hsl(var(--foreground)),hsl(var(--primary))_60%)] bg-clip-text text-transparent">
+                Intelligence.
               </span>
             </h1>
 
             <p className="max-w-[46ch] text-sm leading-relaxed text-muted-foreground md:text-base">
-              Manage lectures, attendance, achievements, and campus life in one intelligent platform built for speed,
-              clarity, and momentum.
+              Campus Connect unifies lectures, attendance, engagement, and communication in one clean, fast, mobile-first experience.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
