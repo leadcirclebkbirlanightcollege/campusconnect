@@ -352,7 +352,7 @@ const AppShell = ({ children }: AppShellProps) => {
                   <NavItem to="/app/inbox" label="Inbox" icon={MailOpen} active={path.startsWith("/app/inbox")} badge={unread} />
                 </div>
 
-                <NavItem to="/app/profile" label="Profile" icon={UserRound} active={path.startsWith("/app/profile")} />
+                <NavItem to="/app/settings" label="Settings" icon={UserRound} active={path.startsWith("/app/settings") || path.startsWith("/app/profile")} />
 
                 {/* Avatar dropdown */}
                 <DropdownMenu>
