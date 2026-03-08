@@ -204,7 +204,7 @@ function BellPopover({ userId, unreadCount }: { userId: string; unreadCount: num
                         onClick={() => {
                           if (isUnread) markOneRead.mutate(item.rec.id);
                           setOpen(false);
-                          navigate("/student/inbox");
+                          navigate("/app/inbox");
                         }}
                       >
                         <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5", cfg.bg)}>
