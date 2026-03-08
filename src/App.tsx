@@ -96,7 +96,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <PlatformModeGuard>
-            <OneSignalManager />
+            
             <Suspense fallback={<RouteSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
