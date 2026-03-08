@@ -87,7 +87,7 @@ export function MetricCountUp({
   value,
   suffix = "",
   prefix = "",
-  duration = 600,
+  duration = MOTION_SPECIAL_MS.metricCount,
   className,
 }: MetricCountUpProps) {
   const [display, setDisplay] = React.useState(0);
