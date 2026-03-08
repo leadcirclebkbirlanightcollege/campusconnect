@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Backend is not configured for admin user creation' })
     }
 
-    // Client bound to the caller (RLS applies) -> used only for role verification.
+    // Client bound to the caller (RLS applies) — used only for role + college_id lookup.
     const caller = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     })
@@ -52,9 +52,10 @@ Deno.serve(async (req) => {
 
     const callerUserId = claimsData.claims.sub
 
+    // Fetch caller role AND college_id in one query
     const { data: roleData, error: roleError } = await caller
       .from('user_roles')
-      .select('role')
+      .select('role, college_id')
       .eq('user_id', callerUserId)
       .single()
 
@@ -63,17 +64,22 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Failed to verify role' })
     }
 
-    if (!roleData || !['admin', 'super_admin'].includes(roleData.role)) return json(403, { error: 'Admin access required' })
+    if (!roleData || !['admin', 'super_admin'].includes(roleData.role)) {
+      return json(403, { error: 'Admin access required' })
+    }
+
+    // college_id of the admin performing the creation — may be null for super_admin
+    const callerCollegeId: string | null = roleData.college_id ?? null
 
     const body = (await req.json()) as CreateStudentBody
 
     const email = (body.email ?? '').trim().toLowerCase()
-    const name = (body.name ?? '').trim()
+    const name  = (body.name  ?? '').trim()
 
     if (!email || !email.includes('@')) return json(400, { error: 'Valid email is required' })
-    if (!name) return json(400, { error: 'Name is required' })
+    if (!name)                          return json(400, { error: 'Name is required' })
 
-    // Admin client bypasses RLS for inserts/role assignment.
+    // Admin client bypasses RLS for inserts / role assignment.
     const admin = createClient(supabaseUrl, supabaseServiceKey)
 
     // Prevent duplicates
@@ -88,7 +94,6 @@ Deno.serve(async (req) => {
       return json(409, { error: 'A user with this email already exists' })
     }
 
-    // As requested: default password is literally "student"
     const defaultPassword = 'student'
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -105,51 +110,48 @@ Deno.serve(async (req) => {
 
     const newUserId = created.user.id
 
+    // Insert profile — include college_id so targeting queries work
     const { error: profileError } = await admin.from('profiles').insert({
-      user_id: newUserId,
+      user_id:    newUserId,
       name,
       email,
-      phone: body.phone ?? null,
+      phone:      body.phone      ?? null,
       student_id: body.student_id ?? null,
       department: body.department ?? null,
       class_name: body.class_name ?? null,
+      college_id: callerCollegeId,          // ← propagate admin's college
     })
 
     if (profileError) {
       console.error('Error inserting profile:', profileError)
-      // best-effort cleanup
-      try {
-        await admin.auth.admin.deleteUser(newUserId)
-      } catch (e) {
-        console.error('Cleanup failed:', e)
-      }
+      try { await admin.auth.admin.deleteUser(newUserId) } catch (e) { console.error('Cleanup failed:', e) }
       return json(500, { error: 'Failed to create student profile' })
     }
 
+    // Insert role — include college_id so push-notification targeting works
     const { error: roleInsertError } = await admin.from('user_roles').insert({
-      user_id: newUserId,
-      role: 'student',
+      user_id:    newUserId,
+      role:       'student',
+      college_id: callerCollegeId,          // ← propagate admin's college
     })
 
     if (roleInsertError) {
       console.error('Error assigning role:', roleInsertError)
-      // best-effort cleanup
       try {
         await admin.from('profiles').delete().eq('user_id', newUserId)
         await admin.auth.admin.deleteUser(newUserId)
-      } catch (e) {
-        console.error('Cleanup failed:', e)
-      }
+      } catch (e) { console.error('Cleanup failed:', e) }
       return json(500, { error: 'Failed to assign student role' })
     }
 
-    console.log('Student created by admin', { admin_user_id: callerUserId, student_user_id: newUserId })
+    console.log('Student created', { admin_user_id: callerUserId, student_user_id: newUserId, college_id: callerCollegeId })
 
     return json(200, {
       message: 'Student account created',
       userId: newUserId,
       email,
       defaultPassword,
+      college_id: callerCollegeId,
     })
   } catch (error) {
     console.error('Unexpected error:', error)
