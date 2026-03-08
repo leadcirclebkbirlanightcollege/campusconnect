@@ -22,8 +22,6 @@ import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ActionTile } from "@/components/ui/ActionTile";
-import { cn } from "@/lib/utils";
-import heroImage from "@/assets/landing-hero-modern.jpg";
 
 const HIGHLIGHTS = [
   {
@@ -84,40 +82,46 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   );
 }
 
-function PreviewCard({
-  title,
-  subtitle,
-  statA,
-  statB,
-}: {
-  title: string;
-  subtitle: string;
-  statA: string;
-  statB: string;
-}) {
+function MetricMini({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border-subtle bg-surface-2 p-4">
+      <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-black leading-none text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function PreviewCard({ title, subtitle, statA, statB }: { title: string; subtitle: string; statA: string; statB: string }) {
   return (
     <article className="min-w-[300px] snap-start">
-      <GlassCard className="overflow-hidden" padding="none" hover>
-        <div className="relative h-32">
-          <img src={heroImage} alt="Campus Connect interface preview" className="h-full w-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background)/0.92),hsl(var(--background)/0.2))]" />
-          <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] text-muted-foreground">{subtitle}</p>
-              <h3 className="text-xs font-semibold text-foreground">{title}</h3>
-            </div>
-            <span className="rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">Live</span>
+      <GlassCard padding="lg" className="space-y-4" hover>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
           </div>
+          <span className="rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] text-primary">Live</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 p-3">
+
+        <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-            <p className="text-[11px] text-muted-foreground">Metric</p>
+            <p className="text-[10px] text-muted-foreground">Metric</p>
             <p className="text-lg font-black text-foreground">{statA}</p>
           </div>
           <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-            <p className="text-[11px] text-muted-foreground">Status</p>
+            <p className="text-[10px] text-muted-foreground">Status</p>
             <p className="text-lg font-black text-foreground">{statB}</p>
           </div>
+        </div>
+
+        <div className="h-2 rounded-full bg-surface-3">
+          <motion.div
+            initial={{ width: 0 }}
+            whileInView={{ width: "76%" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.35 }}
+            className="h-2 rounded-full bg-primary"
+          />
         </div>
       </GlassCard>
     </article>
@@ -164,10 +168,15 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--primary)/0.16),transparent_36%),radial-gradient(circle_at_90%_20%,hsl(var(--primary)/0.1),transparent_38%)]" />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.08)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.08)_1px,transparent_1px)] bg-[size:42px_42px] opacity-20" />
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_20%_0%,hsl(var(--primary)/0.2),transparent_38%),radial-gradient(circle_at_100%_15%,hsl(var(--primary)/0.12),transparent_40%)]" />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[180px] bg-[linear-gradient(to_bottom,hsl(var(--primary)/0.08),transparent)]"
+        animate={{ opacity: [0.45, 0.75, 0.45] }}
+        transition={{ duration: 2.8, repeat: Infinity }}
+      />
 
-      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/80 backdrop-blur-xl safe-area-top">
+      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/85 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-6xl">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
@@ -199,63 +208,99 @@ export default function Index() {
       </header>
 
       <main className="mx-auto w-full max-w-[420px] space-y-8 px-4 py-8 md:max-w-6xl">
-        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
-          <div className="relative overflow-hidden rounded-[24px] border border-border-subtle bg-surface-1">
-            <img src={heroImage} alt="Futuristic connected campus visualization" className="h-[520px] w-full object-cover" loading="eager" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background)/0.95)_14%,hsl(var(--background)/0.56)_44%,hsl(var(--background)/0.12)_72%)]" />
-
-            <div className="absolute inset-x-4 bottom-4 space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-surface-1/85 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur-md">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Next-generation campus operations
-              </div>
-
-              <div className="space-y-2">
-                <h1 className="max-w-[16ch] text-[34px] font-black leading-[1] tracking-[-0.04em] text-foreground md:text-[56px]">
-                  Your Campus.
-                  <br />
-                  Connected in Real Time.
-                </h1>
-                <p className="max-w-[44ch] text-sm leading-relaxed text-muted-foreground md:text-base">
-                  Manage lectures, attendance, achievements, and campus communication in one modern mobile-first platform.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link to="/auth" className="w-full sm:w-auto">
-                  <GlowButton className="h-12 w-full sm:w-auto">
-                    Get Started
-                    <ArrowRight className="h-4 w-4" />
-                  </GlowButton>
-                </Link>
-                <a href="#features" className="w-full sm:w-auto">
-                  <Button variant="outline" className="h-12 w-full border-primary/25 bg-surface-1/80 sm:w-auto">
-                    Explore Features
-                  </Button>
-                </a>
-              </div>
+        <section className="grid gap-4 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-5"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-3 py-1 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Editorial launch edition
             </div>
-          </div>
-        </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
+            <h1 className="text-[38px] font-black leading-[0.97] tracking-[-0.05em] text-foreground md:text-[64px]">
+              Campus Ops.
+              <br />
+              Designed for Speed.
+            </h1>
+
+            <p className="max-w-[44ch] text-sm leading-relaxed text-muted-foreground md:text-base">
+              Manage lectures, attendance, achievements, and community signals in one fast, focused platform.
+            </p>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <GlowButton className="h-12 w-full sm:w-auto">
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </GlowButton>
+              </Link>
+              <a href="#features" className="w-full sm:w-auto">
+                <Button variant="outline" className="h-12 w-full sm:w-auto">
+                  Explore Features
+                </Button>
+              </a>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, delay: 0.06 }}
+          >
+            <GlassCard padding="lg" className="space-y-4 border-primary/25" hover>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">Live Platform Metrics</h2>
+                <span className="rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] text-primary">Realtime</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <MetricMini label="Attendance" value="78%" />
+                <MetricMini label="Streak" value="9d" />
+                <MetricMini label="Active Students" value="512" />
+                <MetricMini label="Live Lectures" value="14" />
+              </div>
+
+              <div className="space-y-2 rounded-xl border border-border-subtle bg-surface-2 p-3">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Engagement Index</span>
+                  <span className="text-foreground">92%</span>
+                </div>
+                <div className="h-2 rounded-full bg-surface-3">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: "92%" }}
+                    transition={{ duration: 0.45, delay: 0.15 }}
+                    className="h-2 rounded-full bg-primary"
+                  />
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </section>
+
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow="Highlights" title="Product Highlights" />
           <div className="space-y-3">
-            {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
-              <GlassCard key={title} className="flex items-start gap-3" padding="lg">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/12 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-                </div>
-              </GlassCard>
+            {HIGHLIGHTS.map(({ icon: Icon, title, description }, i) => (
+              <motion.div key={title} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.18, delay: i * 0.05 }}>
+                <GlassCard className="flex items-start gap-3" padding="lg">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+                  </div>
+                </GlassCard>
+              </motion.div>
             ))}
           </div>
         </motion.section>
 
-        <motion.section id="features" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
+        <motion.section id="features" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow="Capabilities" title="Features" />
           <div className="grid grid-cols-2 gap-3">
             {FEATURES.map((feature) => (
@@ -264,12 +309,12 @@ export default function Index() {
           </div>
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow="Workflow" title="How It Works" />
           <div className="space-y-3">
             {WORKFLOW.map(({ icon: Icon, title, description }, index) => (
               <GlassCard key={title} className="flex items-start gap-3" padding="lg" hover>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/12 text-primary">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
@@ -282,8 +327,8 @@ export default function Index() {
           </div>
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }} className="space-y-3">
-          <SectionTitle eyebrow="Preview" title="Screenshots" />
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
+          <SectionTitle eyebrow="Preview" title="Screens" />
           <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 no-scrollbar">
             <PreviewCard title="Student Dashboard" subtitle="Daily performance" statA="240" statB="Active" />
             <PreviewCard title="Leaderboard" subtitle="Campus rankings" statA="#4" statB="Rising" />
@@ -291,7 +336,7 @@ export default function Index() {
           </div>
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }}>
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
           <GlassCard padding="lg" className="space-y-3" hover={false}>
             <SectionTitle eyebrow="Community" title="Campus Community" />
             <p className="text-xs leading-relaxed text-muted-foreground">
@@ -312,8 +357,8 @@ export default function Index() {
           </GlassCard>
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.18 }}>
-          <GlassCard className="space-y-4 text-center" padding="lg" hover={false}>
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
+          <GlassCard className="space-y-4 text-center border-primary/25" padding="lg" hover={false}>
             <h2 className="text-2xl font-black tracking-tight text-foreground">Start Connecting Your Campus Today</h2>
             <p className="text-xs text-muted-foreground">Launch a smarter campus experience in minutes.</p>
             <Link to="/auth" className="inline-block">
@@ -356,7 +401,7 @@ export default function Index() {
         </div>
       </footer>
 
-      <div className={cn("safe-area-bottom")} />
+      <div className="safe-area-bottom" />
     </div>
   );
 }
