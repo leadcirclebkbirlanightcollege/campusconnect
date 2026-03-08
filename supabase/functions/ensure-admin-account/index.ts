@@ -134,7 +134,8 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ message: 'Admin accounts ensured', ...results }),
+      // Never return real user IDs to callers
+      JSON.stringify({ message: 'Admin accounts ensured' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
