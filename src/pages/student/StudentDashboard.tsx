@@ -39,6 +39,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMetricCountUp } from "@/components/ui/motion";
 import {
   SECTION_REVEAL_ITEM,
   SECTION_REVEAL_PARENT,
