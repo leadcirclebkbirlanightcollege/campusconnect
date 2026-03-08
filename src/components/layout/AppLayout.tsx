@@ -10,7 +10,7 @@ import {
   BadgeCheck,
   CheckCircle,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
@@ -39,10 +39,10 @@ import { BottomNavigation } from "@/layout/BottomNavigation";
 import { getPageMeta } from "@/ui-engine/navigation-engine";
 
 /* ── Page transition variants ─────────────────────────────────── */
-const PAGE_VARIANTS = {
+const PAGE_VARIANTS: Variants = {
   initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0, 0, 0.2, 1] } },
-  exit:    { opacity: 0, y: -4, transition: { duration: 0.12, ease: [0.4, 0, 1, 1] } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
+  exit:    { opacity: 0, y: -4, transition: { duration: 0.12, ease: "easeIn" } },
 };
 
 /* ── System Status Dot ─────────────────────────────────────────── */
