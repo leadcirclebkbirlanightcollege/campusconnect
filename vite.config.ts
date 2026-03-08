@@ -18,26 +18,78 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       manifestFilename: "manifest.webmanifest",
-      includeAssets: ["favicon.ico", "pwa-512.png"],
+      includeAssets: ["favicon.ico", "pwa-512.png", "noise.png"],
+      devOptions: { enabled: false },
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
+        // Never cache OAuth redirect routes
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
+        // Runtime caching: API + image responses
+        runtimeCaching: [
+          {
+            // Supabase REST / Storage
+            urlPattern: ({ url }) =>
+              url.hostname.includes("supabase.co") ||
+              url.hostname.includes("supabase.in"),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-api-cache",
+              expiration: { maxEntries: 80, maxAgeSeconds: 5 * 60 },
+              networkTimeoutSeconds: 6,
+            },
+          },
+          {
+            // Google Fonts / external assets
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "image-cache",
+              expiration: { maxEntries: 60, maxAgeSeconds: 7 * 24 * 60 * 60 },
+            },
+          },
+        ],
       },
       manifest: {
-          name: "Campus Connect",
-          short_name: "Campus Connect",
-          description:
-            "College lecture, attendance & points management for your campus.",
-          start_url: "/",
-          scope: "/",
+        name: "Campus Connect",
+        short_name: "CampusConnect",
+        description: "College lecture, attendance & points management for your campus.",
+        start_url: "/?source=pwa",
+        scope: "/",
         display: "standalone",
-        background_color: "#0b0f17",
-        theme_color: "#0b0f17",
+        orientation: "portrait",
+        background_color: "#0b1220",
+        theme_color: "#1a56db",
+        categories: ["education", "productivity"],
+        shortcuts: [
+          {
+            name: "Dashboard",
+            url: "/app/dashboard",
+            description: "Go to your student dashboard",
+          },
+          {
+            name: "Scan Attendance",
+            url: "/app/scan",
+            description: "Mark your attendance",
+          },
+          {
+            name: "Leaderboard",
+            url: "/app/leaderboard",
+            description: "Check rankings",
+          },
+        ],
         icons: [
+          {
+            src: "/pwa-512.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: "/pwa-512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/pwa-512.png",

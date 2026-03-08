@@ -12,7 +12,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Trophy,
-  Star,
+  Flame,
   UserCircle,
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
@@ -232,31 +232,54 @@ function ProfileMenu({ userId }: { userId: string }) {
 /* ── Main Layout ───────────────────────────────────────────────── */
 
 /* ── Mobile Bottom Nav ─────────────────────────────────────────── */
-const BOTTOM_NAV = [
-  { label: "Home",        icon: LayoutDashboard, href: "/app/dashboard" },
-  { label: "Lectures",    icon: BookOpen,         href: "/app/lectures" },
-  { label: "Leaderboard", icon: Trophy,           href: "/app/leaderboard" },
-  { label: "Achievements",icon: Star,             href: "/app/achievements" },
-  { label: "Profile",     icon: UserCircle,       href: "/app/profile" },
-];
+type BottomNavItem = {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  badge?: number;
+};
 
-function MobileBottomNav({ path }: { path: string }) {
+function MobileBottomNav({ path, unread }: { path: string; unread: number }) {
+  const BOTTOM_NAV: BottomNavItem[] = [
+    { label: "Home",        icon: LayoutDashboard, href: "/app/dashboard" },
+    { label: "Lectures",    icon: BookOpen,         href: "/app/lectures" },
+    { label: "Inbox",       icon: Bell,             href: "/app/inbox",         badge: unread },
+    { label: "Leaderboard", icon: Trophy,           href: "/app/leaderboard" },
+    { label: "Profile",     icon: UserCircle,       href: "/app/profile" },
+  ];
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl pb-safe">
-      <div className="flex items-center justify-around px-2 py-1">
-        {BOTTOM_NAV.map(({ label, icon: Icon, href }) => {
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
+      <div className="flex items-stretch justify-around px-1 pt-1 pb-1">
+        {BOTTOM_NAV.map(({ label, icon: Icon, href, badge }) => {
           const active = path === href || path.startsWith(href + "/");
           return (
             <Link
               key={href}
               to={href}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[44px] transition-all duration-150",
-                active ? "text-primary" : "text-muted-foreground",
+                "relative flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl min-w-[52px] min-h-[52px] justify-center transition-all duration-150",
+                active
+                  ? "text-primary bg-primary/8"
+                  : "text-muted-foreground active:bg-surface-3",
               )}
             >
-              <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-110")} />
-              <span className={cn("text-[10px] font-medium leading-none", active ? "text-primary" : "text-muted-foreground/70")}>
+              {/* Active indicator dot */}
+              {active && (
+                <span className="absolute top-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary" />
+              )}
+              <div className="relative">
+                <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-110")} />
+                {typeof badge === "number" && badge > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-danger text-white text-[9px] font-black flex items-center justify-center leading-none">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
+              </div>
+              <span className={cn("text-[9px] font-semibold leading-none", active ? "text-primary" : "text-muted-foreground/60")}>
                 {label}
               </span>
             </Link>
@@ -278,6 +301,22 @@ export default function AppLayout() {
       return data.user ?? null;
     },
     staleTime: 120_000,
+  });
+
+  // Unread count for mobile bottom nav bell badge
+  const { data: bottomNavUnread = 0 } = useQuery({
+    queryKey: ["topbar", "unread", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("notification_recipients")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .is("read_at", null);
+      return count ?? 0;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 
   return (
@@ -324,7 +363,7 @@ export default function AppLayout() {
           </header>
 
           {/* ── Workspace ───────────────────────────────────────── */}
-          <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
+          <main className="flex-1 px-4 py-5 md:px-6 md:py-6 pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-6">
             <div className="mx-auto max-w-[1280px]">
               <PageTransition>
                 <Outlet />
@@ -349,7 +388,7 @@ export default function AppLayout() {
         </SidebarInset>
       </div>
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
-      <MobileBottomNav path={location.pathname} />
+      <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
     </SidebarProvider>
   );
 }
