@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-import { Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield, Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles, FileText, FileEdit, Palette, UserCog } from "lucide-react";
+import {
+  Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield,
+  Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles,
+  FileText, FileEdit, Palette, UserCog,
+} from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
 import LectureManagementTab from "@/pages/admin/lectures/LectureManagementTab";
@@ -32,74 +34,128 @@ import AdminCoreTeamTab from "@/pages/admin/team/AdminCoreTeamTab";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+/* ── Tab item type ── */
+type TabItem = { value: string; label: string; icon: React.ElementType };
+type TabGroup = { group: string; items: TabItem[] };
+
+/* ── Tab groups for a cleaner grouped navigation ── */
+const TAB_GROUPS: TabGroup[] = [
+  {
+    group: "Command",
+    items: [
+      { value: "overview",       label: "Overview",      icon: LayoutDashboard },
+    ],
+  },
+  {
+    group: "Academics",
+    items: [
+      { value: "students",       label: "Students",      icon: Users },
+      { value: "lectures",       label: "Lectures",      icon: BookOpen },
+      { value: "programmes",     label: "Programmes",    icon: GraduationCap },
+      { value: "allotments",     label: "Allotments",    icon: Users },
+    ],
+  },
+  {
+    group: "Attendance",
+    items: [
+      { value: "attendance",     label: "Control",       icon: CheckSquare },
+      { value: "monthly",        label: "Monthly",       icon: BarChart3 },
+      { value: "corrections",    label: "Corrections",   icon: FileEdit },
+    ],
+  },
+  {
+    group: "Engage",
+    items: [
+      { value: "announcements",  label: "Announce",      icon: Megaphone },
+      { value: "events",         label: "Events",        icon: CalendarDays },
+      { value: "polls",          label: "Polls",         icon: BarChart3 },
+      { value: "daily_content",  label: "Daily",         icon: Sparkles },
+      { value: "notifications",  label: "Notify",        icon: Bell },
+    ],
+  },
+  {
+    group: "System",
+    items: [
+      { value: "points",         label: "Points",        icon: Coins },
+      { value: "scanner",        label: "ID Scanner",    icon: ScanLine },
+      { value: "audit_log",      label: "Audit Log",     icon: FileText },
+      { value: "branding",       label: "Branding",      icon: Palette },
+      { value: "core_team",      label: "Core Team",     icon: UserCog },
+      { value: "system_control", label: "Platform Mode", icon: Settings },
+      { value: "settings",       label: "Settings",      icon: Settings },
+      { value: "admin_profile",  label: "My Profile",    icon: Shield },
+    ],
+  },
+];
+
+const ALL_TABS: TabItem[] = TAB_GROUPS.flatMap((g) => g.items);
 
 const AdminDashboard = () => {
   const location = useLocation();
   const [tab, setTab] = useState("overview");
   const isMobile = useIsMobile();
 
-  const tabItems = useMemo(
-    () => [
-      { value: "overview", label: "Overview", icon: LayoutDashboard },
-      { value: "students", label: "Students", icon: Users },
-      { value: "lectures", label: "Lectures", icon: BookOpen },
-      { value: "programmes", label: "Programmes", icon: GraduationCap },
-      { value: "allotments", label: "Allotments", icon: Users },
-      { value: "attendance", label: "Attendance", icon: CheckSquare },
-      { value: "monthly", label: "Monthly", icon: CheckSquare },
-      { value: "corrections", label: "Corrections", icon: FileEdit },
-      { value: "announcements", label: "Announce", icon: Megaphone },
-      { value: "events", label: "Events", icon: CalendarDays },
-      { value: "polls", label: "Polls", icon: BarChart3 },
-      { value: "daily_content", label: "Daily", icon: Sparkles },
-      { value: "notifications", label: "Notifications", icon: Bell },
-      { value: "points", label: "Points", icon: Coins },
-      { value: "settings", label: "Settings", icon: Settings },
-      { value: "scanner", label: "ID Scanner", icon: ScanLine },
-      { value: "audit_log", label: "Audit Log", icon: FileText },
-      { value: "admin_profile", label: "Admin", icon: Shield },
-      { value: "system_control", label: "Platform Mode", icon: Settings },
-      { value: "branding", label: "Branding", icon: Palette },
-      { value: "core_team", label: "Core Team", icon: UserCog },
-    ],
-    [],
-  );
-
   useEffect(() => {
     if (location.hash === "#admin_profile") setTab("admin_profile");
-    if (location.hash === "#points") setTab("points");
-    if (location.hash === "#settings") setTab("settings");
-    if (location.hash === "#corrections") setTab("corrections");
+    if (location.hash === "#points")        setTab("points");
+    if (location.hash === "#settings")      setTab("settings");
+    if (location.hash === "#corrections")   setTab("corrections");
   }, [location.hash]);
 
   return (
-    <div className="space-y-6">
-      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+    <div className="space-y-5">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-5">
+
+        {/* ── NAVIGATION BAR ─────────────────────────── */}
         {isMobile ? (
           <Select value={tab} onValueChange={setTab}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select section" />
             </SelectTrigger>
             <SelectContent>
-              {tabItems.map((t) => (
+              {ALL_TABS.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         ) : (
-          <TabsList className="w-full flex flex-wrap gap-0.5 h-auto bg-muted/50 p-1 rounded-lg">
-            {tabItems.map((t) => {
-              const Icon = t.icon;
-              return (
-                <TabsTrigger key={t.value} value={t.value} className="gap-1.5 h-8 text-xs rounded-md">
-                  <Icon className="w-3.5 h-3.5" />
-                  {t.label}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-3 shadow-xs overflow-x-auto">
+            <div className="flex gap-5 min-w-max">
+              {TAB_GROUPS.map((group) => (
+                <div key={group.group} className="flex flex-col gap-1">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold px-1 mb-0.5">
+                    {group.group}
+                  </p>
+                  <div className="flex gap-0.5">
+                    {group.items.map((t) => {
+                      const Icon = t.icon;
+                      const active = tab === t.value;
+                      return (
+                        <button
+                          key={t.value}
+                          onClick={() => setTab(t.value)}
+                          className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-120 cursor-pointer",
+                            active
+                              ? "bg-primary/10 text-primary border border-primary/15"
+                              : "text-muted-foreground hover:text-foreground hover:bg-surface-3 border border-transparent"
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0" />
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
+        {/* ── TAB CONTENT ────────────────────────────── */}
         <TabsContent value="overview">
           <AdminOverviewTab onNavigateTab={setTab} />
         </TabsContent>
@@ -116,8 +172,14 @@ const AdminDashboard = () => {
         <TabsContent value="daily_content"><AdminDailyContentTab /></TabsContent>
         <TabsContent value="notifications"><AdminNotificationCenterTab /></TabsContent>
         <TabsContent value="points"><AdminPointsAdjustmentsTab /></TabsContent>
+        <TabsContent value="admin_profile"><AdminProfileSettings /></TabsContent>
+        <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
+        <TabsContent value="system_control"><AdminSystemControlTab /></TabsContent>
+        <TabsContent value="audit_log"><AdminAuditLogTab /></TabsContent>
+        <TabsContent value="branding"><AdminBrandingTab /></TabsContent>
+        <TabsContent value="core_team"><AdminCoreTeamTab /></TabsContent>
         <TabsContent value="settings">
-          <div className="space-y-6">
+          <div className="space-y-5">
             <PointsRulesSettings />
             <SystemHealthPanel />
             <AdminRoleBackfillPanel />
@@ -127,35 +189,16 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Version</p>
-                    <p className="font-medium">{APP_VERSION}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Build</p>
-                    <p className="font-medium">{BUILD_NUMBER}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Release Date</p>
-                    <p className="font-medium">{RELEASE_DATE}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Environment</p>
-                    <Badge variant="secondary" className="text-[10px]">{ENVIRONMENT}</Badge>
-                  </div>
+                  <div><p className="text-xs text-muted-foreground">Version</p><p className="font-medium">{APP_VERSION}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Build</p><p className="font-medium">{BUILD_NUMBER}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Release Date</p><p className="font-medium">{RELEASE_DATE}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Environment</p><Badge variant="secondary" className="text-[10px]">{ENVIRONMENT}</Badge></div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="admin_profile"><AdminProfileSettings /></TabsContent>
-        <TabsContent value="scanner"><AdminDigitalIdScanner /></TabsContent>
-        <TabsContent value="system_control"><AdminSystemControlTab /></TabsContent>
-        <TabsContent value="audit_log"><AdminAuditLogTab /></TabsContent>
-        <TabsContent value="branding"><AdminBrandingTab /></TabsContent>
-        <TabsContent value="core_team"><AdminCoreTeamTab /></TabsContent>
       </Tabs>
-
     </div>
   );
 };

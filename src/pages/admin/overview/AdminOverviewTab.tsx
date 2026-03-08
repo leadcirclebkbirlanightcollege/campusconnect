@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 import KpiCards from "./KpiCards";
 import LiveOperationsPanel from "./LiveOperationsPanel";
 import QuickActionsGrid from "./QuickActionsGrid";
 import ProgrammeHealthSection from "./ProgrammeHealthSection";
-import QuickInsightsPanel from "./QuickInsightsPanel";
+import AdminAnalyticsChart from "./AdminAnalyticsChart";
+import RiskMonitorPanel from "./RiskMonitorPanel";
+import GamificationStatsPanel from "./GamificationStatsPanel";
 
 interface OverviewStats {
   students: number;
@@ -16,13 +17,10 @@ interface OverviewStats {
   attendanceTotal: number;
   manualOverrides: number;
   avgAttendancePct: number;
+  riskCount: number;
 }
 
-export default function AdminOverviewTab({
-  onNavigateTab,
-}: {
-  onNavigateTab: (tab: string) => void;
-}) {
+export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (tab: string) => void }) {
   const { startIso, endIso, todayDate, monthStart } = useMemo(() => {
     const now = new Date();
     const start = new Date(now);
@@ -39,7 +37,7 @@ export default function AdminOverviewTab({
   }, []);
 
   const statsQuery = useQuery({
-    queryKey: ["admin", "overview-v2", todayDate],
+    queryKey: ["admin", "overview-v3", todayDate],
     queryFn: async (): Promise<OverviewStats> => {
       const [
         { count: studentsCount },
@@ -47,36 +45,18 @@ export default function AdminOverviewTab({
         { count: attendanceTodayCount },
         { count: monthAttendanceCount },
         { count: manualCount },
+        { count: riskCount },
       ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .eq("is_deleted", false),
-        supabase
-          .from("programmes")
-          .select("id", { count: "exact", head: true })
-          .eq("is_active", true),
-        supabase
-          .from("attendance")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "present")
-          .gte("marked_at", startIso)
-          .lt("marked_at", endIso),
-        supabase
-          .from("attendance")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "present")
-          .gte("marked_at", monthStart),
-        supabase
-          .from("points_ledger")
-          .select("id", { count: "exact", head: true })
-          .in("source", ["admin_adjustment", "manual"]),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_deleted", false),
+        supabase.from("programmes").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("attendance").select("id", { count: "exact", head: true }).eq("status", "present").gte("marked_at", startIso).lt("marked_at", endIso),
+        supabase.from("attendance").select("id", { count: "exact", head: true }).eq("status", "present").gte("marked_at", monthStart),
+        supabase.from("points_ledger").select("id", { count: "exact", head: true }).in("source", ["admin_adjustment", "manual"]),
+        supabase.from("student_intelligence").select("user_id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
       ]);
 
       const students = studentsCount ?? 0;
       const monthAtt = monthAttendanceCount ?? 0;
-
-      // Rough avg: month attendance / (students * days elapsed)
       const daysElapsed = Math.max(1, new Date().getDate());
       const avgPct = students > 0 ? Math.min(100, Math.round((monthAtt / (students * daysElapsed)) * 100)) : 0;
 
@@ -87,6 +67,7 @@ export default function AdminOverviewTab({
         attendanceTotal: students,
         manualOverrides: manualCount ?? 0,
         avgAttendancePct: avgPct,
+        riskCount: riskCount ?? 0,
       };
     },
     staleTime: 15_000,
@@ -96,18 +77,21 @@ export default function AdminOverviewTab({
   const loading = statsQuery.isLoading;
 
   return (
-    <div className="space-y-8 px-4 sm:px-0">
-      {/* 1. KPI Cards */}
+    <div className="space-y-6 px-4 sm:px-0">
+
+      {/* ── KPI COMMAND METRICS ─────────────────────── */}
       <KpiCards
         students={stats?.students ?? 0}
         programmes={stats?.programmes ?? 0}
         avgAttendancePct={stats?.avgAttendancePct ?? 0}
         manualOverrides={stats?.manualOverrides ?? 0}
+        attendanceToday={stats?.attendanceToday ?? 0}
+        riskCount={stats?.riskCount ?? 0}
         loading={loading}
       />
 
-      {/* 2. Live Operations + Quick Insights side by side on desktop */}
-      <div className="grid gap-6 lg:grid-cols-5">
+      {/* ── LIVE OPERATIONS + QUICK ACTIONS ─────────── */}
+      <div className="grid gap-5 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <LiveOperationsPanel
             attendanceToday={stats?.attendanceToday ?? 0}
@@ -117,18 +101,20 @@ export default function AdminOverviewTab({
           />
         </div>
         <div className="lg:col-span-2">
-          <QuickInsightsPanel
-            attendanceToday={stats?.attendanceToday ?? 0}
-            manualOverrides={stats?.manualOverrides ?? 0}
-            loading={loading}
-          />
+          <QuickActionsGrid onNavigateTab={onNavigateTab} />
         </div>
       </div>
 
-      {/* 3. Quick Actions */}
-      <QuickActionsGrid onNavigateTab={onNavigateTab} />
+      {/* ── ANALYTICS CHARTS ────────────────────────── */}
+      <AdminAnalyticsChart />
 
-      {/* 4. Programme Health */}
+      {/* ── RISK MONITOR + GAMIFICATION SIDE BY SIDE ── */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <RiskMonitorPanel onNavigateTab={onNavigateTab} />
+        <GamificationStatsPanel onNavigateTab={onNavigateTab} />
+      </div>
+
+      {/* ── PROGRAMME HEALTH ───────────────────────── */}
       <ProgrammeHealthSection onNavigateTab={onNavigateTab} />
     </div>
   );
