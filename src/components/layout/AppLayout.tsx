@@ -399,6 +399,8 @@ export default function AppLayout() {
       <FeedbackButton />
       {/* Force update overlay — listens to platform_settings realtime */}
       <ForceUpdateBanner />
+      {/* Soft update banner — dismissible refresh prompt */}
+      <SoftUpdateBanner />
     </SidebarProvider>
     </>
   );
