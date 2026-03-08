@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    // SPA fallback: serve index.html for any unknown path so React Router
+    // handles routing — prevents 404 on hard refresh in development.
+    historyApiFallback: true,
   },
   plugins: [
     react(),
