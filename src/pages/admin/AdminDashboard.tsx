@@ -70,6 +70,7 @@ const TAB_GROUPS: TabGroup[] = [
       { value: "polls",          label: "Polls",         icon: BarChart3 },
       { value: "daily_content",  label: "Daily",         icon: Sparkles },
       { value: "notifications",  label: "Notify",        icon: Bell },
+      { value: "challenges",     label: "Challenges",    icon: Trophy },
     ],
   },
   {
