@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield,
   Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles,
-  FileText, FileEdit, Palette, UserCog,
+  FileText, FileEdit, Palette, UserCog, ChevronDown,
 } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
@@ -36,11 +34,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-/* ── Tab item type ── */
 type TabItem = { value: string; label: string; icon: React.ElementType };
 type TabGroup = { group: string; items: TabItem[] };
 
-/* ── Tab groups for a cleaner grouped navigation ── */
 const TAB_GROUPS: TabGroup[] = [
   {
     group: "Command",
@@ -83,7 +79,7 @@ const TAB_GROUPS: TabGroup[] = [
       { value: "audit_log",      label: "Audit Log",     icon: FileText },
       { value: "branding",       label: "Branding",      icon: Palette },
       { value: "core_team",      label: "Core Team",     icon: UserCog },
-      { value: "system_control", label: "Platform Mode", icon: Settings },
+      { value: "system_control", label: "Platform",      icon: Settings },
       { value: "settings",       label: "Settings",      icon: Settings },
       { value: "admin_profile",  label: "My Profile",    icon: Shield },
     ],
@@ -92,10 +88,101 @@ const TAB_GROUPS: TabGroup[] = [
 
 const ALL_TABS: TabItem[] = TAB_GROUPS.flatMap((g) => g.items);
 
+/* Scrollable mobile nav — grouped horizontal pill bar */
+function MobileNav({ tab, setTab }: { tab: string; setTab: (v: string) => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeTab = ALL_TABS.find((t) => t.value === tab);
+
+  return (
+    <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+      {/* Current tab header */}
+      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border-subtle bg-surface-2/50">
+        {activeTab && (
+          <>
+            <activeTab.icon className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-sm font-semibold text-foreground flex-1">{activeTab.label}</span>
+          </>
+        )}
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      {/* Scrollable groups */}
+      <div ref={scrollRef} className="overflow-x-auto scrollbar-none">
+        <div className="flex gap-0 min-w-max">
+          {TAB_GROUPS.map((group, gi) => (
+            <div key={group.group} className={cn("flex flex-col", gi > 0 && "border-l border-border-subtle")}>
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold px-3 pt-2 pb-1">
+                {group.group}
+              </p>
+              <div className="flex gap-0.5 px-2 pb-2">
+                {group.items.map((t) => {
+                  const Icon = t.icon;
+                  const active = tab === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setTab(t.value)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all duration-120",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-surface-3"
+                      )}
+                    >
+                      <Icon className="h-3 w-3 shrink-0" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Desktop grouped nav */
+function DesktopNav({ tab, setTab }: { tab: string; setTab: (v: string) => void }) {
+  return (
+    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-3 shadow-xs overflow-x-auto">
+      <div className="flex gap-5 min-w-max">
+        {TAB_GROUPS.map((group) => (
+          <div key={group.group} className="flex flex-col gap-1">
+            <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold px-1 mb-0.5">
+              {group.group}
+            </p>
+            <div className="flex gap-0.5">
+              {group.items.map((t) => {
+                const Icon = t.icon;
+                const active = tab === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => setTab(t.value)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-120 cursor-pointer",
+                      active
+                        ? "bg-primary/10 text-primary border border-primary/15"
+                        : "text-muted-foreground hover:text-foreground hover:bg-surface-3 border border-transparent"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const AdminDashboard = () => {
   const location = useLocation();
   const [tab, setTab] = useState("overview");
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (location.hash === "#admin_profile") setTab("admin_profile");
@@ -105,57 +192,18 @@ const AdminDashboard = () => {
   }, [location.hash]);
 
   return (
-    <div className="space-y-5">
-      <Tabs value={tab} onValueChange={setTab} className="space-y-5">
+    <div className="space-y-4">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
 
-        {/* ── NAVIGATION BAR ─────────────────────────── */}
-        {isMobile ? (
-          <Select value={tab} onValueChange={setTab}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select section" />
-            </SelectTrigger>
-            <SelectContent>
-              {ALL_TABS.map((t) => (
-                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-3 shadow-xs overflow-x-auto">
-            <div className="flex gap-5 min-w-max">
-              {TAB_GROUPS.map((group) => (
-                <div key={group.group} className="flex flex-col gap-1">
-                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold px-1 mb-0.5">
-                    {group.group}
-                  </p>
-                  <div className="flex gap-0.5">
-                    {group.items.map((t) => {
-                      const Icon = t.icon;
-                      const active = tab === t.value;
-                      return (
-                        <button
-                          key={t.value}
-                          onClick={() => setTab(t.value)}
-                          className={cn(
-                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-120 cursor-pointer",
-                            active
-                              ? "bg-primary/10 text-primary border border-primary/15"
-                              : "text-muted-foreground hover:text-foreground hover:bg-surface-3 border border-transparent"
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5 shrink-0" />
-                          {t.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Nav — mobile gets scrollable pill bar, desktop gets grouped bar */}
+        <div className="md:hidden">
+          <MobileNav tab={tab} setTab={setTab} />
+        </div>
+        <div className="hidden md:block">
+          <DesktopNav tab={tab} setTab={setTab} />
+        </div>
 
-        {/* ── TAB CONTENT ────────────────────────────── */}
+        {/* Tab Content */}
         <TabsContent value="overview">
           <AdminOverviewTab onNavigateTab={setTab} />
         </TabsContent>
