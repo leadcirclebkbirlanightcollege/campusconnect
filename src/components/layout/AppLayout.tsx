@@ -393,5 +393,6 @@ export default function AppLayout() {
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
     </SidebarProvider>
+    </>
   );
 }
