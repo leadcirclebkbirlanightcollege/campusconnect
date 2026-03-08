@@ -529,6 +529,48 @@ export default function StudentManagementTab() {
         userId={openStudentUserId}
         onOpenChange={(open) => setOpenStudentUserId(open ? openStudentUserId : null)}
       />
+
+      {/* ── Bulk Assign College Dialog ── */}
+      <Dialog open={assignCollegeOpen} onOpenChange={setAssignCollegeOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" />
+              Assign College
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Assign a college to <span className="font-semibold text-foreground">{selectedIds.length} selected student(s)</span>.
+              This updates both their profile and role record.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-medium">College</Label>
+              <Select value={assignCollegeId} onValueChange={setAssignCollegeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select college…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(collegesQuery.data ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.college_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignCollegeOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!assignCollegeId || bulkAssignCollegeMutation.isPending}
+              onClick={() => bulkAssignCollegeMutation.mutate({ userIds: selectedIds, collegeId: assignCollegeId })}
+              className="gap-2"
+            >
+              <Building2 className="h-4 w-4" />
+              Assign to {selectedIds.length} student{selectedIds.length !== 1 ? "s" : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
