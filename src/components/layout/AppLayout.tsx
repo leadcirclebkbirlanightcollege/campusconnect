@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
 import SessionGuard from "@/components/auth/SessionGuard";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 import {
   SidebarInset,
   SidebarProvider,
