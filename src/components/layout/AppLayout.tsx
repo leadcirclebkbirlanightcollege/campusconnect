@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import PageTransition from "@/components/layout/PageTransition";
 import SessionGuard from "@/components/auth/SessionGuard";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 import {
   SidebarInset,
   SidebarProvider,
@@ -392,6 +393,8 @@ export default function AppLayout() {
       </div>
       {/* Mobile bottom nav — outside SidebarInset so it's always full-width */}
       <MobileBottomNav path={location.pathname} unread={bottomNavUnread} />
+      {/* Floating feedback button — visible for all authenticated users */}
+      <FeedbackButton />
     </SidebarProvider>
     </>
   );

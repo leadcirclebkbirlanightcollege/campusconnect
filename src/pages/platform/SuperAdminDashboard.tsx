@@ -11,7 +11,7 @@ import {
   UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
   History, Sliders, AlertTriangle, Flame, Zap,
   ArrowUpRight, Plus, ChevronRight, Layers, LayoutDashboard,
-  ServerCrash, Bell, GraduationCap, Sparkles, Network,
+  ServerCrash, Bell, GraduationCap, Sparkles, Network, MessageSquare,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
@@ -27,7 +27,8 @@ import SABroadcastTab from "./components/SABroadcastTab";
 import SAActivityLogsTab from "./components/SAActivityLogsTab";
 import SAPlatformSettingsTab from "./components/SAPlatformSettingsTab";
 import SAGlobalSearch from "./components/SAGlobalSearch";
-import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
+import SAFeedbackTab from "./components/SAFeedbackTab";
+import SAMonitoringTab from "./components/SAMonitoringTab";
 import { useMetricCountUp } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 
@@ -87,12 +88,18 @@ const TAB_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Operations",
+    items: [
+      { value: "monitoring", icon: Activity,      label: "Monitoring" },
+      { value: "feedback",   icon: MessageSquare, label: "Feedback" },
+    ],
+  },
+  {
     label: "System",
     items: [
-      { value: "settings",  icon: Sliders,  label: "Settings" },
+      { value: "settings",  icon: Sliders,   label: "Settings" },
       { value: "platform",  icon: Settings2, label: "Platform Mode" },
-      { value: "security",  icon: Shield,   label: "Security" },
-      { value: "health",    icon: Activity, label: "Health" },
+      { value: "security",  icon: Shield,    label: "Security" },
     ],
   },
 ];
@@ -715,10 +722,17 @@ function DashboardInner() {
                   </Section>
                 )}
 
-                {/* ── HEALTH ── */}
-                {tab === "health" && (
-                  <Section title="System Health" subtitle="Real-time platform diagnostics — auto-refreshes every 30s">
-                    <SystemHealthPanel />
+                {/* ── MONITORING ── */}
+                {tab === "monitoring" && (
+                  <Section title="Platform Monitoring" subtitle="Live metrics: logins, lectures, attendance, feedback, and system health">
+                    <SAMonitoringTab />
+                  </Section>
+                )}
+
+                {/* ── FEEDBACK ── */}
+                {tab === "feedback" && (
+                  <Section title="User Feedback" subtitle="Bug reports, feature suggestions, and UI issues from students and admins">
+                    <SAFeedbackTab />
                   </Section>
                 )}
 

@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ChevronLeft, ChevronRight, Sparkles, Shield,
   ScanLine, Smartphone, TrendingUp, Zap,
+  Activity, MessageSquarePlus,
 } from "lucide-react";
 import { APP_VERSION } from "@/config/version";
 
@@ -13,16 +14,22 @@ const DONT_SHOW_KEY = "cc_whats_new_dismissed";
 
 const slides = [
   {
-    icon: Sparkles,
-    title: "Smart Insights Strip",
-    description: "Personalised rotating insights on your dashboard — tier progress, streak nudges, attendance tips, and motivational milestones.",
+    icon: Activity,
+    title: "Platform Monitoring Dashboard",
+    description: "Super Admins now have a live monitoring center: login activity, active lectures, attendance today, open feedback, and security alerts — all auto-refreshing every 60s.",
     color: "text-primary",
   },
   {
-    icon: TrendingUp,
-    title: "Page Transitions & Polish",
-    description: "Smooth fade transitions between every route, polished empty states across all pages, and consistent design tokens throughout.",
+    icon: MessageSquarePlus,
+    title: "User Feedback System",
+    description: "Students and admins can now submit bug reports, feature ideas, UI issues, and general feedback using the floating button. Super Admins review and resolve all submissions.",
     color: "text-success",
+  },
+  {
+    icon: Sparkles,
+    title: "Smart Insights Strip",
+    description: "Personalised rotating insights on your dashboard — tier progress, streak nudges, attendance tips, and motivational milestones.",
+    color: "text-accent",
   },
   {
     icon: Smartphone,
@@ -33,14 +40,20 @@ const slides = [
   {
     icon: Shield,
     title: "Enterprise Security",
-    description: "Row-Level Security on every table, tamper-proof points ledger, complete audit trail, and server-side role validation.",
+    description: "Row-Level Security on every table, tamper-proof points ledger, complete audit trail, inactivity auto-logout, and server-side role validation.",
     color: "text-danger",
   },
   {
     icon: ScanLine,
     title: "Attendance Intelligence",
     description: "QR + OTP attendance with retry resilience, real-time live widgets, admin corrections with audit logs, and monthly CSV export.",
-    color: "text-accent",
+    color: "text-primary",
+  },
+  {
+    icon: TrendingUp,
+    title: "Performance Optimized",
+    description: "React Query caching, composite DB indexes, progressive dashboard loading, and code splitting — dashboard loads in under 700ms.",
+    color: "text-success",
   },
   {
     icon: Zap,
@@ -98,7 +111,7 @@ export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewMod
           </div>
 
           {/* Progress dots */}
-          <div className="flex items-center justify-center gap-1.5">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
             {slides.map((_, i) => (
               <button
                 key={i}
