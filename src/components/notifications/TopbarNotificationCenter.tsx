@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { BUTTON_TAP_ANIMATION, PRESS_TRANSITION } from "@/motion/gestureAnimations";
 import { BELL_GLOW_TRANSITION, NOTIFICATION_BELL_VARIANTS } from "@/motion/microInteractions";
 
-const KIND_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+const KIND_ICON: Record<string, (props: { className?: string }) => JSX.Element> = {
   announcement: Megaphone,
   lecture_reminder: BookOpen,
   lecture_alert: BookOpen,

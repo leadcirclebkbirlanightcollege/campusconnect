@@ -27,7 +27,7 @@ const DEFAULT_PREFS: Prefs = {
   system_updates: true,
 };
 
-const PREF_ROWS: Array<{ key: keyof Prefs; label: string; desc: string; icon: React.ElementType; tone: string }> = [
+const PREF_ROWS: Array<{ key: keyof Prefs; label: string; desc: string; icon: ElementType; tone: string }> = [
   { key: "lecture_alerts", label: "Lecture alerts", desc: "Lecture start reminders and live status updates", icon: BookOpen, tone: "text-accent" },
   { key: "announcements", label: "Announcements", desc: "Admin and platform announcements", icon: Megaphone, tone: "text-primary" },
   { key: "achievement_alerts", label: "Achievement alerts", desc: "Milestones, rewards, and unlocked badges", icon: Trophy, tone: "text-premium" },

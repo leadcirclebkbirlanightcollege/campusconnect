@@ -46,7 +46,7 @@ type InboxItem = {
 
 const PAGE_SIZE = 20;
 
-const KIND_META: Record<string, { icon: React.ElementType; label: string; tone: string }> = {
+const KIND_META: Record<string, { icon: ElementType; label: string; tone: string }> = {
   announcement: { icon: Megaphone, label: "Announcement", tone: "text-primary" },
   lecture_reminder: { icon: BookOpen, label: "Lecture Alert", tone: "text-accent" },
   lecture_alert: { icon: BookOpen, label: "Lecture Alert", tone: "text-accent" },
