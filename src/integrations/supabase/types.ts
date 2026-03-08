@@ -270,6 +270,50 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          college_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          performed_by: string
+          target_entity: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          performed_by: string
+          target_entity: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          performed_by?: string
+          target_entity?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           college_name: string
@@ -576,6 +620,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "lectures_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      login_activity: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_activity_college_id_fkey"
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
@@ -956,6 +1035,50 @@ export type Database = {
         }
         Relationships: []
       }
+      security_alerts: {
+        Row: {
+          alert_type: string
+          college_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          college_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_alerts_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_achievements: {
         Row: {
           awarded_at: string
@@ -1154,6 +1277,16 @@ export type Database = {
           total_count: number
         }[]
       }
+      award_points: {
+        Args: {
+          p_note?: string
+          p_points: number
+          p_source: string
+          p_source_id?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       export_monthly_attendance_combined: {
         Args: {
           p_end_date: string
@@ -1206,6 +1339,22 @@ export type Database = {
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_student: { Args: { check_user_id: string }; Returns: boolean }
       is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_college_id?: string
+          p_details?: Json
+          p_ip_address?: string
+          p_performed_by: string
+          p_target_entity: string
+          p_target_id?: string
+        }
+        Returns: undefined
+      }
+      unlock_achievement: {
+        Args: { p_code: string; p_metadata?: Json; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       account_deletion_status:
