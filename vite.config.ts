@@ -23,8 +23,8 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
-        // Never cache OAuth redirect routes
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
+        // Never cache OAuth redirect routes or push worker
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/, /^\/sw-push\.js/],
         // Runtime caching: API + image responses
         runtimeCaching: [
           {
