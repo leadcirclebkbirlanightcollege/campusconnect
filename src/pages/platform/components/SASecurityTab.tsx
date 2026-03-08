@@ -245,13 +245,13 @@ function LoginActivityTab() {
   const q = useQuery<LoginEntry[]>({
     queryKey: ["sa_login_activity"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("login_activity" as any)
+      const { data, error } = await (supabase as any)
+        .from("login_activity")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      const entries = (data ?? []) as LoginEntry[];
+      const entries = ((data ?? []) as unknown) as LoginEntry[];
       const ids = [...new Set(entries.map(e => e.user_id))];
       if (!ids.length) return entries;
       const { data: profiles } = await supabase.from("profiles").select("user_id,name").in("user_id", ids);
