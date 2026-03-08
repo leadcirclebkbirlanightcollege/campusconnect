@@ -274,6 +274,15 @@ async function resolveRecipientIds(
     if (error) throw error;
     return (data ?? []).map((r: any) => r.user_id);
   }
+  if (targetType === "programme") {
+    if (!value) return [];
+    const { data, error } = await db
+      .from("student_programme_allotments")
+      .select("student_user_id")
+      .eq("programme_id", value);
+    if (error) throw error;
+    return [...new Set((data ?? []).map((r: any) => r.student_user_id))];
+  }
   return [];
 }
 
