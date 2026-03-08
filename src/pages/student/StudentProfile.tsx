@@ -888,6 +888,9 @@ export default function StudentProfile() {
         </AnimatePresence>
       </motion.div>
 
+      {/* ══ GOALS ════════════════════════════════════════════════ */}
+      {meQuery.data?.id && <GoalTrackingCard userId={meQuery.data.id} />}
+
       {/* ══ PWA + VERSION ═══════════════════════════════════════ */}
       <PwaStatusCard />
       <div className="rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3.5 flex items-center justify-between shadow-xs">
