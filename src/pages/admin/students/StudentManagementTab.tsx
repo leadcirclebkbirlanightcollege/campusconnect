@@ -102,7 +102,23 @@ export default function StudentManagementTab() {
   const [filters, setFilters] = useState<StudentFilters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [openStudentUserId, setOpenStudentUserId] = useState<string | null>(null);
+  const [assignCollegeOpen, setAssignCollegeOpen] = useState(false);
+  const [assignCollegeId, setAssignCollegeId] = useState("");
   const debouncedQ = useDebounce(filters.q, 300);
+
+  // Load colleges for bulk-assign dropdown
+  const collegesQuery = useQuery({
+    queryKey: ["admin", "colleges_list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id,college_name")
+        .eq("is_active", true)
+        .order("college_name");
+      return (data ?? []) as { id: string; college_name: string }[];
+    },
+    staleTime: 300_000,
+  });
 
   const studentsQuery = useQuery({
     queryKey: ["admin", "students"],
@@ -206,11 +222,38 @@ export default function StudentManagementTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update verification"),
   });
 
+  // Bulk assign college
+  const bulkAssignCollegeMutation = useMutation({
+    mutationFn: async ({ userIds, collegeId }: { userIds: string[]; collegeId: string }) => {
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({ college_id: collegeId })
+        .in("user_id", userIds);
+      if (profileErr) throw profileErr;
+
+      const { error: roleErr } = await supabase
+        .from("user_roles")
+        .update({ college_id: collegeId })
+        .in("user_id", userIds)
+        .eq("role", "student");
+      if (roleErr) throw roleErr;
+    },
+    onSuccess: async () => {
+      toast.success(`College assigned to ${selectedIds.length} student(s)`);
+      setAssignCollegeOpen(false);
+      setAssignCollegeId("");
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to assign college"),
+  });
+
   const busy =
     studentsQuery.isLoading ||
     softDeleteMutation.isPending ||
     restoreMutation.isPending ||
-    toggleVerifyMutation.isPending;
+    toggleVerifyMutation.isPending ||
+    bulkAssignCollegeMutation.isPending;
 
   return (
     <div className="space-y-6">
