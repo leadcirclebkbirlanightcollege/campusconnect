@@ -316,6 +316,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@layer components {
   /* Glass surface — subtle, for topbar / modals */
   .glass-surface {
     background: hsl(var(--surface-1) / 0.82);
@@ -339,6 +340,29 @@
   .metric-card:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+  }
+
+  /* Dashboard panel lift */
+  .dashboard-panel {
+    transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+  }
+  .dashboard-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px -8px hsl(var(--primary) / 0.12);
+  }
+
+  /* Quick action button */
+  .quick-action {
+    transition: transform 120ms var(--ease-out), background 120ms var(--ease-out);
+  }
+  .quick-action:hover {
+    transform: translateY(-1px);
+    background: hsl(var(--primary) / 0.12);
+  }
+
+  /* Streak flame glow */
+  .streak-flame {
+    filter: drop-shadow(0 0 6px hsl(var(--warning) / 0.6));
   }
 }
 
