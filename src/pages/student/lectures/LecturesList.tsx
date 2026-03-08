@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { BookOpen, ChevronRight, MapPin, Clock, Info } from "lucide-react";
+import { BookOpen, ChevronRight, MapPin, Clock } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { FadeIn } from "@/components/ui/motion";
 import { StatusChip, LiveIndicator } from "@/components/ui/design-system";
+import { EmptyStateCard } from "@/components/ui/empty-state";
 
 type LectureRow = {
   id: string;
@@ -130,16 +131,15 @@ export default function LecturesList() {
           ))}
         </div>
       ) : lectures.length === 0 ? (
-        <FadeIn>
-          <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs py-16 text-center">
-            <BookOpen className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-body text-muted-foreground">No {view} lectures.</p>
-            <p className="text-caption text-muted-foreground mt-1 flex items-center justify-center gap-1">
-              <Info className="h-3 w-3" />
-              Programme allotment may be pending.
-            </p>
-          </div>
-        </FadeIn>
+        <EmptyStateCard
+          emoji={view === "upcoming" ? "📅" : "📚"}
+          title={view === "upcoming" ? "No upcoming lectures" : "No past lectures"}
+          description={
+            view === "upcoming"
+              ? "Your schedule is clear. Upcoming lectures will appear here once created."
+              : "Past lectures will show up here after sessions end."
+          }
+        />
       ) : (
         <div className="space-y-2">
           {lectures.map((l, i) => (

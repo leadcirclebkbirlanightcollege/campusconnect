@@ -3,16 +3,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, useMemo } from "react";
 import {
   Bell,
-  Search,
   ChevronDown,
   UserRound,
   LogOut,
-  Settings,
   CreditCard,
   BadgeCheck,
   GraduationCap,
   CheckCircle,
 } from "lucide-react";
+import PageTransition from "@/components/layout/PageTransition";
 import {
   SidebarInset,
   SidebarProvider,
@@ -287,7 +286,9 @@ export default function AppLayout() {
           {/* ── Workspace ───────────────────────────────────────── */}
           <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
             <div className="mx-auto max-w-[1280px]">
-              <Outlet />
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
             </div>
           </main>
 

@@ -1,17 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { EmptyStateCard } from "@/components/ui/empty-state";
+import { FadeIn } from "@/components/ui/motion";
+import { cn } from "@/lib/utils";
 import { format, isPast, isToday } from "date-fns";
+import { Calendar, MapPin, Clock, PartyPopper } from "lucide-react";
 
 export default function StudentEventsList() {
   const query = useQuery({
@@ -19,7 +14,7 @@ export default function StudentEventsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id,title,description,event_date,event_time,venue")
+        .select("id,title,description,event_date,event_time,venue,poster_url")
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -30,68 +25,101 @@ export default function StudentEventsList() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-12 rounded-xl" />
+          <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {query.data?.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No upcoming events.
-          </CardContent>
-        </Card>
-      )}
+  const events = query.data ?? [];
 
-      {(query.data?.length ?? 0) > 0 && (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event</TableHead>
-                    <TableHead className="w-28">Date</TableHead>
-                    <TableHead className="w-24">Time</TableHead>
-                    <TableHead className="w-28">Venue</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {query.data?.map((e: any) => {
-                    const eventDay = new Date(e.event_date);
-                    const past = isPast(eventDay) && !isToday(eventDay);
-                    return (
-                      <TableRow key={e.id} className={past ? "opacity-60" : ""}>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm font-medium">{e.title}</p>
-                            {e.description && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">{e.description}</p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {format(eventDay, "PP")}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{e.event_time}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{e.venue ?? "—"}</TableCell>
-                        <TableCell>
-                          {isToday(eventDay) && <Badge className="bg-success text-success-foreground text-[10px]">Today</Badge>}
-                          {past && <Badge variant="secondary" className="text-[10px]">Past</Badge>}
-                          {!past && !isToday(eventDay) && <Badge variant="outline" className="text-[10px]">Upcoming</Badge>}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+  return (
+    <div className="space-y-5 page-enter">
+      {/* Header */}
+      <FadeIn>
+        <div className="flex items-center gap-2">
+          <PartyPopper className="h-4 w-4 text-muted-foreground" />
+          <h1 className="text-heading text-foreground">Events</h1>
+        </div>
+      </FadeIn>
+
+      {events.length === 0 ? (
+        <EmptyStateCard
+          emoji="🎉"
+          title="No events scheduled"
+          description="Campus events and activities will show up here once created by your admin."
+        />
+      ) : (
+        <div className="space-y-2">
+          {events.map((e: any, i: number) => {
+            const eventDay = new Date(e.event_date + "T00:00:00");
+            const past = isPast(eventDay) && !isToday(eventDay);
+            const today = isToday(eventDay);
+
+            return (
+              <FadeIn key={e.id} delay={i * 20}>
+                <div
+                  className={cn(
+                    "rounded-xl border bg-surface-1 shadow-xs transition-fast hover:shadow-sm",
+                    today
+                      ? "border-success/25 bg-success/3"
+                      : past
+                      ? "border-border-subtle opacity-70"
+                      : "border-border-subtle hover:border-border-strong",
+                  )}
+                >
+                  <div className="flex gap-4 px-5 py-4">
+                    {/* Date block */}
+                    <div className="flex-shrink-0 w-12 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {format(eventDay, "EEE")}
+                      </p>
+                      <p className="text-[22px] font-bold text-foreground leading-tight tabular-nums">
+                        {format(eventDay, "d")}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {format(eventDay, "MMM")}
+                      </p>
+                    </div>
+
+                    {/* Divider */}
+                    <div className={cn(
+                      "w-px self-stretch rounded-full",
+                      today ? "bg-success/30" : "bg-border-subtle",
+                    )} />
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-[14px] font-semibold text-foreground leading-snug">{e.title}</h3>
+                        {today && <Badge className="text-[9px] bg-success text-success-foreground shrink-0">Today</Badge>}
+                        {!today && !past && <Badge variant="outline" className="text-[9px] shrink-0">Upcoming</Badge>}
+                        {past && <Badge variant="secondary" className="text-[9px] shrink-0">Past</Badge>}
+                      </div>
+
+                      {e.description && (
+                        <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2">{e.description}</p>
+                      )}
+
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {e.event_time}
+                        </span>
+                        {e.venue && (
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {e.venue}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
       )}
     </div>
   );

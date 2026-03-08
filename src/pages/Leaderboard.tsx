@@ -260,8 +260,8 @@ export default function Leaderboard() {
           ))}
         </div>
       ) : rest.length === 0 ? (
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs py-16 text-center">
-          <p className="text-caption text-muted-foreground">{tab === "weekly" ? "No activity this week yet." : "No students found."}</p>
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs py-12 text-center">
+          <p className="text-caption text-muted-foreground">{tab === "weekly" ? "No activity this week yet. Earn points to join the board!" : "No students on the leaderboard yet."}</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
