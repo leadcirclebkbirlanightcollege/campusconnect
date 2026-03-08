@@ -190,8 +190,7 @@ export default function AppSidebar() {
           {section.items.map((item) => {
             const active = isActive(item.url);
             const Icon = item.icon;
-            const isInbox = item.url === "/app/inbox";
-            const badgeCount = isInbox ? unreadCount : 0;
+            const badgeCount = item.badge ?? (item.url === "/app/inbox" ? unreadCount : 0);
 
             return (
               <SidebarMenuItem key={item.title}>

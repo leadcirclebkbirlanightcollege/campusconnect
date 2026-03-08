@@ -231,7 +231,7 @@ function BellPopover({ userId, unreadCount }: { userId: string; unreadCount: num
               {/* Footer */}
               <div className="px-4 py-2.5 border-t border-border-subtle">
                 <button
-                  onClick={() => { setOpen(false); navigate("/student/inbox"); }}
+                  onClick={() => { setOpen(false); navigate("/app/inbox"); }}
                   className="w-full flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   View all notifications <ChevronRight className="h-3.5 w-3.5" />
