@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import PwaStatusCard from "@/components/pwa/PwaStatusCard";
+import GoalTrackingCard from "@/components/student/GoalTrackingCard";
 import { cn } from "@/lib/utils";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";

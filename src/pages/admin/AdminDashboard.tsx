@@ -4,7 +4,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Users, BookOpen, CheckSquare, Bell, LayoutDashboard, Settings, Shield,
   Coins, GraduationCap, ScanLine, Megaphone, CalendarDays, BarChart3, Sparkles,
-  FileText, FileEdit, Palette, UserCog, ChevronDown,
+  FileText, FileEdit, Palette, UserCog, ChevronDown, Trophy,
 } from "lucide-react";
 import AdminOverviewTab from "@/pages/admin/overview/AdminOverviewTab";
 import StudentManagementTab from "@/pages/admin/students/StudentManagementTab";
@@ -29,6 +29,7 @@ import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel"
 import AdminSystemControlTab from "@/pages/admin/system/AdminSystemControlTab";
 import AdminBrandingTab from "@/pages/admin/branding/AdminBrandingTab";
 import AdminCoreTeamTab from "@/pages/admin/team/AdminCoreTeamTab";
+import AdminChallengesTab from "@/pages/admin/challenges/AdminChallengesTab";
 import { APP_VERSION, BUILD_NUMBER, RELEASE_DATE, ENVIRONMENT } from "@/config/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
