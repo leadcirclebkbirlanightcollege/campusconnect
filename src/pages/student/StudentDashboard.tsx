@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
+import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
 import {
   ArrowRight, Flame, Zap, TrendingUp, TrendingDown, Minus,
-  Clock, CheckCircle2, AlertTriangle, ChevronRight, BookOpen,
+  Clock, CheckCircle2, ChevronRight, BookOpen,
   Trophy, Shield, Target, BarChart3, Star, Activity,
-  CalendarCheck, Award, Sparkles, Users,
+  CalendarCheck, Award, Sparkles,
 } from "lucide-react";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
@@ -260,6 +261,13 @@ const StudentDashboard = () => {
         <div id="checkin-card">
           <DailyCheckinCard />
         </div>
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════╗
+          ║  INTELLIGENCE SCORE & GOAL TRACKER        ║
+          ╚═══════════════════════════════════════════╝ */}
+      <SlideUp delay={55}>
+        <IntelligenceScoreCard />
       </SlideUp>
 
       {/* ╔═══════════════════════════════════════════╗
