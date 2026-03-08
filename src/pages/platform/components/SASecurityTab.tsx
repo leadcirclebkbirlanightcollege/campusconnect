@@ -176,13 +176,13 @@ function AuditLogTab() {
   const q = useQuery<AuditEntry[]>({
     queryKey: ["sa_generic_audit"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("audit_logs" as any)
+      const { data, error } = await (supabase as any)
+        .from("audit_logs")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      const entries = (data ?? []) as AuditEntry[];
+      const entries = ((data ?? []) as unknown) as AuditEntry[];
       const ids = [...new Set(entries.map(e => e.performed_by))];
       if (!ids.length) return entries;
       const { data: profiles } = await supabase.from("profiles").select("user_id,name").in("user_id", ids);
