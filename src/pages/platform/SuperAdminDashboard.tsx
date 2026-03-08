@@ -11,7 +11,7 @@ import {
   UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
   History, Sliders, AlertTriangle, Flame, Zap,
   ArrowUpRight, Plus, ChevronRight, Layers, LayoutDashboard,
-  ServerCrash, Bell, GraduationCap, Sparkles, Network,
+  ServerCrash, Bell, GraduationCap, Sparkles, Network, MessageSquare,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
@@ -27,7 +27,8 @@ import SABroadcastTab from "./components/SABroadcastTab";
 import SAActivityLogsTab from "./components/SAActivityLogsTab";
 import SAPlatformSettingsTab from "./components/SAPlatformSettingsTab";
 import SAGlobalSearch from "./components/SAGlobalSearch";
-import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";
+import SAFeedbackTab from "./components/SAFeedbackTab";
+import SAMonitoringTab from "./components/SAMonitoringTab";
 import { useMetricCountUp } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 
