@@ -8,7 +8,7 @@ import {
   Flame, Zap, TrendingUp, TrendingDown, Minus,
   Clock, CheckCircle2, ChevronRight, BookOpen,
   Trophy, Shield, Target, BarChart3, Star, Activity,
-  CalendarCheck, Award, Sparkles, ArrowRight,
+  CalendarCheck, Award, Sparkles, ArrowRight, Scan,
 } from "lucide-react";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
@@ -129,52 +129,77 @@ const StudentDashboard = () => {
 
   const riskLevel = growth.data?.risk_probability ?? "low";
   const riskColor = riskLevel === "high" ? "text-danger" : riskLevel === "medium" ? "text-warning" : "text-success";
-  const riskBg = riskLevel === "high" ? "bg-danger/10 border-danger/20" : riskLevel === "medium" ? "bg-warning/10 border-warning/20" : "bg-success/10 border-success/20";
+  const riskBg = riskLevel === "high" ? "bg-danger/8 border-danger/20" : riskLevel === "medium" ? "bg-warning/8 border-warning/20" : "bg-success/8 border-success/20";
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto pb-24 sm:pb-8">
+    <div className="space-y-4 max-w-2xl mx-auto pb-28 md:pb-8">
 
       {/* ╔═══════════════════════════════════════════╗
           ║  PREMIUM HERO CARD                        ║
           ╚═══════════════════════════════════════════╝ */}
       <FadeIn>
-        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-border-subtle">
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-surface-1 to-surface-1 pointer-events-none" />
-          <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-primary/6 blur-3xl pointer-events-none -translate-y-12 translate-x-12" />
+        <div className="relative rounded-2xl overflow-hidden border border-border-subtle shadow-md">
+          {/* Multi-layer gradient bg */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-surface-1 to-surface-1 pointer-events-none" />
+          {/* Glow orbs */}
+          <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-primary/8 blur-3xl pointer-events-none -translate-y-16 translate-x-16" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-primary/5 blur-2xl pointer-events-none translate-y-8 -translate-x-8" />
 
           {/* Tier accent top bar */}
           <div className="h-[3px] w-full relative z-10"
-            style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.2))` }} />
+            style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.15))` }} />
 
-          <div className="relative z-10 p-5 sm:p-6 space-y-5">
-            {/* Row 1: greeting + ring */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0 space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-muted-foreground">{greeting} 👋</p>
-                <h1 className="text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-none">{name}</h1>
+          <div className="relative z-10 p-5 sm:p-6">
+            {/* Row 1: greeting + attendance ring */}
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-muted-foreground leading-none">
+                  {greeting} 👋
+                </p>
+                <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-none">
+                  {name}
+                </h1>
                 {tierData && (
-                  <span className={cn(
-                    "inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-[11px] font-semibold border",
-                    tierData.bg, tierData.border, tierData.color,
-                  )}>
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border",
+                      tierData.bg, tierData.border, tierData.color,
+                    )}
+                  >
                     <Star className="h-2.5 w-2.5" />
                     {tierData.label} Tier
-                  </span>
+                  </motion.span>
                 )}
               </div>
-              <AttendanceRing pct={attendancePct} loading={loading} size={96} />
+
+              {/* Large attendance ring */}
+              <AttendanceRing pct={attendancePct} loading={loading} size={110} />
             </div>
 
-            {/* Row 2: KPI strip */}
-            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border-subtle/60">
-              <HeroKpi label="Points" value={stats.totalPoints} icon={<Zap className="h-4 w-4" />} loading={loading} color="text-primary" bg="bg-primary/10" />
-              <HeroKpi label="Streak" value={stats.currentStreak} suffix="d" icon={<Flame className="h-4 w-4" />} loading={loading} color="text-warning" bg="bg-warning/10" />
-              <HeroKpi label="Classes" value={stats.lecturesAttended} icon={<CheckCircle2 className="h-4 w-4" />} loading={loading} color="text-success" bg="bg-success/10" />
+            {/* Row 2: KPI strip — 3 columns */}
+            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border-subtle/50">
+              <HeroKpi
+                label="Points" value={stats.totalPoints}
+                icon={<Zap className="h-4 w-4" />}
+                loading={loading} color="text-primary" bg="bg-primary/10"
+              />
+              <HeroKpi
+                label="Streak" value={stats.currentStreak} suffix="d"
+                icon={<Flame className="h-4 w-4" />}
+                loading={loading} color="text-warning" bg="bg-warning/10"
+              />
+              <HeroKpi
+                label="Classes" value={stats.lecturesAttended}
+                icon={<CheckCircle2 className="h-4 w-4" />}
+                loading={loading} color="text-success" bg="bg-success/10"
+              />
             </div>
 
-            {/* Row 3: Tier progress */}
-            <div className="space-y-2">
+            {/* Row 3: Tier progress bar */}
+            <div className="mt-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-muted-foreground">
                   {tierData?.label} → {tierProgress.nextLabel}
@@ -186,10 +211,10 @@ const StudentDashboard = () => {
               <div className="h-2 w-full rounded-full bg-surface-3 overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.6))" }}
+                  style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.55))" }}
                   initial={{ width: "0%" }}
                   animate={{ width: `${tierProgress.pct}%` }}
-                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.4 }}
+                  transition={{ duration: 1.3, ease: "easeOut", delay: 0.5 }}
                 />
               </div>
             </div>
@@ -198,78 +223,82 @@ const StudentDashboard = () => {
       </FadeIn>
 
       {/* ╔═══════════════════════════════════════════╗
-          ║  QUICK ACTIONS — 4-GRID                   ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={20}>
-        <div className="grid grid-cols-4 gap-2.5">
-          {[
-            { label: "Check In", icon: <Flame className="h-5 w-5" />, color: "text-warning", bg: "bg-warning/10 group-hover:bg-warning/20", href: "#checkin", isBtn: true },
-            { label: "Attendance", icon: <CalendarCheck className="h-5 w-5" />, color: "text-success", bg: "bg-success/10 group-hover:bg-success/20", href: "/app/attendance", isBtn: false },
-            { label: "Leaderboard", icon: <Trophy className="h-5 w-5" />, color: "text-amber-400", bg: "bg-amber-400/10 group-hover:bg-amber-400/20", href: "/app/leaderboard", isBtn: false },
-            { label: "Lectures", icon: <BookOpen className="h-5 w-5" />, color: "text-primary", bg: "bg-primary/10 group-hover:bg-primary/20", href: "/app/lectures", isBtn: false },
-          ].map((a) => (
-            a.isBtn
-              ? <QuickActionBtn key={a.label} label={a.label} icon={a.icon} color={a.color} bg={a.bg}
-                  onClick={() => document.getElementById("checkin-card")?.scrollIntoView({ behavior: "smooth" })} />
-              : <QuickActionLink key={a.label} label={a.label} icon={a.icon} color={a.color} bg={a.bg} href={a.href} />
-          ))}
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
           ║  LIVE / UPCOMING LECTURE BANNER           ║
           ╚═══════════════════════════════════════════╝ */}
       <AnimatePresence>
         {liveNow ? (
-          <SlideUp delay={30}>
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-success/30 bg-success/8 overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-3.5 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <LiveIndicator />
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-foreground truncate">{liveNow.topic}</p>
-                    <p className="text-[12px] text-muted-foreground">{liveNow.venue} · {liveNow.start_time}</p>
-                  </div>
+          <motion.div
+            key="live-banner"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="rounded-xl border border-success/30 bg-success/8 overflow-hidden shadow-sm"
+          >
+            <div className="flex items-center justify-between px-4 py-4 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <LiveIndicator />
+                <div className="min-w-0">
+                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">{liveNow.topic}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">{liveNow.venue} · {liveNow.start_time}</p>
                 </div>
-                <Button asChild size="sm" className="shrink-0 h-9 gap-1.5">
-                  <Link to={`/app/lectures/${liveNow.id}`}>
-                    Mark <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
               </div>
-            </motion.div>
-          </SlideUp>
-        ) : nextLecture ? (
-          <SlideUp delay={30}>
-            <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs">
-              <div className="flex items-center justify-between px-4 py-3.5 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Next Lecture</p>
-                    <p className="text-[14px] font-semibold text-foreground truncate">{nextLecture.topic}</p>
-                    <p className="text-[12px] text-muted-foreground">{nextLecture.lecture_date} · {nextLecture.start_time} · {nextLecture.venue}</p>
-                  </div>
-                </div>
-                <Button asChild variant="outline" size="sm" className="shrink-0 h-9">
-                  <Link to="/app/lectures">View</Link>
-                </Button>
-              </div>
+              <Button asChild size="sm" className="shrink-0 h-10 gap-1.5 rounded-xl px-4">
+                <Link to={`/app/lectures/${liveNow.id}`}>
+                  <Scan className="h-3.5 w-3.5" />
+                  Mark
+                </Link>
+              </Button>
             </div>
-          </SlideUp>
+          </motion.div>
+        ) : nextLecture ? (
+          <motion.div
+            key="upcoming-banner"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs"
+          >
+            <div className="flex items-center justify-between px-4 py-4 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+                  <Clock className="h-4.5 w-4.5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Next Lecture</p>
+                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">{nextLecture.topic}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">{nextLecture.lecture_date} · {nextLecture.start_time} · {nextLecture.venue}</p>
+                </div>
+              </div>
+              <Button asChild variant="outline" size="sm" className="shrink-0 h-10 rounded-xl">
+                <Link to="/app/lectures">View</Link>
+              </Button>
+            </div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
 
       {/* ╔═══════════════════════════════════════════╗
+          ║  QUICK ACTIONS — 4-GRID (2×2)             ║
+          ╚═══════════════════════════════════════════╝ */}
+      <SlideUp delay={20}>
+        <div className="grid grid-cols-4 gap-2.5">
+          <QuickActionBtn
+            label="Check In" icon={<Flame className="h-5 w-5" />}
+            color="text-warning" bg="bg-warning/10 group-hover:bg-warning/18"
+            onClick={() => document.getElementById("checkin-card")?.scrollIntoView({ behavior: "smooth" })}
+          />
+          <QuickActionLink label="Attendance" icon={<CalendarCheck className="h-5 w-5" />} color="text-success" bg="bg-success/10 group-hover:bg-success/18" href="/app/attendance" />
+          <QuickActionLink label="Leaderboard" icon={<Trophy className="h-5 w-5" />} color="text-premium" bg="bg-premium/10 group-hover:bg-premium/18" href="/app/leaderboard" />
+          <QuickActionLink label="Lectures" icon={<BookOpen className="h-5 w-5" />} color="text-primary" bg="bg-primary/10 group-hover:bg-primary/18" href="/app/lectures" />
+        </div>
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════╗
           ║  DAILY CHECK-IN                           ║
           ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={40}>
+      <SlideUp delay={35}>
         <div id="checkin-card">
           <DailyCheckinCard />
         </div>
@@ -278,14 +307,79 @@ const StudentDashboard = () => {
       {/* ╔═══════════════════════════════════════════╗
           ║  SMART INSIGHTS STRIP                     ║
           ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={48}>
+      <SlideUp delay={45}>
         <SmartInsightsStrip />
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════╗
+          ║  2-COLUMN: STREAK + RISK                  ║
+          ╚═══════════════════════════════════════════╝ */}
+      <SlideUp delay={55}>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Streak */}
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs space-y-3 min-h-[110px]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <motion.div animate={{ scale: [1, 1.18, 1] }} transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}>
+                  <Flame className={cn("h-4.5 w-4.5", stats.currentStreak > 0 ? "text-warning" : "text-muted-foreground")} />
+                </motion.div>
+                <p className="text-[13px] font-semibold text-foreground">Streak</p>
+              </div>
+              <Trophy className="h-3.5 w-3.5 text-premium opacity-60" />
+            </div>
+            {loading ? <Skeleton className="h-9 w-20" /> : (
+              <>
+                <div>
+                  <p className="text-[36px] font-black text-foreground tabular-nums leading-none">{stats.currentStreak}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">day streak</p>
+                </div>
+                <div className="flex items-center gap-1.5 pt-2 border-t border-border-subtle">
+                  <Trophy className="h-3 w-3 text-premium" />
+                  <span className="text-[11px] text-muted-foreground">Best: </span>
+                  <span className="text-[11px] font-bold text-foreground tabular-nums">{stats.longestStreak}d</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Risk Level */}
+          <div className={cn("rounded-2xl border p-4 shadow-xs space-y-3 min-h-[110px]", riskBg)}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className={cn("h-4.5 w-4.5", riskColor)} />
+                <p className="text-[13px] font-semibold text-foreground">Risk</p>
+              </div>
+              <span className={cn(
+                "text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border",
+                riskLevel === "high" ? "text-danger border-danger/30 bg-danger/10"
+                : riskLevel === "medium" ? "text-warning border-warning/30 bg-warning/10"
+                : "text-success border-success/30 bg-success/10"
+              )}>{riskLevel}</span>
+            </div>
+            {growth.isLoading || loading ? <Skeleton className="h-9 w-20" /> : (
+              <>
+                <div>
+                  <p className={cn("text-[24px] font-black leading-none capitalize", riskColor)}>
+                    {riskLevel}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">academic risk</p>
+                </div>
+                <div className="flex items-center gap-1.5 pt-2 border-t border-border-subtle/50">
+                  <Target className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[11px] text-muted-foreground capitalize">
+                    {riskLevel === "high" ? "Action needed" : riskLevel === "medium" ? "Stay consistent" : "On track 👍"}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </SlideUp>
 
       {/* ╔═══════════════════════════════════════════╗
           ║  INTELLIGENCE SCORE CARD                  ║
           ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={55}>
+      <SlideUp delay={65}>
         <IntelligenceScoreCard />
       </SlideUp>
 
@@ -293,11 +387,11 @@ const StudentDashboard = () => {
           ║  ACADEMIC INTELLIGENCE PANEL              ║
           ╚═══════════════════════════════════════════╝ */}
       {(intelligence.data || intelligence.isLoading) && (
-        <SlideUp delay={60}>
+        <SlideUp delay={72}>
           <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border-subtle">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
                   <BarChart3 className="h-4 w-4 text-primary" />
                 </div>
                 <div>
@@ -312,7 +406,7 @@ const StudentDashboard = () => {
               )}
             </div>
 
-            <div className="px-5 py-4 space-y-4">
+            <div className="px-5 py-4 space-y-3.5">
               {intelligence.isLoading ? (
                 <><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-5/6" /><Skeleton className="h-3 w-4/5" /></>
               ) : intelligence.data ? (
@@ -353,62 +447,10 @@ const StudentDashboard = () => {
       )}
 
       {/* ╔═══════════════════════════════════════════╗
-          ║  2-COLUMN: STREAK + RISK                  ║
-          ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={80}>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs space-y-3">
-            <div className="flex items-center gap-2">
-              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>
-                <Flame className={cn("h-5 w-5", stats.currentStreak > 0 ? "text-warning" : "text-muted-foreground")} />
-              </motion.div>
-              <p className="text-[13px] font-semibold text-foreground">Streak</p>
-            </div>
-            {loading ? <Skeleton className="h-8 w-20" /> : (
-              <>
-                <div>
-                  <p className="text-[32px] font-bold text-foreground tabular-nums leading-none">{stats.currentStreak}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">day streak</p>
-                </div>
-                <div className="flex items-center gap-1.5 pt-1 border-t border-border-subtle">
-                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-[11px] text-muted-foreground">Best:</span>
-                  <span className="text-[11px] font-semibold text-foreground tabular-nums">{stats.longestStreak}d</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className={cn("rounded-2xl border p-4 shadow-xs space-y-3", riskBg)}>
-            <div className="flex items-center gap-2">
-              <Shield className={cn("h-5 w-5", riskColor)} />
-              <p className="text-[13px] font-semibold text-foreground">Risk Level</p>
-            </div>
-            {growth.isLoading || loading ? <Skeleton className="h-8 w-20" /> : (
-              <>
-                <div>
-                  <p className={cn("text-[22px] font-bold leading-none capitalize", riskColor)}>
-                    {riskLevel}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">academic risk</p>
-                </div>
-                <div className="flex items-center gap-1.5 pt-1 border-t border-border-subtle/50">
-                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[11px] text-muted-foreground capitalize">
-                    {riskLevel === "high" ? "Action needed" : riskLevel === "medium" ? "Stay consistent" : "On track 👍"}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </SlideUp>
-
-      {/* ╔═══════════════════════════════════════════╗
-          ║  SMART INSIGHTS PANEL                     ║
+          ║  SMART INSIGHTS PANEL (detailed)          ║
           ╚═══════════════════════════════════════════╝ */}
       {growth.data && !growth.isLoading && (
-        <SlideUp delay={90}>
+        <SlideUp delay={80}>
           <InsightsPanel growth={growth.data} tierProgress={tierProgress} attendancePct={attendancePct} currentStreak={stats.currentStreak} />
         </SlideUp>
       )}
@@ -416,16 +458,19 @@ const StudentDashboard = () => {
       {/* ╔═══════════════════════════════════════════╗
           ║  ACTIVITY TIMELINE                        ║
           ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={100}>
+      <SlideUp delay={90}>
         <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-surface-3 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-xl bg-surface-3 flex items-center justify-center">
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-[14px] font-semibold text-foreground">Activity Feed</p>
+              <div>
+                <p className="text-[14px] font-semibold text-foreground">Activity Feed</p>
+                <p className="text-[11px] text-muted-foreground">Recent points earned</p>
+              </div>
             </div>
-            <Button asChild variant="ghost" size="sm" className="h-7 text-[12px] gap-1 text-muted-foreground">
+            <Button asChild variant="ghost" size="sm" className="h-8 text-[12px] gap-1 text-muted-foreground hover:text-foreground rounded-lg">
               <Link to="/app/attendance">
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
@@ -436,16 +481,19 @@ const StudentDashboard = () => {
             <div className="px-5 py-4 space-y-4">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                  <Skeleton className="h-9 w-9 rounded-full shrink-0" />
                   <div className="flex-1 space-y-1.5"><Skeleton className="h-3 w-28" /><Skeleton className="h-2.5 w-20" /></div>
                   <Skeleton className="h-3 w-10" />
                 </div>
               ))}
             </div>
           ) : recentPoints.length === 0 ? (
-            <div className="px-5 py-10 text-center space-y-2">
-              <Sparkles className="h-8 w-8 text-muted-foreground mx-auto opacity-40" />
-              <p className="text-[12px] text-muted-foreground">No activity yet. Start by checking in!</p>
+            <div className="px-5 py-12 text-center space-y-2.5">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-surface-3 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-muted-foreground opacity-50" />
+              </div>
+              <p className="text-[13px] font-medium text-muted-foreground">No activity yet</p>
+              <p className="text-[12px] text-muted-foreground/60">Start by doing your daily check-in!</p>
             </div>
           ) : (
             <div className="divide-y divide-border-subtle">
@@ -462,14 +510,12 @@ const StudentDashboard = () => {
    SUB-COMPONENTS
 ══════════════════════════════════════════════ */
 
-function AttendanceRing({ pct, loading, size = 92 }: { pct: number; loading: boolean; size?: number }) {
-  const sw = 8;
+function AttendanceRing({ pct, loading, size = 110 }: { pct: number; loading: boolean; size?: number }) {
+  const sw = 9;
   const r = (size - sw) / 2;
   const circ = 2 * Math.PI * r;
   const filledDash = ((loading ? 0 : pct) / 100) * circ;
-
-  // Color based on percentage
-  const ringColor = pct >= 75 ? "hsl(var(--success))" : pct >= 50 ? "hsl(var(--warning))" : "hsl(var(--danger))";
+  const ringColor = pct >= 75 ? "hsl(var(--success))" : pct >= 50 ? "hsl(var(--warning))" : pct > 0 ? "hsl(var(--danger))" : "hsl(var(--muted))";
 
   return (
     <div className="relative inline-flex items-center justify-center shrink-0">
@@ -477,23 +523,36 @@ function AttendanceRing({ pct, loading, size = 92 }: { pct: number; loading: boo
         <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={sw} className="stroke-surface-3 fill-none" />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} strokeWidth={sw}
-          fill="none"
-          strokeLinecap="round"
+          fill="none" strokeLinecap="round"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}
           animate={{ strokeDashoffset: circ - filledDash }}
-          transition={{ duration: 1.4, ease: "easeOut", delay: 0.3 }}
+          transition={{ duration: 1.5, ease: "easeOut", delay: 0.35 }}
           style={{ stroke: ringColor }}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[18px] font-bold text-foreground tabular-nums leading-none">
-          {loading ? "—" : `${pct}%`}
-        </span>
-        <span className="text-[9px] text-muted-foreground uppercase tracking-wider leading-none mt-0.5">Att.</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        {loading ? (
+          <Skeleton className="h-6 w-10" />
+        ) : (
+          <>
+            <span className="text-[20px] font-black text-foreground tabular-nums leading-none">{pct}%</span>
+            <span className="text-[9px] text-muted-foreground uppercase tracking-wider leading-none">Att.</span>
+            <span className="text-[10px] text-muted-foreground leading-none mt-0.5 tabular-nums">
+              {stats_display(pct)}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
+}
+
+function stats_display(pct: number) {
+  if (pct >= 75) return "✓ Good";
+  if (pct >= 50) return "⚠ Fair";
+  if (pct > 0) return "✗ Low";
+  return "—";
 }
 
 function HeroKpi({ label, value, suffix = "", icon, loading, color, bg }: {
@@ -502,43 +561,53 @@ function HeroKpi({ label, value, suffix = "", icon, loading, color, bg }: {
 }) {
   const counted = useMetricCountUp(loading ? 0 : value, 1000);
   return (
-    <div className="flex flex-col items-center gap-2 py-2">
-      <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center transition-transform duration-150 hover:scale-110", bg, color)}>
+    <div className="flex flex-col items-center gap-2.5 py-3">
+      <div className={cn(
+        "h-10 w-10 rounded-xl flex items-center justify-center",
+        "transition-transform duration-150 active:scale-95",
+        bg, color,
+      )}>
         {icon}
       </div>
       {loading
         ? <Skeleton className="h-5 w-12" />
-        : <p className="text-[16px] font-bold text-foreground tabular-nums leading-none">{counted}{suffix}</p>
+        : <p className="text-[17px] font-black text-foreground tabular-nums leading-none">{counted}{suffix}</p>
       }
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
     </div>
   );
 }
 
-function QuickActionLink({ label, icon, color, bg, href }: { label: string; icon: React.ReactNode; color: string; bg: string; href: string }) {
+function QuickActionLink({ label, icon, color, bg, href }: {
+  label: string; icon: React.ReactNode; color: string; bg: string; href: string;
+}) {
   return (
     <Link to={href} className={cn(
       "flex flex-col items-center gap-2 p-3 rounded-xl border border-border-subtle bg-surface-1",
-      "cursor-pointer group active:scale-95 transition-transform duration-100",
+      "group active:scale-95 transition-all duration-100 cursor-pointer",
+      "hover:border-border-strong hover:shadow-xs",
     )}>
       <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-colors duration-150", bg, color)}>
         {icon}
       </div>
-      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center">{label}</span>
+      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center group-hover:text-foreground transition-colors">{label}</span>
     </Link>
   );
 }
 
-function QuickActionBtn({ label, icon, color, bg, onClick }: { label: string; icon: React.ReactNode; color: string; bg: string; onClick: () => void }) {
+function QuickActionBtn({ label, icon, color, bg, onClick }: {
+  label: string; icon: React.ReactNode; color: string; bg: string; onClick: () => void;
+}) {
   return (
     <button onClick={onClick} className={cn(
       "flex flex-col items-center gap-2 p-3 rounded-xl border border-border-subtle bg-surface-1 w-full",
-      "cursor-pointer group active:scale-95 transition-transform duration-100",
+      "group active:scale-95 transition-all duration-100 cursor-pointer",
+      "hover:border-border-strong hover:shadow-xs",
     )}>
       <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-colors duration-150", bg, color)}>
         {icon}
       </div>
-      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center">{label}</span>
+      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center group-hover:text-foreground transition-colors">{label}</span>
     </button>
   );
 }
@@ -547,41 +616,49 @@ const InsightsPanel = memo(({ growth, tierProgress, attendancePct, currentStreak
   growth: any; tierProgress: { remaining: number; nextLabel: string; pct: number };
   attendancePct: number; currentStreak: number;
 }) => {
-  const insights: Array<{ icon: React.ReactNode; text: string }> = [];
+  const insights: Array<{ icon: React.ReactNode; text: string; tag?: string }> = [];
 
   if (growth.trend_direction === "improving")
-    insights.push({ icon: <TrendingUp className="h-4 w-4 shrink-0 text-success" />, text: `Attendance is improving — up ${Math.abs(growth.last_30_day_attendance_pct - attendancePct)}% vs last period` });
+    insights.push({ icon: <TrendingUp className="h-4 w-4 shrink-0 text-success" />, text: `Attendance trend is improving — keep it up!`, tag: "Improving" });
   else if (growth.trend_direction === "declining")
-    insights.push({ icon: <TrendingDown className="h-4 w-4 shrink-0 text-danger" />, text: `Attendance trend declining. Try not to miss upcoming lectures` });
+    insights.push({ icon: <TrendingDown className="h-4 w-4 shrink-0 text-danger" />, text: `Attendance is declining. Don't miss upcoming lectures`, tag: "Alert" });
 
   if (tierProgress.remaining > 0)
-    insights.push({ icon: <Zap className="h-4 w-4 shrink-0 text-primary" />, text: `${tierProgress.remaining} more points to reach ${tierProgress.nextLabel} tier 🚀` });
+    insights.push({ icon: <Zap className="h-4 w-4 shrink-0 text-primary" />, text: `${tierProgress.remaining} more points to reach ${tierProgress.nextLabel} tier 🚀`, tag: "Goal" });
 
   if (currentStreak > 0 && currentStreak < 7)
-    insights.push({ icon: <Flame className="h-4 w-4 shrink-0 text-warning" />, text: `${7 - currentStreak} more check-in${7 - currentStreak > 1 ? "s" : ""} to unlock the 7-day streak bonus (+20 pts)` });
+    insights.push({ icon: <Flame className="h-4 w-4 shrink-0 text-warning" />, text: `${7 - currentStreak} more check-in${7 - currentStreak > 1 ? "s" : ""} to unlock the 7-day streak bonus (+20 pts)`, tag: "Streak" });
 
   if (currentStreak >= 7)
-    insights.push({ icon: <Trophy className="h-4 w-4 shrink-0 text-amber-400" />, text: `🏆 ${currentStreak}-day streak! Amazing consistency — keep it up!` });
+    insights.push({ icon: <Trophy className="h-4 w-4 shrink-0 text-premium" />, text: `🏆 ${currentStreak}-day streak! Incredible consistency — keep going!`, tag: "Milestone" });
 
   if (attendancePct >= 90)
-    insights.push({ icon: <Star className="h-4 w-4 shrink-0 text-amber-400" />, text: `Outstanding attendance at ${attendancePct}% — you're in the top tier` });
+    insights.push({ icon: <Star className="h-4 w-4 shrink-0 text-premium" />, text: `Outstanding attendance at ${attendancePct}% — you're in elite territory`, tag: "Elite" });
 
   if (insights.length === 0) return null;
 
   return (
     <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
           <Sparkles className="h-4 w-4 text-primary" />
         </div>
-        <p className="text-[14px] font-semibold text-foreground">Smart Insights</p>
+        <div>
+          <p className="text-[14px] font-semibold text-foreground">Smart Insights</p>
+          <p className="text-[11px] text-muted-foreground">Personalised recommendations</p>
+        </div>
       </div>
       <div className="divide-y divide-border-subtle">
         {insights.map((ins, i) => (
           <FadeIn key={i} delay={i * 40}>
-            <div className="flex items-start gap-3 px-5 py-3.5">
-              <div className="mt-0.5">{ins.icon}</div>
-              <p className="text-[13px] text-muted-foreground leading-relaxed">{ins.text}</p>
+            <div className="flex items-start gap-3 px-5 py-4">
+              <div className="mt-0.5 shrink-0">{ins.icon}</div>
+              <p className="text-[13px] text-muted-foreground leading-relaxed flex-1">{ins.text}</p>
+              {ins.tag && (
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 bg-surface-3 px-2 py-0.5 rounded-full">
+                  {ins.tag}
+                </span>
+              )}
             </div>
           </FadeIn>
         ))}
@@ -615,7 +692,7 @@ function ActivityRow({ item, index }: { item: RecentPoint; index: number }) {
 
   return (
     <FadeIn delay={index * 20}>
-      <div className="flex items-center gap-3 px-5 py-3.5 group">
+      <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-surface-2 transition-colors duration-100">
         <div className={cn(
           "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
           "transition-transform duration-150 group-hover:scale-110",
@@ -626,7 +703,7 @@ function ActivityRow({ item, index }: { item: RecentPoint; index: number }) {
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-medium text-foreground capitalize">{label}</p>
           {item.note && <p className="text-[11px] text-muted-foreground truncate">{item.note}</p>}
-          <p className="text-[11px] text-muted-foreground">{date} · {time}</p>
+          <p className="text-[11px] text-muted-foreground/70">{date} · {time}</p>
         </div>
         <motion.span
           className={cn("text-[13px] font-bold tabular-nums shrink-0", isPositive ? "text-success" : "text-danger")}
