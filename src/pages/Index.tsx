@@ -105,9 +105,9 @@ function NeonFrame({ children, className }: { children: React.ReactNode; classNa
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[22px] border border-primary/30 bg-surface-1/80",
-        "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_15%_15%,hsl(var(--primary)/0.22),transparent_45%)]",
-        "after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(120deg,transparent_18%,hsl(var(--primary)/0.14)_50%,transparent_82%)]",
+        "relative overflow-hidden rounded-[22px] border border-border-subtle bg-surface-1/90",
+        "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_12%_12%,hsl(var(--primary)/0.14),transparent_46%)]",
+        "after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(140deg,transparent_15%,hsl(var(--primary)/0.08)_50%,transparent_85%)]",
         className,
       )}
     >
