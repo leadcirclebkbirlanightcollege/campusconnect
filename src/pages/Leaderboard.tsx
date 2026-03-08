@@ -1,501 +1,441 @@
-import { useMemo, useState, memo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Trophy, Filter, Crown, Medal, Award, BadgeCheck,
-  Flame, Zap, ArrowUp, ArrowDown, Minus, Star,
-  ChevronDown, Users, Target,
+  ArrowDown,
+  ArrowUp,
+  Medal,
+  Minus,
+  Shield,
+  Star,
+  Trophy,
+  Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { MetricCountUp } from "@/components/ui/motion";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
 
-/* ── Types ─────────────────────────────────────────────────────── */
-type LeaderRow = {
-  user_id: string; name: string; avatar_url: string | null;
-  is_verified: boolean; points_total: number; rank: number;
+type LeaderboardMode = "alltime" | "weekly";
+
+type LeaderboardRow = {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+  points_total: number;
+  rank: number;
 };
-type WeeklyRow = LeaderRow & { weekly_points: number };
 
-/* ── Tier config ─────────────────────────────────────────────────── */
-const TIERS = [
-  { key: "bronze",   min: 0,   max: 99,       label: "Bronze",   color: "text-[hsl(22_60%_55%)]",   bg: "bg-[hsl(22_60%_55%/0.12)]",   border: "border-[hsl(22_60%_55%/0.3)]",   glow: "" },
-  { key: "silver",   min: 100, max: 249,       label: "Silver",   color: "text-[hsl(215_15%_65%)]",  bg: "bg-[hsl(215_15%_65%/0.12)]",  border: "border-[hsl(215_15%_65%/0.3)]",  glow: "" },
-  { key: "gold",     min: 250, max: 499,       label: "Gold",     color: "text-gold",                 bg: "bg-gold/10",                  border: "border-gold/30",                  glow: "shadow-[0_0_16px_hsl(var(--gold)/0.25)]" },
-  { key: "platinum", min: 500, max: 999,       label: "Platinum", color: "text-premium",              bg: "bg-premium/10",               border: "border-premium/30",               glow: "shadow-[0_0_20px_hsl(var(--premium)/0.3)]" },
-  { key: "elite",    min: 1000, max: Infinity, label: "Elite",    color: "text-[hsl(280_80%_70%)]",   bg: "bg-[hsl(280_80%_70%/0.12)]",  border: "border-[hsl(280_80%_70%/0.3)]",  glow: "shadow-[0_0_24px_hsl(280_80%_70%/0.35)]" },
-] as const;
+type WeeklyRow = {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+  weekly_points: number;
+  rank: number;
+};
 
-function getTier(pts: number) {
-  return [...TIERS].reverse().find((t) => pts >= t.min) ?? TIERS[0];
+const PAGE_SIZE = 20;
+
+function tierMeta(points: number) {
+  if (points >= 500) {
+    return { label: "Elite", className: "border-primary/30 bg-primary/12 text-primary" };
+  }
+  if (points >= 250) {
+    return { label: "Gold", className: "border-warning/35 bg-warning/12 text-warning" };
+  }
+  if (points >= 100) {
+    return { label: "Silver", className: "border-muted-foreground/30 bg-muted text-muted-foreground" };
+  }
+  return { label: "Bronze", className: "border-accent/40 bg-accent/15 text-accent-foreground" };
 }
 
-const TierBadge = memo(function TierBadge({ pts, size = "sm" }: { pts: number; size?: "sm" | "md" }) {
-  const t = getTier(pts);
+const TierPill = memo(function TierPill({ points }: { points: number }) {
+  const tier = tierMeta(points);
   return (
-    <span className={cn(
-      "inline-flex items-center gap-1 font-bold rounded-full border",
-      size === "sm" ? "text-[9px] px-1.5 py-0.5" : "text-[11px] px-2 py-1",
-      t.color, t.bg, t.border,
-    )}>
-      {t.key === "elite" || t.key === "platinum" ? <Star className={size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3"} />
-        : t.key === "gold" ? <Crown className={size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3"} /> : null}
-      {t.label}
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-wide",
+        tier.className,
+      )}
+    >
+      {tier.label}
     </span>
   );
 });
 
-/* ── Rank delta ─────────────────────────────────────────────────── */
-function RankDelta({ delta }: { delta: number }) {
-  if (delta > 0) return (
-    <span className="flex items-center gap-0.5 text-[10px] font-bold text-success tabular-nums">
-      <ArrowUp className="h-2.5 w-2.5" />{delta}
-    </span>
-  );
-  if (delta < 0) return (
-    <span className="flex items-center gap-0.5 text-[10px] font-bold text-danger tabular-nums">
-      <ArrowDown className="h-2.5 w-2.5" />{Math.abs(delta)}
-    </span>
-  );
-  return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
-}
+const MovementIndicator = memo(function MovementIndicator({ delta }: { delta: number }) {
+  if (delta > 0) {
+    return (
+      <motion.span
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.18 }}
+        className="inline-flex items-center gap-1 text-[11px] font-bold text-success"
+      >
+        <ArrowUp className="h-3 w-3" />+{delta}
+      </motion.span>
+    );
+  }
 
-/* ── Podium card ─────────────────────────────────────────────────── */
-const PodiumCard = memo(function PodiumCard({ row, myId, position, featured }: {
-  row: LeaderRow; myId?: string; position: 1 | 2 | 3; featured?: boolean;
+  if (delta < 0) {
+    return (
+      <motion.span
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.18 }}
+        className="inline-flex items-center gap-1 text-[11px] font-bold text-danger"
+      >
+        <ArrowDown className="h-3 w-3" />{delta}
+      </motion.span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
+      <Minus className="h-3 w-3" />0
+    </span>
+  );
+});
+
+const PodiumCard = memo(function PodiumCard({
+  row,
+  rank,
+  isCurrentUser,
+}: {
+  row: LeaderboardRow;
+  rank: 1 | 2 | 3;
+  isCurrentUser: boolean;
+}) {
+  const isFirst = rank === 1;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, delay: rank * 0.06 }}
+      className={cn(
+        "rounded-2xl border p-3 text-center",
+        isFirst
+          ? "border-primary/35 bg-gradient-to-b from-primary/12 to-surface-1 shadow-glow"
+          : "border-border-subtle bg-surface-1",
+        rank === 1 ? "min-h-[190px]" : "min-h-[162px]",
+      )}
+    >
+      <div className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border-subtle bg-surface-2 text-foreground">
+        {rank === 1 ? <Trophy className="h-3.5 w-3.5 text-primary" /> : <Medal className="h-3.5 w-3.5" />}
+      </div>
+
+      <div className="mx-auto mb-2 w-fit">
+        <Avatar className={cn(rank === 1 ? "h-14 w-14" : "h-12 w-12", "ring-2 ring-border-subtle")}>
+          <AvatarImage src={row.avatar_url ?? undefined} />
+          <AvatarFallback className="bg-primary/12 font-bold text-primary">
+            {row.name.slice(0, 1)}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
+      <p className="line-clamp-1 text-sm font-bold text-foreground">{row.name}</p>
+      {isCurrentUser ? (
+        <span className="mt-1 inline-flex rounded-full bg-primary/12 px-2 py-0.5 text-[9px] font-black text-primary">YOU</span>
+      ) : null}
+      <p className="mt-2 text-lg font-black text-foreground tabular-nums">
+        <MetricCountUp value={row.points_total} duration={800} />
+      </p>
+      <p className="text-[11px] text-muted-foreground">points</p>
+      <div className="mt-2">
+        <TierPill points={row.points_total} />
+      </div>
+    </motion.article>
+  );
+});
+
+const LeaderboardListRow = memo(function LeaderboardListRow({
+  row,
+  myId,
+  movement,
+}: {
+  row: LeaderboardRow;
+  myId: string | undefined;
+  movement: number;
 }) {
   const isMe = row.user_id === myId;
-  const meta = {
-    1: { Icon: Crown,  label: "1st", height: "h-[186px]", ring: "ring-gold/40", avatarSize: "h-14 w-14", accent: "border-gold/30 bg-gradient-to-b from-gold/8 via-surface-1 to-surface-1", glow: "shadow-[0_0_28px_hsl(var(--gold)/0.3)]" },
-    2: { Icon: Medal,  label: "2nd", height: "h-[152px]", ring: "ring-border-subtle", avatarSize: "h-11 w-11", accent: "border-border-subtle bg-surface-1", glow: "" },
-    3: { Icon: Award,  label: "3rd", height: "h-[136px]", ring: "ring-border-subtle", avatarSize: "h-11 w-11", accent: "border-border-subtle bg-surface-1", glow: "" },
-  }[position];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: position * 0.07, type: "spring", stiffness: 300, damping: 26 }}
-      className={cn(
-        "relative rounded-2xl border flex flex-col items-center justify-end p-3 pb-4 text-center transition-all duration-150",
-        meta.height, meta.accent, meta.glow,
-        isMe && "ring-2 ring-primary/40",
-        "hover:-translate-y-0.5 hover:shadow-md",
-      )}
+      transition={{ duration: 0.18 }}
     >
-      <div className={cn("absolute top-2.5 left-1/2 -translate-x-1/2 h-7 w-7 rounded-full flex items-center justify-center border shadow-xs",
-        position === 1 ? "bg-gold/15 border-gold/40" : "bg-surface-3 border-border-subtle"
-      )}>
-        <meta.Icon className={cn("h-3.5 w-3.5", position === 1 ? "text-gold" : "text-muted-foreground")} />
-      </div>
+      <GlassCard
+        hover
+        className={cn(
+          "grid min-h-12 grid-cols-[44px_1fr_auto] items-center gap-3",
+          isMe && "border-primary/35 bg-primary/8",
+        )}
+      >
+        <div className="text-center">
+          <p className={cn("text-sm font-black tabular-nums", isMe ? "text-primary" : "text-foreground")}>#{row.rank}</p>
+          <MovementIndicator delta={movement} />
+        </div>
 
-      {position === 1 && (
-        <motion.div
-          className="absolute inset-0 rounded-2xl bg-gradient-to-b from-gold/5 to-transparent pointer-events-none"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Avatar className="h-10 w-10 ring-1 ring-border-subtle">
+            <AvatarImage src={row.avatar_url ?? undefined} />
+            <AvatarFallback className="bg-primary/12 font-bold text-primary">{row.name.slice(0, 1)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate text-sm font-semibold text-foreground">{row.name}</p>
+              {row.is_verified ? <Shield className="h-3.5 w-3.5 text-primary" /> : null}
+            </div>
+            <TierPill points={row.points_total} />
+          </div>
+        </div>
 
-      <Avatar className={cn("mb-2 ring-2 shadow-sm", meta.avatarSize, meta.ring)}>
-        <AvatarImage src={row.avatar_url ?? undefined} />
-        <AvatarFallback className={cn("font-bold", featured ? "text-[14px] bg-gold/10 text-gold" : "text-[12px] bg-primary/10 text-primary")}>
-          {row.name?.slice(0, 1)}
-        </AvatarFallback>
-      </Avatar>
-
-      {row.is_verified && <BadgeCheck className="h-3 w-3 text-primary mb-0.5" />}
-      {isMe && (
-        <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-black text-primary leading-none mb-0.5">YOU</span>
-      )}
-      <p className="text-[11px] font-bold text-foreground truncate w-full leading-tight">{row.name?.split(" ")[0]}</p>
-      <p className={cn("text-[11px] font-black tabular-nums mt-0.5", featured ? "text-gold" : "text-muted-foreground")}>
-        {row.points_total.toLocaleString()} pts
-      </p>
-      <div className="mt-1"><TierBadge pts={row.points_total} /></div>
+        <div className="text-right">
+          <p className={cn("text-base font-black tabular-nums", isMe ? "text-primary" : "text-foreground")}>
+            <MetricCountUp value={row.points_total} duration={800} />
+          </p>
+          <p className="text-[11px] text-muted-foreground">pts</p>
+        </div>
+      </GlassCard>
     </motion.div>
   );
 });
 
-/* ── Streak badge ─────────────────────────────────────────────────── */
-function StreakBadge({ streak }: { streak: number }) {
-  if (!streak || streak < 1) return null;
-  const isHot = streak >= 7;
-  return (
-    <span className={cn(
-      "inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
-      isHot ? "text-warning bg-warning/10 border-warning/30" : "text-muted-foreground bg-surface-3 border-border-subtle",
-    )}>
-      <Flame className={cn("h-2.5 w-2.5", isHot && "text-warning")} />
-      {streak}d
-    </span>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
 export default function Leaderboard() {
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [tab, setTab] = useState<"alltime" | "weekly">("alltime");
-  const [showFilters, setShowFilters] = useState(false);
+  const [mode, setMode] = useState<LeaderboardMode>("alltime");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  /* ── Queries ── */
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [mode]);
+
   const meQuery = useQuery({
-    queryKey: ["student", "me"],
-    queryFn: async () => (await supabase.auth.getUser()).data.user ?? null,
-  });
-
-  const myStreakQ = useQuery({
-    queryKey: ["student", "my-streak-lb"],
+    queryKey: ["leaderboard", "me"],
     queryFn: async () => {
-      const { data } = await supabase.rpc("get_my_streak");
-      return (data as any) ?? null;
-    },
-  });
-
-  const streakMap = useQuery({
-    queryKey: ["leaderboard", "streaks"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("student_streaks")
-        .select("user_id, current_streak");
-      const map: Record<string, number> = {};
-      for (const r of data ?? []) map[r.user_id] = r.current_streak ?? 0;
-      return map;
+      const { data } = await supabase.auth.getUser();
+      return data.user ?? null;
     },
     staleTime: 60_000,
   });
 
-  const leaderboardQ = useQuery({
-    queryKey: ["leaderboard", { verifiedOnly }],
-    queryFn: async (): Promise<LeaderRow[]> => {
-      const { data, error } = await supabase.rpc("get_leaderboard", { p_limit: 100, p_verified_only: verifiedOnly });
+  const allTimeQuery = useQuery({
+    queryKey: ["leaderboard", "alltime", visibleCount],
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("get_leaderboard", {
+        p_limit: visibleCount,
+        p_verified_only: false,
+      });
       if (error) throw error;
-      return (data ?? []) as unknown as LeaderRow[];
+      return (data ?? []) as unknown as LeaderboardRow[];
     },
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
-  const weeklyQ = useQuery({
-    queryKey: ["leaderboard", "weekly"],
-    enabled: tab === "weekly",
-    queryFn: async (): Promise<WeeklyRow[]> => {
-      const { data, error } = await supabase.rpc("get_weekly_leaderboard" as any, { p_limit: 100 });
+  const weeklyQuery = useQuery({
+    queryKey: ["leaderboard", "weekly", visibleCount],
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("get_weekly_leaderboard" as any, {
+        p_limit: visibleCount,
+      } as any);
       if (error) throw error;
-      return (data ?? []) as any;
+      return ((data ?? []) as WeeklyRow[]).map((row) => ({
+        user_id: row.user_id,
+        name: row.name,
+        avatar_url: row.avatar_url,
+        is_verified: row.is_verified,
+        points_total: row.weekly_points,
+        rank: row.rank,
+      }));
     },
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
-  const rows: LeaderRow[] = useMemo(() => {
-    if (tab === "weekly") return (weeklyQ.data ?? []).map((r) => ({ ...r, points_total: r.weekly_points }));
-    return leaderboardQ.data ?? [];
-  }, [leaderboardQ.data, weeklyQ.data, tab]);
+  const activeRows = mode === "alltime" ? allTimeQuery.data ?? [] : weeklyQuery.data ?? [];
+  const compareRows = mode === "alltime" ? weeklyQuery.data ?? [] : allTimeQuery.data ?? [];
+  const isLoading = allTimeQuery.isLoading || weeklyQuery.isLoading || meQuery.isLoading;
+  const myId = meQuery.data?.id;
 
-  const isLoading = leaderboardQ.isLoading || (tab === "weekly" && weeklyQ.isLoading);
-  const myId  = meQuery.data?.id;
-  const myRow = rows.find((r) => r.user_id === myId);
-  const top3  = rows.slice(0, 3);
-  const rest  = rows.slice(3);
-  const streaks = streakMap.data ?? {};
-  const myStreak = myStreakQ.data?.current_streak ?? 0;
+  const movementMap = useMemo(() => {
+    const compareRankByUser = new Map(compareRows.map((row) => [row.user_id, row.rank]));
+    return new Map(
+      activeRows.map((row) => {
+        const otherRank = compareRankByUser.get(row.user_id);
+        if (!otherRank) return [row.user_id, 0] as const;
+        return [row.user_id, otherRank - row.rank] as const;
+      }),
+    );
+  }, [activeRows, compareRows]);
 
-  const pointsToNextRank = useMemo(() => {
-    if (!myRow) return null;
-    const above = rows.find((r) => r.rank === myRow.rank - 1);
-    if (!above) return null;
-    return above.points_total - myRow.points_total + 1;
-  }, [rows, myRow]);
+  const myRow = useMemo(() => activeRows.find((row) => row.user_id === myId), [activeRows, myId]);
+  const top3 = activeRows.slice(0, 3);
+  const listRows = activeRows.slice(3);
 
-  const rankProgressPct = useMemo(() => {
-    if (!myRow || pointsToNextRank === null) return 100;
-    const below = rows.find((r) => r.rank === myRow.rank + 1);
-    const gap = below ? myRow.points_total - below.points_total : myRow.points_total;
-    const span = gap + pointsToNextRank;
-    return Math.max(8, Math.round((gap / Math.max(span, 1)) * 100));
-  }, [rows, myRow, pointsToNextRank]);
-
-  /* ── My tier ── */
-  const myTier = myRow ? getTier(myRow.points_total) : null;
+  const hasMore = activeRows.length >= visibleCount;
 
   return (
-    <div className="space-y-5 page-enter max-w-2xl mx-auto pb-8">
+    <PageContainer className="space-y-6" withBottomNav>
+      <PageHeader
+        title="Leaderboard"
+        subtitle={mode === "alltime" ? "All-time competition standings" : "Weekly competition standings"}
+        variant="large"
+        gradient
+      />
 
-      {/* ── Header ── */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2.5 mb-0.5">
-              <div className="h-9 w-9 rounded-xl bg-gold/10 flex items-center justify-center">
-                <Trophy className="h-4.5 w-4.5 text-gold" />
-              </div>
-              <h1 className="text-[22px] font-black text-foreground tracking-tight">Leaderboard</h1>
-            </div>
-            <p className="text-[12px] text-muted-foreground pl-[46px]">
-              {tab === "weekly" ? "This week's champions" : `All-time rankings · ${rows.length} students`}
-            </p>
+      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <div className="inline-flex rounded-xl border border-border-subtle bg-surface-2 p-1">
+            <button
+              type="button"
+              onClick={() => setMode("alltime")}
+              className={cn(
+                "min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                mode === "alltime" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+              )}
+            >
+              All-Time
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("weekly")}
+              className={cn(
+                "min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                mode === "weekly" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+              )}
+            >
+              Weekly
+            </button>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Tab toggle */}
-            <div className="flex rounded-lg border border-border-subtle bg-surface-2 p-0.5">
-              {(["alltime", "weekly"] as const).map((t) => (
-                <button key={t} onClick={() => setTab(t)} className={cn(
-                  "px-3 py-1 rounded-md text-[11px] font-semibold transition-all duration-150",
-                  tab === t ? "bg-surface-1 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-                )}>
-                  {t === "alltime" ? "All-time" : "Weekly"}
-                </button>
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Top 3 Podium" subtitle="Current leaderboard champions" />
+          {isLoading ? (
+            <div className="grid grid-cols-3 items-end gap-3">
+              <Skeleton className="h-40 rounded-2xl" />
+              <Skeleton className="h-48 rounded-2xl" />
+              <Skeleton className="h-40 rounded-2xl" />
+            </div>
+          ) : top3.length > 0 ? (
+            <div className="grid grid-cols-3 items-end gap-3">
+              {top3[1] ? <PodiumCard row={top3[1]} rank={2} isCurrentUser={top3[1].user_id === myId} /> : <div />}
+              {top3[0] ? <PodiumCard row={top3[0]} rank={1} isCurrentUser={top3[0].user_id === myId} /> : <div />}
+              {top3[2] ? <PodiumCard row={top3[2]} rank={3} isCurrentUser={top3[2].user_id === myId} /> : <div />}
+            </div>
+          ) : (
+            <GlassCard hover={false}>
+              <p className="text-sm text-muted-foreground">No leaderboard entries yet.</p>
+            </GlassCard>
+          )}
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM} className="sticky top-2 z-20">
+          {myRow ? (
+            <GlassCard className="border-primary/35 bg-gradient-to-br from-primary/12 to-surface-1" elevation="high" hover={false}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Rank</p>
+                  <p className="text-2xl font-black text-foreground">#{myRow.rank}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Points</p>
+                  <p className="text-2xl font-black tabular-nums text-primary">
+                    <MetricCountUp value={myRow.points_total} duration={800} />
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <TierPill points={myRow.points_total} />
+                <MovementIndicator delta={movementMap.get(myRow.user_id) ?? 0} />
+              </div>
+            </GlassCard>
+          ) : (
+            <GlassCard hover={false}>
+              <p className="text-sm text-muted-foreground">Your rank will appear once you enter the top {visibleCount}.</p>
+            </GlassCard>
+          )}
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <SectionHeader title="Leaderboard List" subtitle="Track your competitors" />
+
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(6)].map((_, index) => (
+                <Skeleton key={index} className="h-20 rounded-2xl" />
               ))}
             </div>
-            {/* Filter toggle */}
-            <Button variant="outline" size="sm" onClick={() => setShowFilters((v) => !v)}
-              className={cn("h-7 text-[11px] gap-1.5", showFilters && "border-primary/40 text-primary bg-primary/5")}>
-              <Filter className="h-3 w-3" />
-              Filter
-              <ChevronDown className={cn("h-3 w-3 transition-transform", showFilters && "rotate-180")} />
-            </Button>
-          </div>
-        </div>
+          ) : listRows.length > 0 ? (
+            <div className="space-y-3">
+              {listRows.map((row) => (
+                <LeaderboardListRow
+                  key={row.user_id}
+                  row={row}
+                  myId={myId}
+                  movement={movementMap.get(row.user_id) ?? 0}
+                />
+              ))}
 
-        {/* Filter bar */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-3 rounded-xl border border-border-subtle bg-surface-2 p-3 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] text-muted-foreground font-medium">Filters:</span>
-                <button
-                  onClick={() => setVerifiedOnly((v) => !v)}
-                  className={cn(
-                    "text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all",
-                    verifiedOnly
-                      ? "bg-primary/15 border-primary/30 text-primary"
-                      : "bg-surface-3 border-border-subtle text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <BadgeCheck className="inline h-2.5 w-2.5 mr-1" />
-                  Verified only
-                </button>
-                {verifiedOnly && (
-                  <button onClick={() => setVerifiedOnly(false)}
-                    className="text-[10px] text-muted-foreground hover:text-danger ml-auto">
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            </motion.div>
+              {hasMore ? (
+                <Button className="h-12 w-full" variant="secondary" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                  Load 20 more
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <GlassCard hover={false}>
+              <p className="text-sm text-muted-foreground">No additional rankings yet.</p>
+            </GlassCard>
           )}
-        </AnimatePresence>
-      </motion.div>
+        </motion.section>
 
-      {/* ── Your Position card ── */}
-      {myRow && (
-        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}>
-          <div className={cn("rounded-2xl border p-4 shadow-xs", myTier?.glow, "border-primary/20 bg-gradient-to-br from-primary/5 to-surface-1")}>
-            {/* Top row */}
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <div className="h-11 w-11 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
-                <span className="text-[13px] font-black text-primary">#{myRow.rank}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-foreground">Your Position</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  {myTier && <TierBadge pts={myRow.points_total} size="md" />}
-                  {myStreak > 0 && <StreakBadge streak={myStreak} />}
-                  {myStreak >= 7 && (
-                    <span className="text-[10px] text-warning font-semibold">🔥 Streak bonus active</span>
-                  )}
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-[22px] font-black text-foreground tabular-nums leading-none">{myRow.points_total.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">total points</p>
-              </div>
-            </div>
-
-            {/* Rank progress */}
-            {pointsToNextRank !== null && pointsToNextRank > 0 && (
-              <div className="mt-1">
-                <div className="flex items-center justify-between text-[10px] mb-1.5">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Target className="h-2.5 w-2.5" /> Rank #{myRow.rank - 1}
-                  </span>
-                  <span className="font-bold text-primary">+{pointsToNextRank} pts needed</span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-3 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${rankProgressPct}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                  />
-                </div>
-              </div>
-            )}
-            {pointsToNextRank === null && myRow.rank === 1 && (
-              <p className="text-[11px] text-gold font-bold mt-1">👑 You're at the top!</p>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Podium ── */}
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-3 items-end">
-          <Skeleton className="rounded-2xl h-[152px]" />
-          <Skeleton className="rounded-2xl h-[186px]" />
-          <Skeleton className="rounded-2xl h-[136px]" />
-        </div>
-      ) : top3.length >= 2 ? (
-        <div>
-          {/* Podium title */}
-          <div className="flex items-center gap-2 mb-3">
-            <Crown className="h-4 w-4 text-gold" />
-            <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest">Top Performers</p>
-          </div>
-          <div className="grid grid-cols-3 gap-3 items-end">
-            {top3[1] && <PodiumCard row={top3[1]} myId={myId} position={2} />}
-            {top3[0] && <PodiumCard row={top3[0]} myId={myId} position={1} featured />}
-            {top3[2] && <PodiumCard row={top3[2]} myId={myId} position={3} />}
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── Leaderboard table ── */}
-      {isLoading ? (
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-xs divide-y divide-border-subtle">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-5 py-3">
-              <Skeleton className="h-3 w-6" />
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <Skeleton className="h-3 w-36" />
-              <Skeleton className="h-3 w-12 ml-auto" />
-            </div>
-          ))}
-        </div>
-      ) : rest.length === 0 && rows.length <= 3 ? (
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs py-12 text-center">
-          <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-[13px] text-muted-foreground">
-            {tab === "weekly" ? "No activity this week yet." : "No students on the leaderboard yet."}
-          </p>
-        </div>
-      ) : rest.length > 0 ? (
-        <div className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-[36px_1fr_auto_56px] items-center px-4 py-2.5 bg-surface-2 border-b border-border-subtle">
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">#</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Student</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Streak</span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-right">Points</span>
-          </div>
-          <div className="divide-y divide-border-subtle/50">
-            <AnimatePresence initial={false}>
-              {rest.map((r, i) => {
-                const isMe = r.user_id === myId;
-                const streak = streaks[r.user_id] ?? 0;
-                return (
-                  <motion.div
-                    key={r.user_id}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.15, delay: Math.min(i * 0.018, 0.35) }}
-                    className={cn(
-                      "grid grid-cols-[36px_1fr_auto_56px] items-center px-4 py-3 transition-colors duration-150",
-                      isMe ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-surface-2/60",
-                    )}
-                  >
-                    {/* Rank */}
-                    <span className={cn("text-[12px] font-black tabular-nums text-right pr-2",
-                      isMe ? "text-primary" : "text-muted-foreground"
-                    )}>
-                      {r.rank}
-                    </span>
-
-                    {/* Avatar + name + badges */}
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar className="h-8 w-8 flex-shrink-0 ring-1 ring-border-subtle">
-                        <AvatarImage src={r.avatar_url ?? undefined} />
-                        <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
-                          {r.name?.slice(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={cn("text-[13px] truncate max-w-[120px]", isMe ? "font-bold text-foreground" : "text-foreground")}>
-                            {r.name}
-                          </span>
-                          {r.is_verified && <BadgeCheck className="h-3 w-3 text-primary flex-shrink-0" />}
-                          {isMe && (
-                            <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-black text-primary leading-none flex-shrink-0">
-                              YOU
-                            </span>
-                          )}
-                        </div>
-                        <TierBadge pts={r.points_total} />
-                      </div>
-                    </div>
-
-                    {/* Streak */}
-                    <div className="flex justify-center">
-                      <StreakBadge streak={streak} />
-                    </div>
-
-                    {/* Points */}
-                    <span className={cn("text-[13px] font-black tabular-nums text-right", isMe ? "text-primary" : "text-foreground")}>
-                      {r.points_total.toLocaleString()}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── Competition Stats strip ── */}
-      {rows.length > 0 && !isLoading && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-          className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Total Students", value: rows.length, icon: Users, color: "text-primary", bg: "bg-primary/10" },
-            { label: "Top Score",      value: rows[0]?.points_total.toLocaleString() ?? "—", icon: Trophy, color: "text-gold",    bg: "bg-gold/10" },
-            { label: "Your Rank",      value: myRow ? `#${myRow.rank}` : "—",                icon: Target,  color: "text-success", bg: "bg-success/10" },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div key={label} className="rounded-2xl border border-border-subtle bg-surface-1 p-3 text-center shadow-xs">
-              <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mx-auto mb-2", bg)}>
-                <Icon className={cn("h-4 w-4", color)} />
-              </div>
-              <p className="text-[16px] font-black text-foreground tabular-nums">{value}</p>
-              <p className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">{label}</p>
-            </div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* ── Achievements CTA ── */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-        <Link to="/app/achievements"
-          className="flex items-center justify-between rounded-2xl border border-border-subtle bg-surface-1 px-5 py-4 hover:bg-surface-2 transition-colors duration-150 group shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-premium/10 flex items-center justify-center">
-              <Award className="h-4.5 w-4.5 text-premium" />
-            </div>
+        <motion.section variants={SECTION_REVEAL_ITEM}>
+          <GlassCard className="flex items-center justify-between gap-3" hover>
             <div>
-              <p className="text-[13px] font-semibold text-foreground">Achievements & Points</p>
-              <p className="text-[11px] text-muted-foreground">View your milestones and point history</p>
+              <p className="text-sm font-semibold text-foreground">Achievements & Rewards</p>
+              <p className="text-xs text-muted-foreground">Earn more points and climb the leaderboard faster.</p>
             </div>
+            <Link to="/app/achievements" className="inline-flex h-12 items-center rounded-lg border border-primary/30 px-3 text-xs font-semibold text-primary">
+              View
+            </Link>
+          </GlassCard>
+        </motion.section>
+
+        <motion.section variants={SECTION_REVEAL_ITEM}>
+          <div className="grid grid-cols-2 gap-3">
+            <GlassCard hover={false}>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <p className="text-xs">Visible Players</p>
+              </div>
+              <p className="mt-2 text-xl font-black text-foreground">{activeRows.length}</p>
+            </GlassCard>
+            <GlassCard hover={false}>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Star className="h-4 w-4" />
+                <p className="text-xs">Top Score</p>
+              </div>
+              <p className="mt-2 text-xl font-black text-foreground tabular-nums">
+                {activeRows[0] ? <MetricCountUp value={activeRows[0].points_total} duration={800} /> : "0"}
+              </p>
+            </GlassCard>
           </div>
-          <Zap className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-        </Link>
+        </motion.section>
       </motion.div>
-    </div>
+    </PageContainer>
   );
 }
