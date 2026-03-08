@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 type Status = "online" | "slow" | "offline";
 
@@ -15,33 +14,52 @@ const LABEL: Record<Status, string> = {
   offline: "Offline",
 };
 
+const PING_INTERVAL_MS = 120_000;
+const PING_TIMEOUT_MS = 2_500;
+const SLOW_MS = 1_200;
+
 export default function NetworkHealthDot() {
   const [status, setStatus] = useState<Status>(navigator.onLine ? "online" : "offline");
   const timerRef = useRef<number | undefined>(undefined);
 
   const ping = async () => {
-    if (!navigator.onLine) { setStatus("offline"); return; }
-    const start = performance.now();
+    if (!navigator.onLine) {
+      setStatus("offline");
+      return;
+    }
+
+    const startedAt = performance.now();
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
+
     try {
-      // Lightweight ping — fetch the Supabase health endpoint
-      await supabase.from("profiles").select("id").limit(1).abortSignal(AbortSignal.timeout(4000));
-      const ms = performance.now() - start;
-      setStatus(ms > 2500 ? "slow" : "online");
+      await fetch("/favicon.ico", {
+        method: "HEAD",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      const ms = performance.now() - startedAt;
+      setStatus(ms > SLOW_MS ? "slow" : "online");
     } catch {
       setStatus(navigator.onLine ? "slow" : "offline");
+    } finally {
+      window.clearTimeout(timeoutId);
     }
   };
 
   useEffect(() => {
-    const onOnline = () => { setStatus("online"); ping(); };
+    const onOnline = () => {
+      setStatus("online");
+      void ping();
+    };
     const onOffline = () => setStatus("offline");
 
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
 
-    // Ping once on mount, then every 60s
-    ping();
-    timerRef.current = window.setInterval(ping, 60_000);
+    void ping();
+    timerRef.current = window.setInterval(() => void ping(), PING_INTERVAL_MS);
 
     return () => {
       window.removeEventListener("online", onOnline);
@@ -54,10 +72,11 @@ export default function NetworkHealthDot() {
     <div
       title={LABEL[status]}
       aria-label={LABEL[status]}
-      className="fixed bottom-4 right-4 z-[9990] flex items-center gap-1.5 rounded-full bg-card/80 border border-border/40 backdrop-blur-sm px-2.5 py-1 shadow-sm select-none pointer-events-none"
+      className="fixed right-4 z-[9990] hidden items-center gap-1.5 rounded-full border border-border/40 bg-card/80 px-2.5 py-1 shadow-sm backdrop-blur-sm select-none pointer-events-none sm:flex"
+      style={{ bottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
     >
       <span className={`h-2 w-2 rounded-full ${DOT[status]} ${status !== "offline" ? "animate-pulse" : ""}`} />
-      <span className="text-[10px] font-medium text-muted-foreground hidden sm:inline">{LABEL[status]}</span>
+      <span className="text-[10px] font-medium text-muted-foreground">{LABEL[status]}</span>
     </div>
   );
 }
