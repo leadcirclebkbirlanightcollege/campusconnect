@@ -301,13 +301,13 @@ function SecurityAlertsTab() {
   const q = useQuery<Alert[]>({
     queryKey: ["sa_security_alerts"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("security_alerts" as any)
+      const { data, error } = await (supabase as any)
+        .from("security_alerts")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(60);
       if (error) throw error;
-      return (data ?? []) as Alert[];
+      return ((data ?? []) as unknown) as Alert[];
     },
     staleTime: 30_000,
   });
