@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette, RefreshCw, Zap } from "lucide-react";
+import { GraduationCap, Settings, AlertTriangle, Save, Rocket, Palette, RefreshCw, Zap, Bell } from "lucide-react";
 import { useState as useLocalState } from "react";
 import { APP_VERSION } from "@/config/version";
 import { invalidatePlatformModeCache, PlatformModeSettings } from "@/hooks/use-platform-mode";
@@ -30,6 +30,8 @@ export default function AdminSystemControlTab() {
   const [saving, setSaving] = useState(false);
   const [fuMessage, setFuMessage] = useLocalState("");
   const [fuPushing, setFuPushing] = useLocalState(false);
+  const [suMessage, setSuMessage] = useLocalState("");
+  const [suPushing, setSuPushing] = useLocalState(false);
 
   useEffect(() => {
     (supabase as any)
@@ -327,7 +329,69 @@ export default function AdminSystemControlTab() {
             }}
           >
             <Zap className="h-4 w-4" />
-            {fuPushing ? "Pushing…" : "Push Force Update Now"}
+      {fuPushing ? "Pushing…" : "Push Force Update Now"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* ── Soft Update Banner ───────────────────────────────── */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center">
+              <Bell className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold text-foreground">New Update Available Banner</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Shows a dismissible "New update available — refresh to use new version" banner to all students. Non-blocking.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-2">
+          <div>
+            <Label htmlFor="su-msg" className="text-xs text-muted-foreground mb-1.5 block">
+              Optional custom message
+            </Label>
+            <Input
+              id="su-msg"
+              value={suMessage}
+              onChange={(e) => setSuMessage(e.target.value)}
+              placeholder="e.g. New features available! Refresh to experience them."
+              className="text-xs"
+              maxLength={120}
+            />
+          </div>
+          <Button
+            variant="outline"
+            className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/10"
+            disabled={suPushing}
+            onClick={async () => {
+              setSuPushing(true);
+              const payload = {
+                triggered_at: new Date().toISOString(),
+                version: APP_VERSION,
+                message: suMessage.trim() || undefined,
+              };
+              const { error } = await (supabase as any)
+                .from("platform_settings")
+                .upsert({
+                  key: "soft_update",
+                  value: payload,
+                  updated_at: new Date().toISOString(),
+                });
+              setSuPushing(false);
+              if (error) {
+                toast.error("Failed: " + error.message);
+              } else {
+                setSuMessage("");
+                toast.success("Update banner pushed — students will see a dismissible refresh prompt.");
+              }
+            }}
+          >
+            <Bell className="h-4 w-4" />
+            {suPushing ? "Pushing…" : "Push Update Available Banner"}
           </Button>
         </CardContent>
       </Card>

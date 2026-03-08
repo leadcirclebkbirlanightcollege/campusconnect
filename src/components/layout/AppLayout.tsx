@@ -19,6 +19,7 @@ import PageTransition from "@/components/layout/PageTransition";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
+import SoftUpdateBanner from "@/components/layout/SoftUpdateBanner";
 import {
   SidebarInset,
   SidebarProvider,
@@ -398,6 +399,8 @@ export default function AppLayout() {
       <FeedbackButton />
       {/* Force update overlay — listens to platform_settings realtime */}
       <ForceUpdateBanner />
+      {/* Soft update banner — dismissible refresh prompt */}
+      <SoftUpdateBanner />
     </SidebarProvider>
     </>
   );
