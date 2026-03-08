@@ -1,6 +1,6 @@
-import { lazy, Suspense, useMemo, memo } from "react";
+import { lazy, Suspense, useMemo, memo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
 import IntelligenceScoreCard from "@/components/student/IntelligenceScoreCard";
@@ -23,18 +23,20 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Phase 2 — lazy-loaded analytics panels
-const AcademicRadarChart  = lazy(() => import("@/components/student/AcademicRadarChart"));
+const AcademicRadarChart = lazy(() => import("@/components/student/AcademicRadarChart"));
 const AttendanceTrendChart = lazy(() => import("@/components/student/AttendanceTrendChart"));
-const StreakHeatmap        = lazy(() => import("@/components/student/StreakHeatmap"));
-const RiskAnalysisPanel    = lazy(() => import("@/components/student/RiskAnalysisPanel"));
+const StreakHeatmap = lazy(() => import("@/components/student/StreakHeatmap"));
+const RiskAnalysisPanel = lazy(() => import("@/components/student/RiskAnalysisPanel"));
 const EngagementScorePanel = lazy(() => import("@/components/student/EngagementScorePanel"));
-const UpcomingEventsStrip  = lazy(() => import("@/components/student/UpcomingEventsStrip"));
+const UpcomingEventsStrip = lazy(() => import("@/components/student/UpcomingEventsStrip"));
 
 const PanelSkeleton = () => <Skeleton className="h-[180px] w-full rounded-2xl" />;
 
 /* ── Data queries ───────────────────────────────────────────── */
 async function fetchDashboardCore() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const user = session?.user;
   if (!user) throw new Error("unauthenticated");
 
@@ -43,9 +45,7 @@ async function fetchDashboardCore() {
       supabase.from("profiles").select("name").eq("user_id", user.id).maybeSingle(),
       supabase.rpc("get_my_points_total"),
       supabase.rpc("get_my_streak"),
-      supabase.from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,status")
-        .eq("status", "live").limit(1),
+      supabase.from("lectures").select("id,topic,lecture_date,start_time,end_time,venue,status").eq("status", "live").limit(1),
     ]);
 
   const sk = streakRaw as any;
@@ -62,21 +62,22 @@ async function fetchDashboardSecondary(userId: string) {
   const today = new Date().toISOString().split("T")[0];
   const [{ count: attended }, { count: total }, { data: upcoming }, { data: pts }] =
     await Promise.all([
-      supabase.from("attendance")
-        .select("id", { count: "exact", head: true })
-        .eq("student_user_id", userId).eq("status", "present"),
-      supabase.from("lectures")
-        .select("id", { count: "exact", head: true }),
-      supabase.from("lectures")
+      supabase.from("attendance").select("id", { count: "exact", head: true }).eq("student_user_id", userId).eq("status", "present"),
+      supabase.from("lectures").select("id", { count: "exact", head: true }),
+      supabase
+        .from("lectures")
         .select("id,topic,lecture_date,start_time,end_time,venue,status")
-        .gte("lecture_date", today).neq("status", "ended")
+        .gte("lecture_date", today)
+        .neq("status", "ended")
         .order("lecture_date", { ascending: true })
         .order("start_time", { ascending: true })
         .limit(1),
-      supabase.from("points_ledger")
+      supabase
+        .from("points_ledger")
         .select("id,created_at,points,source,note")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false }).limit(8),
+        .order("created_at", { ascending: false })
+        .limit(8),
     ]);
 
   return {
@@ -89,13 +90,20 @@ async function fetchDashboardSecondary(userId: string) {
 
 /* ── Types ─────────────────────────────────────────────────────── */
 type UpcomingLecture = {
-  id: string; topic: string; lecture_date: string;
-  start_time: string; end_time: string; venue: string;
+  id: string;
+  topic: string;
+  lecture_date: string;
+  start_time: string;
+  end_time: string;
+  venue: string;
   status?: "scheduled" | "live" | "ended";
 };
 type RecentPoint = {
-  id: string; created_at: string; points: number;
-  source: string; note: string | null;
+  id: string;
+  created_at: string;
+  points: number;
+  source: string;
+  note: string | null;
 };
 
 const TIER_THRESHOLDS = { bronze: 0, silver: 100, gold: 250, elite: 500 } as const;
@@ -135,6 +143,7 @@ const StudentDashboard = () => {
   const intelligence = useStudentIntelligence();
   const growth = useGrowthInsights();
   const greeting = useMemo(() => getTimeGreeting(), []);
+  const queryClient = useQueryClient();
 
   // ── Critical path: name, points, streak, live lecture (shows skeleton)
   const coreQuery = useQuery({
@@ -149,7 +158,9 @@ const StudentDashboard = () => {
   const secondaryQuery = useQuery({
     queryKey: ["dashboard", "secondary"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       if (!userId) throw new Error("unauthenticated");
       return fetchDashboardSecondary(userId);
@@ -159,6 +170,54 @@ const StudentDashboard = () => {
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (!coreQuery.data) return;
+
+    void queryClient.prefetchQuery({
+      queryKey: ["leaderboard", { verifiedOnly: false }],
+      queryFn: async () => {
+        const { data, error } = await supabase.rpc("get_leaderboard", { p_limit: 100, p_verified_only: false });
+        if (error) throw error;
+        return data ?? [];
+      },
+      staleTime: 60_000,
+    });
+
+    void queryClient.prefetchQuery({
+      queryKey: ["student", "lectures", "all"],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("lectures")
+          .select("id,topic,lecture_date,start_time,end_time,venue")
+          .order("lecture_date", { ascending: false })
+          .limit(500);
+        if (error) throw error;
+        return data ?? [];
+      },
+      staleTime: 45_000,
+    });
+
+    void queryClient.prefetchQuery({
+      queryKey: ["student", "attendance", "all"],
+      queryFn: async () => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return [];
+        const { data, error } = await supabase
+          .from("attendance")
+          .select("id,lecture_id,status,marked_at,points_earned")
+          .eq("student_user_id", user.id)
+          .order("marked_at", { ascending: false })
+          .limit(500);
+        if (error) throw error;
+        return data ?? [];
+      },
+      staleTime: 45_000,
+    });
+  }, [coreQuery.data, queryClient]);
+
 
   const core = coreQuery.data;
   const secondary = secondaryQuery.data;
