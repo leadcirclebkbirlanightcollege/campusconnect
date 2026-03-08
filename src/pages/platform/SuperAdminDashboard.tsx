@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, Users, BookOpen, CheckSquare, Coins,
   BarChart3, ShieldCheck, LogOut, Activity, Globe,
   UserCog, Radio, Trophy, Settings2, Shield, TrendingUp,
   History, Sliders, AlertTriangle, Flame, Zap,
-  ArrowUpRight, Plus,
+  ArrowUpRight, Plus, ChevronRight, Layers, LayoutDashboard,
+  ServerCrash, Bell, GraduationCap, Sparkles, Network,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider, useCollegeContext } from "@/contexts/CollegeContext";
@@ -52,7 +52,63 @@ type College = {
   created_at: string;
 };
 
-// ── Platform-wide gamification stats ────────────────────────────────────────
+// ── Tab groups ───────────────────────────────────────────────────────────────
+const TAB_GROUPS = [
+  {
+    label: "Overview",
+    items: [
+      { value: "overview",  icon: LayoutDashboard, label: "Command Center" },
+      { value: "analytics", icon: BarChart3,        label: "Analytics" },
+    ],
+  },
+  {
+    label: "Institutions",
+    items: [
+      { value: "colleges",  icon: Building2,   label: "Colleges" },
+      { value: "admins",    icon: ShieldCheck, label: "Admins" },
+      { value: "students",  icon: Users,       label: "Students" },
+    ],
+  },
+  {
+    label: "Academic",
+    items: [
+      { value: "lectures",      icon: BookOpen, label: "Lectures" },
+      { value: "achievements",  icon: Trophy,   label: "Achievements" },
+    ],
+  },
+  {
+    label: "Communications",
+    items: [
+      { value: "broadcast", icon: Radio,   label: "Broadcast" },
+      { value: "activity",  icon: History, label: "Activity" },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { value: "settings",  icon: Sliders,     label: "Settings" },
+      { value: "platform",  icon: Settings2,   label: "Platform Mode" },
+      { value: "security",  icon: Shield,      label: "Security" },
+      { value: "health",    icon: Activity,    label: "Health" },
+    ],
+  },
+] as const;
+
+type TabValue = typeof TAB_GROUPS[number]["items"][number]["value"];
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
+function usePlatformAnalytics() {
+  return useQuery<PlatformAnalytics>({
+    queryKey: ["super_admin", "analytics"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_platform_analytics" as any);
+      if (error) throw error;
+      return data as PlatformAnalytics;
+    },
+    staleTime: 60_000,
+  });
+}
+
 function usePlatformGamStats() {
   return useQuery({
     queryKey: ["sa_gam_stats"],
@@ -65,61 +121,27 @@ function usePlatformGamStats() {
         { data: pts },
         { count: achievements },
         { count: risk },
+        { count: adminsCount },
       ] = await Promise.all([
         supabase.from("student_streaks").select("user_id", { count: "exact", head: true }).gt("current_streak", 0),
         supabase.from("points_ledger").select("points").gte("created_at", ws + "T00:00:00Z"),
         supabase.from("student_achievements").select("id", { count: "exact", head: true }).gte("awarded_at", ws + "T00:00:00Z"),
         supabase.from("student_intelligence").select("user_id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
+        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).in("role", ["admin", "super_admin"]),
       ]);
       return {
-        activeStreaks: streaks ?? 0,
-        weeklyPoints: (pts ?? []).reduce((s, r) => s + (r.points ?? 0), 0),
-        weeklyAchievements: achievements ?? 0,
-        riskCount: risk ?? 0,
+        activeStreaks:       streaks ?? 0,
+        weeklyPoints:        (pts ?? []).reduce((s, r) => s + (r.points ?? 0), 0),
+        weeklyAchievements:  achievements ?? 0,
+        riskCount:           risk ?? 0,
+        activeAdmins:        adminsCount ?? 0,
       };
     },
     staleTime: 60_000,
   });
 }
 
-// ── Premium KPI Card ─────────────────────────────────────────────────────────
-function KpiCard({
-  label, value, suffix = "", icon: Icon, bgClass, colorClass, sublabel, loading, index,
-}: {
-  label: string; value: number; suffix?: string; icon: React.ElementType;
-  bgClass: string; colorClass: string; sublabel?: string; loading: boolean; index: number;
-}) {
-  const counted = useMetricCountUp(loading ? 0 : value, 900 + index * 80);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: index * 0.055, ease: "easeOut" }}
-      className="rounded-2xl border border-border-subtle bg-surface-1 p-5 shadow-xs dashboard-panel group"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="space-y-1 min-w-0">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{label}</p>
-          {loading ? (
-            <Skeleton className="h-8 w-20 mt-1" />
-          ) : (
-            <p className="text-[28px] font-bold tracking-tight text-foreground tabular-nums leading-none mt-1">
-              {counted.toLocaleString()}{suffix}
-            </p>
-          )}
-          {sublabel && !loading && (
-            <p className="text-[11px] text-muted-foreground mt-1">{sublabel}</p>
-          )}
-        </div>
-        <div className={cn("rounded-xl p-2.5 shrink-0 transition-transform duration-150 group-hover:scale-110", bgClass)}>
-          <Icon className={cn("h-5 w-5", colorClass)} />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Live Lectures count badge ───────────────────────────────────────────────
+// ── Live lecture count badge ─────────────────────────────────────────────────
 function LiveCount() {
   const { data } = useQuery({
     queryKey: ["sa_live_count"],
@@ -132,122 +154,297 @@ function LiveCount() {
   });
   if (!data) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] bg-success/15 text-success border border-success/20 rounded-full px-2 py-0.5 ml-1">
-      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+    <motion.span
+      animate={{ opacity: [1, 0.55, 1] }}
+      transition={{ repeat: Infinity, duration: 1.8 }}
+      className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] bg-danger/15 text-danger border border-danger/20 rounded-full px-1.5 py-0.5 font-bold"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-danger" />
       {data}
-    </span>
+    </motion.span>
   );
 }
 
-// ── College Snapshot Row ────────────────────────────────────────────────────
-function CollegeSnapshotRow({ college, onView }: { college: College; onView: () => void }) {
+// ── KPI Card ─────────────────────────────────────────────────────────────────
+function KpiCard({
+  label, value, suffix = "", icon: Icon, bgClass, colorClass, sublabel,
+  loading, index, trend, danger,
+}: {
+  label: string; value: number; suffix?: string; icon: React.ElementType;
+  bgClass: string; colorClass: string; sublabel?: string;
+  loading: boolean; index: number; trend?: string; danger?: boolean;
+}) {
+  const counted = useMetricCountUp(loading ? 0 : value, 900 + index * 70);
   return (
     <motion.div
-      whileHover={{ x: 2 }}
-      transition={{ duration: 0.12 }}
-      className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-surface-2 transition-colors cursor-pointer group"
-      onClick={onView}
-    >
-      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: college.primary_color ?? "hsl(var(--primary))" }} />
-      <span className="text-[13px] text-foreground flex-1 truncate font-medium">{college.college_name}</span>
-      {college.subdomain && (
-        <span className="text-[10px] text-muted-foreground hidden sm:block">{college.subdomain}</span>
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05, ease: "easeOut" }}
+      className={cn(
+        "rounded-2xl border bg-surface-1 p-4 shadow-xs flex flex-col justify-between min-h-[110px] transition-all duration-150 hover:shadow-sm group",
+        danger && value > 0 ? "border-danger/30" : "border-border-subtle",
       )}
-      <Badge
-        variant={college.is_active ? "default" : "secondary"}
-        className={cn("text-[10px] shrink-0", college.is_active ? "bg-success/15 text-success border-0" : "")}
-      >
-        {college.is_active ? "Active" : "Inactive"}
-      </Badge>
-      <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none">{label}</p>
+        <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-110", bgClass)}>
+          <Icon className={cn("h-3.5 w-3.5", colorClass)} />
+        </div>
+      </div>
+      {loading ? (
+        <Skeleton className="h-8 w-20" />
+      ) : (
+        <p className={cn("text-[32px] font-black tracking-tight tabular-nums leading-none", danger && value > 0 ? "text-danger" : "text-foreground")}>
+          {counted.toLocaleString()}{suffix}
+        </p>
+      )}
+      {!loading && (sublabel || trend) && (
+        <p className={cn("text-[10px] mt-1.5 font-medium", danger && value > 0 ? "text-danger/70" : "text-muted-foreground")}>
+          {trend ?? sublabel}
+        </p>
+      )}
     </motion.div>
   );
 }
 
-// ── Gamification Stat Row ───────────────────────────────────────────────────
-function GamRow({ icon, label, value, accent, loading }: {
-  icon: React.ReactNode; label: string; value: number; accent: string; loading: boolean;
+// ── College Snapshot Row ─────────────────────────────────────────────────────
+function CollegeRow({ college, onView }: { college: College; onView: () => void }) {
+  return (
+    <motion.div
+      whileHover={{ x: 2 }}
+      transition={{ duration: 0.1 }}
+      onClick={onView}
+      className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-surface-2 transition-colors cursor-pointer group"
+    >
+      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: college.primary_color ?? "hsl(var(--primary))" }} />
+      <span className="text-[13px] font-medium text-foreground flex-1 truncate">{college.college_name}</span>
+      {college.subdomain && (
+        <span className="text-[10px] text-muted-foreground hidden sm:block">{college.subdomain}</span>
+      )}
+      <span className={cn(
+        "text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
+        college.is_active ? "bg-success/10 text-success" : "bg-surface-3 text-muted-foreground",
+      )}>
+        {college.is_active ? "Active" : "Inactive"}
+      </span>
+      <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+    </motion.div>
+  );
+}
+
+// ── Engagement Row ───────────────────────────────────────────────────────────
+function EngRow({ icon: Icon, iconBg, iconColor, label, value, loading }: {
+  icon: React.ElementType; iconBg: string; iconColor: string;
+  label: string; value: number; loading: boolean;
 }) {
   const counted = useMetricCountUp(loading ? 0 : value, 800);
   return (
-    <div className="flex items-center gap-3 py-3">
-      <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", accent)}>{icon}</div>
+    <div className="flex items-center gap-3 py-3 border-b border-border-subtle last:border-0">
+      <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
+        <Icon className={cn("h-4 w-4", iconColor)} />
+      </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{label}</p>
         {loading ? <Skeleton className="h-5 w-12 mt-0.5" /> : (
-          <p className="text-[18px] font-bold text-foreground tabular-nums leading-tight">{counted.toLocaleString()}</p>
+          <p className="text-[20px] font-black text-foreground tabular-nums leading-tight">{counted.toLocaleString()}</p>
         )}
       </div>
     </div>
   );
 }
 
-// ── Tab Nav definition ───────────────────────────────────────────────────────
-const TABS = [
-  { value: "overview",       icon: BarChart3,   label: "Overview" },
-  { value: "analytics",      icon: TrendingUp,  label: "Analytics" },
-  { value: "colleges",       icon: Building2,   label: "Colleges" },
-  { value: "admins",         icon: ShieldCheck, label: "Admins" },
-  { value: "students",       icon: Users,       label: "Students" },
-  { value: "lectures",       icon: BookOpen,    label: "Lectures" },
-  { value: "achievements",   icon: Trophy,      label: "Achievements" },
-  { value: "broadcast",      icon: Radio,       label: "Broadcast" },
-  { value: "activity",       icon: History,     label: "Activity Logs" },
-  { value: "settings",       icon: Sliders,     label: "Settings" },
-  { value: "platform",       icon: Settings2,   label: "Platform Mode" },
-  { value: "security",       icon: Shield,      label: "Security" },
-  { value: "health",         icon: Activity,    label: "Health" },
-] as const;
+// ── Sidebar Nav ──────────────────────────────────────────────────────────────
+function SideNav({ tab, onTab }: { tab: string; onTab: (v: string) => void }) {
+  return (
+    <nav className="hidden xl:flex flex-col w-[200px] shrink-0 space-y-0.5">
+      {TAB_GROUPS.map((group) => (
+        <div key={group.label} className="mb-2">
+          <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold px-3 mb-1">{group.label}</p>
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const isActive = tab === item.value;
+            return (
+              <button
+                key={item.value}
+                onClick={() => onTab(item.value)}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all duration-120 text-left",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface-2",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{item.label}</span>
+                {item.value === "lectures" && <LiveCount />}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
 
-// ── Inner Dashboard ──────────────────────────────────────────────────────────
+// ── Mobile top scroll tab bar ────────────────────────────────────────────────
+function MobileTabBar({ tab, onTab }: { tab: string; onTab: (v: string) => void }) {
+  const allItems = TAB_GROUPS.flatMap((g) => g.items);
+  return (
+    <div className="xl:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+      <div className="flex gap-1.5 w-max py-1">
+        {allItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = tab === item.value;
+          return (
+            <button
+              key={item.value}
+              onClick={() => onTab(item.value)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-120",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-surface-2 text-muted-foreground hover:text-foreground border border-border-subtle",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              {item.label}
+              {item.value === "lectures" && <LiveCount />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Section Shell ─────────────────────────────────────────────────────────────
+function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-[17px] font-black text-foreground">{title}</h2>
+          {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Quick Action Button ───────────────────────────────────────────────────────
+function QA({ icon: Icon, label, color, bg, onClick }: {
+  icon: React.ElementType; label: string; color: string; bg: string; onClick: () => void;
+}) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={onClick}
+      className="flex flex-col items-center gap-2 p-3 rounded-2xl border border-border-subtle bg-surface-1 hover:bg-surface-2 hover:border-primary/20 transition-all duration-120 cursor-pointer group"
+    >
+      <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-120", bg)}>
+        <Icon className={cn("h-4 w-4", color)} />
+      </div>
+      <span className="text-[10px] text-muted-foreground font-semibold text-center group-hover:text-foreground transition-colors leading-tight">{label}</span>
+    </motion.button>
+  );
+}
+
+// ── Inner Dashboard ───────────────────────────────────────────────────────────
 function DashboardInner() {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState<string>("overview");
   const { colleges, isLoading: collegesLoading } = useCollegeContext();
-
-  const analyticsQuery = useQuery<PlatformAnalytics>({
-    queryKey: ["super_admin", "analytics"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_platform_analytics" as any);
-      if (error) throw error;
-      return data as PlatformAnalytics;
-    },
-    staleTime: 60_000,
-  });
-
+  const analyticsQ = usePlatformAnalytics();
   const gamStats = usePlatformGamStats();
-  const analytics = analyticsQuery.data;
-  const loading = analyticsQuery.isLoading;
+  const analytics = analyticsQ.data;
+  const loading = analyticsQ.isLoading;
+
+  const kpis = [
+    {
+      label: "Total Colleges",
+      value: analytics?.total_colleges ?? 0,
+      icon: Building2,
+      bgClass: "bg-primary/10",
+      colorClass: "text-primary",
+      trend: `${analytics?.active_colleges ?? 0} active`,
+    },
+    {
+      label: "Active Admins",
+      value: gamStats.data?.activeAdmins ?? 0,
+      icon: ShieldCheck,
+      bgClass: "bg-purple-500/10",
+      colorClass: "text-purple-400",
+      trend: "Across all colleges",
+    },
+    {
+      label: "Total Students",
+      value: analytics?.total_students ?? 0,
+      icon: Users,
+      bgClass: "bg-success/10",
+      colorClass: "text-success",
+      trend: "Registered users",
+    },
+    {
+      label: "Total Lectures",
+      value: analytics?.total_lectures ?? 0,
+      icon: BookOpen,
+      bgClass: "bg-accent/10",
+      colorClass: "text-accent",
+      trend: "All time",
+    },
+    {
+      label: "Attendance Records",
+      value: analytics?.total_attendance ?? 0,
+      icon: CheckSquare,
+      bgClass: "bg-warning/10",
+      colorClass: "text-warning",
+      trend: "Present marks",
+    },
+    {
+      label: "Points Awarded",
+      value: analytics?.total_points_awarded ?? 0,
+      icon: Coins,
+      bgClass: "bg-premium/10",
+      colorClass: "text-premium",
+      trend: "Total economy",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-1/90 backdrop-blur-md">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           {/* Brand */}
-          <div className="flex items-center gap-3 min-w-0 shrink-0">
-            <img src={BRANDING.logo} alt={BRANDING.name} className="w-7 h-7 object-contain shrink-0" />
+          <div className="flex items-center gap-3 shrink-0">
+            <img src={BRANDING.logo} alt={BRANDING.name} className="w-7 h-7 object-contain" />
             <div className="hidden sm:block">
-              <span className="text-sm font-semibold text-foreground">Platform Control</span>
-              <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">SUPER ADMIN</Badge>
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-bold text-foreground tracking-tight">{BRANDING.name}</span>
+                <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 rounded-full px-2 py-0.5 font-black tracking-widest uppercase">
+                  Super Admin
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Platform Command Center</p>
             </div>
           </div>
 
-          {/* Global search */}
-          <div className="flex-1 flex justify-center px-2">
+          {/* Search */}
+          <div className="flex-1 flex justify-center px-2 max-w-sm">
             <SAGlobalSearch />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <CollegeSwitcher />
-            {/* Quick actions */}
             <Button
               variant="ghost" size="sm"
-              className="gap-1.5 text-xs text-muted-foreground hidden xl:flex"
+              className="gap-1.5 text-xs text-muted-foreground hidden lg:flex"
               onClick={() => setTab("colleges")}
             >
-              <Plus className="w-3.5 h-3.5" />
-              College
+              <Plus className="w-3.5 h-3.5" /> College
             </Button>
             <Button
               variant="ghost" size="sm"
@@ -258,7 +455,7 @@ function DashboardInner() {
               }}
             >
               <UserCog className="w-3.5 h-3.5" />
-              Admin View
+              <span className="hidden xl:inline">Admin View</span>
             </Button>
             <Button
               variant="ghost" size="sm"
@@ -272,224 +469,268 @@ function DashboardInner() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5">
+
         {/* Page heading */}
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex items-center justify-between"
+          transition={{ duration: 0.18 }}
+          className="flex items-center justify-between mb-4"
         >
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Platform Overview</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Multi-college management &amp; platform analytics</p>
+            <h1 className="text-[20px] font-black text-foreground tracking-tight">Enterprise Command Center</h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Platform-wide visibility · {colleges.length} institution{colleges.length !== 1 ? "s" : ""} registered</p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-xs text-muted-foreground">All systems operational</span>
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <span className="text-[11px] text-muted-foreground font-medium">All systems operational</span>
           </div>
         </motion.div>
 
-        <Tabs value={tab} onValueChange={setTab}>
-          {/* Scrollable tab list */}
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-            <TabsList className="bg-surface-2 border border-border-subtle h-auto p-1 flex w-max gap-0">
-              {TABS.map(({ value, icon: Icon, label }) => (
-                <TabsTrigger
-                  key={value}
-                  value={value}
-                  className="gap-1.5 text-xs h-8 px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap"
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  {label}
-                  {value === "lectures" && <LiveCount />}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+        {/* Mobile tab bar */}
+        <div className="mb-4">
+          <MobileTabBar tab={tab} onTab={setTab} />
+        </div>
 
-          {/* ── OVERVIEW ── */}
-          <TabsContent value="overview" className="mt-6 space-y-6">
-            {/* KPI Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              <KpiCard index={0} loading={loading} label="Total Colleges" value={analytics?.total_colleges ?? 0}
-                icon={Building2} bgClass="bg-primary/10" colorClass="text-primary"
-                sublabel={`${analytics?.active_colleges ?? 0} active`} />
-              <KpiCard index={1} loading={loading} label="Total Students" value={analytics?.total_students ?? 0}
-                icon={Users} bgClass="bg-success/10" colorClass="text-success"
-                sublabel="Across all colleges" />
-              <KpiCard index={2} loading={loading} label="Total Lectures" value={analytics?.total_lectures ?? 0}
-                icon={BookOpen} bgClass="bg-accent/10" colorClass="text-accent"
-                sublabel="All time conducted" />
-              <KpiCard index={3} loading={loading} label="Attendance Records" value={analytics?.total_attendance ?? 0}
-                icon={CheckSquare} bgClass="bg-warning/10" colorClass="text-warning"
-                sublabel="Present marks" />
-              <KpiCard index={4} loading={gamStats.isLoading} label="Active Streaks" value={gamStats.data?.activeStreaks ?? 0}
-                icon={Flame} bgClass="bg-warning/10" colorClass="text-warning"
-                sublabel="Students on streak" />
-              <KpiCard index={5} loading={loading} label="Points Awarded" value={analytics?.total_points_awarded ?? 0}
-                icon={Coins} bgClass="bg-premium/10" colorClass="text-premium"
-                sublabel="Total economy" />
-            </div>
+        {/* Layout: sidebar + content */}
+        <div className="flex gap-6 items-start">
 
-            {/* College Snapshot + Gamification side by side */}
-            <div className="grid gap-5 lg:grid-cols-5">
-              {/* College Snapshot */}
-              <div className="lg:col-span-3 rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden dashboard-panel shadow-sm">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Globe className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-semibold text-foreground">College Snapshot</p>
-                      <p className="text-[11px] text-muted-foreground">{colleges.length} institutions registered</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-[11px] gap-1 text-muted-foreground" onClick={() => setTab("colleges")}>
-                    Manage <ArrowUpRight className="h-3 w-3" />
-                  </Button>
-                </div>
-                <div className="px-3 py-2">
-                  {collegesLoading ? (
-                    <div className="space-y-1">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-xl" />)}
-                    </div>
-                  ) : colleges.length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-6 text-center">No colleges yet.</p>
-                  ) : (
-                    <div>
-                      {colleges.slice(0, 7).map((college) => (
-                        <CollegeSnapshotRow key={college.id} college={college as College} onView={() => setTab("colleges")} />
+          {/* Desktop sidebar nav */}
+          <SideNav tab={tab} onTab={setTab} />
+
+          {/* Main content area */}
+          <div className="flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+              >
+
+                {/* ── OVERVIEW ── */}
+                {tab === "overview" && (
+                  <div className="space-y-5">
+                    {/* KPI Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+                      {kpis.map((kpi, i) => (
+                        <KpiCard key={kpi.label} index={i} loading={loading} {...kpi} />
                       ))}
-                      {colleges.length > 7 && (
-                        <button className="text-xs text-primary hover:underline px-3 pt-1 pb-2" onClick={() => setTab("colleges")}>
-                          +{colleges.length - 7} more → View all
-                        </button>
-                      )}
                     </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Gamification & Risk panel */}
-              <div className="lg:col-span-2 rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden dashboard-panel shadow-sm">
-                <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
-                  <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <Flame className="w-4 h-4 text-warning" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-foreground">Platform Engagement</p>
-                    <p className="text-[11px] text-muted-foreground">This week's activity</p>
-                  </div>
-                </div>
-                <div className="px-5 divide-y divide-border-subtle">
-                  <GamRow icon={<Flame className="h-4 w-4 text-warning" />} label="Active Streaks" value={gamStats.data?.activeStreaks ?? 0} accent="bg-warning/10" loading={gamStats.isLoading} />
-                  <GamRow icon={<Zap className="h-4 w-4 text-primary" />} label="Points This Week" value={gamStats.data?.weeklyPoints ?? 0} accent="bg-primary/10" loading={gamStats.isLoading} />
-                  <GamRow icon={<Trophy className="h-4 w-4 text-premium" />} label="Achievements Unlocked" value={gamStats.data?.weeklyAchievements ?? 0} accent="bg-premium/10" loading={gamStats.isLoading} />
-                  <div className="flex items-center gap-3 py-3">
-                    <div className="h-8 w-8 rounded-lg bg-danger/10 flex items-center justify-center shrink-0">
-                      <AlertTriangle className="h-4 w-4 text-danger" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">At-Risk Students</p>
-                      {gamStats.isLoading ? <Skeleton className="h-5 w-12 mt-0.5" /> : (
-                        <p className="text-[18px] font-bold text-foreground tabular-nums leading-tight">{gamStats.data?.riskCount ?? 0}</p>
-                      )}
-                    </div>
-                    {(gamStats.data?.riskCount ?? 0) > 0 && (
-                      <span className="text-[10px] bg-danger/10 text-danger border border-danger/20 rounded-full px-2 py-0.5 font-semibold">flagged</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick actions row */}
-            <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 dashboard-panel shadow-sm">
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold mb-3 px-1">Quick Platform Actions</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                {[
-                  { label: "Colleges",      icon: Building2,   tab: "colleges" },
-                  { label: "Admins",        icon: ShieldCheck, tab: "admins" },
-                  { label: "Students",      icon: Users,       tab: "students" },
-                  { label: "Lectures",      icon: BookOpen,    tab: "lectures" },
-                  { label: "Broadcast",     icon: Radio,       tab: "broadcast" },
-                  { label: "Platform Mode", icon: Settings2,   tab: "platform" },
-                  { label: "Security",      icon: Shield,      tab: "security" },
-                ].map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <motion.button
-                      key={a.tab}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setTab(a.tab)}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl border border-transparent hover:border-border-subtle hover:bg-surface-2 transition-all duration-120 cursor-pointer group"
-                    >
-                      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-120">
-                        <Icon className="h-4 w-4 text-primary" />
+                    {/* College Snapshot + Engagement side by side */}
+                    <div className="grid gap-4 lg:grid-cols-5">
+                      {/* College Snapshot */}
+                      <div className="lg:col-span-3 rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Globe className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-bold text-foreground">Institutions</p>
+                              <p className="text-[11px] text-muted-foreground">{colleges.length} colleges registered</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setTab("colleges")}
+                            className="flex items-center gap-1 text-[11px] text-primary font-semibold hover:underline"
+                          >
+                            Manage <ArrowUpRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <div className="px-3 py-2 max-h-[280px] overflow-y-auto">
+                          {collegesLoading ? (
+                            <div className="space-y-1 p-2">
+                              {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-xl" />)}
+                            </div>
+                          ) : colleges.length === 0 ? (
+                            <div className="py-10 text-center">
+                              <Building2 className="h-7 w-7 text-muted-foreground/30 mx-auto mb-2" />
+                              <p className="text-[12px] text-muted-foreground">No colleges yet</p>
+                            </div>
+                          ) : (
+                            <div>
+                              {colleges.map((college) => (
+                                <CollegeRow key={college.id} college={college as College} onView={() => setTab("colleges")} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-medium text-center group-hover:text-foreground transition-colors">{a.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          </TabsContent>
 
-          {/* ── ANALYTICS ── */}
-          <TabsContent value="analytics" className="mt-6"><SAAnalyticsTab /></TabsContent>
+                      {/* Platform Engagement */}
+                      <div className="lg:col-span-2 rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+                        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
+                          <div className="h-8 w-8 rounded-xl bg-warning/10 flex items-center justify-center">
+                            <Sparkles className="h-4 w-4 text-warning" />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-bold text-foreground">Platform Pulse</p>
+                            <p className="text-[11px] text-muted-foreground">This week's engagement</p>
+                          </div>
+                        </div>
+                        <div className="px-5 py-1">
+                          <EngRow icon={Flame} iconBg="bg-warning/10" iconColor="text-warning" label="Active Streaks" value={gamStats.data?.activeStreaks ?? 0} loading={gamStats.isLoading} />
+                          <EngRow icon={Zap} iconBg="bg-primary/10" iconColor="text-primary" label="Points This Week" value={gamStats.data?.weeklyPoints ?? 0} loading={gamStats.isLoading} />
+                          <EngRow icon={Trophy} iconBg="bg-premium/10" iconColor="text-premium" label="Achievements Unlocked" value={gamStats.data?.weeklyAchievements ?? 0} loading={gamStats.isLoading} />
+                          <div className="flex items-center gap-3 py-3">
+                            <div className="h-8 w-8 rounded-xl bg-danger/10 flex items-center justify-center shrink-0">
+                              <AlertTriangle className="h-4 w-4 text-danger" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">At-Risk Students</p>
+                              {gamStats.isLoading ? <Skeleton className="h-5 w-10 mt-0.5" /> : (
+                                <p className={cn("text-[20px] font-black tabular-nums leading-tight", (gamStats.data?.riskCount ?? 0) > 0 ? "text-danger" : "text-foreground")}>
+                                  {gamStats.data?.riskCount ?? 0}
+                                </p>
+                              )}
+                            </div>
+                            {(gamStats.data?.riskCount ?? 0) > 0 && (
+                              <button onClick={() => setTab("students")} className="text-[10px] text-danger border border-danger/25 rounded-full px-2 py-0.5 hover:bg-danger/10 transition-colors">
+                                View →
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          {/* ── COLLEGES ── */}
-          <TabsContent value="colleges" className="mt-6">
-            <CollegesTab colleges={colleges as College[]} isLoading={collegesLoading} />
-          </TabsContent>
+                    {/* Quick Actions Grid */}
+                    <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs">
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 px-1">Quick Actions</p>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                        <QA icon={Building2}   label="Colleges"      color="text-primary"      bg="bg-primary/10"       onClick={() => setTab("colleges")} />
+                        <QA icon={ShieldCheck} label="Admins"        color="text-purple-400"   bg="bg-purple-500/10"    onClick={() => setTab("admins")} />
+                        <QA icon={Users}       label="Students"      color="text-success"      bg="bg-success/10"       onClick={() => setTab("students")} />
+                        <QA icon={BookOpen}    label="Lectures"      color="text-accent"       bg="bg-accent/10"        onClick={() => setTab("lectures")} />
+                        <QA icon={Radio}       label="Broadcast"     color="text-warning"      bg="bg-warning/10"       onClick={() => setTab("broadcast")} />
+                        <QA icon={Settings2}   label="Platform Mode" color="text-muted-foreground" bg="bg-surface-3"   onClick={() => setTab("platform")} />
+                        <QA icon={Shield}      label="Security"      color="text-danger"       bg="bg-danger/10"        onClick={() => setTab("security")} />
+                      </div>
+                    </div>
 
-          {/* ── ADMINS ── */}
-          <TabsContent value="admins" className="mt-6"><AdminManagerTab /></TabsContent>
+                    {/* Status footer strip */}
+                    <div className="rounded-2xl border border-border-subtle bg-surface-1 px-5 py-3 shadow-xs flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {[
+                          { icon: Network,      label: "Database",      status: "Operational", color: "text-success" },
+                          { icon: ServerCrash,  label: "Edge Functions", status: "Running",     color: "text-success" },
+                          { icon: Activity,     label: "Realtime",       status: "Connected",   color: "text-success" },
+                        ].map(({ icon: Icon, label, status, color }) => (
+                          <div key={label} className="flex items-center gap-2">
+                            <Icon className={cn("h-3.5 w-3.5", color)} />
+                            <span className="text-[11px] text-muted-foreground">{label}:</span>
+                            <span className={cn("text-[11px] font-semibold", color)}>{status}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setTab("health")}
+                        className="text-[11px] text-primary font-semibold hover:underline flex items-center gap-1"
+                      >
+                        Full Health Report <ChevronRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-          {/* ── STUDENTS ── */}
-          <TabsContent value="students" className="mt-6"><SAStudentsTab /></TabsContent>
+                {/* ── ANALYTICS ── */}
+                {tab === "analytics" && (
+                  <Section title="Platform Analytics" subtitle="Cross-college performance, trends & engagement metrics">
+                    <SAAnalyticsTab />
+                  </Section>
+                )}
 
-          {/* ── LECTURES ── */}
-          <TabsContent value="lectures" className="mt-6"><SALecturesTab /></TabsContent>
+                {/* ── COLLEGES ── */}
+                {tab === "colleges" && (
+                  <Section title="College Management" subtitle="Create, configure, and manage institutions on the platform">
+                    <CollegesTab colleges={colleges as College[]} isLoading={collegesLoading} />
+                  </Section>
+                )}
 
-          {/* ── ACHIEVEMENTS ── */}
-          <TabsContent value="achievements" className="mt-6"><SAAchievementsTab /></TabsContent>
+                {/* ── ADMINS ── */}
+                {tab === "admins" && (
+                  <Section title="Admin Management" subtitle="Assign admin roles and manage college administrators">
+                    <AdminManagerTab />
+                  </Section>
+                )}
 
-          {/* ── BROADCAST ── */}
-          <TabsContent value="broadcast" className="mt-6"><SABroadcastTab /></TabsContent>
+                {/* ── STUDENTS ── */}
+                {tab === "students" && (
+                  <Section title="Global Student Manager" subtitle="Search, monitor, and manage students across all colleges">
+                    <SAStudentsTab />
+                  </Section>
+                )}
 
-          {/* ── ACTIVITY LOGS ── */}
-          <TabsContent value="activity" className="mt-6"><SAActivityLogsTab /></TabsContent>
+                {/* ── LECTURES ── */}
+                {tab === "lectures" && (
+                  <Section title="Global Lecture Monitor" subtitle="View and control lectures across all institutions">
+                    <SALecturesTab />
+                  </Section>
+                )}
 
-          {/* ── PLATFORM SETTINGS ── */}
-          <TabsContent value="settings" className="mt-6"><SAPlatformSettingsTab /></TabsContent>
+                {/* ── ACHIEVEMENTS ── */}
+                {tab === "achievements" && (
+                  <Section title="Achievement Manager" subtitle="Create, edit, and manage student achievement definitions">
+                    <SAAchievementsTab />
+                  </Section>
+                )}
 
-          {/* ── PLATFORM MODE ── */}
-          <TabsContent value="platform" className="mt-6"><SAPlatformModeTab /></TabsContent>
+                {/* ── BROADCAST ── */}
+                {tab === "broadcast" && (
+                  <Section title="Broadcast Center" subtitle="Send platform-wide announcements and emergency alerts">
+                    <SABroadcastTab />
+                  </Section>
+                )}
 
-          {/* ── SECURITY ── */}
-          <TabsContent value="security" className="mt-6"><SASecurityTab /></TabsContent>
+                {/* ── ACTIVITY ── */}
+                {tab === "activity" && (
+                  <Section title="Activity Logs" subtitle="Historical record of admin actions and system events">
+                    <SAActivityLogsTab />
+                  </Section>
+                )}
 
-          {/* ── SYSTEM HEALTH ── */}
-          <TabsContent value="health" className="mt-6">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">System Health</h2>
-                <p className="text-xs text-muted-foreground">Real-time platform diagnostics — auto-refreshes every 30s</p>
-              </div>
-              <SystemHealthPanel />
-            </div>
-          </TabsContent>
-        </Tabs>
+                {/* ── SETTINGS ── */}
+                {tab === "settings" && (
+                  <Section title="Platform Settings" subtitle="Configure global platform parameters and defaults">
+                    <SAPlatformSettingsTab />
+                  </Section>
+                )}
+
+                {/* ── PLATFORM MODE ── */}
+                {tab === "platform" && (
+                  <Section title="Platform Mode Switchboard" subtitle="Control system-wide access modes — students affected, admins bypass all modes">
+                    <SAPlatformModeTab />
+                  </Section>
+                )}
+
+                {/* ── SECURITY ── */}
+                {tab === "security" && (
+                  <Section title="Security Monitor" subtitle="Audit logs, login activity, attendance corrections, and security alerts">
+                    <SASecurityTab />
+                  </Section>
+                )}
+
+                {/* ── HEALTH ── */}
+                {tab === "health" && (
+                  <Section title="System Health" subtitle="Real-time platform diagnostics — auto-refreshes every 30s">
+                    <SystemHealthPanel />
+                  </Section>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Main Export ──────────────────────────────────────────────────────────────
+// ── Main Export ───────────────────────────────────────────────────────────────
 export default function SuperAdminDashboard() {
   return (
     <CollegeProvider>
