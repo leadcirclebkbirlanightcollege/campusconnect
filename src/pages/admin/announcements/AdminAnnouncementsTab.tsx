@@ -41,15 +41,31 @@ export default function AdminAnnouncementsTab() {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      const trimmedTitle = title.trim();
+      const trimmedDescription = description.trim();
+      const trimmedClass = targetClass.trim();
+
       const { error } = await supabase.from("announcements").insert({
-        title: title.trim(),
-        description: description.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
         priority,
         target,
+        target_class: target === "class" ? trimmedClass : null,
         is_pinned: isPinned,
         created_by: user.id,
       });
       if (error) throw error;
+
+      const { error: pushError } = await supabase.functions.invoke("send-notification", {
+        body: {
+          title: trimmedTitle,
+          message: trimmedDescription,
+          kind: "announcement",
+          target_type: target === "class" ? "class" : "college_students",
+          target_value: target === "class" ? trimmedClass : null,
+        },
+      });
+      if (pushError) throw pushError;
     },
     onSuccess: () => {
       toast.success("Announcement created");
