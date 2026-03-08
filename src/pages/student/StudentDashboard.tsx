@@ -521,6 +521,11 @@ const StudentDashboard = () => {
         </Suspense>
       </SlideUp>
 
+      {/* ── Active Challenges strip ─────────────────────────── */}
+      <SlideUp delay={90}>
+        <ActiveChallengesStrip />
+      </SlideUp>
+
       {/* ╔═══════════════════════════════════════════════╗
           ║  PHASE 2: PERFORMANCE RADAR + TREND (2-col)   ║
           ╚═══════════════════════════════════════════════╝ */}
