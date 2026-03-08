@@ -2,48 +2,51 @@ import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, ChevronRight, Sparkles, Shield, ScanLine, CreditCard, BarChart3, Zap } from "lucide-react";
+import {
+  ChevronLeft, ChevronRight, Sparkles, Shield,
+  ScanLine, Smartphone, TrendingUp, Zap,
+} from "lucide-react";
 import { APP_VERSION } from "@/config/version";
 
-const STORAGE_KEY = "cc_last_seen_version";
+const STORAGE_KEY   = "cc_last_seen_version";
 const DONT_SHOW_KEY = "cc_whats_new_dismissed";
 
 const slides = [
   {
-    icon: BarChart3,
-    title: "Intelligence Dashboard",
-    description: "A redesigned command center with real-time KPIs, live operations panel, programme health overview, and quick insights — all at a glance.",
+    icon: Sparkles,
+    title: "Smart Insights Strip",
+    description: "Personalised rotating insights on your dashboard — tier progress, streak nudges, attendance tips, and motivational milestones.",
     color: "text-primary",
   },
   {
-    icon: Sparkles,
-    title: "Reputation Engine",
-    description: "Points, tiers, and leaderboard rankings now power a comprehensive student reputation system. Track consistency and engagement.",
-    color: "text-accent",
-  },
-  {
-    icon: Shield,
-    title: "Risk Detection System",
-    description: "Automated alerts for low attendance, inconsistent behavior, and programme drop-offs. Stay proactive, not reactive.",
-    color: "text-destructive",
-  },
-  {
-    icon: CreditCard,
-    title: "Digital ID Upgrades",
-    description: "Glassmorphism-styled student ID cards with QR + Barcode, downloadable branded PNG, and backend-verified authenticity.",
-    color: "text-premium",
-  },
-  {
-    icon: ScanLine,
-    title: "Scanner Improvements",
-    description: "Stable camera lifecycle, one-scan lock, torch toggle, and instant verification with a full action panel for admins.",
+    icon: TrendingUp,
+    title: "Page Transitions & Polish",
+    description: "Smooth fade transitions between every route, polished empty states across all pages, and consistent design tokens throughout.",
     color: "text-success",
   },
   {
+    icon: Smartphone,
+    title: "PWA — Install on Device",
+    description: "Campus Connect is now fully installable. Add it to your home screen for a native app experience with offline detection.",
+    color: "text-warning",
+  },
+  {
+    icon: Shield,
+    title: "Enterprise Security",
+    description: "Row-Level Security on every table, tamper-proof points ledger, complete audit trail, and server-side role validation.",
+    color: "text-danger",
+  },
+  {
+    icon: ScanLine,
+    title: "Attendance Intelligence",
+    description: "QR + OTP attendance with retry resilience, real-time live widgets, admin corrections with audit logs, and monthly CSV export.",
+    color: "text-accent",
+  },
+  {
     icon: Zap,
-    title: "Security Enhancements",
-    description: "Strict RLS policies, role-based routing, audit logging, and device session management for enterprise-grade security.",
-    color: "text-primary",
+    title: "Gamification Engine",
+    description: "Tiered reputation (Bronze → Elite), daily streaks, mystery rewards, achievements with points bonuses, and a competitive leaderboard.",
+    color: "text-premium",
   },
 ];
 
@@ -53,20 +56,16 @@ interface WhatsNewModalProps {
 }
 
 export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewModalProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]       = useState(false);
   const [current, setCurrent] = useState(0);
   const [dontShow, setDontShow] = useState(false);
 
   useEffect(() => {
-    if (manualOpen) {
-      setOpen(true);
-      setCurrent(0);
-      return;
-    }
+    if (manualOpen) { setOpen(true); setCurrent(0); return; }
     const dismissed = localStorage.getItem(DONT_SHOW_KEY);
-    const lastSeen = localStorage.getItem(STORAGE_KEY);
+    const lastSeen  = localStorage.getItem(STORAGE_KEY);
     if (dismissed === APP_VERSION) return;
-    if (lastSeen === APP_VERSION) return;
+    if (lastSeen  === APP_VERSION) return;
     setOpen(true);
   }, [manualOpen]);
 
@@ -78,22 +77,24 @@ export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewMod
   }, [dontShow, onManualClose]);
 
   const slide = slides[current];
-  const Icon = slide.icon;
+  const Icon  = slide.icon;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden border-border/30 bg-card/95 backdrop-blur-xl">
+      <DialogContent className="max-w-md p-0 overflow-hidden border-border-subtle bg-surface-1/95 backdrop-blur-xl shadow-lg">
         <div className="p-6 space-y-6">
           <DialogTitle className="text-center">
-            <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground">What's New in v{APP_VERSION}</span>
+            <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+              What's New in v{APP_VERSION}
+            </span>
           </DialogTitle>
 
-          <div className="flex flex-col items-center text-center space-y-4 min-h-[200px] justify-center transition-all duration-300">
-            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center">
+          <div className="flex flex-col items-center text-center space-y-4 min-h-[200px] justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-surface-3 border border-border-subtle flex items-center justify-center">
               <Icon className={`h-7 w-7 ${slide.color}`} />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">{slide.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{slide.description}</p>
+            <h3 className="text-[17px] font-semibold text-foreground">{slide.title}</h3>
+            <p className="text-[13px] text-muted-foreground leading-relaxed max-w-xs">{slide.description}</p>
           </div>
 
           {/* Progress dots */}
@@ -102,7 +103,9 @@ export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewMod
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-2 rounded-full transition-all duration-200 ${i === current ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"}`}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === current ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/25"
+                }`}
               />
             ))}
           </div>
@@ -114,34 +117,30 @@ export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewMod
               size="sm"
               onClick={() => setCurrent((p) => Math.max(0, p - 1))}
               disabled={current === 0}
-              className="gap-1"
+              className="gap-1 text-muted-foreground"
             >
               <ChevronLeft className="h-4 w-4" /> Back
             </Button>
 
             {current < slides.length - 1 ? (
-              <Button
-                size="sm"
-                onClick={() => setCurrent((p) => p + 1)}
-                className="gap-1 bg-primary hover:bg-primary/90"
-              >
+              <Button size="sm" onClick={() => setCurrent((p) => p + 1)} className="gap-1">
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button size="sm" onClick={handleClose} className="bg-primary hover:bg-primary/90">
-                Get Started
+              <Button size="sm" onClick={handleClose}>
+                Get Started 🚀
               </Button>
             )}
           </div>
 
           {/* Don't show again */}
-          <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/30">
+          <div className="flex items-center justify-center gap-2 pt-2 border-t border-border-subtle">
             <Checkbox
               id="dont-show"
               checked={dontShow}
               onCheckedChange={(v) => setDontShow(v === true)}
             />
-            <label htmlFor="dont-show" className="text-xs text-muted-foreground cursor-pointer">
+            <label htmlFor="dont-show" className="text-[11px] text-muted-foreground cursor-pointer select-none">
               Don't show again for this version
             </label>
           </div>
