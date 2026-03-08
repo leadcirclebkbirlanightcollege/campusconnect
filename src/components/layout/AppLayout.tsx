@@ -39,6 +39,7 @@ import {
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
 
 const PAGE_META: Record<string, { title: string; description: string }> = {
   "/app/dashboard":    { title: "Dashboard",        description: "Your academic overview at a glance" },
