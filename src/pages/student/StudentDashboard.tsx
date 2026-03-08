@@ -465,10 +465,56 @@ const StudentDashboard = () => {
         </SlideUp>
       )}
 
+      {/* ╔═══════════════════════════════════════════════╗
+          ║  PHASE 2: UPCOMING EVENTS STRIP               ║
+          ╚═══════════════════════════════════════════════╝ */}
+      <SlideUp delay={85}>
+        <Suspense fallback={<PanelSkeleton />}>
+          <UpcomingEventsStrip />
+        </Suspense>
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════════╗
+          ║  PHASE 2: PERFORMANCE RADAR + TREND (2-col)   ║
+          ╚═══════════════════════════════════════════════╝ */}
+      <SlideUp delay={90}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Suspense fallback={<PanelSkeleton />}>
+            <AcademicRadarChart />
+          </Suspense>
+          <Suspense fallback={<PanelSkeleton />}>
+            <AttendanceTrendChart />
+          </Suspense>
+        </div>
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════════╗
+          ║  PHASE 2: STREAK HEATMAP                      ║
+          ╚═══════════════════════════════════════════════╝ */}
+      <SlideUp delay={95}>
+        <Suspense fallback={<PanelSkeleton />}>
+          <StreakHeatmap />
+        </Suspense>
+      </SlideUp>
+
+      {/* ╔═══════════════════════════════════════════════╗
+          ║  PHASE 2: ENGAGEMENT + RISK (2-col)           ║
+          ╚═══════════════════════════════════════════════╝ */}
+      <SlideUp delay={100}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Suspense fallback={<PanelSkeleton />}>
+            <EngagementScorePanel />
+          </Suspense>
+          <Suspense fallback={<PanelSkeleton />}>
+            <RiskAnalysisPanel />
+          </Suspense>
+        </div>
+      </SlideUp>
+
       {/* ╔═══════════════════════════════════════════╗
           ║  ACTIVITY TIMELINE                        ║
           ╚═══════════════════════════════════════════╝ */}
-      <SlideUp delay={90}>
+      <SlideUp delay={105}>
         <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
             <div className="flex items-center gap-2.5">
