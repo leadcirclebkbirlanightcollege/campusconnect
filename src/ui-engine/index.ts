@@ -23,3 +23,6 @@ export * from "./page-engine";
 
 // Reusable UI primitives
 export * from "./components";
+
+// Skeleton loading system
+export * from "./skeletons";
