@@ -18,6 +18,7 @@ import {
   Moon,
   Sun,
   GraduationCap,
+  Flame,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,7 @@ interface NavItem {
   url: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
+  accent?: string;
 }
 
 interface NavSection {
@@ -56,9 +58,10 @@ interface NavSection {
 export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state } = useSidebar();
   const { theme, setTheme } = useTheme();
   const { branding } = usePlatformBranding();
+  const collapsed = state === "collapsed";
 
   const authQuery = useQuery({
     queryKey: ["app_sidebar", "auth"],
@@ -67,6 +70,7 @@ export default function AppSidebar() {
       if (error) throw error;
       return data.user ?? null;
     },
+    staleTime: 120_000,
   });
 
   const roleQuery = useQuery({
@@ -116,32 +120,32 @@ export default function AppSidebar() {
       {
         label: "Academics",
         items: [
-          { title: "Attendance", url: "/app/attendance", icon: CalendarDays },
-          { title: "Lectures", url: "/app/lectures", icon: BookOpen },
-          { title: "Learning Circles", url: "/app/programmes", icon: Calendar },
+          { title: "Attendance",       url: "/app/attendance",  icon: CalendarDays },
+          { title: "Lectures",         url: "/app/lectures",    icon: BookOpen },
+          { title: "Learning Circles", url: "/app/programmes",  icon: Calendar },
         ],
       },
       {
         label: "Engagement",
         items: [
           { title: "Leaderboard", url: "/app/leaderboard", icon: Trophy },
-          { title: "Polls", url: "/app/polls", icon: BarChart3 },
-          { title: "Daily", url: "/app/daily", icon: Sparkles },
+          { title: "Polls",       url: "/app/polls",        icon: BarChart3 },
+          { title: "Daily",       url: "/app/daily",        icon: Sparkles },
         ],
       },
       {
         label: "Communication",
         items: [
           { title: "Announcements", url: "/app/announcements", icon: Megaphone },
-          { title: "Events", url: "/app/events", icon: CalendarDays },
-          { title: "Inbox", url: "/app/inbox", icon: Bell },
+          { title: "Events",        url: "/app/events",        icon: CalendarDays },
+          { title: "Inbox",         url: "/app/inbox",         icon: Bell },
         ],
       },
       {
         label: "Identity",
         items: [
           { title: "Digital ID", url: "/app/id-card", icon: CreditCard },
-          { title: "Profile", url: "/app/profile", icon: UserRound },
+          { title: "Profile",    url: "/app/profile",  icon: UserRound },
         ],
       },
     ],
@@ -152,7 +156,7 @@ export default function AppSidebar() {
     () => ({
       label: "Admin",
       items: [
-        { title: "Command Center", url: "/app/admin/dashboard", icon: Shield },
+        { title: "Command Center", url: "/app/admin/dashboard", icon: Shield, accent: "text-warning" },
       ],
     }),
     [],
@@ -171,12 +175,15 @@ export default function AppSidebar() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const renderSection = (section: NavSection, idx: number) => (
-    <SidebarGroup key={section.label} className={cn("py-1", idx > 0 && "pt-0")}>
-      <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 px-3 py-1.5 h-auto">
+    <SidebarGroup key={section.label} className={cn("py-0.5", idx > 0 && "pt-0")}>
+      <SidebarGroupLabel className={cn(
+        "text-[10px] font-bold uppercase tracking-[0.10em] text-muted-foreground/50 px-3 py-2 h-auto",
+        collapsed && "opacity-0 pointer-events-none",
+      )}>
         {section.label}
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu className="gap-0.5">
+        <SidebarMenu className="gap-px">
           {section.items.map((item) => {
             const active = isActive(item.url);
             const Icon = item.icon;
@@ -190,26 +197,32 @@ export default function AppSidebar() {
                   isActive={active}
                   tooltip={item.title}
                   className={cn(
-                    "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal",
+                    "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item",
+                    "transition-all duration-fast",
                     active
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent",
+                      ? "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   )}
                 >
                   <NavLink
                     to={item.url}
-                    className="flex items-center"
+                    className="flex items-center gap-2.5"
                     activeClassName=""
                     end={item.url === "/app/dashboard"}
                     onClick={handleNav}
                   >
                     <Icon className={cn(
-                      "h-3.5 w-3.5 shrink-0",
-                      active ? "text-primary" : "opacity-60",
+                      "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
+                      active ? "text-primary" : "text-muted-foreground/60 group-hover/item:text-foreground/80",
+                      item.accent && !active && item.accent,
                     )} />
-                    <span className="flex-1">{item.title}</span>
+                    <span className="flex-1 leading-none">{item.title}</span>
                     {badgeCount > 0 && (
-                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground leading-none">
+                      <span className={cn(
+                        "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full",
+                        "bg-primary text-primary-foreground px-1 text-[9px] font-bold leading-none",
+                        "animate-scale-in",
+                      )}>
                         {badgeCount > 99 ? "99+" : badgeCount}
                       </span>
                     )}
@@ -224,44 +237,63 @@ export default function AppSidebar() {
   );
 
   return (
-    <Sidebar variant="sidebar" className="border-r border-sidebar-border">
-      {/* Brand lockup */}
-      <div className="flex h-[52px] items-center gap-2.5 px-3.5 border-b border-sidebar-border shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
+    <Sidebar
+      collapsible="icon"
+      variant="sidebar"
+      className="border-r border-sidebar-border bg-sidebar"
+    >
+      {/* ── Brand Lockup ─────────────────────────────────────────── */}
+      <div className={cn(
+        "flex h-[52px] items-center gap-2.5 border-b border-sidebar-border shrink-0",
+        collapsed ? "justify-center px-2" : "px-3.5",
+      )}>
+        <div className={cn(
+          "flex items-center justify-center rounded-lg bg-primary shadow-primary shrink-0 overflow-hidden",
+          collapsed ? "h-7 w-7" : "h-7 w-7",
+        )}>
           {branding.logo_url ? (
             <img src={branding.logo_url} alt={branding.brand_name} className="w-5 h-5 object-contain" />
           ) : (
             <GraduationCap className="h-4 w-4 text-primary-foreground" />
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight">
-            {branding.brand_name}
-          </span>
-          <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60 leading-none">
-            {branding.tagline}
-          </span>
-        </div>
+
+        {!collapsed && (
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight truncate">
+              {branding.brand_name}
+            </span>
+            <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50 leading-none">
+              {branding.tagline}
+            </span>
+          </div>
+        )}
       </div>
 
-      <SidebarContent className="overflow-y-auto px-1.5 py-2">
+      {/* ── Navigation ───────────────────────────────────────────── */}
+      <SidebarContent className="overflow-y-auto px-1.5 py-2 gap-0">
         {sections.map((s, i) => renderSection(s, i))}
 
         {isAdmin && (
           <>
-            <div className="mx-3 my-2 h-px bg-sidebar-border" />
+            <div className="mx-3 my-1.5 h-px bg-sidebar-border" />
             {renderSection(adminSection, sections.length)}
           </>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-1.5 py-2 space-y-0.5">
-        <SidebarMenu className="gap-0.5">
+      {/* ── Footer ───────────────────────────────────────────────── */}
+      <SidebarFooter className="border-t border-sidebar-border px-1.5 py-2">
+        <SidebarMenu className="gap-px">
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={toggleTheme}
-              tooltip={theme === "dark" ? "Light mode" : "Dark mode"}
-              className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-sidebar-foreground hover:bg-sidebar-accent"
+              tooltip={theme === "dark" ? "Light Mode" : "Dark Mode"}
+              className={cn(
+                "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal",
+                "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent",
+                "transition-all duration-fast",
+              )}
             >
               {theme === "dark" ? (
                 <Sun className="h-3.5 w-3.5 shrink-0 opacity-60" />
@@ -271,11 +303,16 @@ export default function AppSidebar() {
               <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={onLogout}
-              tooltip="Logout"
-              className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-muted-foreground hover:text-danger hover:bg-danger/8"
+              tooltip="Sign Out"
+              className={cn(
+                "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal",
+                "text-muted-foreground hover:text-danger hover:bg-danger/8",
+                "transition-all duration-fast",
+              )}
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />
               <span>Sign Out</span>
