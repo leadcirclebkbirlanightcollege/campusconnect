@@ -112,6 +112,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
       if (scanLock) throw new Error("Already processing");
+      if (!attemptMark()) throw new Error("rate_limited");  // client-side rate limit
       setScanLock(true);
 
       const { data: sessionData } = await supabase.auth.getSession();

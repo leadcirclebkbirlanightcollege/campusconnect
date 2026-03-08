@@ -136,8 +136,9 @@ export function DailyCheckinCard() {
 
   const handleCheckin = useCallback(() => {
     if (checkinMutation.isPending) return;
+    if (!attemptCheckin()) return;  // rate-limit guard
     checkinMutation.mutate();
-  }, [checkinMutation]);
+  }, [checkinMutation, attemptCheckin]);
 
   const checkedInToday = data?.checkedInToday || justCheckedIn;
   const streak = data?.currentStreak ?? 0;
