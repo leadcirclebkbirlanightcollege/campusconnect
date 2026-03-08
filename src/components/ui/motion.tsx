@@ -105,7 +105,7 @@ export function MetricCountUp({
 }
 
 /* ── useMetricCountUp hook ── */
-export function useMetricCountUp(target: number, duration = MOTION_SPECIAL_MS.metricCount): number {
+export function useMetricCountUp(target: number, duration: number = MOTION_SPECIAL_MS.metricCount): number {
   return useCountUp(target, duration);
 }
 

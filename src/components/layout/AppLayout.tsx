@@ -40,6 +40,7 @@ import {
   PAGE_TRANSITION_VARIANTS,
 } from "@/motion/pageTransitions";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
+import { getPageMeta } from "@/ui-engine/navigation-engine";
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {

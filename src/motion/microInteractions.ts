@@ -44,7 +44,7 @@ export const BELL_GLOW_TRANSITION: Transition = {
   ease: MOTION_EASING,
 };
 
-export function useCountUp(target: number, duration = MOTION_SPECIAL_MS.metricCount): number {
+export function useCountUp(target: number, duration: number = MOTION_SPECIAL_MS.metricCount): number {
   const [count, setCount] = useState(0);
   const frameRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
