@@ -45,8 +45,8 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/app/polls":        { title: "Polls",            description: "Active polls & surveys" },
   "/app/daily":        { title: "Daily",            description: "Daily content" },
   "/app/scan":         { title: "Scan Attendance",  description: "Mark your attendance" },
-  "/app/admin/dashboard": { title: "Command Center", description: "Administration" },
-  "/platform/admin":      { title: "Super Admin",    description: "Platform management" },
+  "/platform/admin/dashboard":              { title: "Command Center",   description: "Administration" },
+  "/platform/admin-control/dashboard":     { title: "Platform Command", description: "Super Admin" },
 };
 
 export function getPageMeta(pathname: string): PageMeta {
