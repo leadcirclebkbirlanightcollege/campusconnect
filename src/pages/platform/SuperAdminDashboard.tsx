@@ -483,7 +483,7 @@ function DashboardInner() {
                       className="h-12 text-xs"
                       onClick={() => {
                         setActiveCollegeId(college.id);
-                        window.location.href = "/app/admin/dashboard";
+                        window.location.href = "/platform/admin/dashboard";
                       }}
                     >
                       View Dashboard

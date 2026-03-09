@@ -109,8 +109,8 @@ const Auth = () => {
     try {
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
       const role = data?.role;
-      if (role === "super_admin") navigate("/platform/admin", { replace: true });
-      else if (role === "admin") navigate("/app/admin/dashboard", { replace: true });
+      if (role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
+      else if (role === "admin") navigate("/platform/admin/dashboard", { replace: true });
       else navigate("/app/dashboard", { replace: true });
     } catch {
       navigate("/app/dashboard", { replace: true });

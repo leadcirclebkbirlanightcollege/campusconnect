@@ -30,4 +30,3 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 export function RedirectToApp() {
   return <Navigate to="/app/dashboard" replace />;
 }
-

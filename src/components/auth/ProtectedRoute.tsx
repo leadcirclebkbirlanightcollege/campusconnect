@@ -92,11 +92,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // super_admin: always redirect to /platform/admin if they land on /app routes (no requiredRole)
-  if (!requiredRole && userRole === "super_admin") return <Navigate to="/platform/admin" replace />;
+  // super_admin: always redirect to /platform/admin-control if they land on /app routes
+  if (!requiredRole && userRole === "super_admin") return <Navigate to="/platform/admin-control/dashboard" replace />;
 
   if (requiredRole === "super_admin") {
-    if (userRole !== "super_admin") return <Navigate to="/app/admin/dashboard" replace />;
+    if (userRole !== "super_admin") return <Navigate to="/platform/admin/dashboard" replace />;
   }
 
   if (requiredRole === "admin") {
@@ -105,7 +105,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (requiredRole === "student") {
-    if (userRole === "admin" || userRole === "super_admin") return <Navigate to="/app/admin/dashboard" replace />;
+    if (userRole === "admin" || userRole === "super_admin") return <Navigate to="/platform/admin/dashboard" replace />;
   }
 
   return <>{children}</>;

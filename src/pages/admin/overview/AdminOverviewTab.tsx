@@ -80,7 +80,7 @@ function activityIcon(action: string) {
   return Sparkles;
 }
 
-export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab: (tab: string) => void }) {
+export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: string) => void }) {
   const qc = useQueryClient();
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementBody, setAnnouncementBody] = useState("");

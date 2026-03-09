@@ -159,7 +159,7 @@ export default function AppSidebar() {
     () => ({
       label: "Admin",
       items: [
-        { title: "Command Center", url: "/app/admin/dashboard", icon: Shield, accent: "text-warning" },
+        { title: "Command Center", url: "/platform/admin/dashboard", icon: Shield, accent: "text-warning" },
       ],
     }),
     [],
