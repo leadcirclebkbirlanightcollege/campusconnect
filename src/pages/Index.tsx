@@ -151,7 +151,9 @@ export default function Index() {
           .maybeSingle();
 
         if (!mounted) return;
-        navigate(data?.role === "admin" ? "/app/admin/dashboard" : "/app/dashboard", { replace: true });
+        if (data?.role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
+        else if (data?.role === "admin") navigate("/platform/admin/dashboard", { replace: true });
+        else navigate("/app/dashboard", { replace: true });
       } finally {
         if (mounted) setAuthChecking(false);
       }
