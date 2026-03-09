@@ -175,8 +175,8 @@ export default function AppRouter() {
           </Route>
 
           {/* ── Legacy redirects ──────────────────────────────────────────────── */}
-          {/* Old super admin path */}
-          <Route path="/platform/admin/dashboard" element={<Navigate to="/platform/admin/dashboard" replace />} />
+          {/* Old super admin path → new control center */}
+          <Route path="/platform/admin/super"    element={<Navigate to="/platform/admin-control/dashboard" replace />} />
 
           {/* Old app/admin paths → new /platform/admin paths */}
           <Route path="/app/admin"                 element={<Navigate to="/platform/admin/dashboard" replace />} />
