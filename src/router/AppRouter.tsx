@@ -53,6 +53,8 @@ const AdminBrandingPage            = lazy(() => import("@/pages/admin/pages/Admi
 const AdminCoreTeamPage            = lazy(() => import("@/pages/admin/pages/AdminCoreTeamPage"));
 const AdminSystemControlPage       = lazy(() => import("@/pages/admin/pages/AdminSystemControlPage"));
 const AdminSettingsPage            = lazy(() => import("@/pages/admin/pages/AdminSettingsPage"));
+const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/departments/AdminDepartmentsPage"));
+const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
@@ -121,6 +123,8 @@ export default function AppRouter() {
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="programmes"               element={<AdminProgrammesPage />} />
             <Route path="allotments"               element={<AdminAllotmentsPage />} />
+            <Route path="departments"              element={<AdminDepartmentsPage />} />
+            <Route path="classes"                  element={<AdminClassesPage />} />
             <Route path="attendance"               element={<AdminAttendancePage />} />
             <Route path="attendance/monthly"       element={<AdminAttendanceMonthlyPage />} />
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />

@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, FileText, Palette, UserCog, Settings,
-  SlidersHorizontal, LogOut, Moon, Sun, Shield,
+  SlidersHorizontal, LogOut, Moon, Sun, Shield, Building2, School,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
@@ -25,7 +25,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, FileText, Palette, UserCog, Settings,
-  SlidersHorizontal, Shield,
+  SlidersHorizontal, Shield, Building2, School,
 };
 
 export default function AdminSidebar() {
