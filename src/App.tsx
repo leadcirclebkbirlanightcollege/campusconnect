@@ -9,12 +9,14 @@ import { AppProviders } from "@/providers/AppProviders";
 import { useWebVitals } from "@/hooks/use-web-vitals";
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from "@/router/AppRouter";
+import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicator";
 
 function AppInner() {
   useWebVitals();
 
   return (
     <>
+      <TenantBrandingApplicator />
       <OfflineBanner />
       <SwUpdateManager />
       <AppSplash />
