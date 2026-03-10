@@ -123,6 +123,8 @@ export default function AppRouter() {
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="programmes"               element={<AdminProgrammesPage />} />
             <Route path="allotments"               element={<AdminAllotmentsPage />} />
+            <Route path="departments"              element={<AdminDepartmentsPage />} />
+            <Route path="classes"                  element={<AdminClassesPage />} />
             <Route path="attendance"               element={<AdminAttendancePage />} />
             <Route path="attendance/monthly"       element={<AdminAttendanceMonthlyPage />} />
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />
