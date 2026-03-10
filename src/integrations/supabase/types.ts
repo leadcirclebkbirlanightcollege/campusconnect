@@ -367,6 +367,60 @@ export type Database = {
           },
         ]
       }
+      classes: {
+        Row: {
+          college_id: string
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          section: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          section?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          section?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           college_name: string
@@ -536,6 +590,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      departments: {
+        Row: {
+          college_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -1518,6 +1613,7 @@ export type Database = {
         Returns: Json
       }
       get_my_achievements: { Args: { p_limit?: number }; Returns: Json }
+      get_my_college_id: { Args: never; Returns: string }
       get_my_points_total: { Args: never; Returns: number }
       get_my_streak: { Args: never; Returns: Json }
       get_my_tier_progress: {
