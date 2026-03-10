@@ -108,7 +108,7 @@ export function useCollegeLectures(
         .limit(limit);
 
       if (status) {
-        query = query.eq("status", status);
+        query = query.eq("status", status as "scheduled" | "live" | "ended");
       }
 
       const { data, error } = await query;
