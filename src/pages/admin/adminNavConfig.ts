@@ -76,6 +76,8 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/create-lecture":         { title: "Create Lecture",     description: "Schedule a new lecture" },
   "/platform/admin/programmes":             { title: "Programmes",         description: "Learning circle management" },
   "/platform/admin/allotments":             { title: "Allotments",         description: "Student programme allotment" },
+  "/platform/admin/departments":            { title: "Departments",        description: "Academic department structure" },
+  "/platform/admin/classes":               { title: "Classes",            description: "Class sections & batches" },
   "/platform/admin/attendance":             { title: "Attendance Control", description: "Live attendance management" },
   "/platform/admin/attendance/monthly":     { title: "Monthly Report",     description: "Monthly attendance export" },
   "/platform/admin/attendance/corrections": { title: "Corrections",        description: "Edit attendance records" },
