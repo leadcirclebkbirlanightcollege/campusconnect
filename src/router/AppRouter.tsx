@@ -53,6 +53,8 @@ const AdminBrandingPage            = lazy(() => import("@/pages/admin/pages/Admi
 const AdminCoreTeamPage            = lazy(() => import("@/pages/admin/pages/AdminCoreTeamPage"));
 const AdminSystemControlPage       = lazy(() => import("@/pages/admin/pages/AdminSystemControlPage"));
 const AdminSettingsPage            = lazy(() => import("@/pages/admin/pages/AdminSettingsPage"));
+const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/departments/AdminDepartmentsPage"));
+const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
