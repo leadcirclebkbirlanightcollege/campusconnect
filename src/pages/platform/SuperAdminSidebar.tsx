@@ -19,7 +19,7 @@ import { SA_NAV_SECTIONS } from "@/pages/platform/superAdminNavConfig";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
-  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings,
+  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, Network,
 };
 
 export default function SuperAdminSidebar() {
