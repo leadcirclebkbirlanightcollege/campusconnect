@@ -96,6 +96,7 @@ export default function AppRouter() {
           >
             <Route index element={<Navigate to="/platform/admin-control/dashboard" replace />} />
             <Route path="dashboard"         element={<SADashboardPage />} />
+            <Route path="system-map"        element={<SASystemMapPage />} />
             <Route path="colleges"          element={<SACollegesPage />} />
             <Route path="admins"            element={<SAAdminsPage />} />
             <Route path="students"          element={<SAStudentsPage />} />
