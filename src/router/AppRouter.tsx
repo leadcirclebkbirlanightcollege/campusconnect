@@ -59,6 +59,7 @@ const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/Ad
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
 const SADashboardPage       = lazy(() => import("@/pages/platform/pages/SADashboardPage"));
+const SASystemMapPage       = lazy(() => import("@/pages/platform/pages/SASystemMapPage"));
 const SACollegesPage        = lazy(() => import("@/pages/platform/pages/SACollegesPage"));
 const SAAdminsPage          = lazy(() => import("@/pages/platform/pages/SAAdminsPage"));
 const SAStudentsPage        = lazy(() => import("@/pages/platform/pages/SAStudentsPage"));
