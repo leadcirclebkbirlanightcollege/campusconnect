@@ -4,30 +4,21 @@
  */
 
 // Dashboard (overview from original SuperAdminDashboard)
-import { Suspense, lazy, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Suspense, lazy } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  Activity, Building2, CheckSquare, ChevronRight, GraduationCap,
-  Megaphone, Plus, Shield, UserCog, Users,
+  Activity, Building2, CheckSquare, GraduationCap,
+  Megaphone, Shield, UserCog, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/layout";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { ActionTile } from "@/components/ui/ActionTile";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { useCollegeContext } from "@/contexts/CollegeContext";
 import CollegeSwitcher from "@/pages/platform/components/CollegeSwitcher";
 import { useNavigate } from "react-router-dom";
-
-const SAAnalyticsTab = lazy(() => import("@/pages/platform/components/SAAnalyticsTab"));
-const SABroadcastTab = lazy(() => import("@/pages/platform/components/SABroadcastTab"));
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 
 const SECTION_ANIM = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.18 } };
 
@@ -65,7 +56,13 @@ function usePlatformOverview() {
 
 export default function SADashboardPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const overviewQ = usePlatformOverview();
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["sa_cmd"] });
+  };
+
   const overviewMetrics = [
     { icon: Building2, value: overviewQ.data?.total_colleges ?? 0, label: "Total Colleges" },
     { icon: Users, value: overviewQ.data?.total_students ?? 0, label: "Total Students" },
@@ -76,26 +73,31 @@ export default function SADashboardPage() {
   ];
 
   return (
-    <PageContainer size="tablet" withBottomNav={false} className="space-y-6 py-4">
-      <PageHeader title="Platform Command Center" subtitle="Mission control for colleges, admins, analytics, health, and security"
-        action={<CollegeSwitcher className="max-w-[200px]" />} />
+    <PageContainer size="tablet" withBottomNav={false} className="py-4">
+      <PullToRefresh onRefresh={handleRefresh} className="space-y-6">
+        <PageHeader
+          title="Platform Command Center"
+          subtitle="Mission control for colleges, admins, analytics, health, and security"
+          action={<CollegeSwitcher className="max-w-[200px]" />}
+        />
 
-      <SectionFrame id="overview" title="Platform Overview Metrics" subtitle="Live platform-wide command metrics">
-        <div className="grid grid-cols-2 gap-3">
-          {overviewQ.isLoading
-            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-2xl" />)
-            : overviewMetrics.map((m) => <MetricCard key={m.label} icon={m.icon} value={m.value} label={m.label} />)}
-        </div>
-      </SectionFrame>
+        <SectionFrame id="overview" title="Platform Overview Metrics" subtitle="Live platform-wide command metrics">
+          <div className="grid grid-cols-2 gap-3">
+            {overviewQ.isLoading
+              ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-2xl" />)
+              : overviewMetrics.map((m) => <MetricCard key={m.label} icon={m.icon} value={m.value} label={m.label} />)}
+          </div>
+        </SectionFrame>
 
-      <SectionFrame id="quick-actions" title="Quick Actions" subtitle="Navigate to key management areas">
-        <div className="grid grid-cols-2 gap-3">
-          <ActionTile icon={Building2} label="Manage Colleges" onClick={() => navigate("/platform/admin-control/colleges")} />
-          <ActionTile icon={UserCog} label="Manage Admins" onClick={() => navigate("/platform/admin-control/admins")} />
-          <ActionTile icon={Shield} label="Security Logs" onClick={() => navigate("/platform/admin-control/security")} />
-          <ActionTile icon={Megaphone} label="Analytics" onClick={() => navigate("/platform/admin-control/analytics")} />
-        </div>
-      </SectionFrame>
+        <SectionFrame id="quick-actions" title="Quick Actions" subtitle="Navigate to key management areas">
+          <div className="grid grid-cols-2 gap-3">
+            <ActionTile icon={Building2} label="Manage Colleges" onClick={() => navigate("/platform/admin-control/colleges")} />
+            <ActionTile icon={UserCog} label="Manage Admins" onClick={() => navigate("/platform/admin-control/admins")} />
+            <ActionTile icon={Shield} label="Security Logs" onClick={() => navigate("/platform/admin-control/security")} />
+            <ActionTile icon={Megaphone} label="Analytics" onClick={() => navigate("/platform/admin-control/analytics")} />
+          </div>
+        </SectionFrame>
+      </PullToRefresh>
     </PageContainer>
   );
 }
