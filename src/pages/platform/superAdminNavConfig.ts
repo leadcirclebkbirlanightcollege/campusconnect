@@ -18,6 +18,7 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
     label: "Command",
     items: [
       { title: "Dashboard",          url: "/platform/admin-control/dashboard",         icon: "LayoutDashboard" },
+      { title: "System Map",         url: "/platform/admin-control/system-map",        icon: "Network" },
     ],
   },
   {
@@ -57,6 +58,7 @@ export interface PageMeta { title: string; description: string }
 
 const SA_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin-control/dashboard":        { title: "Platform Command",   description: "Global platform overview" },
+  "/platform/admin-control/system-map":       { title: "System Map",         description: "Live ecosystem hierarchy & attendance heatmap" },
   "/platform/admin-control/colleges":         { title: "Colleges",           description: "Manage all colleges" },
   "/platform/admin-control/create-college":   { title: "Create College",     description: "Register a new college" },
   "/platform/admin-control/admins":           { title: "Admins",             description: "Admin role management" },

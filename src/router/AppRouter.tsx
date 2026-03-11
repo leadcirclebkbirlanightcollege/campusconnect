@@ -59,6 +59,7 @@ const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/Ad
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
 const SADashboardPage       = lazy(() => import("@/pages/platform/pages/SADashboardPage"));
+const SASystemMapPage       = lazy(() => import("@/pages/platform/pages/SASystemMapPage"));
 const SACollegesPage        = lazy(() => import("@/pages/platform/pages/SACollegesPage"));
 const SAAdminsPage          = lazy(() => import("@/pages/platform/pages/SAAdminsPage"));
 const SAStudentsPage        = lazy(() => import("@/pages/platform/pages/SAStudentsPage"));
@@ -95,6 +96,7 @@ export default function AppRouter() {
           >
             <Route index element={<Navigate to="/platform/admin-control/dashboard" replace />} />
             <Route path="dashboard"         element={<SADashboardPage />} />
+            <Route path="system-map"        element={<SASystemMapPage />} />
             <Route path="colleges"          element={<SACollegesPage />} />
             <Route path="admins"            element={<SAAdminsPage />} />
             <Route path="students"          element={<SAStudentsPage />} />
