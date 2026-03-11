@@ -18,6 +18,7 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
     label: "Command",
     items: [
       { title: "Dashboard",          url: "/platform/admin-control/dashboard",         icon: "LayoutDashboard" },
+      { title: "System Map",         url: "/platform/admin-control/system-map",        icon: "Network" },
     ],
   },
   {
