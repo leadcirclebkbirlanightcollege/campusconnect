@@ -4,7 +4,7 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
-  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun,
+  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
