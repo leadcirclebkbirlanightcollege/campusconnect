@@ -40,11 +40,8 @@ function AdminProfileMenu({ userId }: { userId: string }) {
     enabled: !!userId,
   });
   const initial = useMemo(() => (profile?.name ?? "A")[0].toUpperCase(), [profile?.name]);
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/auth", { replace: true });
-  };
+  const logout = useLogout();
+  const handleLogout = () => logout();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
