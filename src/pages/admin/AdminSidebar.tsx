@@ -31,8 +31,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function AdminSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const logout = useLogout();
   const { setOpenMobile, state } = useSidebar();
   const { theme, setTheme } = useTheme();
   const { branding } = usePlatformBranding();
@@ -44,11 +43,6 @@ export default function AdminSidebar() {
 
   const handleNav = () => setOpenMobile(false);
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-  const onLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/auth", { replace: true });
-  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border bg-sidebar">
