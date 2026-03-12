@@ -1,7 +1,7 @@
 /**
  * SuperAdminLayout — shell for /platform/admin-control/* routes.
  */
-import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { Outlet, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
@@ -15,17 +15,16 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/hooks/useLogout";
 import { useMemo } from "react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider } from "@/contexts/CollegeContext";
 import SessionGuard from "@/components/auth/SessionGuard";
 
 function SAProfileMenu({ userId }: { userId: string }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const logout = useLogout();
   const { data: profile } = useQuery({
     queryKey: ["sa_topbar", "profile", userId],
     queryFn: async () => {
@@ -33,13 +32,9 @@ function SAProfileMenu({ userId }: { userId: string }) {
       return data;
     },
     staleTime: 60_000,
+    enabled: !!userId,
   });
   const initial = useMemo(() => (profile?.name ?? "S")[0].toUpperCase(), [profile?.name]);
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/auth", { replace: true });
-  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -65,9 +60,9 @@ function SAProfileMenu({ userId }: { userId: string }) {
           <Link to="/platform/admin-control/platform-settings"><UserRound className="h-3.5 w-3.5 text-muted-foreground" />Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-border-subtle" />
-        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleLogout(); }}
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); logout(); }}
           className="gap-2 text-[13px] text-danger focus:text-danger focus:bg-danger/8 cursor-pointer">
-          <LogOut className="h-3.5 w-3.5" />Sign Out
+          <UserRound className="h-3.5 w-3.5 opacity-0 absolute" />Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -18,9 +18,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/hooks/useLogout";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransitions";
@@ -30,8 +29,7 @@ import TopbarNotificationCenter from "@/components/notifications/TopbarNotificat
 import { useMemo } from "react";
 
 function AdminProfileMenu({ userId }: { userId: string }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const logout = useLogout();
   const { data: profile } = useQuery({
     queryKey: ["admin_topbar", "profile", userId],
     queryFn: async () => {
@@ -39,13 +37,9 @@ function AdminProfileMenu({ userId }: { userId: string }) {
       return data;
     },
     staleTime: 60_000,
+    enabled: !!userId,
   });
   const initial = useMemo(() => (profile?.name ?? "A")[0].toUpperCase(), [profile?.name]);
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/auth", { replace: true });
-  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -71,7 +65,7 @@ function AdminProfileMenu({ userId }: { userId: string }) {
           <Link to="/platform/admin/settings"><UserRound className="h-3.5 w-3.5 text-muted-foreground" />Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-border-subtle" />
-        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleLogout(); }}
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); logout(); }}
           className="gap-2 text-[13px] text-danger focus:text-danger focus:bg-danger/8 cursor-pointer">
           <LogOut className="h-3.5 w-3.5" />Sign Out
         </DropdownMenuItem>

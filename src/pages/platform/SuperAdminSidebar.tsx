@@ -1,13 +1,12 @@
 /**
  * SuperAdminSidebar — left nav for /platform/admin-control/* routes.
  */
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
+import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
   CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
@@ -25,8 +24,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function SuperAdminSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const logout = useLogout();
   const { setOpenMobile, state } = useSidebar();
   const { theme, setTheme } = useTheme();
   const collapsed = state === "collapsed";
@@ -37,11 +35,6 @@ export default function SuperAdminSidebar() {
 
   const handleNav = () => setOpenMobile(false);
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-  const onLogout = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/auth", { replace: true });
-  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border bg-sidebar">
@@ -117,7 +110,7 @@ export default function SuperAdminSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={onLogout} tooltip="Sign Out"
+            <SidebarMenuButton onClick={logout} tooltip="Sign Out"
               className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-muted-foreground hover:text-danger hover:bg-danger/8 transition-all duration-fast">
               <LogOut className="h-3.5 w-3.5 shrink-0" />
               <span>Sign Out</span>
