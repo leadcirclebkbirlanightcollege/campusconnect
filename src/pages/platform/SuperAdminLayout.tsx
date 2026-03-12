@@ -25,6 +25,7 @@ import SessionGuard from "@/components/auth/SessionGuard";
 
 function SAProfileMenu({ userId }: { userId: string }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: profile } = useQuery({
     queryKey: ["sa_topbar", "profile", userId],
     queryFn: async () => {
@@ -36,6 +37,7 @@ function SAProfileMenu({ userId }: { userId: string }) {
   const initial = useMemo(() => (profile?.name ?? "S")[0].toUpperCase(), [profile?.name]);
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/auth", { replace: true });
   };
   return (
