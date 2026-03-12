@@ -18,9 +18,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/hooks/useLogout";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransitions";
