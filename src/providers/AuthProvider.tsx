@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextValue {
   session: Session | null;
@@ -15,9 +16,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  // NOTE: queryClient is NOT available here (AuthProvider wraps QueryProvider).
+  // The cache-clear on sign-out is handled by useLogout() and the listener
+  // inside QueryProvider / AppProviders instead.
   React.useEffect(() => {
     let mounted = true;
 
+    // Set up listener BEFORE getSession to avoid missing events
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
