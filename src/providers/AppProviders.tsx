@@ -3,7 +3,7 @@
  *
  * AppProviders
  *   - AuthProvider
- *   - QueryProvider
+ *   - QueryProvider  ← also installs global auth-state → cache-clear listener
  *   - TenantProvider  ← multi-tenant college context
  *   - ThemeProvider
  *   - PerformanceProvider
@@ -19,24 +19,43 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { NotificationProvider } from "@/providers/NotificationProvider";
 import { PerformanceProvider } from "@/providers/PerformanceProvider";
 import { TenantProvider } from "@/providers/TenantProvider";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppProvidersProps {
   children: React.ReactNode;
+}
+
+/** Sits inside QueryProvider so it can call queryClient safely */
+function GlobalAuthListener({ children }: { children: React.ReactNode }) {
+  React.useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // When the user signs out (from any panel), purge all cached data
+      if (event === "SIGNED_OUT") {
+        queryClient.removeQueries();
+        queryClient.clear();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return <>{children}</>;
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AuthProvider>
       <QueryProvider>
-        <TenantProvider>
-          <ThemeProvider>
-            <PerformanceProvider>
-              <TooltipProvider delayDuration={400}>
-                <NotificationProvider>{children}</NotificationProvider>
-              </TooltipProvider>
-            </PerformanceProvider>
-          </ThemeProvider>
-        </TenantProvider>
+        <GlobalAuthListener>
+          <TenantProvider>
+            <ThemeProvider>
+              <PerformanceProvider>
+                <TooltipProvider delayDuration={400}>
+                  <NotificationProvider>{children}</NotificationProvider>
+                </TooltipProvider>
+              </PerformanceProvider>
+            </ThemeProvider>
+          </TenantProvider>
+        </GlobalAuthListener>
       </QueryProvider>
     </AuthProvider>
   );

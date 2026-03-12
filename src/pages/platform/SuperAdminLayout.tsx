@@ -15,9 +15,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/hooks/useLogout";
 import { useMemo } from "react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider } from "@/contexts/CollegeContext";
