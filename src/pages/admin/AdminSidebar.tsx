@@ -10,7 +10,6 @@ import {
   Bell, Trophy, Coins, ScanLine, FileText, Palette, UserCog, Settings,
   SlidersHorizontal, LogOut, Moon, Sun, Shield, Building2, School,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
