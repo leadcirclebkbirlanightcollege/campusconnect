@@ -3,6 +3,7 @@
  */
 import { useMemo } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
@@ -31,6 +32,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export default function AdminSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { setOpenMobile, state } = useSidebar();
   const { theme, setTheme } = useTheme();
   const { branding } = usePlatformBranding();
@@ -44,6 +46,7 @@ export default function AdminSidebar() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const onLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/auth", { replace: true });
   };
 

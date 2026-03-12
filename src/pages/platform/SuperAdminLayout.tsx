@@ -16,6 +16,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { BRANDING } from "@/config/branding";
@@ -24,6 +25,7 @@ import SessionGuard from "@/components/auth/SessionGuard";
 
 function SAProfileMenu({ userId }: { userId: string }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: profile } = useQuery({
     queryKey: ["sa_topbar", "profile", userId],
     queryFn: async () => {
@@ -35,6 +37,7 @@ function SAProfileMenu({ userId }: { userId: string }) {
   const initial = useMemo(() => (profile?.name ?? "S")[0].toUpperCase(), [profile?.name]);
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/auth", { replace: true });
   };
   return (

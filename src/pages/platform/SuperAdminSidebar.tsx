@@ -7,6 +7,7 @@ import {
   CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export default function SuperAdminSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { setOpenMobile, state } = useSidebar();
   const { theme, setTheme } = useTheme();
   const collapsed = state === "collapsed";
@@ -37,6 +39,7 @@ export default function SuperAdminSidebar() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const onLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/auth", { replace: true });
   };
 
