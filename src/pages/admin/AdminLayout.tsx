@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";

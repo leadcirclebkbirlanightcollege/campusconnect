@@ -3,6 +3,7 @@
  */
 import { useMemo } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
