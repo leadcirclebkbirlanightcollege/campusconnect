@@ -31,6 +31,7 @@ import { useMemo } from "react";
 
 function AdminProfileMenu({ userId }: { userId: string }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: profile } = useQuery({
     queryKey: ["admin_topbar", "profile", userId],
     queryFn: async () => {
@@ -42,6 +43,7 @@ function AdminProfileMenu({ userId }: { userId: string }) {
   const initial = useMemo(() => (profile?.name ?? "A")[0].toUpperCase(), [profile?.name]);
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/auth", { replace: true });
   };
   return (
