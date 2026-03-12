@@ -110,7 +110,7 @@ export default function SuperAdminSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={onLogout} tooltip="Sign Out"
+            <SidebarMenuButton onClick={logout} tooltip="Sign Out"
               className="h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal text-muted-foreground hover:text-danger hover:bg-danger/8 transition-all duration-fast">
               <LogOut className="h-3.5 w-3.5 shrink-0" />
               <span>Sign Out</span>
