@@ -2,8 +2,8 @@
  * AdminSidebar — left nav for /platform/admin/* routes.
  */
 import { useMemo } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useLocation, Link } from "react-router-dom";
+import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
