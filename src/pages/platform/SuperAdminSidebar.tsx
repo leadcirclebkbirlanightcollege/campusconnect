@@ -7,6 +7,7 @@ import {
   CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
