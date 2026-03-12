@@ -65,7 +65,7 @@ function AdminProfileMenu({ userId }: { userId: string }) {
           <Link to="/platform/admin/settings"><UserRound className="h-3.5 w-3.5 text-muted-foreground" />Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-border-subtle" />
-        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleLogout(); }}
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); logout(); }}
           className="gap-2 text-[13px] text-danger focus:text-danger focus:bg-danger/8 cursor-pointer">
           <LogOut className="h-3.5 w-3.5" />Sign Out
         </DropdownMenuItem>
