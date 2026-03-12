@@ -29,8 +29,7 @@ import TopbarNotificationCenter from "@/components/notifications/TopbarNotificat
 import { useMemo } from "react";
 
 function AdminProfileMenu({ userId }: { userId: string }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const logout = useLogout();
   const { data: profile } = useQuery({
     queryKey: ["admin_topbar", "profile", userId],
     queryFn: async () => {
@@ -38,6 +37,7 @@ function AdminProfileMenu({ userId }: { userId: string }) {
       return data;
     },
     staleTime: 60_000,
+    enabled: !!userId,
   });
   const initial = useMemo(() => (profile?.name ?? "A")[0].toUpperCase(), [profile?.name]);
   const handleLogout = async () => {

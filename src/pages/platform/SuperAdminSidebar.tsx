@@ -1,13 +1,12 @@
 /**
  * SuperAdminSidebar — left nav for /platform/admin-control/* routes.
  */
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
+import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
   CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
