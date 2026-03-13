@@ -79,8 +79,8 @@ export default function PlatformModeGuard({ children }: Props) {
     return () => { document.body.dataset.theme = ""; };
   }, [settings.event_theme]);
 
-  // Wait for auth to resolve — do NOT render children prematurely
-  if (!authReady) return null;
+  // Wait for auth to resolve — show children immediately so landing page is never blank
+  if (!authReady) return <>{children}</>;
 
   // Admins always bypass — role-based only, no route exceptions
   if (userRole === "admin") return <>{children}</>;
