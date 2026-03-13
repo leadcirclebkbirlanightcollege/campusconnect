@@ -5,7 +5,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
-  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network,
+  CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network, Activity,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
