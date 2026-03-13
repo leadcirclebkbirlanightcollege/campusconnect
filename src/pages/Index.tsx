@@ -166,7 +166,14 @@ export default function Index() {
 
   const year = useMemo(() => new Date().getFullYear(), []);
 
-  if (authChecking) return null;
+  if (authChecking) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
