@@ -1,6 +1,3 @@
-/**
- * SuperAdminLayout — shell for /platform/admin-control/* routes.
- */
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +19,7 @@ import { useMemo } from "react";
 import { BRANDING } from "@/config/branding";
 import { CollegeProvider } from "@/contexts/CollegeContext";
 import SessionGuard from "@/components/auth/SessionGuard";
+import CollegeSwitcher from "@/pages/platform/components/CollegeSwitcher";
 
 function SAProfileMenu({ userId }: { userId: string }) {
   const logout = useLogout();
@@ -105,6 +103,8 @@ export default function SuperAdminLayout() {
                   </AnimatePresence>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Slack-style College Workspace Switcher */}
+                  <CollegeSwitcher className="hidden sm:flex max-w-[180px]" />
                   {user && <SAProfileMenu userId={user.id} />}
                 </div>
               </div>

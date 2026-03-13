@@ -60,8 +60,11 @@ const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/Ad
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
 const SADashboardPage       = lazy(() => import("@/pages/platform/pages/SADashboardPage"));
 const SASystemMapPage       = lazy(() => import("@/pages/platform/pages/SASystemMapPage"));
+const SASystemHealthPage    = lazy(() => import("@/pages/platform/pages/SASystemHealthPage"));
 const SACollegesPage        = lazy(() => import("@/pages/platform/pages/SACollegesPage"));
+const SACreateCollegePage   = lazy(() => import("@/pages/platform/pages/SACreateCollegePage"));
 const SAAdminsPage          = lazy(() => import("@/pages/platform/pages/SAAdminsPage"));
+const SACreateAdminPage     = lazy(() => import("@/pages/platform/pages/SACreateAdminPage"));
 const SAStudentsPage        = lazy(() => import("@/pages/platform/pages/SAStudentsPage"));
 const SALectureMonitorPage  = lazy(() => import("@/pages/platform/pages/SALectureMonitorPage"));
 const SAAttendancePage      = lazy(() => import("@/pages/platform/pages/SAAttendancePage"));
@@ -95,19 +98,27 @@ export default function AppRouter() {
             }
           >
             <Route index element={<Navigate to="/platform/admin-control/dashboard" replace />} />
-            <Route path="dashboard"         element={<SADashboardPage />} />
-            <Route path="system-map"        element={<SASystemMapPage />} />
-            <Route path="colleges"          element={<SACollegesPage />} />
-            <Route path="admins"            element={<SAAdminsPage />} />
-            <Route path="students"          element={<SAStudentsPage />} />
-            <Route path="lectures"          element={<SALectureMonitorPage />} />
-            <Route path="attendance"        element={<SAAttendancePage />} />
-            <Route path="leaderboard"       element={<SALeaderboardPage />} />
-            <Route path="achievements"      element={<SAAchievementsPage />} />
-            <Route path="notifications"     element={<SANotificationsPage />} />
-            <Route path="analytics"         element={<SAAnalyticsPage />} />
-            <Route path="security"          element={<SASecurityPage />} />
-            <Route path="platform-settings" element={<SAPlatformSettingsPage />} />
+            <Route path="dashboard"          element={<SADashboardPage />} />
+            <Route path="system-map"         element={<SASystemMapPage />} />
+            <Route path="system-health"      element={<SASystemHealthPage />} />
+            <Route path="colleges"           element={<SACollegesPage />} />
+            <Route path="create-college"     element={<SACreateCollegePage />} />
+            <Route path="edit-college/:collegeId" element={<SACollegesPage />} />
+            <Route path="admins"             element={<SAAdminsPage />} />
+            <Route path="create-admin"       element={<SACreateAdminPage />} />
+            <Route path="edit-admin/:adminId" element={<SAAdminsPage />} />
+            <Route path="students"           element={<SAStudentsPage />} />
+            <Route path="student/:studentId" element={<SAStudentsPage />} />
+            <Route path="lectures"           element={<SALectureMonitorPage />} />
+            <Route path="lecture/:lectureId" element={<SALectureMonitorPage />} />
+            <Route path="attendance"         element={<SAAttendancePage />} />
+            <Route path="leaderboard"        element={<SALeaderboardPage />} />
+            <Route path="achievements"       element={<SAAchievementsPage />} />
+            <Route path="notifications"      element={<SANotificationsPage />} />
+            <Route path="send-notification"  element={<SANotificationsPage />} />
+            <Route path="analytics"          element={<SAAnalyticsPage />} />
+            <Route path="security"           element={<SASecurityPage />} />
+            <Route path="platform-settings"  element={<SAPlatformSettingsPage />} />
           </Route>
 
           {/* ── Admin (/platform/admin/*) ─────────────────────────────────────── */}
