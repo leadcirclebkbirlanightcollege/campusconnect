@@ -103,6 +103,8 @@ export default function SuperAdminLayout() {
                   </AnimatePresence>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Slack-style College Workspace Switcher */}
+                  <CollegeSwitcher className="hidden sm:flex max-w-[180px]" />
                   {user && <SAProfileMenu userId={user.id} />}
                 </div>
               </div>
