@@ -7,22 +7,31 @@ import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import { AppProviders } from "@/providers/AppProviders";
 import { useWebVitals } from "@/hooks/use-web-vitals";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRouter from "@/router/AppRouter";
 import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicator";
+import { useAuth } from "@/providers/AuthProvider";
+
+// Public routes where overlays (WhatsNew, Splash, Install) must NOT appear
+const PUBLIC_PATHS = ["/", "/auth", "/auth/login", "/auth/signup"];
 
 function AppInner() {
   useWebVitals();
+  const { user, isLoading } = useAuth();
+  const { pathname } = useLocation();
+
+  const isPublicRoute = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith("/auth"));
+  const showOverlays = !isLoading && !!user && !isPublicRoute;
 
   return (
     <>
       <TenantBrandingApplicator />
       <OfflineBanner />
       <SwUpdateManager />
-      <AppSplash />
-      <WhatsNewModal />
+      {showOverlays && <AppSplash />}
+      {showOverlays && <WhatsNewModal />}
       <NetworkHealthDot />
-      <InstallPromptBanner />
+      {showOverlays && <InstallPromptBanner />}
       <AppRouter />
     </>
   );
