@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "@/providers/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -9,103 +9,96 @@ interface ProtectedRouteProps {
   requiredRole?: "admin" | "super_admin" | "student";
 }
 
-// Module-level role cache so repeated mounts don't re-fetch
+// Module-level role cache — survives re-mounts, cleared on sign-out via GlobalAuthListener
 const roleCache = new Map<string, string>();
 
+// Clear cache on sign-out so next login gets a fresh role fetch
+supabase.auth.onAuthStateChange((event) => {
+  if (event === "SIGNED_OUT") roleCache.clear();
+});
+
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const [user, setUser] = useState<User | null | undefined>(undefined); // undefined = loading
+  // Use the centralized AuthProvider — avoids duplicate session listeners
+  const { user, isLoading: authLoading } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
   const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
-
-    // Use cached session — avoids network round-trip on every mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted.current) return;
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) {
-        loadRole(u.id);
-      } else {
-        setRoleLoading(false);
-      }
-    });
-
-    // Listen only for sign-out / sign-in changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted.current) return;
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) {
-        loadRole(u.id);
-      } else {
-        setUserRole(null);
-        setRoleLoading(false);
-      }
-    });
-
-    return () => {
-      isMounted.current = false;
-      subscription.unsubscribe();
-    };
+    return () => { isMounted.current = false; };
   }, []);
 
-  const loadRole = async (userId: string) => {
-    // Serve from cache first — no DB hit on repeated renders
-    if (roleCache.has(userId)) {
-      if (isMounted.current) {
-        setUserRole(roleCache.get(userId) ?? null);
-        setRoleLoading(false);
-      }
+  useEffect(() => {
+    if (authLoading) return; // wait for auth to settle
+
+    if (!user) {
+      setRoleLoading(false);
       return;
     }
 
-    try {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      const role = data?.role ?? null;
-      roleCache.set(userId, role ?? "student");
-      if (isMounted.current) setUserRole(role);
-    } catch {
-      // Silent — default to student on failure
-    } finally {
-      if (isMounted.current) setRoleLoading(false);
+    // Serve from cache first
+    if (roleCache.has(user.id)) {
+      setUserRole(roleCache.get(user.id) ?? "student");
+      setRoleLoading(false);
+      return;
     }
-  };
 
-  // Still resolving session
-  if (user === undefined || roleLoading) {
+    // Fetch role from DB
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const role = data?.role ?? "student";
+        roleCache.set(user.id, role);
+        if (isMounted.current) {
+          setUserRole(role);
+          setRoleLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted.current) {
+          setUserRole("student");
+          setRoleLoading(false);
+        }
+      });
+  }, [user, authLoading]);
+
+  // Loading: wait for both auth + role
+  if (authLoading || (!!user && roleLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        </div>
       </div>
     );
   }
 
+  // Not authenticated → redirect to login
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // super_admin: always redirect to /platform/admin-control if they land on /app routes
-  if (!requiredRole && userRole === "super_admin") return <Navigate to="/platform/admin-control/dashboard" replace />;
-
-  if (requiredRole === "super_admin") {
-    if (userRole !== "super_admin") return <Navigate to="/platform/admin/dashboard" replace />;
+  // Super admin on generic protected route → send to SA dashboard
+  if (!requiredRole && userRole === "super_admin") {
+    return <Navigate to="/platform/admin-control/dashboard" replace />;
   }
 
-  if (requiredRole === "admin") {
-    // super_admin inherits admin access
-    if (userRole !== "admin" && userRole !== "super_admin") return <Navigate to="/app/dashboard" replace />;
+  // Role enforcement
+  if (requiredRole === "super_admin" && userRole !== "super_admin") {
+    return <Navigate to="/platform/admin/dashboard" replace />;
   }
 
-  if (requiredRole === "student") {
-    if (userRole === "admin" || userRole === "super_admin") return <Navigate to="/platform/admin/dashboard" replace />;
+  if (requiredRole === "admin" && userRole !== "admin" && userRole !== "super_admin") {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  if (requiredRole === "student" && (userRole === "admin" || userRole === "super_admin")) {
+    return <Navigate to="/platform/admin/dashboard" replace />;
   }
 
   return <>{children}</>;
