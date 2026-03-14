@@ -45,25 +45,26 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     }
 
     // Fetch role from DB
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
         const role = data?.role ?? "student";
         roleCache.set(user.id, role);
         if (isMounted.current) {
           setUserRole(role);
           setRoleLoading(false);
         }
-      })
-      .catch(() => {
+      } catch {
         if (isMounted.current) {
           setUserRole("student");
           setRoleLoading(false);
         }
-      });
+      }
+    })();
   }, [user, authLoading]);
 
   // Loading: wait for both auth + role
