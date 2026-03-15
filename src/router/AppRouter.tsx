@@ -149,11 +149,12 @@ export default function AppRouter() {
             <Route path="challenges"               element={<AdminChallengesPage />} />
             <Route path="points"                   element={<AdminPointsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
-            <Route path="audit-log"                element={<AdminAuditLogPage />} />
-            <Route path="branding"                 element={<AdminBrandingPage />} />
-            <Route path="core-team"                element={<AdminCoreTeamPage />} />
-            <Route path="system-control"           element={<AdminSystemControlPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
+            {/* Legacy redirects for removed platform items → SA panel */}
+            <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
+            <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
+            <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
+            <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
           </Route>
 
           {/* ── Student (/app/*) ──────────────────────────────────────────────── */}
