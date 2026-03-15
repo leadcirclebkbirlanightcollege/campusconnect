@@ -83,6 +83,7 @@ export default function SuperAdminLayout() {
         <div className="min-h-svh flex w-full bg-background">
           <SuperAdminSidebar />
           <SidebarInset className="flex flex-col min-w-0">
+            {/* ── Topbar ── */}
             <header className={cn(
               "sticky top-0 z-40 glass-surface border-b border-border-subtle/70",
               "shadow-[0_1px_0_hsl(var(--border-subtle)/0.8)]",
@@ -90,6 +91,8 @@ export default function SuperAdminLayout() {
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
                 <SidebarTrigger className="h-8 w-8 shrink-0" />
                 <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
+                {/* Breadcrumb title */}
                 <div className="min-w-0 flex-1">
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.div
@@ -98,37 +101,51 @@ export default function SuperAdminLayout() {
                       transition={{ duration: msToSeconds(MOTION_MS.fast), ease: [0, 0, 0.2, 1] }}
                     >
                       <p className="text-[14px] font-semibold text-foreground leading-none truncate">{title}</p>
-                      {description && <p className="hidden sm:block text-[11px] text-muted-foreground mt-0.5 leading-none truncate">{description}</p>}
+                      {description && (
+                        <p className="hidden sm:block text-[11px] text-muted-foreground mt-0.5 leading-none truncate">{description}</p>
+                      )}
                     </motion.div>
                   </AnimatePresence>
                 </div>
+
+                {/* Right controls */}
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {/* Slack-style College Workspace Switcher */}
-                  <CollegeSwitcher className="hidden sm:flex max-w-[180px]" />
+                  {/* SA badge */}
+                  <span className="hidden lg:flex items-center gap-1 rounded-full border border-primary/20 bg-primary/8 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary/80">
+                    Super Admin
+                  </span>
+                  {/* College Workspace Switcher */}
+                  <CollegeSwitcher className="hidden sm:flex max-w-[200px]" />
+                  {/* Profile menu */}
                   {user && <SAProfileMenu userId={user.id} />}
                 </div>
               </div>
             </header>
 
-            <main className="flex-1 min-w-0 py-5 md:px-6 md:pb-6 pb-6">
+            {/* ── Page content — full-width desktop ── */}
+            <main className="flex-1 min-w-0 p-4 md:p-6 xl:p-8">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}
                   variants={PAGE_TRANSITION_VARIANTS} initial="initial" animate="animate" exit="exit"
-                  transition={PAGE_TRANSITION} className="w-full h-full"
+                  transition={PAGE_TRANSITION}
+                  className="w-full h-full max-w-[1600px]"
                 >
                   <Outlet />
                 </motion.div>
               </AnimatePresence>
             </main>
 
+            {/* ── Footer ── */}
             <footer className="border-t border-border-subtle/60 bg-surface-1/50 shrink-0 hidden md:block">
               <div className="px-5 py-2.5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-1.5">
                   <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-50" />
                   <span className="text-[11px] text-muted-foreground/50 font-medium">{BRANDING.name} Platform</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground/35 text-right">Super Admin · Developed by Atharv Jadhav</p>
+                <p className="text-[11px] text-muted-foreground/35 text-right">
+                  Super Admin Control Center · {BRANDING.name}
+                </p>
               </div>
             </footer>
           </SidebarInset>
