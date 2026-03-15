@@ -23,8 +23,7 @@ import { ADMIN_NAV_SECTIONS } from "@/pages/admin/adminNavConfig";
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
-  Bell, Trophy, Coins, ScanLine, FileText, Palette, UserCog, Settings,
-  SlidersHorizontal, Shield, Building2, School,
+  Bell, Trophy, Coins, ScanLine, SlidersHorizontal, Building2, School,
 };
 
 export default function AdminSidebar() {
