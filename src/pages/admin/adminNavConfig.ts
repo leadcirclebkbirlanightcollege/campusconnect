@@ -55,13 +55,9 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     label: "System",
     items: [
-      { title: "Points",         url: "/platform/admin/points",         icon: "Coins" },
-      { title: "ID Scanner",     url: "/platform/admin/scanner",        icon: "ScanLine" },
-      { title: "Audit Log",      url: "/platform/admin/audit-log",      icon: "FileText" },
-      { title: "Branding",       url: "/platform/admin/branding",       icon: "Palette" },
-      { title: "Core Team",      url: "/platform/admin/core-team",      icon: "UserCog" },
-      { title: "Platform Ctrl",  url: "/platform/admin/system-control", icon: "Settings" },
-      { title: "Settings",       url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
+      { title: "Points",    url: "/platform/admin/points",   icon: "Coins" },
+      { title: "ID Scanner",url: "/platform/admin/scanner",  icon: "ScanLine" },
+      { title: "Settings",  url: "/platform/admin/settings", icon: "SlidersHorizontal" },
     ],
   },
 ];
@@ -89,10 +85,6 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/challenges":             { title: "Challenges",         description: "Engagement challenges" },
   "/platform/admin/points":                 { title: "Points",             description: "Points & adjustments" },
   "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
-  "/platform/admin/audit-log":              { title: "Audit Log",          description: "Action history" },
-  "/platform/admin/branding":              { title: "Branding",           description: "College branding settings" },
-  "/platform/admin/core-team":              { title: "Core Team",          description: "Core team members" },
-  "/platform/admin/system-control":        { title: "Platform Control",   description: "System-level settings" },
   "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
 };
 

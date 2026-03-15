@@ -48,10 +48,6 @@ const AdminNotificationsPage       = lazy(() => import("@/pages/admin/pages/Admi
 const AdminChallengesPage          = lazy(() => import("@/pages/admin/pages/AdminChallengesPage"));
 const AdminPointsPage              = lazy(() => import("@/pages/admin/pages/AdminPointsPage"));
 const AdminScannerPage             = lazy(() => import("@/pages/admin/pages/AdminScannerPage"));
-const AdminAuditLogPage            = lazy(() => import("@/pages/admin/pages/AdminAuditLogPage"));
-const AdminBrandingPage            = lazy(() => import("@/pages/admin/pages/AdminBrandingPage"));
-const AdminCoreTeamPage            = lazy(() => import("@/pages/admin/pages/AdminCoreTeamPage"));
-const AdminSystemControlPage       = lazy(() => import("@/pages/admin/pages/AdminSystemControlPage"));
 const AdminSettingsPage            = lazy(() => import("@/pages/admin/pages/AdminSettingsPage"));
 const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/departments/AdminDepartmentsPage"));
 const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
@@ -149,11 +145,12 @@ export default function AppRouter() {
             <Route path="challenges"               element={<AdminChallengesPage />} />
             <Route path="points"                   element={<AdminPointsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
-            <Route path="audit-log"                element={<AdminAuditLogPage />} />
-            <Route path="branding"                 element={<AdminBrandingPage />} />
-            <Route path="core-team"                element={<AdminCoreTeamPage />} />
-            <Route path="system-control"           element={<AdminSystemControlPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
+            {/* Legacy redirects for removed platform items → SA panel */}
+            <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
+            <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
+            <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
+            <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
           </Route>
 
           {/* ── Student (/app/*) ──────────────────────────────────────────────── */}
