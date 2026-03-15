@@ -55,13 +55,9 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     label: "System",
     items: [
-      { title: "Points",         url: "/platform/admin/points",         icon: "Coins" },
-      { title: "ID Scanner",     url: "/platform/admin/scanner",        icon: "ScanLine" },
-      { title: "Audit Log",      url: "/platform/admin/audit-log",      icon: "FileText" },
-      { title: "Branding",       url: "/platform/admin/branding",       icon: "Palette" },
-      { title: "Core Team",      url: "/platform/admin/core-team",      icon: "UserCog" },
-      { title: "Platform Ctrl",  url: "/platform/admin/system-control", icon: "Settings" },
-      { title: "Settings",       url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
+      { title: "Points",    url: "/platform/admin/points",   icon: "Coins" },
+      { title: "ID Scanner",url: "/platform/admin/scanner",  icon: "ScanLine" },
+      { title: "Settings",  url: "/platform/admin/settings", icon: "SlidersHorizontal" },
     ],
   },
 ];
