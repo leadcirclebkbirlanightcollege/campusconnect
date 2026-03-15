@@ -49,6 +49,8 @@ const AdminChallengesPage          = lazy(() => import("@/pages/admin/pages/Admi
 const AdminPointsPage              = lazy(() => import("@/pages/admin/pages/AdminPointsPage"));
 const AdminScannerPage             = lazy(() => import("@/pages/admin/pages/AdminScannerPage"));
 const AdminSettingsPage            = lazy(() => import("@/pages/admin/pages/AdminSettingsPage"));
+const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/departments/AdminDepartmentsPage"));
+const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
