@@ -95,14 +95,14 @@ export default function SAStudentsTab() {
       if (filterRisk === "risk")  rows = rows.filter((s) => (s.risk_flags?.length ?? 0) > 0);
       if (filterRisk === "safe")  rows = rows.filter((s) => (s.risk_flags?.length ?? 0) === 0);
 
-      return { rows, total: count ?? 0 };
+      return { rows, total: count ?? 0 } as { rows: StudentRow[]; total: number };
     },
     staleTime: 45_000,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 
-  const rows  = studentsQuery.data?.rows ?? [];
-  const total = studentsQuery.data?.total ?? 0;
+  const rows  = (studentsQuery.data as any)?.rows  as StudentRow[] ?? [];
+  const total = (studentsQuery.data as any)?.total as number      ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
