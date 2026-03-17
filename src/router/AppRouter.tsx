@@ -199,6 +199,27 @@ export default function AppRouter() {
             <Route path="daily"                  element={<StudentDailyContent />} />
             <Route path="achievements"           element={<StudentAchievements />} />
             <Route path="install"                element={<PwaInstallPage />} />
+            <Route path="messages"               element={<CollaborationHub />} />
+            <Route path="messages/*"             element={<CollaborationHub />} />
+          </Route>
+
+          {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
+          <Route
+            path="/faculty"
+            element={
+              <ProtectedRoute requiredRole="faculty">
+                <FacultyLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/faculty/dashboard" replace />} />
+            <Route path="dashboard"     element={<FacultyDashboard />} />
+            <Route path="my-lectures"   element={<FacultyMyLectures />} />
+            <Route path="attendance"    element={<FacultyAttendance />} />
+            <Route path="students"      element={<FacultyStudents />} />
+            <Route path="announcements" element={<FacultyAnnouncements />} />
+            <Route path="schedule"      element={<FacultySchedule />} />
+            <Route path="profile"       element={<FacultyProfile />} />
           </Route>
 
           {/* ── Legacy redirects ──────────────────────────────────────────────── */}
