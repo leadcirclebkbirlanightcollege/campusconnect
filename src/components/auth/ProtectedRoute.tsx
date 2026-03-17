@@ -84,20 +84,23 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Super admin on generic protected route → send to SA dashboard
-  if (!requiredRole && userRole === "super_admin") {
-    return <Navigate to="/platform/admin-control/dashboard" replace />;
+  // Role-based redirects on generic protected route
+  if (!requiredRole) {
+    if (userRole === "super_admin") return <Navigate to="/platform/admin-control/dashboard" replace />;
+    if (userRole === "admin")       return <Navigate to="/platform/admin/dashboard" replace />;
+    if (userRole === "faculty")     return <Navigate to="/faculty/dashboard" replace />;
   }
 
   // Role enforcement
   if (requiredRole === "super_admin" && userRole !== "super_admin") {
     return <Navigate to="/platform/admin/dashboard" replace />;
   }
-
   if (requiredRole === "admin" && userRole !== "admin" && userRole !== "super_admin") {
     return <Navigate to="/app/dashboard" replace />;
   }
-
+  if (requiredRole === "faculty" && userRole !== "faculty" && userRole !== "admin" && userRole !== "super_admin") {
+    return <Navigate to="/app/dashboard" replace />;
+  }
   if (requiredRole === "student" && (userRole === "admin" || userRole === "super_admin")) {
     return <Navigate to="/platform/admin/dashboard" replace />;
   }
