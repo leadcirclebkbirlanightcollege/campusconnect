@@ -367,6 +367,82 @@ export type Database = {
           },
         ]
       }
+      channel_members: {
+        Row: {
+          channel_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           college_id: string
@@ -853,6 +929,63 @@ export type Database = {
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachments: Json | null
+          channel_id: string | null
+          created_at: string
+          id: string
+          is_deleted: boolean
+          message_text: string | null
+          reactions: Json | null
+          receiver_id: string | null
+          reply_to_id: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          channel_id?: string | null
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          message_text?: string | null
+          reactions?: Json | null
+          receiver_id?: string | null
+          reply_to_id?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          channel_id?: string | null
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          message_text?: string | null
+          reactions?: Json | null
+          receiver_id?: string | null
+          reply_to_id?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -1638,6 +1771,7 @@ export type Database = {
       }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
+      is_faculty: { Args: { check_user_id: string }; Returns: boolean }
       is_student: { Args: { check_user_id: string }; Returns: boolean }
       is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
       log_audit_event: {
@@ -1663,7 +1797,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "completed"
-      app_role: "admin" | "student" | "super_admin"
+      app_role: "admin" | "student" | "super_admin" | "faculty"
       lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent" | "cancelled"
     }
@@ -1799,7 +1933,7 @@ export const Constants = {
         "rejected",
         "completed",
       ],
-      app_role: ["admin", "student", "super_admin"],
+      app_role: ["admin", "student", "super_admin", "faculty"],
       lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent", "cancelled"],
     },

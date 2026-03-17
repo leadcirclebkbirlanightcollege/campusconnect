@@ -4,7 +4,7 @@ import LegacyProtectedRoute from "@/components/auth/ProtectedRoute";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: "admin" | "super_admin" | "student";
+  requiredRole?: "admin" | "super_admin" | "student" | "faculty";
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {

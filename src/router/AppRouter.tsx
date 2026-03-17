@@ -9,6 +9,19 @@ import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 
+// ── Faculty pages ──────────────────────────────────────────────────────────────
+const FacultyLayout       = lazy(() => import("@/pages/faculty/FacultyLayout"));
+const FacultyDashboard    = lazy(() => import("@/pages/faculty/FacultyDashboard"));
+const FacultyMyLectures   = lazy(() => import("@/pages/faculty/FacultyMyLectures"));
+const FacultyAttendance   = lazy(() => import("@/pages/faculty/FacultyAttendance"));
+const FacultyStudents     = lazy(() => import("@/pages/faculty/FacultyStudents"));
+const FacultyAnnouncements = lazy(() => import("@/pages/faculty/FacultyAnnouncements"));
+const FacultySchedule     = lazy(() => import("@/pages/faculty/FacultySchedule"));
+const FacultyProfile      = lazy(() => import("@/pages/faculty/FacultyProfile"));
+
+// ── Collaboration Hub ─────────────────────────────────────────────────────────
+const CollaborationHub    = lazy(() => import("@/pages/student/messages/CollaborationHub"));
+
 // ── Student pages ─────────────────────────────────────────────────────────────
 const StudentDashboard    = lazy(() => import("@/pages/student/StudentDashboard"));
 const StudentProfile      = lazy(() => import("@/pages/student/StudentProfile"));
@@ -186,6 +199,27 @@ export default function AppRouter() {
             <Route path="daily"                  element={<StudentDailyContent />} />
             <Route path="achievements"           element={<StudentAchievements />} />
             <Route path="install"                element={<PwaInstallPage />} />
+            <Route path="messages"               element={<CollaborationHub />} />
+            <Route path="messages/*"             element={<CollaborationHub />} />
+          </Route>
+
+          {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
+          <Route
+            path="/faculty"
+            element={
+              <ProtectedRoute requiredRole="faculty">
+                <FacultyLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/faculty/dashboard" replace />} />
+            <Route path="dashboard"     element={<FacultyDashboard />} />
+            <Route path="my-lectures"   element={<FacultyMyLectures />} />
+            <Route path="attendance"    element={<FacultyAttendance />} />
+            <Route path="students"      element={<FacultyStudents />} />
+            <Route path="announcements" element={<FacultyAnnouncements />} />
+            <Route path="schedule"      element={<FacultySchedule />} />
+            <Route path="profile"       element={<FacultyProfile />} />
           </Route>
 
           {/* ── Legacy redirects ──────────────────────────────────────────────── */}
