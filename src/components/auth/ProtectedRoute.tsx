@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "super_admin" | "student";
+  requiredRole?: "admin" | "super_admin" | "student" | "faculty";
 }
 
 // Module-level role cache — survives re-mounts, cleared on sign-out via GlobalAuthListener

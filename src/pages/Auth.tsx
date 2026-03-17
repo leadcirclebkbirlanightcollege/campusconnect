@@ -111,6 +111,7 @@ const Auth = () => {
       const role = data?.role;
       if (role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
       else if (role === "admin") navigate("/platform/admin/dashboard", { replace: true });
+      else if (role === "faculty") navigate("/faculty/dashboard", { replace: true });
       else navigate("/app/dashboard", { replace: true });
     } catch {
       navigate("/app/dashboard", { replace: true });
