@@ -1663,7 +1663,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "completed"
-      app_role: "admin" | "student" | "super_admin"
+      app_role: "admin" | "student" | "super_admin" | "faculty"
       lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent" | "cancelled"
     }
@@ -1799,7 +1799,7 @@ export const Constants = {
         "rejected",
         "completed",
       ],
-      app_role: ["admin", "student", "super_admin"],
+      app_role: ["admin", "student", "super_admin", "faculty"],
       lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent", "cancelled"],
     },
