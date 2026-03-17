@@ -9,6 +9,19 @@ import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 
+// ── Faculty pages ──────────────────────────────────────────────────────────────
+const FacultyLayout       = lazy(() => import("@/pages/faculty/FacultyLayout"));
+const FacultyDashboard    = lazy(() => import("@/pages/faculty/FacultyDashboard"));
+const FacultyMyLectures   = lazy(() => import("@/pages/faculty/FacultyMyLectures"));
+const FacultyAttendance   = lazy(() => import("@/pages/faculty/FacultyAttendance"));
+const FacultyStudents     = lazy(() => import("@/pages/faculty/FacultyStudents"));
+const FacultyAnnouncements = lazy(() => import("@/pages/faculty/FacultyAnnouncements"));
+const FacultySchedule     = lazy(() => import("@/pages/faculty/FacultySchedule"));
+const FacultyProfile      = lazy(() => import("@/pages/faculty/FacultyProfile"));
+
+// ── Collaboration Hub ─────────────────────────────────────────────────────────
+const CollaborationHub    = lazy(() => import("@/pages/student/messages/CollaborationHub"));
+
 // ── Student pages ─────────────────────────────────────────────────────────────
 const StudentDashboard    = lazy(() => import("@/pages/student/StudentDashboard"));
 const StudentProfile      = lazy(() => import("@/pages/student/StudentProfile"));
