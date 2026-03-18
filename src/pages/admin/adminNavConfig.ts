@@ -26,6 +26,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "Academics",
     items: [
       { title: "Students",       url: "/platform/admin/students",       icon: "Users" },
+      { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
       { title: "Programmes",     url: "/platform/admin/programmes",     icon: "GraduationCap" },
       { title: "Allotments",     url: "/platform/admin/allotments",     icon: "UserCheck" },
