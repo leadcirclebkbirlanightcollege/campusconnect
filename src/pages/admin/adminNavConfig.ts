@@ -68,6 +68,7 @@ export interface PageMeta { title: string; description: string }
 const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/dashboard":              { title: "Command Center",     description: "Overview & key metrics" },
   "/platform/admin/students":               { title: "Students",           description: "Manage student accounts" },
+  "/platform/admin/faculty":                { title: "Faculty",            description: "Manage faculty members" },
   "/platform/admin/create-student":         { title: "Create Student",     description: "Add a new student" },
   "/platform/admin/lectures":               { title: "Lectures",           description: "Schedule & manage lectures" },
   "/platform/admin/create-lecture":         { title: "Create Lecture",     description: "Schedule a new lecture" },

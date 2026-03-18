@@ -203,7 +203,7 @@ const FacultyCard = memo(function FacultyCard({
 
       {/* Badge + Menu */}
       <div className="flex items-center gap-2 shrink-0">
-        <Badge variant="secondary" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/20">
+        <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
           <Shield className="h-2.5 w-2.5 mr-1" />Faculty
         </Badge>
         <p className="text-[10px] text-muted-foreground hidden md:block">
