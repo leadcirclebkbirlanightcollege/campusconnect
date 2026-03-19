@@ -4,10 +4,12 @@ import ProtectedRoute from "@/router/ProtectedRoute";
 import PublicRoute from "@/router/PublicRoute";
 import RouteLoader from "@/router/RouteLoader";
 import PlatformModeGuard from "@/components/platform/PlatformModeGuard";
+import FeatureGate from "@/components/platform/FeatureGate";
 import AppLayout from "@/components/layout/AppLayout";
 
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
+
 
 // ── Faculty pages ──────────────────────────────────────────────────────────────
 const FacultyLayout       = lazy(() => import("@/pages/faculty/FacultyLayout"));
