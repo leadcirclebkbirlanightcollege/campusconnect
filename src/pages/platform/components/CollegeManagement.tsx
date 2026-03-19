@@ -205,8 +205,17 @@ export function CollegeFormDialog({
   );
 }
 
+type CollegeAdmin = {
+  user_id: string;
+  college_id: string | null;
+  college_name: string | null;
+  name: string | null;
+  email: string | null;
+  created_at: string;
+};
 
 // ── Create Admin Dialog ──────────────────────────────────────────────────────
+
 function CreateAdminDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { colleges } = useCollegeContext();
