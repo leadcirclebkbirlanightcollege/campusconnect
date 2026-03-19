@@ -499,34 +499,43 @@ export type Database = {
       }
       colleges: {
         Row: {
+          banner_image: string | null
           college_name: string
           created_at: string
+          enabled_features: Json
           id: string
           is_active: boolean
           logo_url: string | null
           primary_color: string | null
+          secondary_color: string | null
           subdomain: string | null
           tagline: string | null
           updated_at: string
         }
         Insert: {
+          banner_image?: string | null
           college_name: string
           created_at?: string
+          enabled_features?: Json
           id?: string
           is_active?: boolean
           logo_url?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           subdomain?: string | null
           tagline?: string | null
           updated_at?: string
         }
         Update: {
+          banner_image?: string | null
           college_name?: string
           created_at?: string
+          enabled_features?: Json
           id?: string
           is_active?: boolean
           logo_url?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           subdomain?: string | null
           tagline?: string | null
           updated_at?: string

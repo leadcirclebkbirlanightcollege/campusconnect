@@ -26,8 +26,12 @@ export interface TenantCollege {
   logo_url: string | null;
   tagline: string | null;
   primary_color: string | null;
+  secondary_color: string | null;
+  banner_image: string | null;
   is_active: boolean;
+  enabled_features: string[];
 }
+
 
 export interface TenantContextValue {
   collegeId: string | null;
@@ -95,10 +99,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     staleTime: 300_000, // 5 min — branding rarely changes
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("colleges")
-        .select("id, college_name, subdomain, logo_url, tagline, primary_color, is_active")
-        .eq("id", collegeId!)
-        .maybeSingle();
+          .from("colleges")
+          .select("id, college_name, subdomain, logo_url, tagline, primary_color, secondary_color, banner_image, is_active, enabled_features")
+          .eq("id", collegeId!)
+          .maybeSingle();
+
       if (error) throw error;
       return data as TenantCollege | null;
     },

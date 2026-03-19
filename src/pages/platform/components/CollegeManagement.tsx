@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FadeIn, SlideUp } from "@/components/ui/motion";
@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle } from "lucide-react";
+import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
 import { useCollegeContext } from "@/contexts/CollegeContext";
+import { ALL_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS, type FeatureKey } from "@/hooks/use-feature-gate";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type College = {
@@ -22,40 +25,115 @@ type College = {
   logo_url: string | null;
   tagline: string | null;
   primary_color: string | null;
+  secondary_color: string | null;
   is_active: boolean;
   created_at: string;
+  enabled_features: string[];
 };
 
-type CollegeAdmin = {
-  user_id: string;
-  college_id: string | null;
-  college_name: string | null;
-  name: string | null;
-  email: string | null;
-  created_at: string;
-};
+// ── Feature Selector ─────────────────────────────────────────────────────────
+function FeatureSelector({ value, onChange }: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const toggle = (f: FeatureKey) => {
+    onChange(value.includes(f) ? value.filter(x => x !== f) : [...value, f]);
+  };
+  const allOn = ALL_FEATURES.every(f => value.includes(f));
+  const toggleAll = () => onChange(allOn ? [] : [...ALL_FEATURES]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-semibold">Enabled Features</Label>
+        <button type="button" onClick={toggleAll} className="text-xs text-primary hover:underline">
+          {allOn ? "Disable all" : "Enable all"}
+        </button>
+      </div>
+      <div className="rounded-xl border border-border-subtle overflow-hidden">
+        <ScrollArea className="h-52">
+          <div className="p-1">
+            {ALL_FEATURES.map(f => (
+              <label key={f} className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${value.includes(f) ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                <Checkbox
+                  checked={value.includes(f)}
+                  onCheckedChange={() => toggle(f)}
+                  className="mt-0.5 shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-medium text-foreground">{FEATURE_LABELS[f]}</span>
+                    {value.includes(f) && <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{FEATURE_DESCRIPTIONS[f]}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {value.length} of {ALL_FEATURES.length} features enabled
+      </p>
+    </div>
+  );
+}
 
 // ── College Form Dialog ──────────────────────────────────────────────────────
+const DEFAULT_FEATURES: string[] = [...ALL_FEATURES];
+
 export function CollegeFormDialog({
   open, onClose, editing
 }: { open: boolean; onClose: () => void; editing: College | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState({
-    college_name: editing?.college_name ?? "",
-    subdomain: editing?.subdomain ?? "",
-    tagline: editing?.tagline ?? "",
-    primary_color: editing?.primary_color ?? "#6366f1",
+    college_name: "",
+    subdomain: "",
+    tagline: "",
+    primary_color: "#6366f1",
+    secondary_color: "#8b5cf6",
+    enabled_features: DEFAULT_FEATURES as string[],
   });
+
+  // Sync form when editing changes
+  useEffect(() => {
+    if (editing) {
+      setForm({
+        college_name: editing.college_name ?? "",
+        subdomain: editing.subdomain ?? "",
+        tagline: editing.tagline ?? "",
+        primary_color: editing.primary_color ?? "#6366f1",
+        secondary_color: editing.secondary_color ?? "#8b5cf6",
+        enabled_features: editing.enabled_features?.length ? editing.enabled_features : DEFAULT_FEATURES,
+      });
+    } else {
+      setForm({
+        college_name: "",
+        subdomain: "",
+        tagline: "",
+        primary_color: "#6366f1",
+        secondary_color: "#8b5cf6",
+        enabled_features: DEFAULT_FEATURES,
+      });
+    }
+  }, [editing, open]);
 
   const save = useMutation({
     mutationFn: async () => {
+      const payload = {
+        college_name: form.college_name.trim(),
+        subdomain: form.subdomain.trim() || null,
+        tagline: form.tagline.trim() || null,
+        primary_color: form.primary_color,
+        secondary_color: form.secondary_color,
+        enabled_features: form.enabled_features,
+        updated_at: new Date().toISOString(),
+      };
       if (editing) {
-        const { error } = await supabase.from("colleges")
-          .update({ ...form, updated_at: new Date().toISOString() })
-          .eq("id", editing.id);
+        const { error } = await supabase.from("colleges").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("colleges").insert(form);
+        const { error } = await supabase.from("colleges").insert({ ...payload, is_active: true });
         if (error) throw error;
       }
     },
@@ -69,32 +147,54 @@ export function CollegeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-surface-1 border-border-subtle max-w-md">
+      <DialogContent className="bg-surface-1 border-border-subtle max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit College" : "Add College"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            {editing ? "Edit College" : "Add College"}
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label>College Name *</Label>
-            <Input value={form.college_name} onChange={e => setForm(p => ({ ...p, college_name: e.target.value }))} placeholder="e.g. Mumbai University" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Subdomain</Label>
-            <Input value={form.subdomain} onChange={e => setForm(p => ({ ...p, subdomain: e.target.value }))} placeholder="e.g. mumbai" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Tagline</Label>
-            <Input value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} placeholder="e.g. Excellence in Education" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Brand Color</Label>
-            <div className="flex items-center gap-3">
-              <input type="color" value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))} className="h-9 w-14 rounded border border-border-subtle cursor-pointer bg-transparent" />
-              <Input value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))} className="font-mono text-sm" />
+        <ScrollArea className="flex-1 -mx-2 px-2">
+          <div className="space-y-4 py-2 pb-4">
+            <div className="space-y-1.5">
+              <Label>College Name *</Label>
+              <Input value={form.college_name} onChange={e => setForm(p => ({ ...p, college_name: e.target.value }))} placeholder="e.g. Mumbai University" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Subdomain</Label>
+              <Input value={form.subdomain} onChange={e => setForm(p => ({ ...p, subdomain: e.target.value }))} placeholder="e.g. mumbai" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tagline</Label>
+              <Input value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} placeholder="e.g. Excellence in Education" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Primary Color</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))} className="h-9 w-12 rounded border border-border-subtle cursor-pointer bg-transparent" />
+                  <Input value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))} className="font-mono text-xs" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Accent Color</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={form.secondary_color} onChange={e => setForm(p => ({ ...p, secondary_color: e.target.value }))} className="h-9 w-12 rounded border border-border-subtle cursor-pointer bg-transparent" />
+                  <Input value={form.secondary_color} onChange={e => setForm(p => ({ ...p, secondary_color: e.target.value }))} className="font-mono text-xs" />
+                </div>
+              </div>
+            </div>
+
+            {/* Feature selector — the core white-label control */}
+            <div className="pt-1">
+              <FeatureSelector
+                value={form.enabled_features}
+                onChange={v => setForm(p => ({ ...p, enabled_features: v }))}
+              />
             </div>
           </div>
-        </div>
-        <DialogFooter>
+        </ScrollArea>
+        <DialogFooter className="pt-2 border-t border-border-subtle">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={() => save.mutate()} disabled={save.isPending || !form.college_name.trim()}>
             {save.isPending ? "Saving…" : editing ? "Save Changes" : "Create College"}
@@ -105,7 +205,17 @@ export function CollegeFormDialog({
   );
 }
 
+type CollegeAdmin = {
+  user_id: string;
+  college_id: string | null;
+  college_name: string | null;
+  name: string | null;
+  email: string | null;
+  created_at: string;
+};
+
 // ── Create Admin Dialog ──────────────────────────────────────────────────────
+
 function CreateAdminDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { colleges } = useCollegeContext();
