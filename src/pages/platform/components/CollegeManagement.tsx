@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FadeIn, SlideUp } from "@/components/ui/motion";
@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle } from "lucide-react";
+import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
 import { useCollegeContext } from "@/contexts/CollegeContext";
+import { ALL_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS, type FeatureKey } from "@/hooks/use-feature-gate";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type College = {
