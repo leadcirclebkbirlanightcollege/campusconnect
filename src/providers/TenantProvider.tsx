@@ -26,8 +26,12 @@ export interface TenantCollege {
   logo_url: string | null;
   tagline: string | null;
   primary_color: string | null;
+  secondary_color: string | null;
+  banner_image: string | null;
   is_active: boolean;
+  enabled_features: string[];
 }
+
 
 export interface TenantContextValue {
   collegeId: string | null;
