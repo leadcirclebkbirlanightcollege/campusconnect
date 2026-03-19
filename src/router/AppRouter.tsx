@@ -185,26 +185,28 @@ export default function AppRouter() {
             <Route path="settings"               element={<StudentProfile />} />
             <Route path="settings/notifications" element={<NotificationSettings />} />
             <Route path="settings/security"      element={<StudentProfile />} />
+            <Route path="notifications"          element={<NotificationSettings />} />
             <Route path="inbox"                  element={<StudentInbox />} />
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
-            <Route path="attendance"             element={<StudentAttendanceHistory />} />
-            <Route path="attendance/history"     element={<StudentAttendanceHistory />} />
-            <Route path="lectures"               element={<LecturesList />} />
-            <Route path="lectures/:id"           element={<LectureDetail />} />
-            <Route path="programmes"             element={<ProgrammesList />} />
-            <Route path="programmes/:id"         element={<ProgrammeDetail />} />
-            <Route path="leaderboard"            element={<Leaderboard />} />
-            <Route path="leaderboard/weekly"     element={<Leaderboard />} />
-            <Route path="leaderboard/all-time"   element={<Leaderboard />} />
-            <Route path="announcements"          element={<StudentAnnouncementsFeed />} />
-            <Route path="events"                 element={<StudentEventsList />} />
-            <Route path="polls"                  element={<StudentPollsList />} />
-            <Route path="daily"                  element={<StudentDailyContent />} />
-            <Route path="achievements"           element={<StudentAchievements />} />
+            <Route path="attendance"             element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
+            <Route path="attendance/history"     element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
+            <Route path="lectures"               element={<FeatureGate feature="lectures"><LecturesList /></FeatureGate>} />
+            <Route path="lectures/:id"           element={<FeatureGate feature="lectures"><LectureDetail /></FeatureGate>} />
+            <Route path="programmes"             element={<FeatureGate feature="programmes"><ProgrammesList /></FeatureGate>} />
+            <Route path="programmes/:id"         element={<FeatureGate feature="programmes"><ProgrammeDetail /></FeatureGate>} />
+            <Route path="leaderboard"            element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
+            <Route path="leaderboard/weekly"     element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
+            <Route path="leaderboard/all-time"   element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
+            <Route path="announcements"          element={<FeatureGate feature="announcements"><StudentAnnouncementsFeed /></FeatureGate>} />
+            <Route path="events"                 element={<FeatureGate feature="events"><StudentEventsList /></FeatureGate>} />
+            <Route path="polls"                  element={<FeatureGate feature="polls"><StudentPollsList /></FeatureGate>} />
+            <Route path="daily"                  element={<FeatureGate feature="daily_content"><StudentDailyContent /></FeatureGate>} />
+            <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
             <Route path="install"                element={<PwaInstallPage />} />
-            <Route path="messages"               element={<CollaborationHub />} />
-            <Route path="messages/*"             element={<CollaborationHub />} />
+            <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
+            <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
+
           </Route>
 
           {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
