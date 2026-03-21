@@ -39,13 +39,15 @@ const ProgrammesList      = lazy(() => import("@/pages/student/programmes/Progra
 const ProgrammeDetail     = lazy(() => import("@/pages/student/programmes/ProgrammeDetail"));
 const StudentAnnouncementsFeed = lazy(() => import("@/pages/student/announcements/StudentAnnouncementsFeed"));
 const StudentEventsList   = lazy(() => import("@/pages/student/events/StudentEventsList"));
-const StudentPollsList    = lazy(() => import("@/pages/student/polls/StudentPollsList"));
-const StudentDailyContent = lazy(() => import("@/pages/student/content/StudentDailyContent"));
-const StudentAchievements = lazy(() => import("@/pages/student/StudentAchievements"));
-const Leaderboard         = lazy(() => import("@/pages/Leaderboard"));
-const PwaInstallPage      = lazy(() => import("@/pages/student/PwaInstallPage"));
+const StudentPollsList     = lazy(() => import("@/pages/student/polls/StudentPollsList"));
+const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentDailyContent"));
+const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
+const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
+const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
+const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
+const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
-const NotFound            = lazy(() => import("@/pages/NotFound"));
+const NotFound             = lazy(() => import("@/pages/NotFound"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
