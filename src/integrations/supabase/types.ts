@@ -139,6 +139,59 @@ export type Database = {
           },
         ]
       }
+      assignments: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          college_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string
+          id: string
+          is_active: boolean
+          max_marks: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          college_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date: string
+          id?: string
+          is_active?: boolean
+          max_marks?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          college_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_active?: boolean
+          max_marks?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           college_id: string | null
@@ -1661,6 +1714,75 @@ export type Database = {
         }
         Relationships: []
       }
+      submissions: {
+        Row: {
+          assignment_id: string
+          attachment_name: string | null
+          attachment_url: string | null
+          college_id: string | null
+          content: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          marks_obtained: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_user_id: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          attachment_name?: string | null
+          attachment_url?: string | null
+          college_id?: string | null
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          marks_obtained?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_user_id: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          attachment_name?: string | null
+          attachment_url?: string | null
+          college_id?: string | null
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          marks_obtained?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_user_id?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           college_id: string | null
@@ -1737,7 +1859,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_admin_college_analytics: { Args: never; Returns: Json }
       get_college_admins: { Args: never; Returns: Json }
+      get_faculty_lecture_analytics: {
+        Args: { p_faculty_id?: string }
+        Returns: Json
+      }
       get_growth_insights: { Args: { p_user_id?: string }; Returns: Json }
       get_leaderboard: {
         Args: { p_limit?: number; p_verified_only?: boolean }

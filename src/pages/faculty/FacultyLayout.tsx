@@ -2,8 +2,8 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   LayoutDashboard, BookOpen, Users, CheckSquare,
-  Megaphone, Calendar, UserCircle, LogOut, Menu, X,
-  GraduationCap, ChevronRight,
+  Megaphone, Calendar, UserCircle, LogOut, Menu,
+  GraduationCap, ChevronRight, BarChart2, FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -11,13 +11,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const NAV = [
-  { to: "/faculty/dashboard",      icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/faculty/my-lectures",    icon: BookOpen,         label: "My Lectures" },
-  { to: "/faculty/attendance",     icon: CheckSquare,      label: "Attendance" },
-  { to: "/faculty/students",       icon: Users,            label: "Students" },
-  { to: "/faculty/announcements",  icon: Megaphone,        label: "Announcements" },
-  { to: "/faculty/schedule",       icon: Calendar,         label: "Schedule" },
-  { to: "/faculty/profile",        icon: UserCircle,       label: "Profile" },
+  { to: "/faculty/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/faculty/my-lectures",   icon: BookOpen,        label: "My Lectures" },
+  { to: "/faculty/attendance",    icon: CheckSquare,     label: "Attendance" },
+  { to: "/faculty/students",      icon: Users,           label: "Students" },
+  { to: "/faculty/assignments",   icon: FileText,        label: "Assignments" },
+  { to: "/faculty/announcements", icon: Megaphone,       label: "Announcements" },
+  { to: "/faculty/schedule",      icon: Calendar,        label: "Schedule" },
+  { to: "/faculty/analytics",     icon: BarChart2,       label: "Analytics" },
+  { to: "/faculty/profile",       icon: UserCircle,      label: "Profile" },
 ];
 
 export default function FacultyLayout() {

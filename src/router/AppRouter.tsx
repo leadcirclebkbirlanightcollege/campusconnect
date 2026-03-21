@@ -12,17 +12,19 @@ import Auth from "@/pages/Auth";
 
 
 // ── Faculty pages ──────────────────────────────────────────────────────────────
-const FacultyLayout       = lazy(() => import("@/pages/faculty/FacultyLayout"));
-const FacultyDashboard    = lazy(() => import("@/pages/faculty/FacultyDashboard"));
-const FacultyMyLectures   = lazy(() => import("@/pages/faculty/FacultyMyLectures"));
-const FacultyAttendance   = lazy(() => import("@/pages/faculty/FacultyAttendance"));
-const FacultyStudents     = lazy(() => import("@/pages/faculty/FacultyStudents"));
+const FacultyLayout        = lazy(() => import("@/pages/faculty/FacultyLayout"));
+const FacultyDashboard     = lazy(() => import("@/pages/faculty/FacultyDashboard"));
+const FacultyMyLectures    = lazy(() => import("@/pages/faculty/FacultyMyLectures"));
+const FacultyAttendance    = lazy(() => import("@/pages/faculty/FacultyAttendance"));
+const FacultyStudents      = lazy(() => import("@/pages/faculty/FacultyStudents"));
 const FacultyAnnouncements = lazy(() => import("@/pages/faculty/FacultyAnnouncements"));
-const FacultySchedule     = lazy(() => import("@/pages/faculty/FacultySchedule"));
-const FacultyProfile      = lazy(() => import("@/pages/faculty/FacultyProfile"));
+const FacultySchedule      = lazy(() => import("@/pages/faculty/FacultySchedule"));
+const FacultyProfile       = lazy(() => import("@/pages/faculty/FacultyProfile"));
+const FacultyAnalytics     = lazy(() => import("@/pages/faculty/FacultyAnalytics"));
+const FacultyAssignments   = lazy(() => import("@/pages/faculty/FacultyAssignments"));
 
 // ── Collaboration Hub ─────────────────────────────────────────────────────────
-const CollaborationHub    = lazy(() => import("@/pages/student/messages/CollaborationHub"));
+const CollaborationHub     = lazy(() => import("@/pages/student/messages/CollaborationHub"));
 
 // ── Student pages ─────────────────────────────────────────────────────────────
 const StudentDashboard    = lazy(() => import("@/pages/student/StudentDashboard"));
@@ -37,13 +39,15 @@ const ProgrammesList      = lazy(() => import("@/pages/student/programmes/Progra
 const ProgrammeDetail     = lazy(() => import("@/pages/student/programmes/ProgrammeDetail"));
 const StudentAnnouncementsFeed = lazy(() => import("@/pages/student/announcements/StudentAnnouncementsFeed"));
 const StudentEventsList   = lazy(() => import("@/pages/student/events/StudentEventsList"));
-const StudentPollsList    = lazy(() => import("@/pages/student/polls/StudentPollsList"));
-const StudentDailyContent = lazy(() => import("@/pages/student/content/StudentDailyContent"));
-const StudentAchievements = lazy(() => import("@/pages/student/StudentAchievements"));
-const Leaderboard         = lazy(() => import("@/pages/Leaderboard"));
-const PwaInstallPage      = lazy(() => import("@/pages/student/PwaInstallPage"));
+const StudentPollsList     = lazy(() => import("@/pages/student/polls/StudentPollsList"));
+const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentDailyContent"));
+const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
+const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
+const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
+const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
+const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
-const NotFound            = lazy(() => import("@/pages/NotFound"));
+const NotFound             = lazy(() => import("@/pages/NotFound"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
@@ -67,6 +71,7 @@ const AdminSettingsPage            = lazy(() => import("@/pages/admin/pages/Admi
 const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/departments/AdminDepartmentsPage"));
 const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
+const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
@@ -163,7 +168,8 @@ export default function AppRouter() {
             <Route path="points"                   element={<AdminPointsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
-            {/* Legacy redirects for removed platform items → SA panel */}
+            <Route path="reports"                  element={<AdminReportsPage />} />
+            {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
@@ -189,6 +195,8 @@ export default function AppRouter() {
             <Route path="inbox"                  element={<StudentInbox />} />
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
+            <Route path="analytics"              element={<StudentAnalytics />} />
+            <Route path="assignments"            element={<StudentAssignments />} />
             <Route path="attendance"             element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="attendance/history"     element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="lectures"               element={<FeatureGate feature="lectures"><LecturesList /></FeatureGate>} />
@@ -206,7 +214,6 @@ export default function AppRouter() {
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
-
           </Route>
 
           {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
@@ -225,6 +232,8 @@ export default function AppRouter() {
             <Route path="students"      element={<FacultyStudents />} />
             <Route path="announcements" element={<FacultyAnnouncements />} />
             <Route path="schedule"      element={<FacultySchedule />} />
+            <Route path="analytics"     element={<FacultyAnalytics />} />
+            <Route path="assignments"   element={<FacultyAssignments />} />
             <Route path="profile"       element={<FacultyProfile />} />
           </Route>
 
