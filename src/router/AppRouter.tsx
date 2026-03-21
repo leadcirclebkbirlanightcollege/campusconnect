@@ -168,7 +168,8 @@ export default function AppRouter() {
             <Route path="points"                   element={<AdminPointsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
-            {/* Legacy redirects for removed platform items → SA panel */}
+            <Route path="reports"                  element={<AdminReportsPage />} />
+            {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
@@ -194,6 +195,8 @@ export default function AppRouter() {
             <Route path="inbox"                  element={<StudentInbox />} />
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
+            <Route path="analytics"              element={<StudentAnalytics />} />
+            <Route path="assignments"            element={<StudentAssignments />} />
             <Route path="attendance"             element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="attendance/history"     element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="lectures"               element={<FeatureGate feature="lectures"><LecturesList /></FeatureGate>} />
@@ -211,7 +214,6 @@ export default function AppRouter() {
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
-
           </Route>
 
           {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
@@ -230,6 +232,8 @@ export default function AppRouter() {
             <Route path="students"      element={<FacultyStudents />} />
             <Route path="announcements" element={<FacultyAnnouncements />} />
             <Route path="schedule"      element={<FacultySchedule />} />
+            <Route path="analytics"     element={<FacultyAnalytics />} />
+            <Route path="assignments"   element={<FacultyAssignments />} />
             <Route path="profile"       element={<FacultyProfile />} />
           </Route>
 
