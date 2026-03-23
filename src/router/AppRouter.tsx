@@ -157,6 +157,7 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
+            <Route path="timetable"                element={<AdminTimetablePage />} />
             <Route path="programmes"               element={<AdminProgrammesPage />} />
             <Route path="allotments"               element={<AdminAllotmentsPage />} />
             <Route path="faculty"                  element={<AdminFacultyPage />} />
@@ -165,6 +166,8 @@ export default function AppRouter() {
             <Route path="attendance"               element={<AdminAttendancePage />} />
             <Route path="attendance/monthly"       element={<AdminAttendanceMonthlyPage />} />
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />
+            <Route path="exams"                    element={<AdminExamsPage />} />
+            <Route path="documents"                element={<AdminDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
             <Route path="polls"                    element={<AdminPollsPage />} />
@@ -203,6 +206,9 @@ export default function AppRouter() {
             <Route path="id-card"                element={<StudentDigitalId />} />
             <Route path="analytics"              element={<StudentAnalytics />} />
             <Route path="assignments"            element={<StudentAssignments />} />
+            <Route path="timetable"              element={<StudentTimetable />} />
+            <Route path="documents"              element={<StudentDocuments />} />
+            <Route path="results"                element={<StudentResults />} />
             <Route path="attendance"             element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="attendance/history"     element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="lectures"               element={<FeatureGate feature="lectures"><LecturesList /></FeatureGate>} />
