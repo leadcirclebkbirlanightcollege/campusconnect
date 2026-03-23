@@ -770,6 +770,72 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          access_level: string
+          class_id: string | null
+          college_id: string | null
+          created_at: string
+          doc_type: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          is_active: boolean
+          subject: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          access_level?: string
+          class_id?: string | null
+          college_id?: string | null
+          created_at?: string
+          doc_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          is_active?: boolean
+          subject?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          access_level?: string
+          class_id?: string | null
+          college_id?: string | null
+          created_at?: string
+          doc_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          is_active?: boolean
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -808,6 +874,110 @@ export type Database = {
           venue?: string | null
         }
         Relationships: []
+      }
+      exam_results: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          entered_by: string
+          exam_id: string
+          grade: string | null
+          id: string
+          marks_obtained: number
+          remarks: string | null
+          student_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          entered_by: string
+          exam_id: string
+          grade?: string | null
+          id?: string
+          marks_obtained?: number
+          remarks?: string | null
+          student_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          entered_by?: string
+          exam_id?: string
+          grade?: string | null
+          id?: string
+          marks_obtained?: number
+          remarks?: string | null
+          student_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          college_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          exam_date: string
+          id: string
+          is_active: boolean
+          max_marks: number
+          subject: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          exam_date: string
+          id?: string
+          is_active?: boolean
+          max_marks?: number
+          subject: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          exam_date?: string
+          id?: string
+          is_active?: boolean
+          max_marks?: number
+          subject?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedback: {
         Row: {
@@ -1363,17 +1533,20 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           class_name: string | null
           college_id: string | null
           created_at: string
           deleted_at: string | null
           department: string | null
           email: string
+          graduation_year: number | null
           id: string
           is_deleted: boolean
           is_verified: boolean
           name: string
           phone: string | null
+          status: string
           student_id: string | null
           updated_at: string
           user_id: string
@@ -1382,17 +1555,20 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           class_name?: string | null
           college_id?: string | null
           created_at?: string
           deleted_at?: string | null
           department?: string | null
           email: string
+          graduation_year?: number | null
           id?: string
           is_deleted?: boolean
           is_verified?: boolean
           name: string
           phone?: string | null
+          status?: string
           student_id?: string | null
           updated_at?: string
           user_id: string
@@ -1401,17 +1577,20 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           class_name?: string | null
           college_id?: string | null
           created_at?: string
           deleted_at?: string | null
           department?: string | null
           email?: string
+          graduation_year?: number | null
           id?: string
           is_deleted?: boolean
           is_verified?: boolean
           name?: string
           phone?: string | null
+          status?: string
           student_id?: string | null
           updated_at?: string
           user_id?: string
@@ -1779,6 +1958,79 @@ export type Database = {
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_slots: {
+        Row: {
+          class_id: string | null
+          college_id: string
+          created_at: string
+          created_by: string
+          day_of_week: number
+          department_id: string | null
+          end_time: string
+          faculty_name: string | null
+          id: string
+          is_active: boolean
+          start_time: string
+          subject: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          college_id: string
+          created_at?: string
+          created_by: string
+          day_of_week: number
+          department_id?: string | null
+          end_time: string
+          faculty_name?: string | null
+          id?: string
+          is_active?: boolean
+          start_time: string
+          subject: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          college_id?: string
+          created_at?: string
+          created_by?: string
+          day_of_week?: number
+          department_id?: string | null
+          end_time?: string
+          faculty_name?: string | null
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          subject?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_slots_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_slots_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_slots_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
         ]

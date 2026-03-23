@@ -44,6 +44,9 @@ const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentD
 const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
 const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
 const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
+const StudentTimetable     = lazy(() => import("@/pages/student/StudentTimetable"));
+const StudentDocuments     = lazy(() => import("@/pages/student/StudentDocuments"));
+const StudentResults       = lazy(() => import("@/pages/student/StudentResults"));
 const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
@@ -72,6 +75,9 @@ const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/department
 const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
 const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
+const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
+const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
+const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
@@ -151,6 +157,7 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
+            <Route path="timetable"                element={<AdminTimetablePage />} />
             <Route path="programmes"               element={<AdminProgrammesPage />} />
             <Route path="allotments"               element={<AdminAllotmentsPage />} />
             <Route path="faculty"                  element={<AdminFacultyPage />} />
@@ -159,6 +166,8 @@ export default function AppRouter() {
             <Route path="attendance"               element={<AdminAttendancePage />} />
             <Route path="attendance/monthly"       element={<AdminAttendanceMonthlyPage />} />
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />
+            <Route path="exams"                    element={<AdminExamsPage />} />
+            <Route path="documents"                element={<AdminDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
             <Route path="polls"                    element={<AdminPollsPage />} />
@@ -197,6 +206,9 @@ export default function AppRouter() {
             <Route path="id-card"                element={<StudentDigitalId />} />
             <Route path="analytics"              element={<StudentAnalytics />} />
             <Route path="assignments"            element={<StudentAssignments />} />
+            <Route path="timetable"              element={<StudentTimetable />} />
+            <Route path="documents"              element={<StudentDocuments />} />
+            <Route path="results"                element={<StudentResults />} />
             <Route path="attendance"             element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="attendance/history"     element={<FeatureGate feature="attendance"><StudentAttendanceHistory /></FeatureGate>} />
             <Route path="lectures"               element={<FeatureGate feature="lectures"><LecturesList /></FeatureGate>} />
