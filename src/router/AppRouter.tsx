@@ -44,6 +44,9 @@ const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentD
 const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
 const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
 const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
+const StudentTimetable     = lazy(() => import("@/pages/student/StudentTimetable"));
+const StudentDocuments     = lazy(() => import("@/pages/student/StudentDocuments"));
+const StudentResults       = lazy(() => import("@/pages/student/StudentResults"));
 const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
@@ -72,6 +75,9 @@ const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/department
 const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
 const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
+const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
+const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
+const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
