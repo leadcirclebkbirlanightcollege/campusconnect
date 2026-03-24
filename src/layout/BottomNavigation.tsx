@@ -1,21 +1,13 @@
 /**
- * BottomNavigation — futuristic fixed mobile bottom nav
- *
- * Tabs: Dashboard, Attendance, Lectures, Leaderboard, Profile
- * Active tab: gradient pill indicator + glow accent + icon scale
- *
- * Rules:
- *   height: 64px
- *   position: fixed bottom
- *   glass-surface background
- *   min tap target: 48px
+ * BottomNavigation — premium mobile bottom nav
+ * 5 tabs: Home · Lectures · Messages · Leaderboard · Profile
  */
 
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  CalendarCheck,
   BookOpen,
+  MessageSquare,
   Trophy,
   UserRound,
 } from "lucide-react";
@@ -23,37 +15,33 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 interface NavTab {
-  label:  string;
-  href:   string;
-  icon:   React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  match?: string[];
 }
 
 const TABS: NavTab[] = [
-  { label: "Dashboard",   href: "/app/dashboard",   icon: LayoutDashboard },
-  { label: "Attendance",  href: "/app/attendance",  icon: CalendarCheck },
-  { label: "Lectures",    href: "/app/lectures",    icon: BookOpen },
-  { label: "Leaderboard", href: "/app/leaderboard", icon: Trophy },
-  { label: "Profile",     href: "/app/settings",    icon: UserRound },
+  { label: "Home",       href: "/app/dashboard",   icon: LayoutDashboard, match: ["/app/dashboard", "/app/analytics", "/app/timetable", "/app/results"] },
+  { label: "Lectures",   href: "/app/lectures",    icon: BookOpen,         match: ["/app/lectures", "/app/attendance", "/app/assignments"] },
+  { label: "Messages",   href: "/app/messages",    icon: MessageSquare,    match: ["/app/messages"] },
+  { label: "Leaderboard",href: "/app/leaderboard", icon: Trophy,           match: ["/app/leaderboard", "/app/achievements"] },
+  { label: "Profile",    href: "/app/settings",    icon: UserRound,        match: ["/app/settings", "/app/profile", "/app/id-card"] },
 ];
 
 const MotionLink = motion(Link);
 
-function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(href + "/");
+function isActive(pathname: string, tab: NavTab): boolean {
+  if (tab.match) return tab.match.some(m => pathname === m || pathname.startsWith(m + "/"));
+  return pathname === tab.href || pathname.startsWith(tab.href + "/");
 }
 
 function prefetchRoute(path: string): void {
-  if (path.includes("dashboard")) {
-    void import("@/pages/student/StudentDashboard");
-  } else if (path.includes("attendance")) {
-    void import("@/pages/student/StudentAttendanceHistory");
-  } else if (path.includes("lectures")) {
-    void import("@/pages/student/lectures/LecturesList");
-  } else if (path.includes("leaderboard")) {
-    void import("@/pages/Leaderboard");
-  } else if (path.includes("settings")) {
-    void import("@/pages/student/StudentProfile");
-  }
+  if (path.includes("dashboard"))  void import("@/pages/student/StudentDashboard");
+  else if (path.includes("lecture")) void import("@/pages/student/lectures/LecturesList");
+  else if (path.includes("message")) void import("@/pages/student/messages/CollaborationHub");
+  else if (path.includes("leaderboard")) void import("@/pages/Leaderboard");
+  else if (path.includes("settings")) void import("@/pages/student/StudentProfile");
 }
 
 export function BottomNavigation() {
@@ -69,14 +57,15 @@ export function BottomNavigation() {
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        paddingLeft: "env(safe-area-inset-left, 0px)",
-        paddingRight: "env(safe-area-inset-right, 0px)",
+        paddingLeft:   "env(safe-area-inset-left, 0px)",
+        paddingRight:  "env(safe-area-inset-right, 0px)",
       }}
       aria-label="Main navigation"
     >
       <div className="flex h-16 items-stretch justify-around px-1">
-        {TABS.map(({ label, href, icon: Icon }) => {
-          const active = isActive(pathname, href);
+        {TABS.map((tab) => {
+          const { label, href, icon: Icon } = tab;
+          const active = isActive(pathname, tab);
 
           return (
             <MotionLink
@@ -84,7 +73,7 @@ export function BottomNavigation() {
               to={href}
               onMouseEnter={() => prefetchRoute(href)}
               onTouchStart={() => prefetchRoute(href)}
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.94 }}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "tap-ripple relative flex flex-col items-center justify-center",
@@ -92,9 +81,7 @@ export function BottomNavigation() {
                 "rounded-xl mx-0.5 my-1.5",
                 "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
                 "select-none outline-none",
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground active:bg-surface-3",
+                active ? "text-primary" : "text-muted-foreground active:bg-surface-3",
               )}
             >
               {/* Active background pill */}
@@ -102,14 +89,8 @@ export function BottomNavigation() {
                 <motion.div
                   layoutId="bottom-nav-active"
                   className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/15"
-                  style={{
-                    boxShadow: "0 0 16px -4px hsl(var(--primary)/0.25)",
-                  }}
-                  transition={{
-                    type:      "spring",
-                    stiffness: 380,
-                    damping:   34,
-                  }}
+                  style={{ boxShadow: "0 0 16px -4px hsl(var(--primary)/0.25)" }}
+                  transition={{ type: "spring", stiffness: 380, damping: 34 }}
                 />
               )}
 
@@ -119,25 +100,17 @@ export function BottomNavigation() {
                 transition={{ duration: 0.12, ease: [0, 0, 0.2, 1] }}
                 className="relative z-10"
               >
-                <Icon
-                  className={cn(
-                    "h-[22px] w-[22px] transition-none",
-                    active
-                      ? "stroke-[2.2px]"
-                      : "opacity-55 stroke-[1.8px]",
-                  )}
-                />
+                <Icon className={cn(
+                  "h-[22px] w-[22px] transition-none",
+                  active ? "stroke-[2.2px]" : "opacity-55 stroke-[1.8px]",
+                )} />
               </motion.div>
 
               {/* Label */}
-              <span
-                className={cn(
-                  "relative z-10 text-[9.5px] font-semibold leading-none tracking-wide",
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground/55",
-                )}
-              >
+              <span className={cn(
+                "relative z-10 text-[9.5px] font-semibold leading-none tracking-wide",
+                active ? "text-primary" : "text-muted-foreground/55",
+              )}>
                 {label}
               </span>
             </MotionLink>
