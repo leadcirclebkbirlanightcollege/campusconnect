@@ -1,15 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyStateCard } from "@/components/ui/empty-state";
-import { FadeIn } from "@/components/ui/motion";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { BarChart2, Users, CheckCircle2 } from "lucide-react";
+import { BarChart2, Users, CheckCircle2, VoteIcon } from "lucide-react";
 
 export default function StudentPollsList() {
   const qc = useQueryClient();
@@ -33,6 +29,7 @@ export default function StudentPollsList() {
       if (error) throw error;
       return data ?? [];
     },
+    staleTime: 60_000,
   });
 
   const votesQuery = useQuery({
@@ -42,6 +39,7 @@ export default function StudentPollsList() {
       if (error) throw error;
       return data ?? [];
     },
+    staleTime: 30_000,
   });
 
   const voteMutation = useMutation({
@@ -55,27 +53,20 @@ export default function StudentPollsList() {
       });
       if (error) throw error;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       toast.success("Vote recorded!");
       qc.invalidateQueries({ queryKey: ["student", "poll_votes"] });
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          await supabase.functions.invoke("recompute-intelligence", {
-            body: { userId: userData.user.id },
-          });
-        }
-      } catch { /* best-effort */ }
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Already voted"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Already voted or error"),
   });
 
   const userId = meQuery.data?.id;
 
   if (pollsQuery.isLoading) {
     return (
-      <div className="space-y-3">
-        {[1, 2].map((i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+      <div className="space-y-4 px-4 pt-4">
+        <Skeleton className="h-8 w-32 rounded-lg" />
+        {[1, 2].map((i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
       </div>
     );
   }
@@ -83,24 +74,31 @@ export default function StudentPollsList() {
   const polls = pollsQuery.data ?? [];
 
   return (
-    <div className="space-y-5 page-enter">
+    <div className="space-y-5 px-4 pt-4 pb-24">
       {/* Header */}
-      <FadeIn>
-        <div className="flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          <h1 className="text-heading text-foreground">Polls</h1>
+      <div className="flex items-center gap-2.5">
+        <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <BarChart2 className="h-4.5 w-4.5 text-primary" />
         </div>
-      </FadeIn>
+        <div>
+          <h1 className="text-[18px] font-bold text-foreground leading-tight">Polls & Surveys</h1>
+          <p className="text-[12px] text-muted-foreground">{polls.length} active poll{polls.length !== 1 ? "s" : ""}</p>
+        </div>
+      </div>
 
       {polls.length === 0 ? (
-        <EmptyStateCard
-          emoji="🗳️"
-          title="No active polls"
-          description="Polls and surveys from your college will appear here. Cast your vote and share your opinion!"
-        />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-muted/20 flex items-center justify-center mb-4">
+            <VoteIcon className="h-7 w-7 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-[15px] font-semibold text-foreground mb-1">No polls yet</h3>
+          <p className="text-[13px] text-muted-foreground max-w-xs">
+            Polls and surveys from your college will appear here. Cast your vote and share your opinion!
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {polls.map((p: any, i: number) => {
+          {polls.map((p: any) => {
             const opts = Array.isArray(p.options) ? p.options as string[] : [];
             const allVotes = (votesQuery.data ?? []).filter((v: any) => v.poll_id === p.id);
             const total = allVotes.length;
@@ -108,70 +106,18 @@ export default function StudentPollsList() {
             const hasVoted = Boolean(myVote);
 
             return (
-              <FadeIn key={p.id} delay={i * 30}>
-                <div className="rounded-xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
-                  {/* Poll header */}
-                  <div className="px-5 pt-5 pb-3 border-b border-border-subtle">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-[14px] font-semibold text-foreground leading-snug flex-1">{p.question}</h3>
-                      {hasVoted && (
-                        <span className="flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 border border-success/20 rounded-full px-2 py-0.5 shrink-0">
-                          <CheckCircle2 className="h-2.5 w-2.5" /> Voted
-                        </span>
-                      )}
-                    </div>
+              <div key={p.id} className="rounded-2xl border border-border-subtle bg-surface-1 shadow-xs overflow-hidden">
+                {/* Poll header */}
+                <div className="px-5 pt-4 pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-[14px] font-semibold text-foreground leading-snug flex-1">{p.question}</h3>
+                    {hasVoted && (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 border border-success/20 rounded-full px-2 py-0.5 shrink-0">
+                        <CheckCircle2 className="h-2.5 w-2.5" /> Voted
+                      </span>
+                    )}
                   </div>
-
-                  {/* Options */}
-                  <div className="px-5 py-4 space-y-2.5">
-                    {opts.map((opt: string, idx: number) => {
-                      const count = allVotes.filter((v: any) => v.option_index === idx).length;
-                      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                      const isMyChoice = myVote?.option_index === idx;
-
-                      return hasVoted ? (
-                        <div key={idx} className="space-y-1.5">
-                          <div className="flex justify-between text-[12px]">
-                            <span className={cn(
-                              "font-medium flex items-center gap-1.5",
-                              isMyChoice ? "text-primary" : "text-foreground",
-                            )}>
-                              {isMyChoice && <CheckCircle2 className="h-3 w-3" />}
-                              {opt}
-                            </span>
-                            <span className="text-muted-foreground font-semibold tabular-nums">{pct}%</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
-                            <div
-                              className={cn(
-                                "h-full rounded-full transition-all duration-slow",
-                                isMyChoice ? "bg-primary" : "bg-surface-4",
-                              )}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          key={idx}
-                          className={cn(
-                            "w-full text-left px-4 py-2.5 rounded-lg border text-[13px] font-medium",
-                            "border-border-subtle bg-surface-2 text-foreground",
-                            "hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
-                            "transition-fast press-scale",
-                            "disabled:opacity-50 disabled:cursor-not-allowed",
-                          )}
-                          onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: idx })}
-                          disabled={voteMutation.isPending}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-5 pb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
                     <Users className="h-3 w-3" />
                     <span>{total} vote{total !== 1 ? "s" : ""}</span>
                     <span className="text-border-strong">·</span>
@@ -179,12 +125,54 @@ export default function StudentPollsList() {
                     {p.is_anonymous && (
                       <>
                         <span className="text-border-strong">·</span>
-                        <Badge variant="secondary" className="text-[9px] h-4">Anonymous</Badge>
+                        <Badge variant="secondary" className="text-[9px] h-4 px-1.5">Anonymous</Badge>
                       </>
                     )}
                   </div>
                 </div>
-              </FadeIn>
+
+                {/* Options */}
+                <div className="px-5 pb-5 space-y-2.5">
+                  {opts.map((opt: string, idx: number) => {
+                    const count = allVotes.filter((v: any) => v.option_index === idx).length;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    const isMyChoice = myVote?.option_index === idx;
+
+                    return hasVoted ? (
+                      <div key={idx} className="space-y-1.5">
+                        <div className="flex justify-between text-[12px]">
+                          <span className={cn("font-medium flex items-center gap-1.5", isMyChoice ? "text-primary" : "text-foreground")}>
+                            {isMyChoice && <CheckCircle2 className="h-3 w-3" />}
+                            {opt}
+                          </span>
+                          <span className={cn("font-bold tabular-nums", isMyChoice ? "text-primary" : "text-muted-foreground")}>{pct}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-surface-3 overflow-hidden">
+                          <div
+                            className={cn("h-full rounded-full transition-all duration-500", isMyChoice ? "bg-primary" : "bg-muted-foreground/30")}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        key={idx}
+                        className={cn(
+                          "w-full text-left px-4 py-3 rounded-xl border text-[13px] font-medium",
+                          "border-border-subtle bg-surface-2 text-foreground",
+                          "hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
+                          "active:scale-[0.98] transition-all duration-100",
+                          "disabled:opacity-50 disabled:cursor-not-allowed",
+                        )}
+                        onClick={() => voteMutation.mutate({ pollId: p.id, optionIndex: idx })}
+                        disabled={voteMutation.isPending}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>

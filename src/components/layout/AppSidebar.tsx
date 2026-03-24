@@ -19,6 +19,7 @@ import {
   Sun,
   Flame,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -131,13 +132,14 @@ export default function AppSidebar() {
         items: [
           { title: "Leaderboard",   url: "/app/leaderboard",   icon: Trophy },
           { title: "Achievements",  url: "/app/achievements",  icon: Flame },
-          { title: "Polls",         url: "/app/polls",          icon: BarChart3 },
-          { title: "Daily",         url: "/app/daily",          icon: Sparkles },
+          { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
+          { title: "Daily",         url: "/app/daily",         icon: Sparkles },
         ],
       },
       {
         label: "Communication",
         items: [
+          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
           { title: "Announcements", url: "/app/announcements", icon: Megaphone },
           { title: "Events",        url: "/app/events",        icon: CalendarDays },
           { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
