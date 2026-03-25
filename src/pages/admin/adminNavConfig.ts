@@ -57,12 +57,19 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
+    label: "Communication",
+    items: [
+      { title: "Channels",   url: "/platform/admin/channels", icon: "Hash" },
+    ],
+  },
+  {
     label: "System",
     items: [
-      { title: "Reports",    url: "/platform/admin/reports",  icon: "BarChart2" },
-      { title: "Points",     url: "/platform/admin/points",   icon: "Coins" },
-      { title: "ID Scanner", url: "/platform/admin/scanner",  icon: "ScanLine" },
-      { title: "Settings",   url: "/platform/admin/settings", icon: "SlidersHorizontal" },
+      { title: "Reports",       url: "/platform/admin/reports",        icon: "BarChart2" },
+      { title: "Export Data",   url: "/platform/admin/reports/export", icon: "Download" },
+      { title: "Points",        url: "/platform/admin/points",         icon: "Coins" },
+      { title: "ID Scanner",    url: "/platform/admin/scanner",        icon: "ScanLine" },
+      { title: "Settings",      url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
     ],
   },
 ];

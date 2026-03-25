@@ -178,6 +178,14 @@ function MessageBubble({ msg, isOwn, onReact, onReply, showAvatar }: {
 /* ── Main Component ─────────────────────────────────────────────── */
 export default function CollaborationHub() {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => setIsAdmin(data?.role === "admin"));
+  }, [user?.id]);
   const qc = useQueryClient();
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [text, setText] = useState("");
@@ -346,10 +354,12 @@ export default function CollaborationHub() {
             <MessageSquare className="h-4 w-4 text-primary" />
             <p className="text-[14px] font-bold text-foreground">Channels</p>
           </div>
-          <button onClick={() => setShowNewChannel(true)}
-            className="h-7 w-7 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
-            <Plus className="h-3.5 w-3.5 text-primary" />
-          </button>
+          {isAdmin && (
+            <button onClick={() => setShowNewChannel(true)}
+              className="h-7 w-7 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+              <Plus className="h-3.5 w-3.5 text-primary" />
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -394,10 +404,12 @@ export default function CollaborationHub() {
           <div className="text-center py-8">
             <Hash className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-[12px] text-muted-foreground">No channels yet</p>
-            <button onClick={() => setShowNewChannel(true)}
-              className="mt-2 text-[11px] text-primary hover:underline">
-              Create one
-            </button>
+            {isAdmin && (
+              <button onClick={() => setShowNewChannel(true)}
+                className="mt-2 text-[11px] text-primary hover:underline">
+                Create one
+              </button>
+            )}
           </div>
         )}
         {filteredChannels.map((ch) => {
