@@ -75,6 +75,8 @@ const AdminDepartmentsPage         = lazy(() => import("@/pages/admin/department
 const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/AdminClassesPage"));
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
 const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
+const AdminExportPage              = lazy(() => import("@/pages/admin/reports/AdminExportPage"));
+const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/AdminChannelsPage"));
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
@@ -178,6 +180,8 @@ export default function AppRouter() {
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
             <Route path="reports"                  element={<AdminReportsPage />} />
+            <Route path="reports/export"           element={<AdminExportPage />} />
+            <Route path="channels"                 element={<AdminChannelsPage />} />
             {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
