@@ -7,7 +7,8 @@ import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
-  Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun, Building2, School,
+  Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
+  Building2, School, Hash, BarChart2, FileText, Download, ClipboardList,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -24,6 +25,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, Building2, School,
+  Hash, BarChart2, FileText, Download, ClipboardList,
 };
 
 export default function AdminSidebar() {
