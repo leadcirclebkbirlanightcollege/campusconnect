@@ -72,7 +72,7 @@ export default function FacultyLayout() {
       <div className="p-3 border-t border-border/40">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
+          className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all duration-150"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Sign Out
