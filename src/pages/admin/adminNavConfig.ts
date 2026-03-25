@@ -57,12 +57,19 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
+    label: "Communication",
+    items: [
+      { title: "Channels",   url: "/platform/admin/channels", icon: "Hash" },
+    ],
+  },
+  {
     label: "System",
     items: [
-      { title: "Reports",    url: "/platform/admin/reports",  icon: "BarChart2" },
-      { title: "Points",     url: "/platform/admin/points",   icon: "Coins" },
-      { title: "ID Scanner", url: "/platform/admin/scanner",  icon: "ScanLine" },
-      { title: "Settings",   url: "/platform/admin/settings", icon: "SlidersHorizontal" },
+      { title: "Reports",       url: "/platform/admin/reports",        icon: "BarChart2" },
+      { title: "Export Data",   url: "/platform/admin/reports/export", icon: "Download" },
+      { title: "Points",        url: "/platform/admin/points",         icon: "Coins" },
+      { title: "ID Scanner",    url: "/platform/admin/scanner",        icon: "ScanLine" },
+      { title: "Settings",      url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
     ],
   },
 ];
@@ -95,6 +102,8 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/points":                 { title: "Points",             description: "Points & adjustments" },
   "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
   "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
+  "/platform/admin/channels":              { title: "Channels",           description: "Manage messaging channels" },
+  "/platform/admin/reports/export":        { title: "Export Reports",     description: "Download data as CSV" },
 };
 
 export function getAdminPageMeta(pathname: string): PageMeta {
