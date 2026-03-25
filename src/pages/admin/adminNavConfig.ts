@@ -102,6 +102,8 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/points":                 { title: "Points",             description: "Points & adjustments" },
   "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
   "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
+  "/platform/admin/channels":              { title: "Channels",           description: "Manage messaging channels" },
+  "/platform/admin/reports/export":        { title: "Export Reports",     description: "Download data as CSV" },
 };
 
 export function getAdminPageMeta(pathname: string): PageMeta {
