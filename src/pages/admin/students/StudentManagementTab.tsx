@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2 } from "lucide-react";
+import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2, GraduationCap, ArrowUpCircle } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -248,12 +248,48 @@ export default function StudentManagementTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to assign college"),
   });
 
+  // Batch graduate students
+  const graduateMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "graduated", graduation_year: new Date().getFullYear(), updated_at: new Date().toISOString() })
+        .in("user_id", userIds);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success(`${selectedIds.length} student(s) graduated`);
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to graduate students"),
+  });
+
+  // Batch promote (just updates class_name — admin picks next class)
+  const promoteMutation = useMutation({
+    mutationFn: async ({ userIds, nextClass }: { userIds: string[]; nextClass: string }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ class_name: nextClass, updated_at: new Date().toISOString() })
+        .in("user_id", userIds);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success(`${selectedIds.length} student(s) promoted`);
+      clearSelection();
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to promote students"),
+  });
+
   const busy =
     studentsQuery.isLoading ||
     softDeleteMutation.isPending ||
     restoreMutation.isPending ||
     toggleVerifyMutation.isPending ||
-    bulkAssignCollegeMutation.isPending;
+    bulkAssignCollegeMutation.isPending ||
+    graduateMutation.isPending ||
+    promoteMutation.isPending;
 
   return (
     <div className="space-y-6">
