@@ -21,7 +21,6 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { ActionTile } from "@/components/ui/ActionTile";
 
 const HIGHLIGHTS = [
   {
@@ -71,6 +70,32 @@ const WORKFLOW = [
     title: "Rewards unlocked",
     description: "Points, achievements, and tiers keep campus momentum high.",
   },
+] as const;
+
+const ROLE_PANELS = [
+  {
+    title: "Student Workspace",
+    description: "Mobile-first learning dashboard with lectures, attendance, and personal progress tracking.",
+  },
+  {
+    title: "Faculty Console",
+    description: "Desktop-optimized control for lectures, assignments, and class engagement analytics.",
+  },
+  {
+    title: "Admin ERP",
+    description: "Centralized college operations including attendance governance, reports, and system controls.",
+  },
+  {
+    title: "Super Admin Command",
+    description: "Multi-college visibility with platform health, security monitoring, and institution oversight.",
+  },
+] as const;
+
+const KPI_STRIP = [
+  { label: "Institutions", value: "100+" },
+  { label: "Students", value: "50K+" },
+  { label: "Daily Events", value: "1M+" },
+  { label: "Uptime", value: "99.9%" },
 ] as const;
 
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
@@ -177,16 +202,16 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_20%_0%,hsl(var(--primary)/0.2),transparent_38%),radial-gradient(circle_at_100%_15%,hsl(var(--primary)/0.12),transparent_40%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--primary)/0.16),transparent_42%),radial-gradient(circle_at_95%_8%,hsl(var(--accent)/0.14),transparent_38%)]" />
       <motion.div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[180px] bg-[linear-gradient(to_bottom,hsl(var(--primary)/0.08),transparent)]"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[220px] bg-[linear-gradient(to_bottom,hsl(var(--primary)/0.1),transparent)]"
         animate={{ opacity: [0.45, 0.75, 0.45] }}
         transition={{ duration: 2.8, repeat: Infinity }}
       />
 
-      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/85 backdrop-blur-xl safe-area-top">
-        <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-6xl">
+      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/90 backdrop-blur-xl safe-area-top">
+        <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-7xl md:px-6">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
               {branding.logo_url ? (
@@ -197,11 +222,11 @@ export default function Index() {
             </div>
             <div>
               <p className="text-sm font-semibold leading-none text-foreground">{branding.brand_name}</p>
-              <p className="mt-1 text-[10px] leading-none text-muted-foreground">Campus intelligence platform</p>
+              <p className="mt-1 text-[10px] leading-none text-muted-foreground">Enterprise campus operating system</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Link to="/auth" aria-label="Login">
               <Button variant="ghost" size="sm" className="h-12 px-3 text-xs">
                 Login
@@ -216,30 +241,30 @@ export default function Index() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[420px] space-y-8 px-4 py-8 md:max-w-6xl">
-        <section className="grid gap-4 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+      <main className="mx-auto w-full max-w-[420px] space-y-10 px-4 py-8 md:max-w-7xl md:px-6 md:py-12">
+        <section className="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:items-stretch md:gap-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="space-y-5"
+            className="space-y-6"
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-3 py-1 text-[11px] text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Editorial launch edition
+              Trusted by modern campuses
             </div>
 
-            <h1 className="text-[38px] font-black leading-[0.97] tracking-[-0.05em] text-foreground md:text-[64px]">
-              Campus Ops.
+            <h1 className="text-[38px] font-black leading-[0.95] tracking-[-0.05em] text-foreground md:text-[72px]">
+              Run Your College
               <br />
-              Designed for Speed.
+              Like an Enterprise.
             </h1>
 
-            <p className="max-w-[44ch] text-sm leading-relaxed text-muted-foreground md:text-base">
-              Manage lectures, attendance, achievements, and community signals in one fast, focused platform.
+            <p className="max-w-[58ch] text-sm leading-relaxed text-muted-foreground md:text-base">
+              Campus Connect unifies academics, communication, analytics, and operations into one professional control layer for students, faculty, admins, and platform teams.
             </p>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link to="/auth" className="w-full sm:w-auto">
                 <GlowButton className="h-12 w-full sm:w-auto">
                   Get Started
@@ -252,20 +277,30 @@ export default function Index() {
                 </Button>
               </a>
             </div>
+
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+              {KPI_STRIP.map((kpi) => (
+                <div key={kpi.label} className="rounded-2xl border border-border-subtle bg-surface-1 p-3 md:p-4">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{kpi.label}</p>
+                  <p className="mt-1 text-xl font-black leading-none text-foreground md:text-2xl">{kpi.value}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, delay: 0.06 }}
+            className="h-full"
           >
-            <GlassCard padding="lg" className="space-y-4 border-primary/25" hover>
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground">Live Platform Metrics</h2>
-                <span className="rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] text-primary">Realtime</span>
+            <GlassCard padding="lg" className="h-full space-y-5 border-primary/25" hover>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-foreground md:text-base">Command Center Snapshot</h2>
+                <span className="rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] text-primary">Live</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <MetricMini label="Attendance" value="78%" />
                 <MetricMini label="Streak" value="9d" />
                 <MetricMini label="Active Students" value="512" />
@@ -284,6 +319,18 @@ export default function Index() {
                     transition={{ duration: 0.45, delay: 0.15 }}
                     className="h-2 rounded-full bg-primary"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Role Workspaces</p>
+                <div className="grid gap-2 md:grid-cols-2">
+                  {ROLE_PANELS.map((panel) => (
+                    <div key={panel.title} className="rounded-xl border border-border-subtle bg-surface-2 p-3">
+                      <p className="text-xs font-semibold text-foreground">{panel.title}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{panel.description}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </GlassCard>
@@ -311,9 +358,14 @@ export default function Index() {
 
         <motion.section id="features" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow="Capabilities" title="Features" />
-          <div className="grid grid-cols-2 gap-3">
-            {FEATURES.map((feature) => (
-              <ActionTile key={feature.label} icon={feature.icon} label={feature.label} onClick={() => undefined} />
+          <div className="grid gap-3 md:grid-cols-3">
+            {FEATURES.map(({ icon: Icon, label }) => (
+              <GlassCard key={label} className="flex items-center gap-3" padding="lg" hover>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">{label}</p>
+              </GlassCard>
             ))}
           </div>
         </motion.section>
@@ -338,7 +390,7 @@ export default function Index() {
 
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow="Preview" title="Screens" />
-          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 no-scrollbar">
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 no-scrollbar md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
             <PreviewCard title="Student Dashboard" subtitle="Daily performance" statA="240" statB="Active" />
             <PreviewCard title="Leaderboard" subtitle="Campus rankings" statA="#4" statB="Rising" />
             <PreviewCard title="Admin Dashboard" subtitle="Operations control" statA="89%" statB="Stable" />
@@ -381,7 +433,7 @@ export default function Index() {
       </main>
 
       <footer className="border-t border-border-subtle/70 bg-surface-1/80">
-        <div className="mx-auto w-full max-w-[420px] space-y-3 px-4 py-6 md:max-w-6xl">
+        <div className="mx-auto w-full max-w-[420px] space-y-3 px-4 py-6 md:max-w-7xl md:px-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/12">
               {branding.logo_url ? (
