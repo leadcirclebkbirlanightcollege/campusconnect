@@ -80,6 +80,7 @@ const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/A
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
+const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
@@ -182,6 +183,7 @@ export default function AppRouter() {
             <Route path="reports"                  element={<AdminReportsPage />} />
             <Route path="reports/export"           element={<AdminExportPage />} />
             <Route path="channels"                 element={<AdminChannelsPage />} />
+            <Route path="permissions"              element={<AdminPermissionsPage />} />
             {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />

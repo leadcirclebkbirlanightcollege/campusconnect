@@ -63,6 +63,12 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
+    label: "Access Control",
+    items: [
+      { title: "Permissions",  url: "/platform/admin/permissions", icon: "SlidersHorizontal" },
+    ],
+  },
+  {
     label: "System",
     items: [
       { title: "Reports",       url: "/platform/admin/reports",        icon: "BarChart2" },
@@ -103,6 +109,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
   "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
   "/platform/admin/channels":              { title: "Channels",           description: "Manage messaging channels" },
+  "/platform/admin/permissions":           { title: "Permissions",         description: "Role-based access control" },
   "/platform/admin/reports/export":        { title: "Export Reports",     description: "Download data as CSV" },
 };
 
