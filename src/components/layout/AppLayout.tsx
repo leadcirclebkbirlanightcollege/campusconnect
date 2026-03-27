@@ -34,6 +34,7 @@ import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
+import CommandPalette from "@/components/search/CommandPalette";
 import { BottomNavigation } from "@/layout/BottomNavigation";
 import {
   PAGE_TRANSITION,
@@ -268,6 +269,9 @@ export default function AppLayout() {
 
         {/* Mobile bottom navigation — new layout engine component */}
         <BottomNavigation />
+
+        {/* Command Palette (Ctrl+K) */}
+        <CommandPalette />
 
         {/* Floating utilities */}
         <FeedbackButton />
