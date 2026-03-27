@@ -320,6 +320,15 @@ export default function StudentManagementTab() {
               <Button
                 variant="outline"
                 disabled={selectedIds.length === 0 || busy}
+                onClick={() => graduateMutation.mutate(selectedIds)}
+                className="gap-2"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Graduate
+              </Button>
+              <Button
+                variant="outline"
+                disabled={selectedIds.length === 0 || busy}
                 onClick={() => restoreMutation.mutate(selectedIds)}
                 className="gap-2"
               >
