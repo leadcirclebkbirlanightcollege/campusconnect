@@ -26,6 +26,7 @@ import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransiti
 import { getAdminPageMeta } from "@/pages/admin/adminNavConfig";
 import { BRANDING } from "@/config/branding";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
+import CommandPalette from "@/components/search/CommandPalette";
 import { useMemo } from "react";
 
 function AdminProfileMenu({ userId }: { userId: string }) {
@@ -138,6 +139,7 @@ export default function AdminLayout() {
             </footer>
           </SidebarInset>
         </div>
+        <CommandPalette />
         <FeedbackButton />
         <ForceUpdateBanner />
         <SoftUpdateBanner />
