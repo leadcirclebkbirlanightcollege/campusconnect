@@ -63,6 +63,12 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
+    label: "Access Control",
+    items: [
+      { title: "Permissions",  url: "/platform/admin/permissions", icon: "SlidersHorizontal" },
+    ],
+  },
+  {
     label: "System",
     items: [
       { title: "Reports",       url: "/platform/admin/reports",        icon: "BarChart2" },
