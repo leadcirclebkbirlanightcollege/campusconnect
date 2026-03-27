@@ -80,6 +80,7 @@ const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/A
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
+const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
 const SuperAdminLayout      = lazy(() => import("@/pages/platform/SuperAdminLayout"));
