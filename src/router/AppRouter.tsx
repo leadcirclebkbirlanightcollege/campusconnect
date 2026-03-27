@@ -183,6 +183,7 @@ export default function AppRouter() {
             <Route path="reports"                  element={<AdminReportsPage />} />
             <Route path="reports/export"           element={<AdminExportPage />} />
             <Route path="channels"                 element={<AdminChannelsPage />} />
+            <Route path="permissions"              element={<AdminPermissionsPage />} />
             {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
