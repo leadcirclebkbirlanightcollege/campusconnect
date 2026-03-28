@@ -241,6 +241,13 @@ export type Database = {
             referencedRelation: "lectures"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_attendance_student_profile"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       attendance_audit_log: {

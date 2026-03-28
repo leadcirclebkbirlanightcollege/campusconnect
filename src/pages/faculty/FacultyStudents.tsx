@@ -30,7 +30,7 @@ export default function FacultyStudents() {
     queryFn: async () => {
       const { data } = await supabase
         .from("attendance")
-        .select("student_user_id, profiles(name,email,student_id,class_name,department,avatar_url)")
+        .select("student_user_id, profiles:student_user_id(name,email,student_id,class_name,department,avatar_url)")
         .in("lecture_id", lectures)
         .limit(500);
 

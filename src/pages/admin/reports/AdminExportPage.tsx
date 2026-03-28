@@ -65,7 +65,7 @@ export default function AdminExportPage() {
       if (reportType === "attendance") {
         const { data, error } = await supabase
           .from("attendance")
-          .select("student_user_id,lecture_id,status,marked_at,points_earned,profiles(name,student_id,class_name),lectures(topic,lecture_date,venue)")
+          .select("student_user_id,lecture_id,status,marked_at,points_earned,profiles:student_user_id(name,student_id,class_name),lectures:lecture_id(topic,lecture_date,venue)")
           .gte("marked_at", startDate)
           .lte("marked_at", endDate + "T23:59:59Z")
           .order("marked_at", { ascending: false });
@@ -102,10 +102,19 @@ export default function AdminExportPage() {
       } else if (reportType === "faculty") {
         const { data, error } = await supabase
           .from("user_roles")
-          .select("user_id,created_at,profiles(name,email,department)")
+          .select("user_id,created_at")
           .eq("role", "faculty");
         if (error) throw error;
+        // Fetch profiles separately to avoid join issues
         const userIds = (data ?? []).map((r: any) => r.user_id);
+        let profileMap: Record<string, any> = {};
+        if (userIds.length > 0) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id,name,email,department")
+            .in("user_id", userIds);
+          (profs ?? []).forEach((p: any) => { profileMap[p.user_id] = p; });
+        }
         let lectureCounts: Record<string, number> = {};
         if (userIds.length > 0) {
           const { data: lecs } = await supabase
@@ -115,50 +124,60 @@ export default function AdminExportPage() {
           (lecs ?? []).forEach((l: any) => { lectureCounts[l.created_by] = (lectureCounts[l.created_by] ?? 0) + 1; });
         }
         const headers = ["Name", "Email", "Department", "Total Lectures", "Joined"];
-        const rows = (data ?? []).map((r: any) => [
-          (r.profiles as any)?.name ?? "",
-          (r.profiles as any)?.email ?? "",
-          (r.profiles as any)?.department ?? "",
-          lectureCounts[r.user_id] ?? 0,
-          r.created_at ? format(new Date(r.created_at), "yyyy-MM-dd") : "",
-        ]);
+        const rows = (data ?? []).map((r: any) => {
+          const prof = profileMap[r.user_id];
+          return [
+            prof?.name ?? "",
+            prof?.email ?? "",
+            prof?.department ?? "",
+            lectureCounts[r.user_id] ?? 0,
+            r.created_at ? format(new Date(r.created_at), "yyyy-MM-dd") : "",
+          ];
+        });
         downloadCSV(buildCSV(headers, rows), fname);
 
       } else if (reportType === "lectures") {
         const { data, error } = await supabase
           .from("lectures")
-          .select("topic,lecture_date,start_time,end_time,venue,status,profiles(name)")
+          .select("topic,lecture_date,start_time,end_time,venue,status,created_by")
           .gte("lecture_date", startDate)
           .lte("lecture_date", endDate)
           .order("lecture_date", { ascending: false });
         if (error) throw error;
+        // Fetch creator profiles separately
+        const creatorIds = [...new Set((data ?? []).map((r: any) => r.created_by).filter(Boolean))];
+        let creatorMap: Record<string, string> = {};
+        if (creatorIds.length > 0) {
+          const { data: profs } = await supabase.from("profiles").select("user_id,name").in("user_id", creatorIds);
+          (profs ?? []).forEach((p: any) => { creatorMap[p.user_id] = p.name; });
+        }
         const headers = ["Topic", "Date", "Start Time", "End Time", "Venue", "Status", "Created By"];
         const rows = (data ?? []).map((r: any) => [
           r.topic, r.lecture_date, r.start_time, r.end_time, r.venue, r.status,
-          (r.profiles as any)?.name ?? "",
+          creatorMap[r.created_by] ?? "",
         ]);
         downloadCSV(buildCSV(headers, rows), fname);
 
       } else if (reportType === "assignments") {
         const { data, error } = await supabase
           .from("assignments")
-          .select("title,description,due_date,max_marks,is_active,created_at,profiles(name)")
+          .select("id,title,description,due_date,max_marks,is_active,created_at,created_by")
           .gte("created_at", startDate)
           .lte("created_at", endDate + "T23:59:59Z")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        // count submissions per assignment
-        const ids = (data ?? []).map((a: any) => a.id).filter(Boolean);
-        let subCounts: Record<string, number> = {};
-        if (ids.length > 0) {
-          const { data: subs } = await supabase.from("submissions").select("assignment_id").in("assignment_id", ids);
-          (subs ?? []).forEach((s: any) => { subCounts[s.assignment_id] = (subCounts[s.assignment_id] ?? 0) + 1; });
+        // Fetch creator profiles separately
+        const asnCreatorIds = [...new Set((data ?? []).map((r: any) => r.created_by).filter(Boolean))];
+        let asnCreatorMap: Record<string, string> = {};
+        if (asnCreatorIds.length > 0) {
+          const { data: profs } = await supabase.from("profiles").select("user_id,name").in("user_id", asnCreatorIds);
+          (profs ?? []).forEach((p: any) => { asnCreatorMap[p.user_id] = p.name; });
         }
-        const headers = ["Title", "Description", "Due Date", "Max Marks", "Submissions", "Active", "Created By", "Created At"];
+        const headers = ["Title", "Description", "Due Date", "Max Marks", "Active", "Created By", "Created At"];
         const rows = (data ?? []).map((r: any) => [
           r.title, r.description ?? "", r.due_date, r.max_marks ?? 100,
-          subCounts[r.id] ?? 0, r.is_active ? "Yes" : "No",
-          (r.profiles as any)?.name ?? "",
+          r.is_active ? "Yes" : "No",
+          asnCreatorMap[r.created_by] ?? "",
           r.created_at ? format(new Date(r.created_at), "yyyy-MM-dd") : "",
         ]);
         downloadCSV(buildCSV(headers, rows), fname);
