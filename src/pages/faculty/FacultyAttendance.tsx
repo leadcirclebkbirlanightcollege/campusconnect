@@ -36,7 +36,7 @@ export default function FacultyAttendance() {
       if (selectedLecture !== "all") ids = [selectedLecture];
       const { data } = await supabase
         .from("attendance")
-        .select("id,student_user_id,status,marked_at,lecture_id,profiles(name,student_id,class_name)")
+        .select("id,student_user_id,status,marked_at,lecture_id,profiles:student_user_id(name,student_id,class_name)")
         .in("lecture_id", ids)
         .order("marked_at", { ascending: false })
         .limit(200);
