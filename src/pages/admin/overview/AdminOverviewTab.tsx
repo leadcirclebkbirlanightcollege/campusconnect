@@ -2,40 +2,33 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  AlarmClock,
-  Bell,
-  BookOpen,
-  CheckSquare,
-  Megaphone,
-  PlayCircle,
-  Radio,
-  Sparkles,
-  TriangleAlert,
-  Users,
+  AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock,
+  GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles,
+  TriangleAlert, TrendingUp, Users, Zap, FileEdit, BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 import { supabase } from "@/integrations/supabase/client";
-import { ActionTile } from "@/components/ui/ActionTile";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MetricCountUp } from "@/components/ui/motion";
-import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { PageContainer } from "@/layout/PageContainer";
-import { PageHeader } from "@/layout/PageHeader";
-import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
+import { useMetricCountUp } from "@/components/ui/motion";
+import AdminAnalyticsChart from "./AdminAnalyticsChart";
 
+/* ── Types ─────────────────────────────────────────── */
 type CommandMetrics = {
   totalStudents: number;
+  totalFaculty: number;
   lecturesConducted: number;
   attendanceToday: number;
   activeLectures: number;
+  totalProgrammes: number;
+  totalPoints: number;
+  studentsAtRisk: number;
 };
 
 type LiveLecture = {
@@ -43,16 +36,9 @@ type LiveLecture = {
   topic: string;
   venue: string;
   start_time: string;
+  end_time: string;
   lecture_date: string;
   presentCount: number;
-};
-
-type AnalyticsMetrics = {
-  averageAttendance: number;
-  totalPoints: number;
-  studentsAtRisk: number;
-  topStudentName: string;
-  topStudentPoints: number;
 };
 
 type ActivityItem = {
@@ -60,364 +46,383 @@ type ActivityItem = {
   action: string;
   target_entity: string;
   created_at: string;
+  performed_by: string;
 };
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+type UpcomingLec = {
+  id: string;
+  topic: string;
+  lecture_date: string;
+  start_time: string;
+  end_time: string;
+  venue: string;
+  faculty_name: string;
+};
+
+/* ── Helpers ───────────────────────────────────────── */
+function formatTime(val: string) {
+  return new Date(val).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-function activityIcon(action: string) {
-  const normalized = action.toLowerCase();
-  if (normalized.includes("lecture")) return BookOpen;
-  if (normalized.includes("attendance")) return CheckSquare;
-  if (normalized.includes("announce")) return Megaphone;
-  if (normalized.includes("notification")) return Bell;
-  return Sparkles;
+/* ── KPI Card ──────────────────────────────────────── */
+function KpiCard({ label, value, icon: Icon, colorCls, bgCls, loading, suffix = "", danger, idx }: {
+  label: string; value: number; icon: React.ElementType;
+  colorCls: string; bgCls: string; loading: boolean;
+  suffix?: string; danger?: boolean; idx: number;
+}) {
+  const counted = useMetricCountUp(loading ? 0 : value, 700 + idx * 60);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, delay: idx * 0.04 }}
+      className={cn(
+        "rounded-xl border p-5 flex flex-col justify-between min-h-[130px] transition-all hover:shadow-md",
+        danger && value > 0 ? "border-danger/30 bg-danger/5" : "border-border-subtle bg-surface-1",
+      )}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center", bgCls)}>
+          <Icon className={cn("h-4.5 w-4.5", colorCls)} />
+        </div>
+      </div>
+      {loading ? (
+        <Skeleton className="h-10 w-24" />
+      ) : (
+        <p className={cn(
+          "text-[38px] font-black tracking-tight tabular-nums leading-none",
+          danger && value > 0 ? "text-danger" : "text-foreground",
+        )}>
+          {counted.toLocaleString()}{suffix}
+        </p>
+      )}
+    </motion.div>
+  );
 }
 
+/* ── Quick Action Button ───────────────────────────── */
+function QuickAction({ icon: Icon, label, to, color, bg }: {
+  icon: React.ElementType; label: string; to: string; color: string; bg: string;
+}) {
+  return (
+    <Link to={to} className={cn(
+      "flex items-center gap-3 px-4 py-3 rounded-lg border border-transparent",
+      "hover:border-border-subtle hover:bg-surface-2 transition-all cursor-pointer group",
+    )}>
+      <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", bg)}>
+        <Icon className={cn("h-4 w-4", color)} />
+      </div>
+      <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
+      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+    </Link>
+  );
+}
+
+/* ── Main Component ────────────────────────────────── */
 export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: string) => void }) {
   const qc = useQueryClient();
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementBody, setAnnouncementBody] = useState("");
-  const announcementRef = useRef<HTMLDivElement>(null);
 
   const { startIso, endIso } = useMemo(() => {
     const now = new Date();
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
+    const start = new Date(now); start.setHours(0, 0, 0, 0);
+    const end = new Date(start); end.setDate(end.getDate() + 1);
     return { startIso: start.toISOString(), endIso: end.toISOString() };
   }, []);
 
-  const commandMetricsQuery = useQuery({
-    queryKey: ["admin", "command-center", "metrics", startIso],
+  /* ── Metrics Query ── */
+  const metricsQ = useQuery({
+    queryKey: ["admin", "cc", "metrics", startIso],
     queryFn: async (): Promise<CommandMetrics> => {
-      const [studentsRes, lecturesRes, todayAttendanceRes, activeLecturesRes] = await Promise.all([
+      const [students, faculty, lectures, todayAtt, live, progs, platform, risk] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_deleted", false),
-        supabase.from("lectures").select("id", { count: "exact", head: true }).eq("status", "ended"),
-        supabase
-          .from("attendance")
-          .select("id", { count: "exact", head: true })
-          .gte("marked_at", startIso)
-          .lt("marked_at", endIso),
+        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "faculty"),
+        supabase.from("lectures").select("id", { count: "exact", head: true }),
+        supabase.from("attendance").select("id", { count: "exact", head: true }).gte("marked_at", startIso).lt("marked_at", endIso),
         supabase.from("lectures").select("id", { count: "exact", head: true }).eq("status", "live"),
+        supabase.from("programmes").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.rpc("get_platform_analytics"),
+        supabase.from("student_intelligence").select("id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
       ]);
-
       return {
-        totalStudents: studentsRes.count ?? 0,
-        lecturesConducted: lecturesRes.count ?? 0,
-        attendanceToday: todayAttendanceRes.count ?? 0,
-        activeLectures: activeLecturesRes.count ?? 0,
+        totalStudents: students.count ?? 0,
+        totalFaculty: faculty.count ?? 0,
+        lecturesConducted: lectures.count ?? 0,
+        attendanceToday: todayAtt.count ?? 0,
+        activeLectures: live.count ?? 0,
+        totalProgrammes: progs.count ?? 0,
+        totalPoints: Number((platform.data as any)?.total_points_awarded ?? 0),
+        studentsAtRisk: risk.count ?? 0,
       };
     },
     staleTime: 30_000,
-    refetchOnWindowFocus: false,
   });
 
-  const liveLecturesQuery = useQuery({
-    queryKey: ["admin", "command-center", "live-lectures"],
+  /* ── Live Lectures Query ── */
+  const liveQ = useQuery({
+    queryKey: ["admin", "cc", "live"],
     queryFn: async (): Promise<LiveLecture[]> => {
-      const { data, error } = await supabase
-        .from("lectures")
-        .select("id,topic,venue,start_time,lecture_date")
-        .eq("status", "live")
-        .order("start_time", { ascending: true })
-        .limit(4);
-
-      if (error) throw error;
-
-      const liveRows = data ?? [];
-      const presentCounts = await Promise.all(
-        liveRows.map(async (row) => {
-          const { count } = await supabase
-            .from("attendance")
-            .select("id", { count: "exact", head: true })
-            .eq("lecture_id", row.id)
-            .eq("status", "present");
-          return { lectureId: row.id, count: count ?? 0 };
+      const { data } = await supabase.from("lectures").select("id,topic,venue,start_time,end_time,lecture_date").eq("status", "live").order("start_time").limit(3);
+      const rows = data ?? [];
+      const counts = await Promise.all(
+        rows.map(async (r) => {
+          const { count } = await supabase.from("attendance").select("id", { count: "exact", head: true }).eq("lecture_id", r.id).eq("status", "present");
+          return count ?? 0;
         }),
       );
-
-      const presentMap = new Map(presentCounts.map((entry) => [entry.lectureId, entry.count]));
-
-      return liveRows.map((row) => ({
-        ...row,
-        presentCount: presentMap.get(row.id) ?? 0,
-      }));
+      return rows.map((r, i) => ({ ...r, presentCount: counts[i] }));
     },
     staleTime: 15_000,
     refetchInterval: 20_000,
-    refetchOnWindowFocus: false,
   });
 
-  const analyticsQuery = useQuery({
-    queryKey: ["admin", "command-center", "student-analytics"],
-    queryFn: async (): Promise<AnalyticsMetrics> => {
-      const [attendedRes, totalAttendanceRes, riskRes, platformStatsRes, topStudentRes] = await Promise.all([
-        supabase
-          .from("attendance")
-          .select("id", { count: "exact", head: true })
-          .in("status", ["present", "late"]),
-        supabase.from("attendance").select("id", { count: "exact", head: true }),
-        supabase
-          .from("student_intelligence")
-          .select("id", { count: "exact", head: true })
-          .or("attendance_consistency.lt.50,engagement_index.lt.40"),
-        supabase.rpc("get_platform_analytics"),
-        supabase.rpc("get_leaderboard", { p_limit: 1, p_verified_only: false }),
-      ]);
-
-      const attended = attendedRes.count ?? 0;
-      const totalAttendance = totalAttendanceRes.count ?? 0;
-      const averageAttendance = totalAttendance > 0 ? Math.round((attended / totalAttendance) * 100) : 0;
-      const platformStats = platformStatsRes.data as any;
-      const topStudent = ((topStudentRes.data as any[]) ?? [])[0];
-
-      return {
-        averageAttendance,
-        totalPoints: Number(platformStats?.total_points_awarded ?? 0),
-        studentsAtRisk: riskRes.count ?? 0,
-        topStudentName: topStudent?.name ?? "—",
-        topStudentPoints: Number(topStudent?.points_total ?? 0),
-      };
+  /* ── Upcoming Lectures ── */
+  const upcomingQ = useQuery({
+    queryKey: ["admin", "cc", "upcoming"],
+    queryFn: async (): Promise<UpcomingLec[]> => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase.from("lectures").select("id,topic,lecture_date,start_time,end_time,venue,created_by")
+        .gte("lecture_date", today).in("status", ["scheduled"]).order("lecture_date").order("start_time").limit(5);
+      const rows = data ?? [];
+      const creatorIds = [...new Set(rows.map((r) => r.created_by))];
+      let nameMap: Record<string, string> = {};
+      if (creatorIds.length) {
+        const { data: profs } = await supabase.from("profiles").select("user_id,name").in("user_id", creatorIds);
+        (profs ?? []).forEach((p) => { nameMap[p.user_id] = p.name; });
+      }
+      return rows.map((r) => ({ ...r, faculty_name: nameMap[r.created_by] ?? "—" }));
     },
-    staleTime: 45_000,
-    refetchOnWindowFocus: false,
+    staleTime: 60_000,
   });
 
-  const activityQuery = useQuery({
-    queryKey: ["admin", "command-center", "recent-activity"],
+  /* ── Activity ── */
+  const activityQ = useQuery({
+    queryKey: ["admin", "cc", "activity"],
     queryFn: async (): Promise<ActivityItem[]> => {
-      const { data, error } = await supabase
-        .from("audit_logs")
-        .select("id,action,target_entity,created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
+      const { data } = await supabase.from("audit_logs").select("id,action,target_entity,created_at,performed_by").order("created_at", { ascending: false }).limit(8);
       return (data ?? []) as ActivityItem[];
     },
     staleTime: 30_000,
-    refetchOnWindowFocus: false,
   });
 
-  const announcementMutation = useMutation({
+  /* ── Announcement ── */
+  const announceMut = useMutation({
     mutationFn: async () => {
-      const trimmedTitle = announcementTitle.trim();
-      const trimmedBody = announcementBody.trim();
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) throw new Error("Not authenticated");
-
       const { error } = await supabase.from("announcements").insert({
-        title: trimmedTitle,
-        description: trimmedBody,
-        priority: "normal",
-        target: "all",
-        target_class: null,
-        created_by: auth.user.id,
+        title: announcementTitle.trim(), description: announcementBody.trim(),
+        priority: "normal", target: "all", created_by: auth.user.id,
       });
       if (error) throw error;
-
-      const { error: notifyError } = await supabase.functions.invoke("send-notification", {
-        body: {
-          title: trimmedTitle,
-          message: trimmedBody,
-          kind: "announcement",
-          target_type: "college_students",
-          target_value: null,
-        },
-      });
-
-      if (notifyError) throw notifyError;
     },
-    onSuccess: () => {
-      toast.success("Announcement sent");
-      setAnnouncementTitle("");
-      setAnnouncementBody("");
-      qc.invalidateQueries({ queryKey: ["admin", "command-center", "recent-activity"] });
-    },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Failed to send announcement"),
+    onSuccess: () => { toast.success("Announcement sent"); setAnnouncementTitle(""); setAnnouncementBody(""); qc.invalidateQueries({ queryKey: ["admin", "cc", "activity"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  const commandMetrics = commandMetricsQuery.data;
-  const analytics = analyticsQuery.data;
+  const m = metricsQ.data;
+  const loading = metricsQ.isLoading;
 
   return (
-    <PageContainer className="space-y-6" withBottomNav>
-      <PageHeader
-        title="Admin Command Center"
-        subtitle="Control lectures, attendance, students, and announcements"
-        variant="large"
-        gradient
-      />
+    <div className="w-full space-y-6">
+      {/* ── Page Title ── */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Real-time institutional overview & quick operations</p>
+      </div>
 
-      <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Command Overview" subtitle="Real-time command metrics" />
-          {commandMetricsQuery.isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[...Array(4)].map((_, index) => (
-                <Skeleton key={index} className="h-[124px] rounded-2xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={Users} value={commandMetrics?.totalStudents ?? 0} label="Total Students" />
-              <MetricCard icon={BookOpen} value={commandMetrics?.lecturesConducted ?? 0} label="Lectures Conducted" />
-              <MetricCard icon={CheckSquare} value={commandMetrics?.attendanceToday ?? 0} label="Attendance Today" />
-              <MetricCard icon={Radio} value={commandMetrics?.activeLectures ?? 0} label="Active Lectures" />
-            </div>
-          )}
-        </motion.section>
+      {/* ── KPI Row ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
+        <KpiCard idx={0} label="Total Students" value={m?.totalStudents ?? 0} icon={Users} colorCls="text-primary" bgCls="bg-primary/10" loading={loading} />
+        <KpiCard idx={1} label="Total Faculty" value={m?.totalFaculty ?? 0} icon={GraduationCap} colorCls="text-accent" bgCls="bg-accent/10" loading={loading} />
+        <KpiCard idx={2} label="Total Lectures" value={m?.lecturesConducted ?? 0} icon={BookOpen} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={3} label="Attendance Today" value={m?.attendanceToday ?? 0} icon={CheckSquare} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+      </div>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Quick Actions" subtitle="Execute admin tasks faster" />
-          <div className="grid grid-cols-2 gap-3">
-            <ActionTile icon={BookOpen} label="Create Lecture" onClick={() => onNavigateTab("lectures")} />
-            <ActionTile icon={PlayCircle} label="Start Lecture" onClick={() => onNavigateTab("lectures")} />
-            <ActionTile icon={CheckSquare} label="Mark Attendance" onClick={() => onNavigateTab("attendance")} />
-            <ActionTile
-              icon={Megaphone}
-              label="Send Announcement"
-              onClick={() => announcementRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            />
-          </div>
-        </motion.section>
+      {/* ── Secondary KPIs ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard idx={4} label="Live Now" value={m?.activeLectures ?? 0} icon={Radio} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={5} label="Programmes" value={m?.totalProgrammes ?? 0} icon={GraduationCap} colorCls="text-premium" bgCls="bg-premium/10" loading={loading} />
+        <KpiCard idx={6} label="Points Awarded" value={m?.totalPoints ?? 0} icon={Zap} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+        <KpiCard idx={7} label="At-Risk Students" value={m?.studentsAtRisk ?? 0} icon={TriangleAlert} colorCls="text-danger" bgCls="bg-danger/10" loading={loading} danger />
+      </div>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Live Lecture Monitor" subtitle="Track active sessions instantly" />
-          {liveLecturesQuery.isLoading ? (
-            <div className="space-y-3">
-              {[...Array(2)].map((_, index) => (
-                <Skeleton key={index} className="h-36 rounded-2xl" />
-              ))}
+      {/* ── Main Grid: Charts + Live + Quick Actions ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
+        {/* Left: Charts */}
+        <div className="space-y-6">
+          <AdminAnalyticsChart />
+        </div>
+
+        {/* Right: Live Operations + Quick Actions */}
+        <div className="space-y-5">
+          {/* Live Operations */}
+          <div className={cn(
+            "rounded-xl border overflow-hidden",
+            liveQ.data?.length ? "border-success/40 ring-1 ring-success/15" : "border-border-subtle",
+            "bg-surface-1",
+          )}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+              <div className="flex items-center gap-2">
+                <Radio className={cn("h-4 w-4", liveQ.data?.length ? "text-success" : "text-muted-foreground")} />
+                <p className="text-sm font-semibold text-foreground">Live Operations</p>
+              </div>
+              {liveQ.data?.length ? (
+                <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.6 }}
+                  className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
+                  {liveQ.data.length} LIVE
+                </motion.span>
+              ) : null}
             </div>
-          ) : liveLecturesQuery.data && liveLecturesQuery.data.length > 0 ? (
-            <div className="space-y-3">
-              {liveLecturesQuery.data.map((lecture) => (
-                <GlassCard key={lecture.id} className="space-y-3 border-primary/35 bg-gradient-to-br from-primary/10 to-surface-1" hover={false}>
-                  <div className="flex items-start justify-between gap-2">
+            <div className="p-4 space-y-3">
+              {liveQ.isLoading ? (
+                <Skeleton className="h-20 w-full rounded-lg" />
+              ) : liveQ.data?.length ? (
+                liveQ.data.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between gap-3 rounded-lg bg-success/5 border border-success/15 px-3 py-2.5">
                     <div className="min-w-0">
-                      <div className="mb-1">
-                        <StatusBadge status="live">LIVE</StatusBadge>
-                      </div>
-                      <p className="line-clamp-1 text-sm font-semibold text-foreground">{lecture.topic}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {lecture.venue} • {lecture.start_time}
-                      </p>
+                      <p className="text-sm font-semibold text-foreground truncate">{l.topic}</p>
+                      <p className="text-xs text-muted-foreground">{l.venue} · {l.start_time}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Present</p>
-                      <p className="text-xl font-black text-primary tabular-nums">
-                        <MetricCountUp value={lecture.presentCount} duration={800} />
-                      </p>
+                    <div className="text-right shrink-0">
+                      <p className="text-xl font-black text-success tabular-nums">{l.presentCount}</p>
+                      <p className="text-[10px] text-muted-foreground">present</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button className="h-12" variant="secondary" onClick={() => onNavigateTab("attendance")}>
-                      View Attendance
-                    </Button>
-                    <Button className="h-12" onClick={() => onNavigateTab("lectures")}>End Lecture</Button>
+                ))
+              ) : (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-2 border border-border-subtle">
+                  <Clock className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No active lectures</p>
+                    <p className="text-xs text-muted-foreground">Attendance tracking will appear here during live sessions</p>
                   </div>
-                </GlassCard>
-              ))}
+                </div>
+              )}
+              {/* Attendance progress today */}
+              {!loading && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Today's attendance</span>
+                    <span className="font-semibold text-foreground tabular-nums">{m?.attendanceToday ?? 0} marks</span>
+                  </div>
+                  <Progress value={m?.totalStudents ? Math.min(100, Math.round(((m?.attendanceToday ?? 0) / m.totalStudents) * 100)) : 0} className="h-2" />
+                </div>
+              )}
             </div>
-          ) : (
-            <GlassCard hover={false}>
-              <p className="text-sm text-muted-foreground">No active lectures right now.</p>
-            </GlassCard>
-          )}
-        </motion.section>
+          </div>
 
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Student Analytics" subtitle="Performance snapshot" />
-          {analyticsQuery.isLoading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[...Array(4)].map((_, index) => (
-                <Skeleton key={index} className="h-[124px] rounded-2xl" />
-              ))}
+          {/* Quick Actions */}
+          <div className="rounded-xl border border-border-subtle bg-surface-1">
+            <div className="px-4 py-3 border-b border-border-subtle">
+              <p className="text-sm font-semibold text-foreground">Quick Actions</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={AlarmClock} value={analytics?.averageAttendance ?? 0} suffix="%" label="Average Attendance" />
-              <MetricCard icon={Sparkles} value={analytics?.totalPoints ?? 0} label="Points Distributed" />
-              <MetricCard icon={TriangleAlert} value={analytics?.studentsAtRisk ?? 0} label="Students At Risk" />
-              <GlassCard className="space-y-1" hover={false}>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Top Performing Student</p>
-                <p className="line-clamp-1 text-sm font-semibold text-foreground">{analytics?.topStudentName ?? "—"}</p>
-                <p className="text-xl font-black text-primary tabular-nums">
-                  <MetricCountUp value={analytics?.topStudentPoints ?? 0} duration={800} />
-                </p>
-              </GlassCard>
+            <div className="p-2 space-y-0.5">
+              <QuickAction icon={BookOpen} label="Create Lecture" to="/platform/admin/lectures" color="text-primary" bg="bg-primary/10" />
+              <QuickAction icon={Users} label="Manage Students" to="/platform/admin/students" color="text-success" bg="bg-success/10" />
+              <QuickAction icon={GraduationCap} label="Add Faculty" to="/platform/admin/faculty" color="text-accent" bg="bg-accent/10" />
+              <QuickAction icon={Megaphone} label="Announcements" to="/platform/admin/announcements" color="text-premium" bg="bg-premium/10" />
+              <QuickAction icon={ScanLine} label="ID Scanner" to="/platform/admin/scanner" color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={FileEdit} label="Corrections" to="/platform/admin/attendance/corrections" color="text-danger" bg="bg-danger/10" />
             </div>
-          )}
-        </motion.section>
+          </div>
+        </div>
+      </div>
 
-        <motion.section ref={announcementRef} variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Announcement Shortcut" subtitle="Broadcast quickly to all students" />
-          <GlassCard className="space-y-3" hover={false}>
+      {/* ── Bottom Grid: Schedule + Activity + Announcement ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Today's Schedule */}
+        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Upcoming Schedule</p>
+            </div>
+            <Link to="/platform/admin/lectures" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
+          </div>
+          <div className="p-3 space-y-1.5 max-h-[340px] overflow-y-auto">
+            {upcomingQ.isLoading ? (
+              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
+            ) : upcomingQ.data?.length ? (
+              upcomingQ.data.map((l) => (
+                <div key={l.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-2 transition-colors">
+                  <div className="text-center shrink-0 w-12">
+                    <p className="text-[10px] font-bold text-primary uppercase">
+                      {new Date(l.lecture_date).toLocaleDateString("en-GB", { month: "short" })}
+                    </p>
+                    <p className="text-lg font-black text-foreground leading-none">
+                      {new Date(l.lecture_date).getDate()}
+                    </p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">{l.topic}</p>
+                    <p className="text-xs text-muted-foreground">{l.start_time} – {l.end_time} · {l.venue}</p>
+                    <p className="text-[11px] text-muted-foreground/70">{l.faculty_name}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No upcoming lectures</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent" />
+              <p className="text-sm font-semibold text-foreground">Recent Activity</p>
+            </div>
+            <Link to="/platform/admin/audit" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
+          </div>
+          <div className="divide-y divide-border-subtle max-h-[340px] overflow-y-auto">
+            {activityQ.isLoading ? (
+              [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+            ) : activityQ.data?.length ? (
+              activityQ.data.map((item) => (
+                <div key={item.id} className="flex items-start gap-3 px-4 py-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground truncate">
+                      <span className="font-medium">{item.action.replace(/_/g, " ")}</span>
+                      <span className="text-muted-foreground"> · {item.target_entity}</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">{formatTime(item.created_at)}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No recent activity</p>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Announcement */}
+        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+          <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
+            <Megaphone className="h-4 w-4 text-premium" />
+            <p className="text-sm font-semibold text-foreground">Quick Announcement</p>
+          </div>
+          <div className="p-4 space-y-3">
             <Input
-              value={announcementTitle}
-              onChange={(event) => setAnnouncementTitle(event.target.value)}
-              placeholder="Announcement title"
-              className="h-12"
+              value={announcementTitle} onChange={(e) => setAnnouncementTitle(e.target.value)}
+              placeholder="Title" className="h-10 text-sm"
             />
             <Textarea
-              value={announcementBody}
-              onChange={(event) => setAnnouncementBody(event.target.value)}
-              placeholder="Write announcement..."
-              rows={3}
+              value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)}
+              placeholder="Write announcement..." rows={4} className="text-sm resize-none"
             />
-            <Button
-              className="h-12 w-full"
-              onClick={() => announcementMutation.mutate()}
-              disabled={!announcementTitle.trim() || !announcementBody.trim() || announcementMutation.isPending}
-            >
-              {announcementMutation.isPending ? "Sending..." : "Send to All Students"}
+            <Button className="w-full gap-2" onClick={() => announceMut.mutate()}
+              disabled={!announcementTitle.trim() || !announcementBody.trim() || announceMut.isPending}>
+              {announceMut.isPending ? "Sending…" : "Broadcast to All"}
             </Button>
-          </GlassCard>
-        </motion.section>
-
-        <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-          <SectionHeader title="Recent Admin Activity" subtitle="Latest 10 actions" />
-          {activityQuery.isLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, index) => (
-                <Skeleton key={index} className="h-16 rounded-2xl" />
-              ))}
-            </div>
-          ) : activityQuery.data && activityQuery.data.length > 0 ? (
-            <div className="space-y-3">
-              {activityQuery.data.map((item) => {
-                const Icon = activityIcon(item.action);
-                return (
-                  <GlassCard key={item.id} className="flex items-start gap-3" hover={false}>
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground line-clamp-1">
-                        {item.action.replace(/_/g, " ")} • {item.target_entity}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(item.created_at)}</p>
-                    </div>
-                  </GlassCard>
-                );
-              })}
-            </div>
-          ) : (
-            <GlassCard hover={false}>
-              <p className="text-sm text-muted-foreground">No recent admin activity.</p>
-            </GlassCard>
-          )}
-        </motion.section>
-      </motion.div>
-    </PageContainer>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
