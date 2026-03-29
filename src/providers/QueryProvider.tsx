@@ -1,5 +1,6 @@
 import * as React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { GC_TIME, STALE_TIME } from "@/ui-engine/performance-engine";
 
 export const queryClient = new QueryClient({
@@ -19,6 +20,15 @@ export const queryClient = new QueryClient({
     },
     mutations: { retry: 0 },
   },
+  mutationCache: new MutationCache({
+    onError: (error: any) => {
+      const msg = error?.message ?? "Operation failed";
+      // Don't double-toast if mutation already shows its own toast
+      if (msg.includes("row-level security")) {
+        toast.error("Permission denied", { id: "mutation-rls" });
+      }
+    },
+  }),
 });
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
