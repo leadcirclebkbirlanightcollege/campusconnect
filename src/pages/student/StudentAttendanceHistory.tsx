@@ -198,9 +198,11 @@ export default function StudentAttendanceHistory() {
           subtitle="Unable to load attendance right now"
           variant="large"
         />
-        <GlassCard>
-          <p className="text-sm text-muted-foreground">Please refresh and try again.</p>
-        </GlassCard>
+        <QueryErrorState
+          onRetry={() => { totalsQuery.refetch(); historyQuery.refetch(); }}
+          isRetrying={totalsQuery.isFetching || historyQuery.isFetching}
+          error={(totalsQuery.error ?? historyQuery.error) as Error}
+        />
       </PageContainer>
     );
   }
