@@ -8,6 +8,7 @@ import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import { AppProviders } from "@/providers/AppProviders";
 import { useWebVitals } from "@/hooks/use-web-vitals";
+import { useGlobalQueryErrors } from "@/hooks/use-global-query-errors";
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from "@/router/AppRouter";
 import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicator";
@@ -28,6 +29,7 @@ function AuthenticatedOverlays() {
 
 function AppInner() {
   useWebVitals();
+  useGlobalQueryErrors();
 
   return (
     <>

@@ -26,6 +26,7 @@ import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { cn } from "@/lib/utils";
+import { QueryErrorState } from "@/components/ui/QueryErrorState";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
@@ -240,9 +241,11 @@ export default function StudentDashboard() {
     return (
       <PageContainer className="space-y-6">
         <PageHeader title="Dashboard" subtitle="Unable to load your dashboard right now" variant="large" />
-        <GlassCard>
-          <p className="text-sm text-muted-foreground">Please refresh and try again.</p>
-        </GlassCard>
+        <QueryErrorState
+          onRetry={() => coreQuery.refetch()}
+          isRetrying={coreQuery.isFetching}
+          error={coreQuery.error as Error}
+        />
       </PageContainer>
     );
   }
