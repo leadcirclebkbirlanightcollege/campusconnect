@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { cn } from "@/lib/utils";
+import { QueryErrorState } from "@/components/ui/QueryErrorState";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
