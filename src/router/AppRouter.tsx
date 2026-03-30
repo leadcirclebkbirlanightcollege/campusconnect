@@ -51,6 +51,9 @@ const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
+const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
+const DemoPage             = lazy(() => import("@/pages/Demo"));
+const AdminSetupWizard     = lazy(() => import("@/pages/admin/setup/AdminSetupWizard"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
@@ -114,6 +117,10 @@ export default function AppRouter() {
           <Route path="/auth/login"  element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/auth/signup" element={<PublicRoute><Auth /></PublicRoute>} />
 
+          {/* Demo & Help (public) */}
+          <Route path="/demo" element={<DemoPage />} />
+          <Route path="/help" element={<HelpSupport />} />
+
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
             path="/platform/admin-control"
@@ -158,6 +165,7 @@ export default function AppRouter() {
           >
             <Route index element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="dashboard"                element={<AdminOverviewPage />} />
+            <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />
