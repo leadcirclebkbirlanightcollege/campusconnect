@@ -38,6 +38,7 @@ import { Separator } from "@/components/ui/separator";
 
 import StudentProfileDialog from "./StudentProfileDialog";
 import CreateStudentDialog from "./CreateStudentDialog";
+import BulkImportDialog from "./BulkImportDialog";
 
 export type StudentRow = {
   id: string;
@@ -308,6 +309,7 @@ export default function StudentManagementTab() {
 
             <div className="flex flex-wrap items-center gap-2">
               <CreateStudentDialog />
+              <BulkImportDialog />
               <Button
                 variant="outline"
                 disabled={selectedIds.length === 0 || busy}
