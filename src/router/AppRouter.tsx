@@ -53,6 +53,8 @@ const NotificationSettings = lazy(() => import("@/pages/student/NotificationSett
 const NotFound             = lazy(() => import("@/pages/NotFound"));
 const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
 const DemoPage             = lazy(() => import("@/pages/Demo"));
+const BookDemoPage         = lazy(() => import("@/pages/BookDemo"));
+const CollegeOnboarding    = lazy(() => import("@/pages/CollegeOnboarding"));
 const AdminSetupWizard     = lazy(() => import("@/pages/admin/setup/AdminSetupWizard"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
