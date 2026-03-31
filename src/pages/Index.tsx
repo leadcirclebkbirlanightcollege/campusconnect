@@ -420,16 +420,27 @@ export default function Index() {
           </GlassCard>
         </motion.section>
 
+        <LandingTestimonials />
+
+        <LandingPricing />
+
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
           <GlassCard className="space-y-4 text-center border-primary/25" padding="lg" hover={false}>
-            <h2 className="text-2xl font-black tracking-tight text-foreground">Start Connecting Your Campus Today</h2>
-            <p className="text-xs text-muted-foreground">Launch a smarter campus experience in minutes.</p>
-            <Link to="/auth" className="inline-block">
-              <GlowButton className="h-12 px-8">
-                Get Started
-                <ArrowRight className="h-4 w-4" />
-              </GlowButton>
-            </Link>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Transform Your Campus Digitally</h2>
+            <p className="text-xs text-muted-foreground">Join 100+ institutions already using Campus Connect.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/book-demo" className="w-full sm:w-auto">
+                <GlowButton className="h-12 w-full sm:w-auto px-8">
+                  Book Demo
+                  <ArrowRight className="h-4 w-4" />
+                </GlowButton>
+              </Link>
+              <Link to="/onboarding" className="w-full sm:w-auto">
+                <Button variant="outline" className="h-12 w-full sm:w-auto px-8">
+                  Setup Your College
+                </Button>
+              </Link>
+            </div>
           </GlassCard>
         </motion.section>
       </main>
