@@ -257,9 +257,9 @@ export default function Index() {
             </div>
 
             <h1 className="text-[38px] font-black leading-[0.95] tracking-[-0.05em] text-foreground md:text-[72px]">
-              Run Your College
+              The Operating System
               <br />
-              Like an Enterprise.
+              for Modern Campuses.
             </h1>
 
             <p className="max-w-[58ch] text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -267,9 +267,9 @@ export default function Index() {
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link to="/auth" className="w-full sm:w-auto">
+              <Link to="/book-demo" className="w-full sm:w-auto">
                 <GlowButton className="h-12 w-full sm:w-auto">
-                  Get Started
+                  Book Demo
                   <ArrowRight className="h-4 w-4" />
                 </GlowButton>
               </Link>
