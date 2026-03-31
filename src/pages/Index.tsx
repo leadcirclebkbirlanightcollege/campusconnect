@@ -21,6 +21,8 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
+import LandingTestimonials from "@/pages/landing/LandingTestimonials";
+import LandingPricing from "@/pages/landing/LandingPricing";
 
 const HIGHLIGHTS = [
   {
