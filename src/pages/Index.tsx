@@ -21,6 +21,8 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
+import LandingTestimonials from "@/pages/landing/LandingTestimonials";
+import LandingPricing from "@/pages/landing/LandingPricing";
 
 const HIGHLIGHTS = [
   {
@@ -255,9 +257,9 @@ export default function Index() {
             </div>
 
             <h1 className="text-[38px] font-black leading-[0.95] tracking-[-0.05em] text-foreground md:text-[72px]">
-              Run Your College
+              The Operating System
               <br />
-              Like an Enterprise.
+              for Modern Campuses.
             </h1>
 
             <p className="max-w-[58ch] text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -265,9 +267,9 @@ export default function Index() {
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link to="/auth" className="w-full sm:w-auto">
+              <Link to="/book-demo" className="w-full sm:w-auto">
                 <GlowButton className="h-12 w-full sm:w-auto">
-                  Get Started
+                  Book Demo
                   <ArrowRight className="h-4 w-4" />
                 </GlowButton>
               </Link>
@@ -418,16 +420,27 @@ export default function Index() {
           </GlassCard>
         </motion.section>
 
+        <LandingTestimonials />
+
+        <LandingPricing />
+
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
           <GlassCard className="space-y-4 text-center border-primary/25" padding="lg" hover={false}>
-            <h2 className="text-2xl font-black tracking-tight text-foreground">Start Connecting Your Campus Today</h2>
-            <p className="text-xs text-muted-foreground">Launch a smarter campus experience in minutes.</p>
-            <Link to="/auth" className="inline-block">
-              <GlowButton className="h-12 px-8">
-                Get Started
-                <ArrowRight className="h-4 w-4" />
-              </GlowButton>
-            </Link>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Transform Your Campus Digitally</h2>
+            <p className="text-xs text-muted-foreground">Join 100+ institutions already using Campus Connect.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/book-demo" className="w-full sm:w-auto">
+                <GlowButton className="h-12 w-full sm:w-auto px-8">
+                  Book Demo
+                  <ArrowRight className="h-4 w-4" />
+                </GlowButton>
+              </Link>
+              <Link to="/onboarding" className="w-full sm:w-auto">
+                <Button variant="outline" className="h-12 w-full sm:w-auto px-8">
+                  Setup Your College
+                </Button>
+              </Link>
+            </div>
           </GlassCard>
         </motion.section>
       </main>

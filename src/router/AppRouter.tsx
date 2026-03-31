@@ -53,6 +53,8 @@ const NotificationSettings = lazy(() => import("@/pages/student/NotificationSett
 const NotFound             = lazy(() => import("@/pages/NotFound"));
 const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
 const DemoPage             = lazy(() => import("@/pages/Demo"));
+const BookDemoPage         = lazy(() => import("@/pages/BookDemo"));
+const CollegeOnboarding    = lazy(() => import("@/pages/CollegeOnboarding"));
 const AdminSetupWizard     = lazy(() => import("@/pages/admin/setup/AdminSetupWizard"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
@@ -117,9 +119,11 @@ export default function AppRouter() {
           <Route path="/auth/login"  element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/auth/signup" element={<PublicRoute><Auth /></PublicRoute>} />
 
-          {/* Demo & Help (public) */}
+          {/* Demo, Help & Public (public) */}
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpSupport />} />
+          <Route path="/book-demo" element={<BookDemoPage />} />
+          <Route path="/onboarding" element={<CollegeOnboarding />} />
 
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
