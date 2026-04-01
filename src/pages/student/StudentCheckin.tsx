@@ -1,7 +1,7 @@
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
-import { StreakHeatmap } from "@/components/student/StreakHeatmap";
+import StreakHeatmap from "@/components/student/StreakHeatmap";
 
 export default function StudentCheckin() {
   return (
