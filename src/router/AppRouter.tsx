@@ -129,6 +129,10 @@ export default function AppRouter() {
           <Route path="/help" element={<HelpSupport />} />
           <Route path="/book-demo" element={<BookDemoPage />} />
           <Route path="/onboarding" element={<CollegeOnboarding />} />
+          <Route path="/start" element={<CollegeOnboarding />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
