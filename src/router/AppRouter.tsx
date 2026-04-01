@@ -57,6 +57,10 @@ const DemoPage             = lazy(() => import("@/pages/Demo"));
 const BookDemoPage         = lazy(() => import("@/pages/BookDemo"));
 const CollegeOnboarding    = lazy(() => import("@/pages/CollegeOnboarding"));
 const AdminSetupWizard     = lazy(() => import("@/pages/admin/setup/AdminSetupWizard"));
+const ContactPage          = lazy(() => import("@/pages/Contact"));
+const PrivacyPage          = lazy(() => import("@/pages/Privacy"));
+const TermsPage            = lazy(() => import("@/pages/Terms"));
+const SALeadsPage          = lazy(() => import("@/pages/platform/pages/SALeadsPage"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
