@@ -23,6 +23,7 @@ import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import LandingTestimonials from "@/pages/landing/LandingTestimonials";
 import LandingPricing from "@/pages/landing/LandingPricing";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const HIGHLIGHTS = [
   {
