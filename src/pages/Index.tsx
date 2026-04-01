@@ -472,6 +472,7 @@ export default function Index() {
         </div>
       </footer>
 
+      <WhatsAppButton />
       <div className="safe-area-bottom" />
     </div>
   );
