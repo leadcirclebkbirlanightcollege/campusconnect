@@ -50,6 +50,7 @@ const StudentResults       = lazy(() => import("@/pages/student/StudentResults")
 const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
+const StudentCheckin       = lazy(() => import("@/pages/student/StudentCheckin"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
 const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
 const DemoPage             = lazy(() => import("@/pages/Demo"));
