@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Building2, GraduationCap, Mail, MapPin, Phone, Send, User, Users } from "lucide-react";
@@ -37,7 +38,7 @@ export default function BookDemo() {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = formSchema.safeParse(form);
     if (!result.success) {
@@ -49,6 +50,19 @@ export default function BookDemo() {
       setErrors(fieldErrors);
       return;
     }
+
+    // Save lead to database
+    try {
+      await supabase.from("leads" as any).insert({
+        name: form.name,
+        college: form.collegeName,
+        phone: form.phone,
+        email: form.email,
+        city: form.city,
+        student_count: form.studentCount,
+        status: "new",
+      } as any);
+    } catch {}
 
     const message = encodeURIComponent(
       `Hi, I want to book a demo for Campus Connect.\n\nName: ${form.name}\nCollege: ${form.collegeName}\nStudents: ${form.studentCount}\nCity: ${form.city}\nEmail: ${form.email}\nPhone: ${form.phone}`

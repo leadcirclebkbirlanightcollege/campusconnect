@@ -57,6 +57,10 @@ const DemoPage             = lazy(() => import("@/pages/Demo"));
 const BookDemoPage         = lazy(() => import("@/pages/BookDemo"));
 const CollegeOnboarding    = lazy(() => import("@/pages/CollegeOnboarding"));
 const AdminSetupWizard     = lazy(() => import("@/pages/admin/setup/AdminSetupWizard"));
+const ContactPage          = lazy(() => import("@/pages/Contact"));
+const PrivacyPage          = lazy(() => import("@/pages/Privacy"));
+const TermsPage            = lazy(() => import("@/pages/Terms"));
+const SALeadsPage          = lazy(() => import("@/pages/platform/pages/SALeadsPage"));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
@@ -125,6 +129,10 @@ export default function AppRouter() {
           <Route path="/help" element={<HelpSupport />} />
           <Route path="/book-demo" element={<BookDemoPage />} />
           <Route path="/onboarding" element={<CollegeOnboarding />} />
+          <Route path="/start" element={<CollegeOnboarding />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
@@ -157,6 +165,7 @@ export default function AppRouter() {
             <Route path="analytics"          element={<SAAnalyticsPage />} />
             <Route path="security"           element={<SASecurityPage />} />
             <Route path="platform-settings"  element={<SAPlatformSettingsPage />} />
+            <Route path="leads"              element={<SALeadsPage />} />
           </Route>
 
           {/* ── Admin (/platform/admin/*) ─────────────────────────────────────── */}
