@@ -242,6 +242,7 @@ export default function AppRouter() {
             <Route path="polls"                  element={<FeatureGate feature="polls"><StudentPollsList /></FeatureGate>} />
             <Route path="daily"                  element={<FeatureGate feature="daily_content"><StudentDailyContent /></FeatureGate>} />
             <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
+            <Route path="checkin"                element={<StudentCheckin />} />
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
