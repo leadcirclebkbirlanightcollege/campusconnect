@@ -1033,6 +1033,48 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          city: string | null
+          college: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string
+          student_count: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          college: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          student_count?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          college?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          student_count?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lecture_programme_tags: {
         Row: {
           id: string
