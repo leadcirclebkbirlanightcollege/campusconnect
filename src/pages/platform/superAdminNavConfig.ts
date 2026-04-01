@@ -47,6 +47,7 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
   {
     label: "Platform",
     items: [
+      { title: "Leads & CRM",       url: "/platform/admin-control/leads",              icon: "Target" },
       { title: "Notifications",      url: "/platform/admin-control/notifications",      icon: "Bell" },
       { title: "Analytics",          url: "/platform/admin-control/analytics",          icon: "BarChart3" },
       { title: "Security",           url: "/platform/admin-control/security",           icon: "Shield" },
