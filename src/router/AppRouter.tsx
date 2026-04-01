@@ -165,6 +165,7 @@ export default function AppRouter() {
             <Route path="analytics"          element={<SAAnalyticsPage />} />
             <Route path="security"           element={<SASecurityPage />} />
             <Route path="platform-settings"  element={<SAPlatformSettingsPage />} />
+            <Route path="leads"              element={<SALeadsPage />} />
           </Route>
 
           {/* ── Admin (/platform/admin/*) ─────────────────────────────────────── */}

@@ -50,6 +50,19 @@ export default function BookDemo() {
       return;
     }
 
+    // Save lead to database
+    try {
+      await supabase.from("leads" as any).insert({
+        name: form.name,
+        college: form.collegeName,
+        phone: form.phone,
+        email: form.email,
+        city: form.city,
+        student_count: form.studentCount,
+        status: "new",
+      } as any);
+    } catch {}
+
     const message = encodeURIComponent(
       `Hi, I want to book a demo for Campus Connect.\n\nName: ${form.name}\nCollege: ${form.collegeName}\nStudents: ${form.studentCount}\nCity: ${form.city}\nEmail: ${form.email}\nPhone: ${form.phone}`
     );
