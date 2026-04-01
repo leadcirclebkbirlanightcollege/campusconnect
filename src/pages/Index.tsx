@@ -460,15 +460,11 @@ export default function Index() {
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <a href="#features" className="story-link">
-              Features
-            </a>
-            <a href="#" className="story-link">
-              Community
-            </a>
-            <Link to="/auth" className="story-link">
-              Login
-            </Link>
+            <a href="#features" className="story-link">Features</a>
+            <Link to="/contact" className="story-link">Contact</Link>
+            <Link to="/privacy" className="story-link">Privacy</Link>
+            <Link to="/terms" className="story-link">Terms</Link>
+            <Link to="/auth" className="story-link">Login</Link>
           </div>
 
           <p className="text-xs text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
