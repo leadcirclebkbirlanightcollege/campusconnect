@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import AppGuard from "@/components/layout/AppGuard";
 import OfflineBanner from "@/components/layout/OfflineBanner";
@@ -30,15 +31,31 @@ function AuthenticatedOverlays() {
   );
 }
 
+function OfflineAutoRecovery() {
+  const { isOnline } = useNetworkStatus();
+  const prevOnline = useRef(isOnline);
+
+  useEffect(() => {
+    // When transitioning from offline → online, refetch all queries
+    if (isOnline && !prevOnline.current) {
+      import("@/providers/QueryProvider").then(({ queryClient }) => {
+        queryClient.invalidateQueries();
+      });
+    }
+    prevOnline.current = isOnline;
+  }, [isOnline]);
+
+  return <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>;
+}
+
 function AppInner() {
   useWebVitals();
   useGlobalQueryErrors();
-  const { isOnline } = useNetworkStatus();
 
   return (
     <>
-      {/* Full-screen offline overlay */}
-      <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>
+      {/* Offline overlay — never blocks rendering */}
+      <OfflineAutoRecovery />
 
       {/* Always-on: branding, connectivity, SW update */}
       <TenantBrandingApplicator />
