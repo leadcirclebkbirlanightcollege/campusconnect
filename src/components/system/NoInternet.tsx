@@ -1,10 +1,19 @@
 import { WifiOff, RefreshCw } from "lucide-react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 export default function NoInternet() {
   const { retry } = useNetworkStatus();
+  const queryClient = useQueryClient();
+
+  const handleRetry = () => {
+    retry();
+    if (navigator.onLine) {
+      queryClient.invalidateQueries();
+    }
+  };
 
   return (
     <motion.div
@@ -12,9 +21,13 @@ export default function NoInternet() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-background p-6"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-background/80 backdrop-blur-sm p-6"
     >
-      <div className="flex flex-col items-center gap-6 max-w-sm text-center rounded-2xl border border-border-subtle bg-surface-1 p-8 shadow-xl">
+      <motion.div
+        initial={{ scale: 0.95, y: 10 }}
+        animate={{ scale: 1, y: 0 }}
+        className="flex flex-col items-center gap-6 max-w-sm text-center rounded-2xl border border-border bg-card p-8 shadow-xl"
+      >
         {/* Pulsing icon */}
         <div className="relative flex items-center justify-center">
           <span className="absolute h-20 w-20 rounded-full bg-destructive/10 animate-ping opacity-40" />
@@ -30,11 +43,11 @@ export default function NoInternet() {
           </p>
         </div>
 
-        <Button onClick={retry} size="lg" className="gap-2 w-full">
+        <Button onClick={handleRetry} size="lg" className="gap-2 w-full">
           <RefreshCw className="h-4 w-4" />
           Retry Connection
         </Button>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

@@ -30,15 +30,32 @@ function AuthenticatedOverlays() {
   );
 }
 
+function OfflineAutoRecovery() {
+  const { isOnline } = useNetworkStatus();
+  const queryClientRef = React.useRef<ReturnType<typeof import("@tanstack/react-query").useQueryClient> | null>(null);
+  try {
+    // Safe import - only works inside QueryProvider
+    const { useQueryClient } = require("@tanstack/react-query");
+    queryClientRef.current = useQueryClient();
+  } catch {}
+
+  React.useEffect(() => {
+    if (isOnline && queryClientRef.current) {
+      queryClientRef.current.invalidateQueries();
+    }
+  }, [isOnline]);
+
+  return <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>;
+}
+
 function AppInner() {
   useWebVitals();
   useGlobalQueryErrors();
-  const { isOnline } = useNetworkStatus();
 
   return (
     <>
-      {/* Full-screen offline overlay */}
-      <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>
+      {/* Offline overlay — never blocks rendering */}
+      <OfflineAutoRecovery />
 
       {/* Always-on: branding, connectivity, SW update */}
       <TenantBrandingApplicator />
