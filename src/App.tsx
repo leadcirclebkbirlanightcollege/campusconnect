@@ -13,6 +13,9 @@ import { BrowserRouter } from "react-router-dom";
 import AppRouter from "@/router/AppRouter";
 import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicator";
 import { useAuth } from "@/providers/AuthProvider";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import NoInternet from "@/components/system/NoInternet";
+import { AnimatePresence } from "framer-motion";
 
 /** Overlays that must only appear for logged-in users on protected routes */
 function AuthenticatedOverlays() {
@@ -30,20 +33,19 @@ function AuthenticatedOverlays() {
 function AppInner() {
   useWebVitals();
   useGlobalQueryErrors();
+  const { isOnline } = useNetworkStatus();
 
   return (
     <>
+      {/* Full-screen offline overlay */}
+      <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>
+
       {/* Always-on: branding, connectivity, SW update */}
       <TenantBrandingApplicator />
       <OfflineBanner />
       <SwUpdateManager />
       <NetworkHealthDot />
 
-      {/*
-       * AppGuard:
-       *  - Public routes (/  /auth/*) → renders AppRouter immediately
-       *  - Protected routes           → waits for auth, then renders overlays + AppRouter
-       */}
       <AppGuard overlays={<AuthenticatedOverlays />}>
         <AppRouter />
       </AppGuard>
