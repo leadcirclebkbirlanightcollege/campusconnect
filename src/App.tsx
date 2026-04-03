@@ -32,17 +32,16 @@ function AuthenticatedOverlays() {
 
 function OfflineAutoRecovery() {
   const { isOnline } = useNetworkStatus();
-  const queryClientRef = React.useRef<ReturnType<typeof import("@tanstack/react-query").useQueryClient> | null>(null);
-  try {
-    // Safe import - only works inside QueryProvider
-    const { useQueryClient } = require("@tanstack/react-query");
-    queryClientRef.current = useQueryClient();
-  } catch {}
+  const prevOnline = useRef(isOnline);
 
-  React.useEffect(() => {
-    if (isOnline && queryClientRef.current) {
-      queryClientRef.current.invalidateQueries();
+  useEffect(() => {
+    // When transitioning from offline → online, refetch all queries
+    if (isOnline && !prevOnline.current) {
+      import("@/providers/QueryProvider").then(({ queryClient }) => {
+        queryClient.invalidateQueries();
+      });
     }
+    prevOnline.current = isOnline;
   }, [isOnline]);
 
   return <AnimatePresence>{!isOnline && <NoInternet />}</AnimatePresence>;
