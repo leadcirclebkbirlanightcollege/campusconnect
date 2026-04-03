@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import AppGuard from "@/components/layout/AppGuard";
 import OfflineBanner from "@/components/layout/OfflineBanner";
