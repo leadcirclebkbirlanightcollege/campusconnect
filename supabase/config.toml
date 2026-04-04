@@ -39,6 +39,9 @@ verify_jwt = false
 [functions.daily-checkin]
 verify_jwt = false
 
+[functions.update-user-email]
+verify_jwt = false
+
 [functions.subscribe-web-push]
 verify_jwt = false
 

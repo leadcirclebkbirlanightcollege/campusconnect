@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Mail } from "lucide-react";
 
 import {
   Dialog,
@@ -62,12 +63,42 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   const qc = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [editEmail, setEditEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
   const [form, setForm] = useState({
     name: "",
     phone: "",
     student_id: "",
     department: "",
     class_name: "",
+  });
+
+  const updateEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("Missing userId");
+      const trimmed = newEmail.trim().toLowerCase();
+      if (!trimmed || !trimmed.includes("@") || trimmed.length < 5) {
+        throw new Error("Please enter a valid email address");
+      }
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const res = await supabase.functions.invoke("update-user-email", {
+        body: { user_id: userId, new_email: trimmed },
+      });
+      if (res.error) throw new Error(res.error.message ?? "Failed to update email");
+      const body = res.data as { error?: string };
+      if (body?.error) throw new Error(body.error);
+    },
+    onSuccess: () => {
+      toast.success("Email updated successfully");
+      setEditEmail(false);
+      setNewEmail("");
+      qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
+      qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update email"),
   });
 
   const profileQuery = useQuery({
@@ -88,6 +119,8 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   useEffect(() => {
     // reset edit state whenever a new user is opened
     setIsEditing(false);
+    setEditEmail(false);
+    setNewEmail("");
 
     const p = profileQuery.data;
     setForm({
@@ -245,7 +278,48 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="text-sm">
                   <div className="text-muted-foreground">Email</div>
-                  <div className="font-medium">{profileQuery.data?.email ?? "—"}</div>
+                  {editEmail ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        id="sp-email"
+                        type="email"
+                        placeholder="new@email.com"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => updateEmailMutation.mutate()}
+                        disabled={updateEmailMutation.isPending}
+                      >
+                        {updateEmailMutation.isPending ? "…" : "Save"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => { setEditEmail(false); setNewEmail(""); }}
+                        disabled={updateEmailMutation.isPending}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{profileQuery.data?.email ?? "—"}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        title="Change email"
+                        onClick={() => { setEditEmail(true); setNewEmail(profileQuery.data?.email ?? ""); }}
+                      >
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {isEditing ? (
