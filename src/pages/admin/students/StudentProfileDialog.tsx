@@ -278,7 +278,48 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="text-sm">
                   <div className="text-muted-foreground">Email</div>
-                  <div className="font-medium">{profileQuery.data?.email ?? "—"}</div>
+                  {editEmail ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        id="sp-email"
+                        type="email"
+                        placeholder="new@email.com"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => updateEmailMutation.mutate()}
+                        disabled={updateEmailMutation.isPending}
+                      >
+                        {updateEmailMutation.isPending ? "…" : "Save"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => { setEditEmail(false); setNewEmail(""); }}
+                        disabled={updateEmailMutation.isPending}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{profileQuery.data?.email ?? "—"}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        title="Change email"
+                        onClick={() => { setEditEmail(true); setNewEmail(profileQuery.data?.email ?? ""); }}
+                      >
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {isEditing ? (
