@@ -119,6 +119,8 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   useEffect(() => {
     // reset edit state whenever a new user is opened
     setIsEditing(false);
+    setEditEmail(false);
+    setNewEmail("");
 
     const p = profileQuery.data;
     setForm({
