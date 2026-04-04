@@ -63,12 +63,42 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   const qc = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [editEmail, setEditEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
   const [form, setForm] = useState({
     name: "",
     phone: "",
     student_id: "",
     department: "",
     class_name: "",
+  });
+
+  const updateEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("Missing userId");
+      const trimmed = newEmail.trim().toLowerCase();
+      if (!trimmed || !trimmed.includes("@") || trimmed.length < 5) {
+        throw new Error("Please enter a valid email address");
+      }
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const res = await supabase.functions.invoke("update-user-email", {
+        body: { user_id: userId, new_email: trimmed },
+      });
+      if (res.error) throw new Error(res.error.message ?? "Failed to update email");
+      const body = res.data as { error?: string };
+      if (body?.error) throw new Error(body.error);
+    },
+    onSuccess: () => {
+      toast.success("Email updated successfully");
+      setEditEmail(false);
+      setNewEmail("");
+      qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
+      qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update email"),
   });
 
   const profileQuery = useQuery({
