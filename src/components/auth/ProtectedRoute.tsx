@@ -68,20 +68,16 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 function useResolvedRole(): string | null {
   const { user } = useAuth();
   const { isSuperAdmin } = useTenant();
+  const queryClient = useQueryClient();
 
   if (!user) return null;
   if (isSuperAdmin) return "super_admin";
 
   // Read from React Query cache (set by TenantProvider)
-  try {
-    const { queryClient } = require("@/providers/QueryProvider");
-    const cached = queryClient.getQueryData(["tenant", "role", user.id]) as
-      | { role: string; college_id: string | null }
-      | undefined;
-    return cached?.role ?? "student";
-  } catch {
-    return "student";
-  }
+  const cached = queryClient.getQueryData(["tenant", "role", user.id]) as
+    | { role: string; college_id: string | null }
+    | undefined;
+  return cached?.role ?? "student";
 }
 
 export default ProtectedRoute;
