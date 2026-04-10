@@ -14,7 +14,7 @@ export const queryClient = new QueryClient({
       retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 8000),
       networkMode: "always",
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnMount: true,           // was false — caused stale data after navigation
       refetchOnReconnect: true,
       staleTime: STALE_TIME.attendance,
       gcTime: GC_TIME.medium,
