@@ -1,5 +1,15 @@
+/**
+ * PlatformModeGuard — Shows maintenance/semester-closed/launch screens
+ * when the platform is in a non-normal mode.
+ *
+ * Uses AuthProvider + TenantProvider to avoid duplicate role fetching.
+ * NEVER blocks rendering — children render immediately while settings load.
+ */
+
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
 import SemesterClosedScreen from "@/components/platform/SemesterClosedScreen";
 import MaintenanceModeScreen from "@/components/platform/MaintenanceModeScreen";
 import LaunchModeScreen from "@/components/platform/LaunchModeScreen";
@@ -27,28 +37,11 @@ export default function PlatformModeGuard({ children }: Props) {
   const [settings, setSettings] = useState<PlatformModeSettings>(
     cachedSettings ?? DEFAULT
   );
-  const [userRole, setUserRole] = useState<"admin" | "student" | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+  const { user } = useAuth();
+  const { isSuperAdmin } = useTenant();
   const fetchedRef = useRef(false);
 
-  // 1. Resolve user role once from session cache
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        setAuthReady(true);
-        return;
-      }
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      setUserRole((data?.role as "admin" | "student") ?? "student");
-      setAuthReady(true);
-    });
-  }, []);
-
-  // 2. Fetch platform mode once with 5-min cache
+  // Fetch platform mode once with 5-min cache (non-blocking)
   useEffect(() => {
     const now = Date.now();
     if (cachedSettings && now - lastFetchedAt < CACHE_TTL_MS) {
@@ -72,20 +65,17 @@ export default function PlatformModeGuard({ children }: Props) {
       });
   }, []);
 
-  // Apply event theme to body (non-blocking, runs for everyone including admins)
+  // Apply event theme to body
   useEffect(() => {
     const theme = settings.event_theme ?? "";
     document.body.dataset.theme = theme;
     return () => { document.body.dataset.theme = ""; };
   }, [settings.event_theme]);
 
-  // Wait for auth to resolve — show children immediately so landing page is never blank
-  if (!authReady) return <>{children}</>;
+  // Admins & super_admins always bypass
+  if (user && isSuperAdmin) return <>{children}</>;
 
-  // Admins always bypass — role-based only, no route exceptions
-  if (userRole === "admin") return <>{children}</>;
-
-  // Block students based on mode — no exceptions
+  // Block students based on mode
   if (settings.mode === "semester_closed") {
     return <SemesterClosedScreen settings={settings} />;
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -16,7 +16,8 @@ import {
   Zap,
 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
@@ -159,50 +160,42 @@ function PreviewCard({ title, subtitle, statA, statB }: { title: string; subtitl
 export default function Index() {
   const navigate = useNavigate();
   const { branding } = usePlatformBranding();
-  const [authChecking, setAuthChecking] = useState(true);
+  const { user, isLoading: authLoading } = useAuth();
+  const { isSuperAdmin } = useTenant();
 
+  // Non-blocking redirect: if already logged in, redirect based on role from TenantProvider
   useEffect(() => {
-    let mounted = true;
+    if (authLoading || !user) return;
 
-    (async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session || !mounted) return;
-
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-
-        if (!mounted) return;
-        if (data?.role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
-        else if (data?.role === "admin") navigate("/platform/admin/dashboard", { replace: true });
+    // Use TenantProvider's cached role query instead of a fresh DB call
+    import("@/providers/QueryProvider").then(({ queryClient }) => {
+      const cachedRole = queryClient.getQueryData<{ role: string; college_id: string | null }>(
+        ["tenant", "role", user.id]
+      );
+      if (cachedRole) {
+        if (cachedRole.role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
+        else if (cachedRole.role === "admin") navigate("/platform/admin/dashboard", { replace: true });
+        else if (cachedRole.role === "faculty") navigate("/faculty/dashboard", { replace: true });
         else navigate("/app/dashboard", { replace: true });
-      } finally {
-        if (mounted) setAuthChecking(false);
+      } else {
+        // If role isn't cached yet, wait briefly then fallback
+        const timeout = setTimeout(() => {
+          const role = queryClient.getQueryData<{ role: string; college_id: string | null }>(
+            ["tenant", "role", user.id]
+          );
+          if (role?.role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
+          else if (role?.role === "admin") navigate("/platform/admin/dashboard", { replace: true });
+          else if (role?.role === "faculty") navigate("/faculty/dashboard", { replace: true });
+          else navigate("/app/dashboard", { replace: true });
+        }, 1500);
+        return () => clearTimeout(timeout);
       }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [navigate]);
+    });
+  }, [user, authLoading, navigate]);
 
   const year = useMemo(() => new Date().getFullYear(), []);
 
-  if (authChecking) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        <p className="text-xs text-muted-foreground">Loading…</p>
-      </div>
-    </div>
-  );
-
+  // NEVER block rendering — show landing page immediately
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--primary)/0.16),transparent_42%),radial-gradient(circle_at_95%_8%,hsl(var(--accent)/0.14),transparent_38%)]" />
@@ -404,76 +397,54 @@ export default function Index() {
           <GlassCard padding="lg" className="space-y-3" hover={false}>
             <SectionTitle eyebrow="Community" title="Campus Community" />
             <p className="text-xs leading-relaxed text-muted-foreground">
-              From lectures to events, {branding.brand_name} keeps students, admins, and programmes connected with one shared campus rhythm.
+              Built for forward-thinking institutions. Our platform connects students, faculty, and admin teams through a unified experience.
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Students", value: "500+" },
-                { label: "Events", value: "120+" },
-                { label: "Engagement", value: "92%" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-border-subtle bg-surface-2 p-3 text-center">
-                  <p className="text-sm font-black text-foreground">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
           </GlassCard>
         </motion.section>
 
         <LandingTestimonials />
-
         <LandingPricing />
 
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
-          <GlassCard className="space-y-4 text-center border-primary/25" padding="lg" hover={false}>
-            <h2 className="text-2xl font-black tracking-tight text-foreground">Transform Your Campus Digitally</h2>
-            <p className="text-xs text-muted-foreground">Join 100+ institutions already using Campus Connect.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/book-demo" className="w-full sm:w-auto">
-                <GlowButton className="h-12 w-full sm:w-auto px-8">
-                  Book Demo
-                  <ArrowRight className="h-4 w-4" />
-                </GlowButton>
-              </Link>
-              <Link to="/onboarding" className="w-full sm:w-auto">
-                <Button variant="outline" className="h-12 w-full sm:w-auto px-8">
-                  Setup Your College
-                </Button>
-              </Link>
-            </div>
-          </GlassCard>
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-4 text-center">
+          <SectionTitle eyebrow="Get Started" title="Start your campus transformation" />
+          <p className="mx-auto max-w-md text-sm text-muted-foreground">
+            Join modern campuses already using Campus Connect for attendance, lectures, analytics, and student engagement.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link to="/book-demo">
+              <GlowButton className="h-12 w-full sm:w-auto">
+                Book Demo
+                <ArrowRight className="h-4 w-4" />
+              </GlowButton>
+            </Link>
+            <Link to="/auth">
+              <Button variant="outline" className="h-12 w-full sm:w-auto">
+                Login
+              </Button>
+            </Link>
+          </div>
         </motion.section>
       </main>
 
-      <footer className="border-t border-border-subtle/70 bg-surface-1/80">
-        <div className="mx-auto w-full max-w-[420px] space-y-3 px-4 py-6 md:max-w-7xl md:px-6">
+      <footer className="border-t border-border-subtle bg-surface-1 py-6 safe-area-bottom">
+        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center gap-4 px-4 text-center md:max-w-7xl md:flex-row md:justify-between md:px-6 md:text-left">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/12">
-              {branding.logo_url ? (
-                <img src={branding.logo_url} alt={`${branding.brand_name} logo`} className="h-4.5 w-4.5 object-contain" loading="lazy" />
-              ) : (
-                <GraduationCap className="h-4 w-4 text-primary" />
-              )}
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/8">
+              <GraduationCap className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-sm font-semibold text-foreground">{branding.brand_name}</p>
+            <span className="text-sm font-semibold text-foreground">{branding.brand_name}</span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <a href="#features" className="story-link">Features</a>
-            <Link to="/contact" className="story-link">Contact</Link>
-            <Link to="/privacy" className="story-link">Privacy</Link>
-            <Link to="/terms" className="story-link">Terms</Link>
-            <Link to="/auth" className="story-link">Login</Link>
+          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground md:justify-end">
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link to="/help" className="hover:text-foreground transition-colors">Support</Link>
           </div>
-
-          <p className="text-xs text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
-          <p className="text-xs text-muted-foreground">Developed by - Atharv Jadhav - Department Of Computer Science</p>
+          <p className="text-[11px] text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
         </div>
       </footer>
 
       <WhatsAppButton />
-      <div className="safe-area-bottom" />
     </div>
   );
 }
