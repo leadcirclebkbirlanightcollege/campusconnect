@@ -17,13 +17,11 @@ import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 /** Routes that must NEVER be blocked by auth loading */
-export const PUBLIC_ROUTES = ["/", "/auth", "/auth/login", "/auth/signup"];
+const PUBLIC_PREFIXES = ["/auth", "/demo", "/help", "/book-demo", "/onboarding", "/start", "/contact", "/privacy", "/terms"];
 
 export function isPublicPath(pathname: string): boolean {
-  return (
-    pathname === "/" ||
-    pathname.startsWith("/auth")
-  );
+  if (pathname === "/") return true;
+  return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + "/"));
 }
 
 interface AppGuardProps {
