@@ -544,6 +544,68 @@
 }
 
 /* ══════════════════════════════════════════════
+   ENHANCED MICRO-INTERACTIONS
+══════════════════════════════════════════════ */
+@layer utilities {
+  /* Smooth card entrance stagger */
+  .card-entrance {
+    animation: card-slide-up 0.28s var(--ease-out) both;
+  }
+  .card-entrance:nth-child(1) { animation-delay: 0ms; }
+  .card-entrance:nth-child(2) { animation-delay: 50ms; }
+  .card-entrance:nth-child(3) { animation-delay: 100ms; }
+  .card-entrance:nth-child(4) { animation-delay: 150ms; }
+  .card-entrance:nth-child(5) { animation-delay: 200ms; }
+
+  /* Glass card with hover glow */
+  .glass-card-interactive {
+    transition: transform 150ms var(--ease-out),
+                box-shadow 150ms var(--ease-out),
+                border-color 150ms var(--ease-out);
+  }
+  .glass-card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--primary) / 0.25);
+  }
+  .glass-card-interactive:active {
+    transform: scale(0.98) translateY(0);
+  }
+
+  /* Floating action button pulse */
+  .fab-pulse {
+    animation: fab-breathe 3s ease-in-out infinite;
+  }
+
+  /* Skeleton loading shimmer v2 — smoother */
+  .skeleton-v2 {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--surface-2)) 8%,
+      hsl(var(--surface-3)) 18%,
+      hsl(var(--surface-2)) 33%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-v2 1.8s linear infinite;
+  }
+}
+
+@keyframes card-slide-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fab-breathe {
+  0%, 100% { box-shadow: var(--shadow-primary); }
+  50%       { box-shadow: var(--shadow-glow); transform: scale(1.03); }
+}
+
+@keyframes shimmer-v2 {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ══════════════════════════════════════════════
    REDUCED MOTION
 ══════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
