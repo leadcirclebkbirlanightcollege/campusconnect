@@ -23,9 +23,6 @@ export default function AiChatButton() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Don't show for unauthenticated users
-  if (!user) return null;
-
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -41,6 +38,9 @@ export default function AiChatButton() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Don't show for unauthenticated users
+  if (!user) return null;
 
   const sendMessage = async () => {
     const text = input.trim();
