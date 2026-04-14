@@ -80,6 +80,7 @@ function formatDateTime(value: string) {
 }
 
 export default function StudentAttendanceHistory() {
+  const [exporting, setExporting] = useState(false);
   const growth = useGrowthInsights();
 
   const userQuery = useQuery({
