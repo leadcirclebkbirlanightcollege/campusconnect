@@ -268,6 +268,45 @@ export default function StudentAttendanceHistory() {
           },
   ] as const;
 
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCSV = useCallback(async () => {
+    if (!userId) return;
+    setExporting(true);
+    try {
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("status,marked_at,points_earned,lectures(topic,lecture_date,start_time,venue)")
+        .eq("student_user_id", userId)
+        .order("marked_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const headers = ["Lecture", "Date", "Time", "Venue", "Status", "Points", "Marked At"];
+      const rows = (data ?? []).map((r: any) => [
+        r.lectures?.topic ?? "",
+        r.lectures?.lecture_date ?? "",
+        r.lectures?.start_time ?? "",
+        r.lectures?.venue ?? "",
+        r.status ?? "",
+        r.points_earned ?? 0,
+        r.marked_at ? new Date(r.marked_at).toLocaleString() : "",
+      ]);
+      const csv = [headers.join(","), ...rows.map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `my-attendance-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Attendance exported!");
+    } catch (e: any) {
+      toast.error("Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }, [userId]);
+
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
       <PageContainer className="space-y-6" withBottomNav>
@@ -276,6 +315,16 @@ export default function StudentAttendanceHistory() {
           subtitle="Track your attendance health"
           variant="large"
           gradient
+          action={
+            <button
+              onClick={handleExportCSV}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border-subtle text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-all touch-card"
+            >
+              {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Export
+            </button>
+          }
         />
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
