@@ -269,7 +269,6 @@ export default function StudentAttendanceHistory() {
           },
   ] as const;
 
-  const [exporting, setExporting] = useState(false);
 
   const handleExportCSV = useCallback(async () => {
     if (!userId) return;
