@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   useInfiniteQuery,
   useQuery,
@@ -9,12 +9,14 @@ import {
   BookOpen,
   CalendarCheck,
   Clock3,
+  Download,
   Loader2,
   Sparkles,
   TrendingDown,
   TrendingUp,
   UserX,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
