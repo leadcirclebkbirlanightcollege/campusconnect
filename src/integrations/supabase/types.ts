@@ -845,36 +845,48 @@ export type Database = {
       }
       events: {
         Row: {
+          college_id: string | null
           created_at: string
           created_by: string
           description: string | null
           event_date: string
           event_time: string
+          flyer_url: string | null
           id: string
+          is_featured: boolean
+          max_stalls: number | null
           poster_url: string | null
           title: string
           updated_at: string
           venue: string | null
         }
         Insert: {
+          college_id?: string | null
           created_at?: string
           created_by: string
           description?: string | null
           event_date: string
           event_time: string
+          flyer_url?: string | null
           id?: string
+          is_featured?: boolean
+          max_stalls?: number | null
           poster_url?: string | null
           title: string
           updated_at?: string
           venue?: string | null
         }
         Update: {
+          college_id?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
           event_date?: string
           event_time?: string
+          flyer_url?: string | null
           id?: string
+          is_featured?: boolean
+          max_stalls?: number | null
           poster_url?: string | null
           title?: string
           updated_at?: string
@@ -1493,6 +1505,57 @@ export type Database = {
         }
         Relationships: []
       }
+      point_claims: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["claim_activity_type"]
+          college_id: string | null
+          created_at: string
+          description: string | null
+          event_id: string | null
+          evidence_url: string | null
+          id: string
+          points: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["claim_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["claim_activity_type"]
+          college_id?: string | null
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          evidence_url?: string | null
+          id?: string
+          points: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["claim_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["claim_activity_type"]
+          college_id?: string | null
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          evidence_url?: string | null
+          id?: string
+          points?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["claim_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       points_ledger: {
         Row: {
           college_id: string | null
@@ -1812,6 +1875,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stall_registrations: {
+        Row: {
+          college_id: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          requirements: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          stall_name: string
+          status: Database["public"]["Enums"]["stall_status"]
+          type: Database["public"]["Enums"]["stall_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          college_id?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          requirements?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stall_name: string
+          status?: Database["public"]["Enums"]["stall_status"]
+          type?: Database["public"]["Enums"]["stall_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          college_id?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          requirements?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          stall_name?: string
+          status?: Database["public"]["Enums"]["stall_status"]
+          type?: Database["public"]["Enums"]["stall_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       student_achievements: {
         Row: {
@@ -2209,6 +2332,7 @@ export type Database = {
       }
       get_admin_college_analytics: { Args: never; Returns: Json }
       get_college_admins: { Args: never; Returns: Json }
+      get_event_stall_summary: { Args: { p_event_id: string }; Returns: Json }
       get_faculty_lecture_analytics: {
         Args: { p_faculty_id?: string }
         Returns: Json
@@ -2282,8 +2406,17 @@ export type Database = {
         | "rejected"
         | "completed"
       app_role: "admin" | "student" | "super_admin" | "faculty"
+      claim_activity_type:
+        | "event_attendance"
+        | "participation"
+        | "winning"
+        | "idea_submission"
+        | "other"
+      claim_status: "pending" | "approved" | "rejected"
       lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent" | "cancelled"
+      stall_status: "pending" | "approved" | "rejected"
+      stall_type: "food" | "game" | "startup" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2418,8 +2551,18 @@ export const Constants = {
         "completed",
       ],
       app_role: ["admin", "student", "super_admin", "faculty"],
+      claim_activity_type: [
+        "event_attendance",
+        "participation",
+        "winning",
+        "idea_submission",
+        "other",
+      ],
+      claim_status: ["pending", "approved", "rejected"],
       lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent", "cancelled"],
+      stall_status: ["pending", "approved", "rejected"],
+      stall_type: ["food", "game", "startup", "other"],
     },
   },
 } as const
