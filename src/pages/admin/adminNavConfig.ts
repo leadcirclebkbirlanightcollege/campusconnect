@@ -108,6 +108,8 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/notifications":          { title: "Notifications",      description: "Push notification center" },
   "/platform/admin/challenges":             { title: "Challenges",         description: "Engagement challenges" },
   "/platform/admin/points":                 { title: "Points",             description: "Points & adjustments" },
+  "/platform/admin/point-claims":           { title: "Point Claims",       description: "Approve student point claims" },
+  "/platform/admin/stalls":                 { title: "Stall Requests",     description: "Approve event stall registrations" },
   "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
   "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
   "/platform/admin/channels":              { title: "Channels",           description: "Manage messaging channels" },
