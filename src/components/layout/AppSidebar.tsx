@@ -131,6 +131,7 @@ export default function AppSidebar() {
         label: "Engagement",
         items: [
           { title: "Leaderboard",   url: "/app/leaderboard",   icon: Trophy },
+          { title: "Points",        url: "/app/points",        icon: Flame },
           { title: "Achievements",  url: "/app/achievements",  icon: Flame },
           { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
           { title: "Daily",         url: "/app/daily",         icon: Sparkles },
