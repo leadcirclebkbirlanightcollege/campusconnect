@@ -51,6 +51,9 @@ const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
 const StudentCheckin       = lazy(() => import("@/pages/student/StudentCheckin"));
+const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
+const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
+const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
 const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
 const DemoPage             = lazy(() => import("@/pages/Demo"));
@@ -200,6 +203,8 @@ export default function AppRouter() {
             <Route path="notifications"            element={<AdminNotificationsPage />} />
             <Route path="challenges"               element={<AdminChallengesPage />} />
             <Route path="points"                   element={<AdminPointsPage />} />
+            <Route path="point-claims"             element={<AdminPointClaimsPage />} />
+            <Route path="stalls"                   element={<AdminStallsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
             <Route path="reports"                  element={<AdminReportsPage />} />
@@ -252,6 +257,7 @@ export default function AppRouter() {
             <Route path="daily"                  element={<FeatureGate feature="daily_content"><StudentDailyContent /></FeatureGate>} />
             <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
             <Route path="checkin"                element={<StudentCheckin />} />
+            <Route path="points"                 element={<StudentPointsPage />} />
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
