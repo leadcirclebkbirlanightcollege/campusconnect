@@ -186,7 +186,13 @@ const FacultyCard = memo(function FacultyCard({
         <div className="flex items-center gap-2">
           <p className="text-[13px] font-semibold text-foreground truncate">{faculty.name}</p>
           {faculty.is_verified && (
-            <UserCheck className="h-3 w-3 text-green-500 shrink-0" />
+            <span
+              className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-success text-success-foreground shrink-0"
+              aria-label="Verified"
+              title="Verified"
+            >
+              <UserCheck className="h-2.5 w-2.5" />
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap mt-0.5">
