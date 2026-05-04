@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
-import AiChatButton from "@/components/ai/AiChatButton";
+
 import SoftUpdateBanner from "@/components/layout/SoftUpdateBanner";
 import {
   SidebarInset,
@@ -276,7 +276,6 @@ export default function AppLayout() {
 
         {/* Floating utilities */}
         <FeedbackButton />
-        <AiChatButton />
         <ForceUpdateBanner />
         <SoftUpdateBanner />
       </SidebarProvider>
