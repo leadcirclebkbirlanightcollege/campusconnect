@@ -119,7 +119,7 @@ export default function AppSidebar() {
   const sections: NavSection[] = useMemo(
     () => [
       {
-        label: "Main",
+        label: "Core",
         items: [
           { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
         ],
@@ -130,37 +130,47 @@ export default function AppSidebar() {
           { title: "Attendance",       url: "/app/attendance",  icon: CalendarDays },
           { title: "Lectures",         url: "/app/lectures",    icon: BookOpen },
           { title: "Learning Circles", url: "/app/programmes",  icon: Calendar },
+          { title: "Timetable",        url: "/app/timetable",   icon: CalendarDays },
+        ],
+      },
+      {
+        label: "Campus",
+        items: [
+          { title: "Events",        url: "/app/events",        icon: CalendarDays },
+          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
+          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
+          { title: "Documents",     url: "/app/documents",     icon: BookOpen },
+        ],
+      },
+      {
+        label: "E-Cell",
+        accent: "ecell",
+        items: [
+          { title: "E-Cell Hub",   url: "/app/ecell",        icon: Rocket },
+          { title: "Stalls",       url: "/app/ecell/stalls", icon: Store },
+          { title: "Points",       url: "/app/points",       icon: Coins },
         ],
       },
       {
         label: "Engagement",
         items: [
           { title: "Leaderboard",   url: "/app/leaderboard",   icon: Trophy },
-          { title: "Points",        url: "/app/points",        icon: Flame },
           { title: "Achievements",  url: "/app/achievements",  icon: Flame },
           { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
           { title: "Daily",         url: "/app/daily",         icon: Sparkles },
-        ],
-      },
-      {
-        label: "Communication",
-        items: [
-          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
-          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
-          { title: "Events",        url: "/app/events",        icon: CalendarDays },
           { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
         label: "Identity",
         items: [
-          { title: "Digital ID",         url: "/app/id-card",                   icon: CreditCard },
-          { title: "Settings",           url: "/app/settings",                  icon: UserRound },
-          { title: "Notif. Settings",    url: "/app/settings/notifications",    icon: Settings },
+          { title: "Digital ID",      url: "/app/id-card",                icon: CreditCard },
+          { title: "Settings",        url: "/app/settings",               icon: UserRound },
+          { title: "Notif. Settings", url: "/app/settings/notifications", icon: Settings },
         ],
       },
     ],
-    [],
+    [unreadCount],
   );
 
   const adminSection: NavSection = useMemo(
