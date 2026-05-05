@@ -52,6 +52,8 @@ const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage")
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
 const StudentCheckin       = lazy(() => import("@/pages/student/StudentCheckin"));
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
+const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
+const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
