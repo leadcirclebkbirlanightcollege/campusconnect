@@ -57,6 +57,8 @@ interface NavItem {
 
 interface NavSection {
   label: string;
+  /** Visual variant: "ecell" gives a purple accent identity */
+  accent?: "ecell";
   items: NavItem[];
 }
 
