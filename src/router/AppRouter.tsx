@@ -260,6 +260,8 @@ export default function AppRouter() {
             <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
             <Route path="checkin"                element={<StudentCheckin />} />
             <Route path="points"                 element={<StudentPointsPage />} />
+            <Route path="ecell"                  element={<StudentEcellHub />} />
+            <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
