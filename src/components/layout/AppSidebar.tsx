@@ -20,6 +20,9 @@ import {
   Flame,
   Settings,
   MessageSquare,
+  Rocket,
+  Store,
+  Coins,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
