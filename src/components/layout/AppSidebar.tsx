@@ -20,6 +20,9 @@ import {
   Flame,
   Settings,
   MessageSquare,
+  Rocket,
+  Store,
+  Coins,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +57,8 @@ interface NavItem {
 
 interface NavSection {
   label: string;
+  /** Visual variant: "ecell" gives a purple accent identity */
+  accent?: "ecell";
   items: NavItem[];
 }
 
@@ -114,7 +119,7 @@ export default function AppSidebar() {
   const sections: NavSection[] = useMemo(
     () => [
       {
-        label: "Main",
+        label: "Core",
         items: [
           { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
         ],
@@ -125,37 +130,47 @@ export default function AppSidebar() {
           { title: "Attendance",       url: "/app/attendance",  icon: CalendarDays },
           { title: "Lectures",         url: "/app/lectures",    icon: BookOpen },
           { title: "Learning Circles", url: "/app/programmes",  icon: Calendar },
+          { title: "Timetable",        url: "/app/timetable",   icon: CalendarDays },
+        ],
+      },
+      {
+        label: "Campus",
+        items: [
+          { title: "Events",        url: "/app/events",        icon: CalendarDays },
+          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
+          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
+          { title: "Documents",     url: "/app/documents",     icon: BookOpen },
+        ],
+      },
+      {
+        label: "E-Cell",
+        accent: "ecell",
+        items: [
+          { title: "E-Cell Hub",   url: "/app/ecell",        icon: Rocket },
+          { title: "Stalls",       url: "/app/ecell/stalls", icon: Store },
+          { title: "Points",       url: "/app/points",       icon: Coins },
         ],
       },
       {
         label: "Engagement",
         items: [
           { title: "Leaderboard",   url: "/app/leaderboard",   icon: Trophy },
-          { title: "Points",        url: "/app/points",        icon: Flame },
           { title: "Achievements",  url: "/app/achievements",  icon: Flame },
           { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
           { title: "Daily",         url: "/app/daily",         icon: Sparkles },
-        ],
-      },
-      {
-        label: "Communication",
-        items: [
-          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
-          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
-          { title: "Events",        url: "/app/events",        icon: CalendarDays },
           { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
         label: "Identity",
         items: [
-          { title: "Digital ID",         url: "/app/id-card",                   icon: CreditCard },
-          { title: "Settings",           url: "/app/settings",                  icon: UserRound },
-          { title: "Notif. Settings",    url: "/app/settings/notifications",    icon: Settings },
+          { title: "Digital ID",      url: "/app/id-card",                icon: CreditCard },
+          { title: "Settings",        url: "/app/settings",               icon: UserRound },
+          { title: "Notif. Settings", url: "/app/settings/notifications", icon: Settings },
         ],
       },
     ],
-    [],
+    [unreadCount],
   );
 
   const adminSection: NavSection = useMemo(
@@ -180,66 +195,85 @@ export default function AppSidebar() {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const renderSection = (section: NavSection, idx: number) => (
-    <SidebarGroup key={section.label} className={cn("py-0.5", idx > 0 && "pt-0")}>
-      <SidebarGroupLabel className={cn(
-        "text-[10px] font-bold uppercase tracking-[0.10em] text-muted-foreground/50 px-3 py-2 h-auto",
-        collapsed && "opacity-0 pointer-events-none",
-      )}>
-        {section.label}
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu className="gap-px">
-          {section.items.map((item) => {
-            const active = isActive(item.url);
-            const Icon = item.icon;
-            const badgeCount = item.badge ?? (item.url === "/app/inbox" ? unreadCount : 0);
+  const renderSection = (section: NavSection, idx: number) => {
+    const isEcell = section.accent === "ecell";
+    return (
+      <SidebarGroup
+        key={section.label}
+        className={cn(
+          "py-0.5",
+          idx > 0 && "pt-0",
+          isEcell && "mt-1.5 pt-2 border-t border-sidebar-border/60",
+        )}
+      >
+        <SidebarGroupLabel className={cn(
+          "text-[10px] font-bold uppercase tracking-[0.10em] px-3 py-2 h-auto",
+          isEcell ? "text-[hsl(265_85%_70%)]" : "text-muted-foreground/50",
+          collapsed && "opacity-0 pointer-events-none",
+        )}>
+          <span className="inline-flex items-center gap-1.5">
+            {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
+            {section.label}
+          </span>
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu className="gap-px">
+            {section.items.map((item) => {
+              const active = isActive(item.url);
+              const Icon = item.icon;
+              const badgeCount = item.badge ?? (item.url === "/app/inbox" ? unreadCount : 0);
 
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={active}
-                  tooltip={item.title}
-                  className={cn(
-                    "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item",
-                    "transition-all duration-fast",
-                    active
-                      ? "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )}
-                >
-                  <NavLink
-                    to={item.url}
-                    className="flex items-center gap-2.5"
-                    activeClassName=""
-                    end={item.url === "/app/dashboard"}
-                    onClick={handleNav}
-                  >
-                    <Icon className={cn(
-                      "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
-                      active ? "text-primary" : "text-muted-foreground/60 group-hover/item:text-foreground/80",
-                      item.accent && !active && item.accent,
-                    )} />
-                    <span className="flex-1 leading-none">{item.title}</span>
-                    {badgeCount > 0 && (
-                      <span className={cn(
-                        "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full",
-                        "bg-primary text-primary-foreground px-1 text-[9px] font-bold leading-none",
-                        "animate-scale-in",
-                      )}>
-                        {badgeCount > 99 ? "99+" : badgeCount}
-                      </span>
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={active}
+                    tooltip={item.title}
+                    className={cn(
+                      "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item",
+                      "transition-all duration-fast",
+                      active
+                        ? isEcell
+                          ? "bg-[hsl(265_85%_65%/0.12)] text-[hsl(265_85%_75%)] font-medium shadow-[inset_0_0_0_1px_hsl(265_85%_65%/0.25)]"
+                          : "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
+                  >
+                    <NavLink
+                      to={item.url}
+                      className="flex items-center gap-2.5"
+                      activeClassName=""
+                      end={item.url === "/app/dashboard"}
+                      onClick={handleNav}
+                    >
+                      <Icon className={cn(
+                        "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
+                        active
+                          ? isEcell ? "text-[hsl(265_85%_72%)]" : "text-primary"
+                          : isEcell
+                            ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_75%)]"
+                            : "text-muted-foreground/60 group-hover/item:text-foreground/80",
+                      )} />
+                      <span className="flex-1 leading-none">{item.title}</span>
+                      {badgeCount > 0 && (
+                        <span className={cn(
+                          "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full",
+                          isEcell ? "bg-[hsl(265_85%_65%)]" : "bg-primary",
+                          "text-primary-foreground px-1 text-[9px] font-bold leading-none animate-scale-in",
+                        )}>
+                          {badgeCount > 99 ? "99+" : badgeCount}
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  };
 
   return (
     <Sidebar

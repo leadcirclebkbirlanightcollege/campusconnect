@@ -52,6 +52,8 @@ const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage")
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
 const StudentCheckin       = lazy(() => import("@/pages/student/StudentCheckin"));
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
+const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
+const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
@@ -258,6 +260,8 @@ export default function AppRouter() {
             <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
             <Route path="checkin"                element={<StudentCheckin />} />
             <Route path="points"                 element={<StudentPointsPage />} />
+            <Route path="ecell"                  element={<StudentEcellHub />} />
+            <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="install"                element={<PwaInstallPage />} />
             <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
             <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />

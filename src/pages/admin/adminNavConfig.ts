@@ -1,6 +1,10 @@
 /**
  * Admin navigation configuration — single source of truth
  * for sidebar links and page metadata.
+ *
+ * Groups are role-aware; visual hierarchy is handled by the sidebar.
+ * The "E-Cell" group is visually distinct (purple accent) and must
+ * stay separated from the main Campus / Engagement modules.
  */
 
 export interface AdminNavItem {
@@ -11,15 +15,18 @@ export interface AdminNavItem {
 }
 
 export interface AdminNavSection {
+  /** Section heading (uppercase pill in sidebar) */
   label: string;
+  /** Optional accent: "ecell" → purple highlight */
+  accent?: "ecell";
   items: AdminNavItem[];
 }
 
 export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
-    label: "Command",
+    label: "Core",
     items: [
-      { title: "Overview",       url: "/platform/admin/dashboard",     icon: "LayoutDashboard" },
+      { title: "Dashboard",      url: "/platform/admin/dashboard",     icon: "LayoutDashboard" },
     ],
   },
   {
@@ -29,55 +36,57 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
       { title: "Timetable",      url: "/platform/admin/timetable",      icon: "CalendarDays" },
-      { title: "Programmes",     url: "/platform/admin/programmes",     icon: "GraduationCap" },
-      { title: "Allotments",     url: "/platform/admin/allotments",     icon: "UserCheck" },
-      { title: "Departments",    url: "/platform/admin/departments",    icon: "Building2" },
+      { title: "Programmes",     url: "/platform/admin/programmes",     icon: "Sparkles" },
       { title: "Classes",        url: "/platform/admin/classes",        icon: "School" },
+      { title: "Departments",    url: "/platform/admin/departments",    icon: "Building2" },
+      { title: "Allotments",     url: "/platform/admin/allotments",     icon: "UserCheck" },
     ],
   },
   {
     label: "Attendance",
     items: [
-      { title: "Control",        url: "/platform/admin/attendance",     icon: "CheckSquare" },
-      { title: "Monthly Report", url: "/platform/admin/attendance/monthly",   icon: "BarChart3" },
+      { title: "Control",        url: "/platform/admin/attendance",             icon: "CheckSquare" },
+      { title: "Monthly Report", url: "/platform/admin/attendance/monthly",     icon: "BarChart3" },
       { title: "Corrections",    url: "/platform/admin/attendance/corrections", icon: "FileEdit" },
     ],
   },
   {
-    label: "Exams & Content",
+    label: "Campus",
     items: [
-      { title: "Exams & Results", url: "/platform/admin/exams",         icon: "ClipboardList" },
-      { title: "Documents",      url: "/platform/admin/documents",      icon: "FileText" },
-      { title: "Announcements",  url: "/platform/admin/announcements",  icon: "Megaphone" },
       { title: "Events",         url: "/platform/admin/events",         icon: "CalendarDays" },
-      { title: "Stall Requests", url: "/platform/admin/stalls",         icon: "Store" },
-      { title: "Polls",          url: "/platform/admin/polls",          icon: "BarChart3" },
-      { title: "Daily Content",  url: "/platform/admin/daily-content",  icon: "Sparkles" },
-      { title: "Notifications",  url: "/platform/admin/notifications",  icon: "Bell" },
-      { title: "Challenges",     url: "/platform/admin/challenges",     icon: "Trophy" },
+      { title: "Announcements",  url: "/platform/admin/announcements",  icon: "Megaphone" },
+      { title: "Channels",       url: "/platform/admin/channels",       icon: "Hash" },
+      { title: "Documents",      url: "/platform/admin/documents",      icon: "FileText" },
     ],
   },
   {
-    label: "Communication",
+    label: "E-Cell",
+    accent: "ecell",
     items: [
-      { title: "Channels",   url: "/platform/admin/channels", icon: "Hash" },
+      { title: "E-Cell Events",   url: "/platform/admin/events?ecell=1",  icon: "CalendarDays" },
+      { title: "Stall Requests",  url: "/platform/admin/stalls",          icon: "Store" },
+      { title: "Points & Claims", url: "/platform/admin/point-claims",    icon: "Coins" },
     ],
   },
   {
-    label: "Access Control",
+    label: "Engagement",
     items: [
-      { title: "Permissions",  url: "/platform/admin/permissions", icon: "SlidersHorizontal" },
+      { title: "Leaderboard",    url: "/platform/admin/dashboard#leaderboard", icon: "Trophy" },
+      { title: "Achievements",   url: "/platform/admin/challenges",            icon: "Trophy" },
+      { title: "Polls",          url: "/platform/admin/polls",                 icon: "BarChart3" },
+      { title: "Daily Content",  url: "/platform/admin/daily-content",         icon: "Sparkles" },
+      { title: "Notifications",  url: "/platform/admin/notifications",         icon: "Bell" },
     ],
   },
   {
     label: "System",
     items: [
-      { title: "Reports",       url: "/platform/admin/reports",        icon: "BarChart2" },
-      { title: "Export Data",   url: "/platform/admin/reports/export", icon: "Download" },
-      { title: "Points",        url: "/platform/admin/points",         icon: "Coins" },
-      { title: "Point Claims",  url: "/platform/admin/point-claims",   icon: "Coins" },
-      { title: "ID Scanner",    url: "/platform/admin/scanner",        icon: "ScanLine" },
-      { title: "Settings",      url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
+      { title: "Reports",        url: "/platform/admin/reports",        icon: "BarChart2" },
+      { title: "Export Data",    url: "/platform/admin/reports/export", icon: "Download" },
+      { title: "Points Ledger",  url: "/platform/admin/points",         icon: "Coins" },
+      { title: "ID Scanner",     url: "/platform/admin/scanner",        icon: "ScanLine" },
+      { title: "Permissions",    url: "/platform/admin/permissions",    icon: "SlidersHorizontal" },
+      { title: "Settings",       url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
     ],
   },
 ];
@@ -95,7 +104,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/programmes":             { title: "Programmes",         description: "Learning circle management" },
   "/platform/admin/allotments":             { title: "Allotments",         description: "Student programme allotment" },
   "/platform/admin/departments":            { title: "Departments",        description: "Academic department structure" },
-  "/platform/admin/classes":               { title: "Classes",            description: "Class sections & batches" },
+  "/platform/admin/classes":                { title: "Classes",            description: "Class sections & batches" },
   "/platform/admin/attendance":             { title: "Attendance Control", description: "Live attendance management" },
   "/platform/admin/attendance/monthly":     { title: "Monthly Report",     description: "Monthly attendance export" },
   "/platform/admin/attendance/corrections": { title: "Corrections",        description: "Edit attendance records" },
@@ -106,15 +115,15 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/polls":                  { title: "Polls",              description: "Poll & survey management" },
   "/platform/admin/daily-content":          { title: "Daily Content",      description: "Content of the day" },
   "/platform/admin/notifications":          { title: "Notifications",      description: "Push notification center" },
-  "/platform/admin/challenges":             { title: "Challenges",         description: "Engagement challenges" },
-  "/platform/admin/points":                 { title: "Points",             description: "Points & adjustments" },
-  "/platform/admin/point-claims":           { title: "Point Claims",       description: "Approve student point claims" },
-  "/platform/admin/stalls":                 { title: "Stall Requests",     description: "Approve event stall registrations" },
-  "/platform/admin/scanner":               { title: "ID Scanner",         description: "Digital ID verification" },
-  "/platform/admin/settings":              { title: "Admin Settings",     description: "Profile & system settings" },
-  "/platform/admin/channels":              { title: "Channels",           description: "Manage messaging channels" },
-  "/platform/admin/permissions":           { title: "Permissions",         description: "Role-based access control" },
-  "/platform/admin/reports/export":        { title: "Export Reports",     description: "Download data as CSV" },
+  "/platform/admin/challenges":             { title: "Achievements",       description: "Engagement challenges & badges" },
+  "/platform/admin/points":                 { title: "Points Ledger",      description: "Points & adjustments" },
+  "/platform/admin/point-claims":           { title: "E-Cell · Point Claims", description: "Approve student point claims" },
+  "/platform/admin/stalls":                 { title: "E-Cell · Stall Requests", description: "Approve event stall registrations" },
+  "/platform/admin/scanner":                { title: "ID Scanner",         description: "Digital ID verification" },
+  "/platform/admin/settings":               { title: "Admin Settings",     description: "Profile & system settings" },
+  "/platform/admin/channels":               { title: "Channels",           description: "Manage messaging channels" },
+  "/platform/admin/permissions":            { title: "Permissions",        description: "Role-based access control" },
+  "/platform/admin/reports/export":         { title: "Export Reports",     description: "Download data as CSV" },
 };
 
 export function getAdminPageMeta(pathname: string): PageMeta {

@@ -69,45 +69,65 @@ export default function AdminSidebar() {
 
       {/* Nav */}
       <SidebarContent className="overflow-y-auto px-1.5 py-2 gap-0">
-        {ADMIN_NAV_SECTIONS.map((section, idx) => (
-          <SidebarGroup key={section.label} className={cn("py-0.5", idx > 0 && "pt-0")}>
-            <SidebarGroupLabel className={cn(
-              "text-[10px] font-bold uppercase tracking-[0.10em] text-muted-foreground/50 px-3 py-2 h-auto",
-              collapsed && "opacity-0 pointer-events-none",
-            )}>
-              {section.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-px">
-                {section.items.map((item) => {
-                  const active = isActive(item.url);
-                  const Icon = ICON_MAP[item.icon] ?? LayoutDashboard;
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild isActive={active} tooltip={item.title}
-                        className={cn(
-                          "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item transition-all duration-fast",
-                          active
-                            ? "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                        )}
-                      >
-                        <Link to={item.url} onClick={handleNav} className="flex items-center gap-2.5">
-                          <Icon className={cn(
-                            "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
-                            active ? "text-primary" : "text-muted-foreground/60 group-hover/item:text-foreground/80",
-                          )} />
-                          <span className="flex-1 leading-none">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {ADMIN_NAV_SECTIONS.map((section, idx) => {
+          const isEcell = section.accent === "ecell";
+          return (
+            <SidebarGroup
+              key={section.label}
+              className={cn(
+                "py-0.5",
+                idx > 0 && "pt-0",
+                isEcell && "mt-1.5 pt-2 border-t border-sidebar-border/60",
+              )}
+            >
+              <SidebarGroupLabel className={cn(
+                "text-[10px] font-bold uppercase tracking-[0.10em] px-3 py-2 h-auto",
+                isEcell ? "text-[hsl(265_85%_70%)]" : "text-muted-foreground/50",
+                collapsed && "opacity-0 pointer-events-none",
+              )}>
+                <span className="inline-flex items-center gap-1.5">
+                  {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
+                  {section.label}
+                </span>
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-px">
+                  {section.items.map((item) => {
+                    const active = isActive(item.url.split("?")[0].split("#")[0]);
+                    const Icon = ICON_MAP[item.icon] ?? LayoutDashboard;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild isActive={active} tooltip={item.title}
+                          className={cn(
+                            "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item transition-all duration-fast",
+                            active
+                              ? isEcell
+                                ? "bg-[hsl(265_85%_65%/0.12)] text-[hsl(265_85%_75%)] font-medium shadow-[inset_0_0_0_1px_hsl(265_85%_65%/0.25)]"
+                                : "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          )}
+                        >
+                          <Link to={item.url} onClick={handleNav} className="flex items-center gap-2.5">
+                            <Icon className={cn(
+                              "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
+                              active
+                                ? isEcell ? "text-[hsl(265_85%_72%)]" : "text-primary"
+                                : isEcell
+                                  ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_75%)]"
+                                  : "text-muted-foreground/60 group-hover/item:text-foreground/80",
+                            )} />
+                            <span className="flex-1 leading-none">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       {/* Footer */}
