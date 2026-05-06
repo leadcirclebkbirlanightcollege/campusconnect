@@ -1,7 +1,8 @@
 /**
  * AdminSidebar — left nav for /platform/admin/* routes.
+ * Supports collapsible sections to reduce scroll fatigue.
  */
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import {
@@ -9,6 +10,7 @@ import {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
+  ChevronDown,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -39,6 +41,20 @@ export default function AdminSidebar() {
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
+
+  // Per-section open/closed state. Default from config; auto-open if active.
+  const initialOpen = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const s of ADMIN_NAV_SECTIONS) {
+      const hasActive = s.items.some((i) => isActive(i.url.split("?")[0].split("#")[0]));
+      map[s.label] = hasActive || s.defaultOpen !== false;
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPath]);
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(initialOpen);
+  const toggleSection = (label: string) =>
+    setOpenMap((m) => ({ ...m, [label]: !m[label] }));
 
   const handleNav = () => setOpenMobile(false);
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
@@ -71,6 +87,10 @@ export default function AdminSidebar() {
       <SidebarContent className="overflow-y-auto px-1.5 py-2 gap-0">
         {ADMIN_NAV_SECTIONS.map((section, idx) => {
           const isEcell = section.accent === "ecell";
+          const isOpen = openMap[section.label] ?? true;
+          const hasActiveChild = section.items.some((i) => isActive(i.url.split("?")[0].split("#")[0]));
+          // When collapsed (icon mode), always render items
+          const showItems = collapsed || isOpen;
           return (
             <SidebarGroup
               key={section.label}
@@ -80,17 +100,36 @@ export default function AdminSidebar() {
                 isEcell && "mt-1.5 pt-2 border-t border-sidebar-border/60",
               )}
             >
-              <SidebarGroupLabel className={cn(
-                "text-[10px] font-bold uppercase tracking-[0.10em] px-3 py-2 h-auto",
-                isEcell ? "text-[hsl(265_85%_70%)]" : "text-muted-foreground/50",
-                collapsed && "opacity-0 pointer-events-none",
-              )}>
-                <span className="inline-flex items-center gap-1.5">
-                  {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
-                  {section.label}
-                </span>
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
+              {!collapsed && (
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.label)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-1.5 px-3 py-2 group/sec",
+                    "text-[10px] font-bold uppercase tracking-[0.10em]",
+                    "transition-colors duration-fast rounded-md",
+                    isEcell
+                      ? "text-[hsl(265_85%_70%)] hover:text-[hsl(265_85%_80%)]"
+                      : "text-muted-foreground/50 hover:text-muted-foreground",
+                  )}
+                  aria-expanded={isOpen}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
+                    {section.label}
+                  </span>
+                  <ChevronDown className={cn(
+                    "h-3 w-3 opacity-50 transition-transform duration-fast",
+                    !isOpen && "-rotate-90",
+                  )} />
+                </button>
+              )}
+              <SidebarGroupContent
+                className={cn(
+                  "overflow-hidden transition-all duration-200 ease-out",
+                  showItems ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0",
+                )}
+              >
                 <SidebarMenu className="gap-px">
                   {section.items.map((item) => {
                     const active = isActive(item.url.split("?")[0].split("#")[0]);
@@ -125,6 +164,10 @@ export default function AdminSidebar() {
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
+              {/* Active dot indicator when collapsed group + has active child */}
+              {!collapsed && !isOpen && hasActiveChild && (
+                <div className="mx-3 -mt-1 mb-1 h-0.5 rounded-full bg-primary/40" />
+              )}
             </SidebarGroup>
           );
         })}

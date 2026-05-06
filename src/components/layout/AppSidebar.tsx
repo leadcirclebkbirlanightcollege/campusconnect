@@ -119,7 +119,7 @@ export default function AppSidebar() {
   const sections: NavSection[] = useMemo(
     () => [
       {
-        label: "Core",
+        label: "Main",
         items: [
           { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
         ],
@@ -129,26 +129,25 @@ export default function AppSidebar() {
         items: [
           { title: "Attendance",       url: "/app/attendance",  icon: CalendarDays },
           { title: "Lectures",         url: "/app/lectures",    icon: BookOpen },
-          { title: "Learning Circles", url: "/app/programmes",  icon: Calendar },
-          { title: "Timetable",        url: "/app/timetable",   icon: CalendarDays },
+          { title: "Learning Circles", url: "/app/programmes",  icon: Sparkles },
         ],
       },
       {
         label: "Campus",
         items: [
-          { title: "Events",        url: "/app/events",        icon: CalendarDays },
+          { title: "Events",        url: "/app/events",        icon: Calendar },
           { title: "Announcements", url: "/app/announcements", icon: Megaphone },
           { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
-          { title: "Documents",     url: "/app/documents",     icon: BookOpen },
+          { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
         label: "E-Cell",
         accent: "ecell",
         items: [
-          { title: "E-Cell Hub",   url: "/app/ecell",        icon: Rocket },
-          { title: "Stalls",       url: "/app/ecell/stalls", icon: Store },
-          { title: "Points",       url: "/app/points",       icon: Coins },
+          { title: "E-Cell Events",      url: "/app/ecell",        icon: Rocket },
+          { title: "Stall Registration", url: "/app/ecell/stalls", icon: Store },
+          { title: "Points & Rewards",   url: "/app/points",       icon: Coins },
         ],
       },
       {
@@ -158,15 +157,14 @@ export default function AppSidebar() {
           { title: "Achievements",  url: "/app/achievements",  icon: Flame },
           { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
           { title: "Daily",         url: "/app/daily",         icon: Sparkles },
-          { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
-        label: "Identity",
+        label: "Personal",
         items: [
-          { title: "Digital ID",      url: "/app/id-card",                icon: CreditCard },
-          { title: "Settings",        url: "/app/settings",               icon: UserRound },
-          { title: "Notif. Settings", url: "/app/settings/notifications", icon: Settings },
+          { title: "Digital ID",          url: "/app/id-card",                icon: CreditCard },
+          { title: "Settings",            url: "/app/settings",               icon: UserRound },
+          { title: "Notification Settings", url: "/app/settings/notifications", icon: Settings },
         ],
       },
     ],
