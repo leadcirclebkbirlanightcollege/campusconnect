@@ -167,46 +167,46 @@
     --gold-foreground: 40 60% 15%;
 
     /* ── Accent ── */
-    --accent:            225 80% 64%;
+    --accent:            221 83% 53%;
     --accent-foreground: 0 0% 100%;
-    --ring:              225 80% 64%;
+    --ring:              221 83% 53%;
 
-    /* ── Semantic (bumped brightness for dark bg legibility) ── */
-    --success:             152 52% 48%;
+    /* ── Semantic (spec) ── */
+    --success:             160 84% 39%;   /* #10B981 */
     --success-foreground:  0 0% 100%;
-    --success-soft:        152 30% 14%;
-    --warning:             38 82% 58%;
+    --success-soft:        160 50% 14%;
+    --warning:             38 92% 50%;    /* #F59E0B */
     --warning-foreground:  0 0% 100%;
-    --warning-soft:        38 40% 13%;
-    --danger:              0 62% 58%;
+    --warning-soft:        38 50% 14%;
+    --danger:              0 84% 60%;     /* #EF4444 */
     --danger-foreground:   0 0% 100%;
-    --danger-soft:         0 40% 14%;
+    --danger-soft:         0 50% 16%;
     --destructive:         var(--danger);
     --destructive-foreground: var(--danger-foreground);
 
-    --secondary:            222 22% 16%;
-    --secondary-foreground: 215 14% 82%;
-    --muted:                222 22% 16%;
+    --secondary:            220 33% 15%;
+    --secondary-foreground: 218 11% 85%;
+    --muted:                220 33% 15%;
     --muted-foreground:     var(--text-muted);
     --premium:              43 88% 56%;
 
-    /* ── Shadows (dark — deeper with blue tint) ── */
-    --shadow-xs:      0 1px 2px hsl(222 30% 4% / 0.40);
-    --shadow-sm:      0 2px 6px hsl(222 30% 4% / 0.45), 0 1px 2px -1px hsl(222 30% 4% / 0.35);
-    --shadow-md:      0 6px 16px -3px hsl(222 30% 4% / 0.50), 0 2px 4px -2px hsl(222 30% 4% / 0.35);
-    --shadow-lg:      0 16px 36px -6px hsl(222 30% 4% / 0.55), 0 4px 8px -4px hsl(222 30% 4% / 0.40);
-    --shadow-primary: 0 4px 20px -4px hsl(225 80% 64% / 0.40);
-    --shadow-glow:    0 0 32px -6px hsl(215 100% 72% / 0.45), 0 4px 16px -4px hsl(225 80% 64% / 0.40);
+    /* ── Shadows (soft, premium — never harsh) ── */
+    --shadow-xs:      0 1px 2px hsl(222 41% 3% / 0.40);
+    --shadow-sm:      0 2px 6px hsl(222 41% 3% / 0.40), 0 1px 2px -1px hsl(222 41% 3% / 0.30);
+    --shadow-md:      0 6px 18px -4px hsl(222 41% 3% / 0.45), 0 2px 6px -2px hsl(222 41% 3% / 0.30);
+    --shadow-lg:      0 18px 40px -8px hsl(222 41% 3% / 0.55), 0 4px 10px -4px hsl(222 41% 3% / 0.35);
+    --shadow-primary: 0 4px 20px -4px hsl(221 83% 53% / 0.40);
+    --shadow-glow:    0 0 32px -6px hsl(217 91% 65% / 0.45), 0 4px 16px -4px hsl(221 83% 53% / 0.35);
 
-    /* ── Sidebar ── */
-    --sidebar-background:         222 28% 8%;
-    --sidebar-foreground:         215 14% 82%;
-    --sidebar-primary:            225 80% 64%;
+    /* ── Sidebar — #0F172A ── */
+    --sidebar-background:         222 47% 11%;
+    --sidebar-foreground:         218 11% 78%;
+    --sidebar-primary:            221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent:             222 22% 15%;
-    --sidebar-accent-foreground:  215 14% 82%;
-    --sidebar-border:             222 20% 18%;
-    --sidebar-ring:               225 80% 64%;
+    --sidebar-accent:             220 33% 15%;
+    --sidebar-accent-foreground:  210 20% 98%;
+    --sidebar-border:             217 33% 17%;
+    --sidebar-ring:               221 83% 53%;
   }
 }
 
