@@ -295,6 +295,17 @@
     );
   }
 
+  /* E-Cell exclusive: Purple → Indigo */
+  .gradient-ecell {
+    background: linear-gradient(135deg, hsl(265 85% 62%), hsl(245 80% 58%));
+  }
+  .gradient-ecell-text {
+    background: linear-gradient(135deg, hsl(265 85% 65%), hsl(245 85% 65%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .gradient-primary-text {
     background: linear-gradient(
       135deg,
