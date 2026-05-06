@@ -19,31 +19,36 @@ export interface AdminNavSection {
   label: string;
   /** Optional accent: "ecell" → purple highlight */
   accent?: "ecell";
+  /** Default open state for collapsible groups (default true) */
+  defaultOpen?: boolean;
   items: AdminNavItem[];
 }
 
 export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
-    label: "Core",
+    label: "Command",
+    defaultOpen: true,
     items: [
-      { title: "Dashboard",      url: "/platform/admin/dashboard",     icon: "LayoutDashboard" },
+      { title: "Overview",       url: "/platform/admin/dashboard",      icon: "LayoutDashboard" },
     ],
   },
   {
     label: "Academics",
+    defaultOpen: true,
     items: [
       { title: "Students",       url: "/platform/admin/students",       icon: "Users" },
       { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
       { title: "Timetable",      url: "/platform/admin/timetable",      icon: "CalendarDays" },
       { title: "Programmes",     url: "/platform/admin/programmes",     icon: "Sparkles" },
-      { title: "Classes",        url: "/platform/admin/classes",        icon: "School" },
       { title: "Departments",    url: "/platform/admin/departments",    icon: "Building2" },
+      { title: "Classes",        url: "/platform/admin/classes",        icon: "School" },
       { title: "Allotments",     url: "/platform/admin/allotments",     icon: "UserCheck" },
     ],
   },
   {
     label: "Attendance",
+    defaultOpen: false,
     items: [
       { title: "Control",        url: "/platform/admin/attendance",             icon: "CheckSquare" },
       { title: "Monthly Report", url: "/platform/admin/attendance/monthly",     icon: "BarChart3" },
@@ -51,41 +56,53 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
-    label: "Campus",
+    label: "Exams & Content",
+    defaultOpen: false,
     items: [
-      { title: "Events",         url: "/platform/admin/events",         icon: "CalendarDays" },
+      { title: "Exams & Results", url: "/platform/admin/exams",         icon: "ClipboardList" },
+      { title: "Documents",       url: "/platform/admin/documents",     icon: "FileText" },
+    ],
+  },
+  {
+    label: "Campus",
+    defaultOpen: false,
+    items: [
       { title: "Announcements",  url: "/platform/admin/announcements",  icon: "Megaphone" },
+      { title: "Events",         url: "/platform/admin/events",         icon: "CalendarDays" },
       { title: "Channels",       url: "/platform/admin/channels",       icon: "Hash" },
-      { title: "Documents",      url: "/platform/admin/documents",      icon: "FileText" },
+      { title: "Notifications",  url: "/platform/admin/notifications",  icon: "Bell" },
     ],
   },
   {
     label: "E-Cell",
     accent: "ecell",
+    defaultOpen: true,
     items: [
       { title: "E-Cell Events",   url: "/platform/admin/events?ecell=1",  icon: "CalendarDays" },
       { title: "Stall Requests",  url: "/platform/admin/stalls",          icon: "Store" },
-      { title: "Points & Claims", url: "/platform/admin/point-claims",    icon: "Coins" },
+      { title: "Points",          url: "/platform/admin/points",          icon: "Coins" },
+      { title: "Point Claims",    url: "/platform/admin/point-claims",    icon: "Coins" },
     ],
   },
   {
     label: "Engagement",
+    defaultOpen: false,
     items: [
+      { title: "Polls",          url: "/platform/admin/polls",                 icon: "BarChart3" },
+      { title: "Challenges",     url: "/platform/admin/challenges",            icon: "Trophy" },
       { title: "Leaderboard",    url: "/platform/admin/dashboard#leaderboard", icon: "Trophy" },
       { title: "Achievements",   url: "/platform/admin/challenges",            icon: "Trophy" },
-      { title: "Polls",          url: "/platform/admin/polls",                 icon: "BarChart3" },
       { title: "Daily Content",  url: "/platform/admin/daily-content",         icon: "Sparkles" },
-      { title: "Notifications",  url: "/platform/admin/notifications",         icon: "Bell" },
     ],
   },
   {
     label: "System",
+    defaultOpen: false,
     items: [
+      { title: "Permissions",    url: "/platform/admin/permissions",    icon: "SlidersHorizontal" },
       { title: "Reports",        url: "/platform/admin/reports",        icon: "BarChart2" },
       { title: "Export Data",    url: "/platform/admin/reports/export", icon: "Download" },
-      { title: "Points Ledger",  url: "/platform/admin/points",         icon: "Coins" },
       { title: "ID Scanner",     url: "/platform/admin/scanner",        icon: "ScanLine" },
-      { title: "Permissions",    url: "/platform/admin/permissions",    icon: "SlidersHorizontal" },
       { title: "Settings",       url: "/platform/admin/settings",       icon: "SlidersHorizontal" },
     ],
   },
