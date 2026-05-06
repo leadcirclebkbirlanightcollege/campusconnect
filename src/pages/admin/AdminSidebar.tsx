@@ -1,7 +1,8 @@
 /**
  * AdminSidebar — left nav for /platform/admin/* routes.
+ * Supports collapsible sections to reduce scroll fatigue.
  */
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import {
@@ -9,6 +10,7 @@ import {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
+  ChevronDown,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -39,6 +41,20 @@ export default function AdminSidebar() {
 
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
+
+  // Per-section open/closed state. Default from config; auto-open if active.
+  const initialOpen = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const s of ADMIN_NAV_SECTIONS) {
+      const hasActive = s.items.some((i) => isActive(i.url.split("?")[0].split("#")[0]));
+      map[s.label] = hasActive || s.defaultOpen !== false;
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPath]);
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(initialOpen);
+  const toggleSection = (label: string) =>
+    setOpenMap((m) => ({ ...m, [label]: !m[label] }));
 
   const handleNav = () => setOpenMobile(false);
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
