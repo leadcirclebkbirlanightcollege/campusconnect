@@ -430,8 +430,49 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
+          {/* E-CELL MINI SECTION */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
+            <SectionHeader title="E-Cell" subtitle="Build. Compete. Grow." />
+            <div className="relative overflow-hidden rounded-2xl border border-[hsl(265_85%_65%/0.25)] bg-gradient-to-br from-[hsl(265_85%_55%/0.18)] via-[hsl(245_70%_50%/0.10)] to-surface-1 p-4 shadow-card">
+              <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[hsl(265_85%_65%/0.30)] blur-3xl" />
+              <div className="relative space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-xl bg-[hsl(265_85%_65%/0.20)] text-[hsl(265_85%_70%)] flex items-center justify-center">
+                      <Rocket className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Entrepreneurship Cell</p>
+                      <p className="text-[11px] text-muted-foreground">Events · Stalls · Points</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/app/ecell")}
+                    className="text-[11px] font-semibold text-[hsl(265_85%_75%)] hover:underline"
+                  >
+                    Open →
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => navigate("/app/ecell")}
+                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
+                  >
+                    <CalendarDays className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
+                    <p className="text-xs font-semibold text-foreground">Events</p>
+                  </button>
+                  <button
+                    onClick={() => navigate("/app/ecell/stalls")}
+                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
+                  >
+                    <Store className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
+                    <p className="text-xs font-semibold text-foreground">Stall Registration</p>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
             <GlassCard padding="none" className="overflow-hidden" hover={false}>
               {secondaryQuery.isLoading ? (
                 <div className="space-y-3 p-4">
