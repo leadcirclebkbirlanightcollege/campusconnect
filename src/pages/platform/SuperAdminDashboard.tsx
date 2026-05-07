@@ -354,11 +354,19 @@ function DashboardInner() {
 
   return (
     <PageContainer size="tablet" withBottomNav={false} className="space-y-6 py-4">
-      <PageHeader
-        title="Platform Command Center"
-        subtitle="Mission control for colleges, admins, analytics, health, and security"
-        action={<CollegeSwitcher className="max-w-[200px]" />}
-      />
+      {/* Premium Platform Hero */}
+      <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-accent/10 to-surface-1 p-5 shadow-elevated">
+        <div className="pointer-events-none absolute -top-16 -right-12 h-48 w-48 rounded-full bg-primary/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-accent/20 blur-3xl" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Super Admin</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground mt-1">Platform Command Center</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">Mission control for colleges, admins, analytics, health, and security</p>
+          </div>
+          <CollegeSwitcher className="max-w-[200px]" />
+        </div>
+      </div>
 
       <SectionFrame
         id="platform-overview"
