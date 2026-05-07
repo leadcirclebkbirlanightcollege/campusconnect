@@ -6,19 +6,26 @@ import {
   ArrowRight,
   BookOpen,
   CalendarCheck,
+  CalendarDays,
   CheckCircle2,
   Clock3,
   Flame,
+  Lightbulb,
+  MessageSquare,
+  Rocket,
   ShieldAlert,
   Sparkles,
   Trophy,
   User,
+  Users,
   Zap,
   Brain,
   Scan,
+  Store,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
