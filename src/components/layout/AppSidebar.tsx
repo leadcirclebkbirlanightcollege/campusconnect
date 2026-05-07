@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,6 +23,7 @@ import {
   Rocket,
   Store,
   Coins,
+  ChevronDown,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
