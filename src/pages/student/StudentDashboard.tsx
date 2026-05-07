@@ -473,6 +473,8 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
             <GlassCard padding="none" className="overflow-hidden" hover={false}>
               {secondaryQuery.isLoading ? (
                 <div className="space-y-3 p-4">
