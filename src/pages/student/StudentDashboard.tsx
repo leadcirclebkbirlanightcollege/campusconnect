@@ -6,19 +6,26 @@ import {
   ArrowRight,
   BookOpen,
   CalendarCheck,
+  CalendarDays,
   CheckCircle2,
   Clock3,
   Flame,
+  Lightbulb,
+  MessageSquare,
+  Rocket,
   ShieldAlert,
   Sparkles,
   Trophy,
   User,
+  Users,
   Zap,
   Brain,
   Scan,
+  Store,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -291,35 +298,53 @@ export default function StudentDashboard() {
         <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+          {/* HERO — premium gradient welcome */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
-            <GlassCard className="space-y-4" padding="lg" elevation="high">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{greeting}</p>
-                  <h1 className="text-[28px] font-black leading-none text-foreground truncate">{coreQuery.data.name}</h1>
-                  <StatusBadge status="active" className={cn(tierConfig.bg, tierConfig.border, tierConfig.color)}>
-                    {tierConfig.label} Tier
-                  </StatusBadge>
+            <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-surface-1 p-5 shadow-elevated">
+              <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-primary/30 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
+              <div className="relative space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      {greeting} 👋
+                    </p>
+                    <h1 className="text-[26px] font-black leading-tight text-foreground truncate">
+                      {coreQuery.data.name}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">Ready to make today productive?</p>
+                    <StatusBadge status="active" className={cn("mt-1", tierConfig.bg, tierConfig.border, tierConfig.color)}>
+                      {tierConfig.label} Tier
+                    </StatusBadge>
+                  </div>
+                  <ProgressRing value={attendancePct} className="shrink-0" size={96} />
                 </div>
-                <ProgressRing value={attendancePct} className="shrink-0" size={104} />
-              </div>
 
-              <div className="grid grid-cols-3 gap-3 border-t border-border-subtle pt-4">
-                <HeroStat label="Points" value={coreQuery.data.totalPoints} />
-                <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
-                <HeroStat label="Attendance" value={attendancePct} suffix="%" />
+                <div className="grid grid-cols-3 gap-3 border-t border-border-subtle/60 pt-4">
+                  <HeroStat label="Points" value={coreQuery.data.totalPoints} />
+                  <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
+                  <HeroStat label="Attendance" value={attendancePct} suffix="%" />
+                </div>
               </div>
-            </GlassCard>
+            </div>
           </motion.section>
 
+          {/* QUICK ACTIONS */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Quick Actions" subtitle="One-tap shortcuts" />
-            <div className="grid grid-cols-2 gap-3">
-              <ActionTile icon={Flame} label="Daily Check-In" onClick={() => document.getElementById("daily-checkin")?.scrollIntoView({ behavior: "smooth" })} />
+            <SectionHeader title="Quick Actions" subtitle="Jump straight in" />
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
               <ActionTile icon={CalendarCheck} label="Attendance" onClick={() => navigate("/app/attendance")} />
-              <ActionTile icon={Trophy} label="Leaderboard" onClick={() => navigate("/app/leaderboard")} />
               <ActionTile icon={BookOpen} label="Lectures" onClick={() => navigate("/app/lectures")} />
+              <ActionTile icon={CalendarDays} label="Events" onClick={() => navigate("/app/events")} />
+              <ActionTile icon={MessageSquare} label="Messages" onClick={() => navigate("/app/messages")} />
+              <ActionTile icon={Users} label="Circles" onClick={() => navigate("/app/programmes")} />
+              <ActionTile icon={Rocket} label="E-Cell" onClick={() => navigate("/app/ecell")} />
             </div>
+          </motion.section>
+
+          {/* UPCOMING EVENTS STRIP */}
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            <UpcomingEventsStrip />
           </motion.section>
 
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
@@ -402,6 +427,49 @@ export default function StudentDashboard() {
                   <p className="text-sm leading-relaxed text-foreground">{insight.text}</p>
                 </GlassCard>
               ))}
+            </div>
+          </motion.section>
+
+          {/* E-CELL MINI SECTION */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <SectionHeader title="E-Cell" subtitle="Build. Compete. Grow." />
+            <div className="relative overflow-hidden rounded-2xl border border-[hsl(265_85%_65%/0.25)] bg-gradient-to-br from-[hsl(265_85%_55%/0.18)] via-[hsl(245_70%_50%/0.10)] to-surface-1 p-4 shadow-card">
+              <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[hsl(265_85%_65%/0.30)] blur-3xl" />
+              <div className="relative space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-xl bg-[hsl(265_85%_65%/0.20)] text-[hsl(265_85%_70%)] flex items-center justify-center">
+                      <Rocket className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Entrepreneurship Cell</p>
+                      <p className="text-[11px] text-muted-foreground">Events · Stalls · Points</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/app/ecell")}
+                    className="text-[11px] font-semibold text-[hsl(265_85%_75%)] hover:underline"
+                  >
+                    Open →
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => navigate("/app/ecell")}
+                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
+                  >
+                    <CalendarDays className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
+                    <p className="text-xs font-semibold text-foreground">Events</p>
+                  </button>
+                  <button
+                    onClick={() => navigate("/app/ecell/stalls")}
+                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
+                  >
+                    <Store className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
+                    <p className="text-xs font-semibold text-foreground">Stall Registration</p>
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.section>
 

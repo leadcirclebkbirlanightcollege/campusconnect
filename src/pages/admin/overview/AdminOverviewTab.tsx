@@ -224,12 +224,32 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
   const m = metricsQ.data;
   const loading = metricsQ.isLoading;
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+  const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
   return (
     <div className="w-full space-y-6">
-      {/* ── Page Title ── */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Real-time institutional overview & quick operations</p>
+      {/* ── Premium Greeting Hero ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/15 via-surface-2 to-surface-1 p-5 shadow-sm">
+        <div className="pointer-events-none absolute -top-12 -right-10 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{greeting}</p>
+            <h1 className="text-2xl font-black text-foreground mt-1">Command Center</h1>
+            <p className="text-sm text-muted-foreground mt-1">{today} · Real-time institutional overview</p>
+          </div>
+          {liveQ.data?.length ? (
+            <div className="hidden sm:flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2">
+              <Radio className="h-4 w-4 text-success" />
+              <span className="text-xs font-bold text-success">{liveQ.data.length} LIVE</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* ── KPI Row ── */}
