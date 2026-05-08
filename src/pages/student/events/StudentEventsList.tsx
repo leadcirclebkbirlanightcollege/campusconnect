@@ -220,6 +220,6 @@ export default function StudentEventsList() {
           })}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
