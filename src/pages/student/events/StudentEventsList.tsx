@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyStateCard } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/motion";
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday } from "date-fns";
 import { MapPin, Clock, PartyPopper, Sparkles, Store } from "lucide-react";
