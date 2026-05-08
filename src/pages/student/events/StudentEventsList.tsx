@@ -26,7 +26,6 @@ type EventRow = {
   max_stalls: number | null;
 };
 
-export default function StudentEventsList() {
 type Tab = "upcoming" | "today" | "past";
 
 export default function StudentEventsList() {
