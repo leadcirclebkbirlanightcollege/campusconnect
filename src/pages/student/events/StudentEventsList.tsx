@@ -80,9 +80,9 @@ export default function StudentEventsList() {
     <PageContainer className="space-y-4">
       <PageHeader title="Events" subtitle="What's happening on campus" gradient />
 
-      <SegmentedFilter<Tab>
+      <SegmentedFilter
         value={tab}
-        onChange={setTab}
+        onChange={(v) => setTab(v as Tab)}
         options={[
           { value: "upcoming", label: "Upcoming", count: upcoming.length },
           { value: "today", label: "Today", count: todayList.length },
