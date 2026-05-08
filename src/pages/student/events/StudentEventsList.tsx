@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyStateCard } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/motion";
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday } from "date-fns";
 import { MapPin, Clock, PartyPopper, Sparkles, Store } from "lucide-react";
@@ -23,7 +26,11 @@ type EventRow = {
   max_stalls: number | null;
 };
 
+type Tab = "upcoming" | "today" | "past";
+
 export default function StudentEventsList() {
+  const [tab, setTab] = useState<Tab>("upcoming");
+
   const query = useQuery({
     queryKey: ["student", "events", "v2"],
     queryFn: async () => {
@@ -36,42 +43,51 @@ export default function StudentEventsList() {
     },
   });
 
-  const { featured, upcoming, past } = useMemo(() => {
+  const { featured, upcoming, todayList, past } = useMemo(() => {
     const all = query.data ?? [];
     const upcoming: EventRow[] = [];
     const past: EventRow[] = [];
+    const todayList: EventRow[] = [];
     for (const e of all) {
       const day = new Date(e.event_date + "T00:00:00");
+      if (isToday(day)) todayList.push(e);
       if (isPast(day) && !isToday(day)) past.push(e);
       else upcoming.push(e);
     }
     return {
       featured: upcoming.filter((e) => e.is_featured),
       upcoming,
+      todayList,
       past,
     };
   }, [query.data]);
 
   if (query.isLoading) {
     return (
-      <div className="space-y-3">
+      <PageContainer className="space-y-3">
+        <PageHeader title="Events" subtitle="What's happening on campus" gradient />
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-24 rounded-xl" />
+          <Skeleton key={i} className="h-28 rounded-2xl" />
         ))}
-      </div>
+      </PageContainer>
     );
   }
 
-  const events = [...upcoming, ...past];
+  const events = tab === "today" ? todayList : tab === "past" ? past : upcoming;
 
   return (
-    <div className="space-y-5 page-enter">
-      <FadeIn>
-        <div className="flex items-center gap-2">
-          <PartyPopper className="h-4 w-4 text-muted-foreground" />
-          <h1 className="text-heading text-foreground">Events</h1>
-        </div>
-      </FadeIn>
+    <PageContainer className="space-y-4">
+      <PageHeader title="Events" subtitle="What's happening on campus" gradient />
+
+      <SegmentedFilter
+        value={tab}
+        onChange={(v) => setTab(v as Tab)}
+        options={[
+          { value: "upcoming", label: "Upcoming", count: upcoming.length },
+          { value: "today", label: "Today", count: todayList.length },
+          { value: "past", label: "Past", count: past.length },
+        ]}
+      />
 
       {/* Featured carousel */}
       {featured.length > 0 && (
@@ -203,6 +219,6 @@ export default function StudentEventsList() {
           })}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
