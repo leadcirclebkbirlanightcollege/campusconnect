@@ -57,7 +57,7 @@ export default function StudentAnnouncementsFeed() {
     <PageContainer className="space-y-4">
       <PageHeader title="Announcements" subtitle="Notices and updates from your college" gradient />
 
-      <SegmentedFilter
+      <SegmentedFilter<Filter>
         value={filter}
         onChange={setFilter}
         options={[
