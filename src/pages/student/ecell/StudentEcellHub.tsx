@@ -1,143 +1,376 @@
 /**
- * Student E-Cell Hub
+ * Student E-Cell Hub — Phase 5 redesign
  *
- * Focused, premium landing for the Entrepreneurship Cell module.
- * Visual identity: deep purple/indigo accents to differentiate from
- * the rest of the campus app (which uses blue primary).
+ * "A mini startup ecosystem inside Campus Connect."
+ * Limited to: Events · Stall Registration · Points
  *
- * Sections:
- *   1. Banner — "Entrepreneurship Cell · Build. Compete. Grow."
- *   2. Quick tiles → Events / Stalls / Points
- *   3. Inline previews (events list + points action)
+ * Visual identity:
+ *  • Purple/Indigo accents
+ *  • Subtle particle glow
+ *  • Startup-tech aesthetic
+ *  • Mobile-first, energetic but premium
  */
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Rocket, CalendarDays, Store, Coins, ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  Rocket,
+  CalendarDays,
+  Store,
+  Coins,
+  ArrowRight,
+  Sparkles,
+  Flame,
+  Timer,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-const ECELL_PURPLE = "265 85% 65%";
+const ECELL = "265 85% 65%";
+const ECELL_DEEP = "262 80% 50%";
+const ECELL_ACCENT = "280 80% 60%";
 
-interface TileProps {
-  to: string;
-  icon: typeof Rocket;
-  title: string;
-  desc: string;
+/* ─── Featured event hero with live countdown ─────────────── */
+function useCountdown(target: Date | null) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!target) return;
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  if (!target) return null;
+  const diff = Math.max(0, target.getTime() - now.getTime());
+  const d = Math.floor(diff / 86_400_000);
+  const h = Math.floor((diff % 86_400_000) / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1000);
+  return { d, h, m, s, done: diff === 0 };
 }
 
-function EcellTile({ to, icon: Icon, title, desc }: TileProps) {
+interface NextEvent {
+  id: string;
+  title: string;
+  event_date: string;
+  event_time: string | null;
+  venue: string | null;
+}
+
+function FeaturedCountdown({ event }: { event: NextEvent | undefined }) {
+  const target = event
+    ? new Date(`${event.event_date}T${event.event_time ?? "09:00:00"}`)
+    : null;
+  const cd = useCountdown(target);
+
+  if (!event || !cd) return null;
+
   return (
     <Link
-      to={to}
-      className={cn(
-        "group relative overflow-hidden rounded-xl border border-border bg-card p-4",
-        "transition-all duration-base hover:-translate-y-0.5 hover:shadow-lg",
-        "hover:border-[hsl(265_85%_65%/0.4)]",
-      )}
-      style={{ boxShadow: "var(--shadow-sm)" }}
+      to={`/app/events`}
+      className="relative block overflow-hidden rounded-2xl border p-4 group"
+      style={{
+        background: `linear-gradient(135deg, hsl(${ECELL_DEEP} / 0.18), hsl(${ECELL} / 0.10))`,
+        borderColor: `hsl(${ECELL} / 0.30)`,
+      }}
     >
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-base pointer-events-none"
-        style={{
-          background: `radial-gradient(600px circle at 0% 0%, hsl(${ECELL_PURPLE} / 0.08), transparent 40%)`,
-        }}
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"
+        style={{ background: `hsl(${ECELL_ACCENT} / 0.35)` }}
       />
-      <div className="flex items-start gap-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
+      <div className="relative flex items-center gap-2 mb-2">
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.14em]"
           style={{
-            background: `linear-gradient(135deg, hsl(${ECELL_PURPLE} / 0.15), hsl(262 80% 50% / 0.10))`,
-            boxShadow: `inset 0 0 0 1px hsl(${ECELL_PURPLE} / 0.25)`,
+            color: `hsl(${ECELL} / 0.95)`,
+            background: `hsl(${ECELL} / 0.15)`,
+            boxShadow: `inset 0 0 0 1px hsl(${ECELL} / 0.30)`,
           }}
         >
-          <Icon className="h-5 w-5" style={{ color: `hsl(${ECELL_PURPLE})` }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-[15px] font-semibold text-foreground truncate">{title}</h3>
-            <ArrowRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-[hsl(265_85%_70%)] group-hover:translate-x-0.5 transition-all" />
+          <Flame className="h-2.5 w-2.5" /> Featured
+        </span>
+        <p className="text-[11px] text-muted-foreground truncate">
+          {event.venue ?? "On-campus"}
+        </p>
+      </div>
+
+      <h3 className="relative text-[16px] font-bold text-foreground tracking-tight leading-snug line-clamp-2">
+        {event.title}
+      </h3>
+
+      <div className="relative mt-3 grid grid-cols-4 gap-1.5">
+        {[
+          { v: cd.d, l: "Days" },
+          { v: cd.h, l: "Hrs" },
+          { v: cd.m, l: "Min" },
+          { v: cd.s, l: "Sec" },
+        ].map((u) => (
+          <div
+            key={u.l}
+            className="rounded-lg border bg-surface-1/60 backdrop-blur-sm py-1.5 text-center"
+            style={{ borderColor: `hsl(${ECELL} / 0.20)` }}
+          >
+            <p
+              className="text-[15px] font-black tabular-nums leading-none"
+              style={{ color: `hsl(${ECELL})` }}
+            >
+              {String(u.v).padStart(2, "0")}
+            </p>
+            <p className="text-[8.5px] uppercase tracking-wider text-muted-foreground mt-0.5">
+              {u.l}
+            </p>
           </div>
-          <p className="text-[12.5px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
-        </div>
+        ))}
+      </div>
+
+      <div className="relative mt-3 flex items-center gap-1 text-[11px] font-semibold"
+        style={{ color: `hsl(${ECELL})` }}>
+        <Timer className="h-3 w-3" /> Starts soon · tap to view
+        <ArrowRight className="h-3 w-3 ml-auto group-hover:translate-x-0.5 transition-transform" />
       </div>
     </Link>
   );
 }
 
-export default function StudentEcellHub() {
-  return (
-    <div className="min-h-full px-4 py-4 space-y-5 max-w-3xl mx-auto">
-      {/* ── Banner ─────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border"
-        style={{
-          background: `linear-gradient(135deg, hsl(265 65% 18%), hsl(245 70% 14%))`,
-          borderColor: `hsl(${ECELL_PURPLE} / 0.30)`,
-          boxShadow: `0 12px 40px -12px hsl(${ECELL_PURPLE} / 0.45)`,
-        }}
-      >
-        {/* Glow */}
-        <div
-          aria-hidden
-          className="absolute -top-20 -right-20 h-56 w-56 rounded-full blur-3xl pointer-events-none"
-          style={{ background: `hsl(${ECELL_PURPLE} / 0.35)` }}
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full blur-3xl pointer-events-none"
-          style={{ background: `hsl(280 80% 55% / 0.25)` }}
-        />
+/* ─── Quick action tile ───────────────────────────────────── */
+interface TileProps {
+  to: string;
+  icon: typeof Rocket;
+  title: string;
+  desc: string;
+  badge?: string;
+  delay?: number;
+}
 
-        <div className="relative flex items-center gap-3">
+function EcellTile({ to, icon: Icon, title, desc, badge, delay = 0 }: TileProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay }}
+    >
+      <Link
+        to={to}
+        className={cn(
+          "group relative flex h-full overflow-hidden rounded-xl border border-border bg-card p-3.5",
+          "transition-all duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg",
+        )}
+        style={{ boxShadow: "var(--shadow-sm)" }}
+      >
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+          style={{
+            background: `radial-gradient(120% 80% at 0% 0%, hsl(${ECELL} / 0.10), transparent 55%)`,
+          }}
+        />
+        <div className="flex items-start gap-3 w-full">
           <div
-            className="flex h-11 w-11 items-center justify-center rounded-xl shrink-0"
+            className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
             style={{
-              background: `linear-gradient(135deg, hsl(${ECELL_PURPLE}), hsl(280 80% 55%))`,
-              boxShadow: `0 8px 24px -6px hsl(${ECELL_PURPLE} / 0.7)`,
+              background: `linear-gradient(135deg, hsl(${ECELL} / 0.18), hsl(${ECELL_DEEP} / 0.12))`,
+              boxShadow: `inset 0 0 0 1px hsl(${ECELL} / 0.28)`,
             }}
           >
-            <Rocket className="h-5 w-5 text-white" />
+            <Icon className="h-5 w-5" style={{ color: `hsl(${ECELL})` }} />
           </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[14px] font-semibold text-foreground truncate">
+                {title}
+              </h3>
+              {badge ? (
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
+                  style={{
+                    color: `hsl(${ECELL})`,
+                    background: `hsl(${ECELL} / 0.14)`,
+                  }}
+                >
+                  {badge}
+                </span>
+              ) : (
+                <ArrowRight
+                  className="h-4 w-4 text-muted-foreground/50 group-hover:translate-x-0.5 transition-transform"
+                  style={{ color: undefined }}
+                />
+              )}
+            </div>
+            <p className="text-[12px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+              {desc}
+            </p>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ─── Page ────────────────────────────────────────────────── */
+export default function StudentEcellHub() {
+  const { data: nextEvent } = useQuery({
+    queryKey: ["ecell", "next-featured"],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("events")
+        .select("id,title,event_date,event_time,venue,is_featured,max_stalls")
+        .gte("event_date", today)
+        .order("event_date", { ascending: true })
+        .limit(5);
+      const list = (data ?? []) as (NextEvent & { is_featured?: boolean; max_stalls?: number | null })[];
+      return (
+        list.find((e) => e.is_featured) ??
+        list.find((e) => e.max_stalls != null) ??
+        list[0]
+      );
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: stallCount } = useQuery({
+    queryKey: ["ecell", "open-stalls"],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { count } = await supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .not("max_stalls", "is", null)
+        .gte("event_date", today);
+      return count ?? 0;
+    },
+    staleTime: 60_000,
+  });
+
+  return (
+    <div className="min-h-full px-4 py-4 space-y-4 max-w-3xl mx-auto pb-24">
+      {/* ── Hero Banner ─────────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="relative overflow-hidden rounded-2xl border p-5"
+        style={{
+          background: `
+            radial-gradient(80% 120% at 100% 0%, hsl(${ECELL_ACCENT} / 0.32), transparent 60%),
+            linear-gradient(135deg, hsl(265 65% 16%), hsl(245 70% 12%))
+          `,
+          borderColor: `hsl(${ECELL} / 0.32)`,
+          boxShadow: `0 12px 40px -16px hsl(${ECELL} / 0.55)`,
+        }}
+      >
+        {/* Glow particles */}
+        <motion.div
+          aria-hidden
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.7, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-16 h-52 w-52 rounded-full blur-3xl pointer-events-none"
+          style={{ background: `hsl(${ECELL} / 0.40)` }}
+        />
+        <motion.div
+          aria-hidden
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+          className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full blur-3xl pointer-events-none"
+          style={{ background: `hsl(${ECELL_ACCENT} / 0.35)` }}
+        />
+        {/* Tiny sparkles */}
+        {[
+          { top: "20%", left: "75%", d: 0 },
+          { top: "60%", left: "12%", d: 0.7 },
+          { top: "35%", left: "55%", d: 1.3 },
+        ].map((p, i) => (
+          <motion.span
+            key={i}
+            aria-hidden
+            className="absolute h-1 w-1 rounded-full pointer-events-none"
+            style={{ top: p.top, left: p.left, background: `hsl(${ECELL_ACCENT})`, boxShadow: `0 0 8px hsl(${ECELL_ACCENT})` }}
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.4, 0.5] }}
+            transition={{ duration: 3, repeat: Infinity, delay: p.d }}
+          />
+        ))}
+
+        <div className="relative flex items-center gap-3">
+          <motion.div
+            whileHover={{ rotate: -8, scale: 1.05 }}
+            className="flex h-12 w-12 items-center justify-center rounded-xl shrink-0"
+            style={{
+              background: `linear-gradient(135deg, hsl(${ECELL}), hsl(${ECELL_ACCENT}))`,
+              boxShadow: `0 8px 28px -6px hsl(${ECELL} / 0.7)`,
+            }}
+          >
+            <Rocket className="h-6 w-6 text-white" />
+          </motion.div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/65">
               Entrepreneurship Cell
             </p>
-            <h1 className="text-[20px] sm:text-[22px] font-bold text-white leading-tight tracking-tight mt-0.5">
+            <h1 className="text-[22px] font-bold text-white leading-tight tracking-tight mt-0.5">
               Build. Compete. Grow.
             </h1>
           </div>
         </div>
 
-        <p className="relative mt-3 text-[13px] text-white/70 leading-relaxed max-w-xl">
-          Your launchpad on campus — discover E-Cell events, register a stall,
-          and claim points for the work you ship.
+        <p className="relative mt-3 text-[13px] text-white/75 leading-relaxed max-w-xl">
+          Your launchpad on campus — discover events, register a stall, and
+          earn points for the work you ship.
         </p>
-      </section>
 
-      {/* ── Quick Tiles ───────────────────────────────────────── */}
+        {/* Quick stats */}
+        <div className="relative mt-4 grid grid-cols-3 gap-2">
+          {[
+            { l: "Open Events", v: nextEvent ? "Live" : "—" },
+            { l: "Stalls Open", v: stallCount ?? 0 },
+            { l: "Vibe", v: "🚀" },
+          ].map((s) => (
+            <div
+              key={s.l}
+              className="rounded-lg border border-white/10 bg-white/5 backdrop-blur px-2 py-2 text-center"
+            >
+              <p className="text-[14px] font-black text-white leading-none tabular-nums">
+                {s.v}
+              </p>
+              <p className="text-[9px] uppercase tracking-wider text-white/55 mt-1">
+                {s.l}
+              </p>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── Featured countdown ─────────────────────────────── */}
+      {nextEvent && <FeaturedCountdown event={nextEvent} />}
+
+      {/* ── Quick Tiles (3) ────────────────────────────────── */}
       <section className="grid gap-2.5 sm:grid-cols-3">
         <EcellTile
           to="/app/events"
           icon={CalendarDays}
           title="Events"
-          desc="Upcoming pitches, demos & meetups"
+          desc="Pitches, demos & meetups"
+          delay={0.05}
         />
         <EcellTile
           to="/app/ecell/stalls"
           icon={Store}
           title="Stall Registration"
-          desc="Apply to host a stall at events"
+          desc="Apply to host a stall"
+          badge={stallCount ? "Open" : undefined}
+          delay={0.1}
         />
         <EcellTile
           to="/app/points"
           icon={Coins}
-          title="Points & Claims"
+          title="Points & Rewards"
           desc="Submit work, earn recognition"
+          delay={0.15}
         />
       </section>
 
-      {/* ── Footer note ───────────────────────────────────────── */}
-      <p className="text-[11px] text-muted-foreground/70 text-center pt-2">
-        E-Cell is a focused module — no extra noise, just what you need to ship.
-      </p>
+      {/* ── Footer micro-note ─────────────────────────────── */}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/70 pt-2">
+        <Sparkles className="h-3 w-3" style={{ color: `hsl(${ECELL})` }} />
+        Focused. No noise. Just what you need to ship.
+      </div>
     </div>
   );
 }
