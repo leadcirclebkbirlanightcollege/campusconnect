@@ -37,6 +37,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     defaultOpen: true,
     items: [
       { title: "Students",       url: "/platform/admin/students",       icon: "Users" },
+      { title: "ERP Sync",       url: "/platform/admin/erp-sync",       icon: "Upload" },
       { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
       { title: "Timetable",      url: "/platform/admin/timetable",      icon: "CalendarDays" },
@@ -113,6 +114,7 @@ export interface PageMeta { title: string; description: string }
 const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/dashboard":              { title: "Command Center",     description: "Overview & key metrics" },
   "/platform/admin/students":               { title: "Students",           description: "Manage student accounts" },
+  "/platform/admin/erp-sync":               { title: "ERP Sync Engine",    description: "Onboard or refresh your college from ERP" },
   "/platform/admin/faculty":                { title: "Faculty",            description: "Manage faculty members" },
   "/platform/admin/create-student":         { title: "Create Student",     description: "Add a new student" },
   "/platform/admin/lectures":               { title: "Lectures",           description: "Schedule & manage lectures" },

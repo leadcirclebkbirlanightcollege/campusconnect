@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
+import OnboardingGuard from "@/components/auth/OnboardingGuard";
 
 import SoftUpdateBanner from "@/components/layout/SoftUpdateBanner";
 import {
@@ -248,7 +249,7 @@ export default function AppLayout() {
                   transition={PAGE_TRANSITION}
                   className="w-full h-full"
                 >
-                  <Outlet />
+                  <OnboardingGuard><Outlet /></OnboardingGuard>
                 </motion.div>
               </AnimatePresence>
             </main>

@@ -843,6 +843,182 @@ export type Database = {
           },
         ]
       }
+      erp_import_batches: {
+        Row: {
+          admin_id: string
+          archived_count: number
+          college_id: string
+          completed_at: string | null
+          created_at: string
+          created_count: number
+          duplicate_count: number
+          failed_count: number
+          filename: string | null
+          full_replacement: boolean
+          id: string
+          invalid_count: number
+          notes: string | null
+          started_at: string
+          status: string
+          total_records: number
+          updated_at: string
+          updated_count: number
+          valid_count: number
+        }
+        Insert: {
+          admin_id: string
+          archived_count?: number
+          college_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_count?: number
+          duplicate_count?: number
+          failed_count?: number
+          filename?: string | null
+          full_replacement?: boolean
+          id?: string
+          invalid_count?: number
+          notes?: string | null
+          started_at?: string
+          status?: string
+          total_records?: number
+          updated_at?: string
+          updated_count?: number
+          valid_count?: number
+        }
+        Update: {
+          admin_id?: string
+          archived_count?: number
+          college_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_count?: number
+          duplicate_count?: number
+          failed_count?: number
+          filename?: string | null
+          full_replacement?: boolean
+          id?: string
+          invalid_count?: number
+          notes?: string | null
+          started_at?: string
+          status?: string
+          total_records?: number
+          updated_at?: string
+          updated_count?: number
+          valid_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_import_batches_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_import_errors: {
+        Row: {
+          batch_id: string
+          college_id: string
+          created_at: string
+          id: string
+          raw_data: Json | null
+          reason: string
+          row_number: number | null
+        }
+        Insert: {
+          batch_id: string
+          college_id: string
+          created_at?: string
+          id?: string
+          raw_data?: Json | null
+          reason: string
+          row_number?: number | null
+        }
+        Update: {
+          batch_id?: string
+          college_id?: string
+          created_at?: string
+          id?: string
+          raw_data?: Json | null
+          reason?: string
+          row_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_import_errors_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "erp_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "erp_import_errors_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_import_staging: {
+        Row: {
+          batch_id: string
+          college_id: string
+          created_at: string
+          diff_action: string | null
+          error_reason: string | null
+          id: string
+          parsed: Json | null
+          parsed_state: string
+          raw: Json
+          row_number: number
+          validation_state: string
+        }
+        Insert: {
+          batch_id: string
+          college_id: string
+          created_at?: string
+          diff_action?: string | null
+          error_reason?: string | null
+          id?: string
+          parsed?: Json | null
+          parsed_state?: string
+          raw: Json
+          row_number: number
+          validation_state?: string
+        }
+        Update: {
+          batch_id?: string
+          college_id?: string
+          created_at?: string
+          diff_action?: string | null
+          error_reason?: string | null
+          id?: string
+          parsed?: Json | null
+          parsed_state?: string
+          raw?: Json
+          row_number?: number
+          validation_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_import_staging_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "erp_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "erp_import_staging_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           college_id: string | null
@@ -1691,68 +1867,125 @@ export type Database = {
       }
       profiles: {
         Row: {
+          academic_session: string | null
+          admission_no: string | null
+          archived_at: string | null
           avatar_url: string | null
           bio: string | null
+          category: string | null
           class_name: string | null
           college_id: string | null
           created_at: string
           deleted_at: string | null
           department: string | null
+          department_id: string | null
           email: string
+          enrollment_no: string | null
+          enrollment_status: string | null
+          erp_student_id: string | null
+          gender: string | null
           graduation_year: number | null
+          guardian_name: string | null
           id: string
+          is_active: boolean
           is_deleted: boolean
           is_verified: boolean
+          mobile: string | null
+          must_change_password: boolean
           name: string
+          onboarding_completed: boolean
           phone: string | null
+          profile_completed: boolean
+          programme_id: string | null
+          roll_no: string | null
           status: string
           student_id: string | null
           updated_at: string
           user_id: string
+          validity_end: string | null
+          validity_start: string | null
           verified_at: string | null
           verified_by: string | null
         }
         Insert: {
+          academic_session?: string | null
+          admission_no?: string | null
+          archived_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          category?: string | null
           class_name?: string | null
           college_id?: string | null
           created_at?: string
           deleted_at?: string | null
           department?: string | null
+          department_id?: string | null
           email: string
+          enrollment_no?: string | null
+          enrollment_status?: string | null
+          erp_student_id?: string | null
+          gender?: string | null
           graduation_year?: number | null
+          guardian_name?: string | null
           id?: string
+          is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
+          mobile?: string | null
+          must_change_password?: boolean
           name: string
+          onboarding_completed?: boolean
           phone?: string | null
+          profile_completed?: boolean
+          programme_id?: string | null
+          roll_no?: string | null
           status?: string
           student_id?: string | null
           updated_at?: string
           user_id: string
+          validity_end?: string | null
+          validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
         }
         Update: {
+          academic_session?: string | null
+          admission_no?: string | null
+          archived_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          category?: string | null
           class_name?: string | null
           college_id?: string | null
           created_at?: string
           deleted_at?: string | null
           department?: string | null
+          department_id?: string | null
           email?: string
+          enrollment_no?: string | null
+          enrollment_status?: string | null
+          erp_student_id?: string | null
+          gender?: string | null
           graduation_year?: number | null
+          guardian_name?: string | null
           id?: string
+          is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
+          mobile?: string | null
+          must_change_password?: boolean
           name?: string
+          onboarding_completed?: boolean
           phone?: string | null
+          profile_completed?: boolean
+          programme_id?: string | null
+          roll_no?: string | null
           status?: string
           student_id?: string | null
           updated_at?: string
           user_id?: string
+          validity_end?: string | null
+          validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
         }
@@ -1764,40 +1997,78 @@ export type Database = {
             referencedRelation: "colleges"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programmes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       programmes: {
         Row: {
+          college_id: string | null
           color: string | null
           created_at: string
           created_by: string
+          department_id: string | null
           description: string | null
           id: string
           is_active: boolean
           name: string
+          programme_code: string | null
           updated_at: string
         }
         Insert: {
+          college_id?: string | null
           color?: string | null
           created_at?: string
           created_by: string
+          department_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          programme_code?: string | null
           updated_at?: string
         }
         Update: {
+          college_id?: string | null
           color?: string | null
           created_at?: string
           created_by?: string
+          department_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          programme_code?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "programmes_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programmes_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
