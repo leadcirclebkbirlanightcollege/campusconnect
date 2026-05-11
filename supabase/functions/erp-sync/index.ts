@@ -397,6 +397,7 @@ async function finalizeBatch(
   collegeId: string,
   fullReplacement: boolean,
   seenEnrollments: string[],
+  adminUserId: string,
 ) {
   log("STEP 8: finalize start", { batchId, fullReplacement, seenCount: seenEnrollments.length });
   let archivedCount = 0;
@@ -414,7 +415,6 @@ async function finalizeBatch(
         .filter((p) => p.enrollment_no && !seenSet.has(p.enrollment_no.trim().toLowerCase()))
         .map((p) => p.user_id);
       if (toArchive.length > 0) {
-        // chunk archive updates
         const CHUNK = 200;
         for (let i = 0; i < toArchive.length; i += CHUNK) {
           const slice = toArchive.slice(i, i + CHUNK);
@@ -426,6 +426,49 @@ async function finalizeBatch(
         }
       }
     }
+  }
+
+  // ============ Notifications: welcome new students + password-reset reminders ============
+  try {
+    const { data: batchRow } = await admin.from("erp_import_batches")
+      .select("created_user_ids").eq("id", batchId).single();
+    const newIds: string[] = (batchRow as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
+
+    // Also notify any existing student in this college that still requires password change
+    const { data: pwResetRows } = await admin.from("profiles")
+      .select("user_id")
+      .eq("college_id", collegeId)
+      .eq("is_active", true)
+      .eq("must_change_password", true);
+    const allTargetIds = Array.from(new Set([
+      ...newIds,
+      ...((pwResetRows ?? []).map((r) => r.user_id as string)),
+    ]));
+
+    if (allTargetIds.length > 0) {
+      const title = "Welcome to Campus Connect";
+      const body = `Your student account is ready. Sign in with your email and the default password "${DEFAULT_STUDENT_PASSWORD}", then complete onboarding to set a new password.`;
+      const { data: notif, error: nE } = await admin.from("notifications").insert({
+        title, body, kind: "general", target_role: "student",
+        created_by: adminUserId, status: "sent", sent_at: new Date().toISOString(),
+      }).select("id").single();
+      if (nE) {
+        log("WARN: notification insert failed", nE.message);
+      } else if (notif?.id) {
+        const CHUNK = 500;
+        for (let i = 0; i < allTargetIds.length; i += CHUNK) {
+          const slice = allTargetIds.slice(i, i + CHUNK).map((uid) => ({
+            notification_id: notif.id, user_id: uid,
+          }));
+          const { error: rE } = await admin.from("notification_recipients")
+            .upsert(slice, { onConflict: "notification_id,user_id", ignoreDuplicates: true });
+          if (rE) log("WARN: recipient chunk failed", rE.message);
+        }
+        log("NOTIFY: welcome sent", { notif_id: notif.id, recipients: allTargetIds.length });
+      }
+    }
+  } catch (e) {
+    log("WARN: notification block error", e instanceof Error ? e.message : "unknown");
   }
 
   const { data: cur } = await admin.from("erp_import_batches")
@@ -447,4 +490,5 @@ async function finalizeBatch(
   await admin.from("erp_import_batches").update(summary).eq("id", batchId);
   log("STEP 9: finalize complete", summary);
   return summary;
+}
 }
