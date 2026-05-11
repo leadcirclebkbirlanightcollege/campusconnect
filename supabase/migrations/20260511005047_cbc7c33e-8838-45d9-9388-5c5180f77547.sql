@@ -1,0 +1,1 @@
+ALTER TABLE public.erp_import_batches ADD COLUMN IF NOT EXISTS seen_enrollments text[] NOT NULL DEFAULT '{}'::text[];

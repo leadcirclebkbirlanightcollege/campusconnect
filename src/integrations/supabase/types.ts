@@ -858,6 +858,7 @@ export type Database = {
           id: string
           invalid_count: number
           notes: string | null
+          seen_enrollments: string[]
           started_at: string
           status: string
           total_records: number
@@ -879,6 +880,7 @@ export type Database = {
           id?: string
           invalid_count?: number
           notes?: string | null
+          seen_enrollments?: string[]
           started_at?: string
           status?: string
           total_records?: number
@@ -900,6 +902,7 @@ export type Database = {
           id?: string
           invalid_count?: number
           notes?: string | null
+          seen_enrollments?: string[]
           started_at?: string
           status?: string
           total_records?: number
