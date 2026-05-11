@@ -491,4 +491,4 @@ async function finalizeBatch(
   log("STEP 9: finalize complete", summary);
   return summary;
 }
-}
+
