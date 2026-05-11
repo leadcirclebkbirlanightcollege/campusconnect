@@ -30,7 +30,8 @@ interface IncomingRow {
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-const defaultPassword = (enr: string) => `${enr}@123`;
+const DEFAULT_STUDENT_PASSWORD = "student@123";
+const defaultPassword = (_enr: string) => DEFAULT_STUDENT_PASSWORD;
 
 function log(step: string, details?: unknown) {
   try {
@@ -240,6 +241,7 @@ Deno.serve(async (req) => {
       currentStep = "students";
       let createdCount = 0, updatedCount = 0, failedCount = 0;
       const seenEnrInChunk: string[] = [];
+      const createdUserIds: string[] = [];
       const errorPayload: Array<{ row_number: number; reason: string; raw: IncomingRow }> = [];
 
       for (const r of validRows) {
@@ -260,7 +262,7 @@ Deno.serve(async (req) => {
         };
 
         try {
-          let existingUserId = existingByEnr.get(enrKey)?.user_id
+          const existingUserId = existingByEnr.get(enrKey)?.user_id
             ?? existingByEmail.get(r.email.trim().toLowerCase())
             ?? null;
 
@@ -269,7 +271,6 @@ Deno.serve(async (req) => {
             if (upErr) throw upErr;
             updatedCount++;
           } else {
-            // create auth user; tolerate "already registered"
             const { data: created, error: createErr } = await admin.auth.admin.createUser({
               email: r.email,
               password: defaultPassword(r.enrollment_no),
@@ -278,13 +279,13 @@ Deno.serve(async (req) => {
             });
 
             let newUserId: string | null = created?.user?.id ?? null;
+            let wasFreshCreate = !!created?.user?.id;
             if (createErr || !newUserId) {
               const msg = createErr?.message ?? "auth create failed";
-              // Try to find existing auth user by email
               if (/registered|exists|already/i.test(msg)) {
                 const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
                 const found = list?.users?.find((u) => (u.email ?? "").toLowerCase() === r.email.trim().toLowerCase());
-                if (found) newUserId = found.id;
+                if (found) { newUserId = found.id; wasFreshCreate = false; }
               }
               if (!newUserId) throw new Error(msg);
             }
@@ -307,6 +308,7 @@ Deno.serve(async (req) => {
               );
             }
             createdCount++;
+            if (wasFreshCreate) createdUserIds.push(newUserId);
           }
         } catch (err) {
           failedCount++;
@@ -326,11 +328,13 @@ Deno.serve(async (req) => {
       // increment running tallies on the batch
       currentStep = "update_batch_tally";
       const { data: cur } = await admin.from("erp_import_batches")
-        .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments")
+        .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments,created_user_ids")
         .eq("id", batchId).single();
 
       const prevSeen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
       const nextSeen = Array.from(new Set([...prevSeen, ...seenEnrInChunk]));
+      const prevCreated: string[] = (cur as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
+      const nextCreated = Array.from(new Set([...prevCreated, ...createdUserIds]));
 
       await admin.from("erp_import_batches").update({
         total_records: (cur?.total_records ?? 0) + rows.length,
@@ -341,6 +345,7 @@ Deno.serve(async (req) => {
         updated_count: (cur?.updated_count ?? 0) + updatedCount,
         failed_count: (cur?.failed_count ?? 0) + failedCount,
         seen_enrollments: nextSeen,
+        created_user_ids: nextCreated,
       }).eq("id", batchId);
 
       log("CHUNK_DONE", { createdCount, updatedCount, failedCount });
@@ -357,7 +362,7 @@ Deno.serve(async (req) => {
 
       // legacy "commit" path: also archive + finalize in same call (small files only)
       if (step === "commit") {
-        const fin = await finalizeBatch(admin, batchId, collegeId, body.full_replacement !== false, nextSeen);
+        const fin = await finalizeBatch(admin, batchId, collegeId, body.full_replacement !== false, nextSeen, userId);
         return json({ success: true, summary: fin });
       }
       return json({ success: true, summary });
@@ -371,7 +376,7 @@ Deno.serve(async (req) => {
       const { data: cur } = await admin.from("erp_import_batches")
         .select("seen_enrollments").eq("id", batchId).single();
       const seen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
-      const fin = await finalizeBatch(admin, batchId, collegeId, fullReplacement, seen);
+      const fin = await finalizeBatch(admin, batchId, collegeId, fullReplacement, seen, userId);
       return json({ success: true, summary: fin });
     }
 
@@ -392,6 +397,7 @@ async function finalizeBatch(
   collegeId: string,
   fullReplacement: boolean,
   seenEnrollments: string[],
+  adminUserId: string,
 ) {
   log("STEP 8: finalize start", { batchId, fullReplacement, seenCount: seenEnrollments.length });
   let archivedCount = 0;
@@ -409,7 +415,6 @@ async function finalizeBatch(
         .filter((p) => p.enrollment_no && !seenSet.has(p.enrollment_no.trim().toLowerCase()))
         .map((p) => p.user_id);
       if (toArchive.length > 0) {
-        // chunk archive updates
         const CHUNK = 200;
         for (let i = 0; i < toArchive.length; i += CHUNK) {
           const slice = toArchive.slice(i, i + CHUNK);
@@ -421,6 +426,49 @@ async function finalizeBatch(
         }
       }
     }
+  }
+
+  // ============ Notifications: welcome new students + password-reset reminders ============
+  try {
+    const { data: batchRow } = await admin.from("erp_import_batches")
+      .select("created_user_ids").eq("id", batchId).single();
+    const newIds: string[] = (batchRow as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
+
+    // Also notify any existing student in this college that still requires password change
+    const { data: pwResetRows } = await admin.from("profiles")
+      .select("user_id")
+      .eq("college_id", collegeId)
+      .eq("is_active", true)
+      .eq("must_change_password", true);
+    const allTargetIds = Array.from(new Set([
+      ...newIds,
+      ...((pwResetRows ?? []).map((r) => r.user_id as string)),
+    ]));
+
+    if (allTargetIds.length > 0) {
+      const title = "Welcome to Campus Connect";
+      const body = `Your student account is ready. Sign in with your email and the default password "${DEFAULT_STUDENT_PASSWORD}", then complete onboarding to set a new password.`;
+      const { data: notif, error: nE } = await admin.from("notifications").insert({
+        title, body, kind: "general", target_role: "student",
+        created_by: adminUserId, status: "sent", sent_at: new Date().toISOString(),
+      }).select("id").single();
+      if (nE) {
+        log("WARN: notification insert failed", nE.message);
+      } else if (notif?.id) {
+        const CHUNK = 500;
+        for (let i = 0; i < allTargetIds.length; i += CHUNK) {
+          const slice = allTargetIds.slice(i, i + CHUNK).map((uid) => ({
+            notification_id: notif.id, user_id: uid,
+          }));
+          const { error: rE } = await admin.from("notification_recipients")
+            .upsert(slice, { onConflict: "notification_id,user_id", ignoreDuplicates: true });
+          if (rE) log("WARN: recipient chunk failed", rE.message);
+        }
+        log("NOTIFY: welcome sent", { notif_id: notif.id, recipients: allTargetIds.length });
+      }
+    }
+  } catch (e) {
+    log("WARN: notification block error", e instanceof Error ? e.message : "unknown");
   }
 
   const { data: cur } = await admin.from("erp_import_batches")
@@ -443,3 +491,4 @@ async function finalizeBatch(
   log("STEP 9: finalize complete", summary);
   return summary;
 }
+

@@ -1,0 +1,1 @@
+ALTER TABLE public.erp_import_batches ADD COLUMN IF NOT EXISTS created_user_ids uuid[] NOT NULL DEFAULT '{}'::uuid[];

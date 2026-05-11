@@ -851,6 +851,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           created_count: number
+          created_user_ids: string[]
           duplicate_count: number
           failed_count: number
           filename: string | null
@@ -873,6 +874,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_count?: number
+          created_user_ids?: string[]
           duplicate_count?: number
           failed_count?: number
           filename?: string | null
@@ -895,6 +897,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_count?: number
+          created_user_ids?: string[]
           duplicate_count?: number
           failed_count?: number
           filename?: string | null

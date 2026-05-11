@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * OnboardingGuard — redirects students with incomplete onboarding to /app/onboarding.
- * Only applies to students; admins/faculty/super_admin pass through.
+ * OnboardingGuard — blocks student routes until onboarding is complete.
+ * - Re-runs on every mount (so refresh cannot bypass it).
+ * - Re-evaluates on auth state changes (sign-in, password update).
+ * - Admins / faculty / super_admin pass through untouched.
  */
 export default function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -12,7 +15,8 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const check = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -38,15 +42,28 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       } catch {
         if (!cancelled) setState("ok");
       }
-    })();
+    };
+
+    check();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      if (!cancelled) check();
+    });
+
     return () => {
       cancelled = true;
+      sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [location.pathname]);
 
-  if (state === "loading") return null;
+  if (state === "loading") {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   if (state === "needs_onboarding" && !location.pathname.startsWith("/app/onboarding")) {
-    return <Navigate to="/app/onboarding" replace />;
+    return <Navigate to="/app/onboarding" replace state={{ from: location.pathname }} />;
   }
   return <>{children}</>;
 }
