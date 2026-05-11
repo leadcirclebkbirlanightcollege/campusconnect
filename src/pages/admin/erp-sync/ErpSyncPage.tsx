@@ -101,33 +101,60 @@ export default function ErpSyncPage() {
       const { data: startData, error: startErr } = await supabase.functions.invoke("erp-sync", {
         body: { step: "start", filename },
       });
-      if (startErr || !startData?.batch) throw new Error(startErr?.message ?? "Failed to start batch");
+      if (startErr || !startData?.batch) {
+        const msg = (startData as { error?: string } | null)?.error ?? startErr?.message ?? "Failed to start batch";
+        throw new Error(`[start] ${msg}`);
+      }
       const batchId = startData.batch.id as string;
 
       setActiveStep(3);
-      setProgress(30);
+      setProgress(20);
 
       const cleaned = parsed.map(({ ...r }) => r);
-      setActiveStep(4);
-      setProgress(60);
+      const CHUNK_SIZE = 50;
+      const chunks: typeof cleaned[] = [];
+      for (let i = 0; i < cleaned.length; i += CHUNK_SIZE) chunks.push(cleaned.slice(i, i + CHUNK_SIZE));
 
-      const { data, error } = await supabase.functions.invoke("erp-sync", {
-        body: {
-          step: "commit",
-          batch_id: batchId,
-          rows: cleaned,
-          full_replacement: fullReplacement,
-        },
-      });
-      if (error) throw new Error(error.message);
-      if (!data?.summary) throw new Error("No summary returned");
+      setActiveStep(4);
+
+      let totalCreated = 0, totalUpdated = 0, totalFailed = 0;
+
+      for (let i = 0; i < chunks.length; i++) {
+        const { data: cd, error: cErr } = await supabase.functions.invoke("erp-sync", {
+          body: {
+            step: "commit_chunk",
+            batch_id: batchId,
+            rows: chunks[i],
+            full_replacement: fullReplacement,
+            is_first_chunk: i === 0,
+          },
+        });
+        if (cErr || !cd?.success) {
+          const msg = (cd as { error?: string; step?: string } | null)?.error ?? cErr?.message ?? "Chunk failed";
+          const step = (cd as { step?: string } | null)?.step ?? "commit_chunk";
+          throw new Error(`[${step}] chunk ${i + 1}/${chunks.length}: ${msg}`);
+        }
+        totalCreated += cd.summary?.created_count ?? 0;
+        totalUpdated += cd.summary?.updated_count ?? 0;
+        totalFailed += cd.summary?.failed_count ?? 0;
+        const pct = 20 + Math.round(((i + 1) / chunks.length) * 60);
+        setProgress(pct);
+      }
 
       setActiveStep(5);
       setProgress(85);
-      await new Promise((r) => setTimeout(r, 300));
+
+      const { data: finData, error: finErr } = await supabase.functions.invoke("erp-sync", {
+        body: { step: "finalize", batch_id: batchId, full_replacement: fullReplacement },
+      });
+      if (finErr || !finData?.summary) {
+        const msg = (finData as { error?: string } | null)?.error ?? finErr?.message ?? "Finalize failed";
+        throw new Error(`[finalize] ${msg}`);
+      }
+
       setActiveStep(6);
       setProgress(100);
-      return data.summary as BatchSummary;
+      return finData.summary as BatchSummary;
     },
     onSuccess: (s) => {
       setSummary(s);
