@@ -345,6 +345,7 @@ Deno.serve(async (req) => {
         updated_count: (cur?.updated_count ?? 0) + updatedCount,
         failed_count: (cur?.failed_count ?? 0) + failedCount,
         seen_enrollments: nextSeen,
+        created_user_ids: nextCreated,
       }).eq("id", batchId);
 
       log("CHUNK_DONE", { createdCount, updatedCount, failedCount });
