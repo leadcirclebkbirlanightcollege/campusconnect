@@ -30,7 +30,8 @@ interface IncomingRow {
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-const defaultPassword = (enr: string) => `${enr}@123`;
+const DEFAULT_STUDENT_PASSWORD = "student@123";
+const defaultPassword = (_enr: string) => DEFAULT_STUDENT_PASSWORD;
 
 function log(step: string, details?: unknown) {
   try {
