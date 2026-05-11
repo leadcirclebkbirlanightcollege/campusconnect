@@ -241,6 +241,7 @@ Deno.serve(async (req) => {
       currentStep = "students";
       let createdCount = 0, updatedCount = 0, failedCount = 0;
       const seenEnrInChunk: string[] = [];
+      const createdUserIds: string[] = [];
       const errorPayload: Array<{ row_number: number; reason: string; raw: IncomingRow }> = [];
 
       for (const r of validRows) {
@@ -261,7 +262,7 @@ Deno.serve(async (req) => {
         };
 
         try {
-          let existingUserId = existingByEnr.get(enrKey)?.user_id
+          const existingUserId = existingByEnr.get(enrKey)?.user_id
             ?? existingByEmail.get(r.email.trim().toLowerCase())
             ?? null;
 
@@ -270,7 +271,6 @@ Deno.serve(async (req) => {
             if (upErr) throw upErr;
             updatedCount++;
           } else {
-            // create auth user; tolerate "already registered"
             const { data: created, error: createErr } = await admin.auth.admin.createUser({
               email: r.email,
               password: defaultPassword(r.enrollment_no),
@@ -279,13 +279,13 @@ Deno.serve(async (req) => {
             });
 
             let newUserId: string | null = created?.user?.id ?? null;
+            let wasFreshCreate = !!created?.user?.id;
             if (createErr || !newUserId) {
               const msg = createErr?.message ?? "auth create failed";
-              // Try to find existing auth user by email
               if (/registered|exists|already/i.test(msg)) {
                 const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
                 const found = list?.users?.find((u) => (u.email ?? "").toLowerCase() === r.email.trim().toLowerCase());
-                if (found) newUserId = found.id;
+                if (found) { newUserId = found.id; wasFreshCreate = false; }
               }
               if (!newUserId) throw new Error(msg);
             }
@@ -308,6 +308,7 @@ Deno.serve(async (req) => {
               );
             }
             createdCount++;
+            if (wasFreshCreate) createdUserIds.push(newUserId);
           }
         } catch (err) {
           failedCount++;
@@ -327,11 +328,13 @@ Deno.serve(async (req) => {
       // increment running tallies on the batch
       currentStep = "update_batch_tally";
       const { data: cur } = await admin.from("erp_import_batches")
-        .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments")
+        .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments,created_user_ids")
         .eq("id", batchId).single();
 
       const prevSeen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
       const nextSeen = Array.from(new Set([...prevSeen, ...seenEnrInChunk]));
+      const prevCreated: string[] = (cur as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
+      const nextCreated = Array.from(new Set([...prevCreated, ...createdUserIds]));
 
       await admin.from("erp_import_batches").update({
         total_records: (cur?.total_records ?? 0) + rows.length,
