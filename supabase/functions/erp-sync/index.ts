@@ -362,7 +362,7 @@ Deno.serve(async (req) => {
 
       // legacy "commit" path: also archive + finalize in same call (small files only)
       if (step === "commit") {
-        const fin = await finalizeBatch(admin, batchId, collegeId, body.full_replacement !== false, nextSeen);
+        const fin = await finalizeBatch(admin, batchId, collegeId, body.full_replacement !== false, nextSeen, userId);
         return json({ success: true, summary: fin });
       }
       return json({ success: true, summary });
@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
       const { data: cur } = await admin.from("erp_import_batches")
         .select("seen_enrollments").eq("id", batchId).single();
       const seen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
-      const fin = await finalizeBatch(admin, batchId, collegeId, fullReplacement, seen);
+      const fin = await finalizeBatch(admin, batchId, collegeId, fullReplacement, seen, userId);
       return json({ success: true, summary: fin });
     }
 
