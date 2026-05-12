@@ -332,10 +332,11 @@ Deno.serve(async (req) => {
       }
 
       if (errorPayload.length > 0) {
-        await admin.from("erp_import_errors").insert(errorPayload.map((e) => ({
+        const { error: insertErrorsErr } = await admin.from("erp_import_errors").insert(errorPayload.map((e) => ({
           batch_id: batchId, college_id: collegeId, row_number: e.row_number,
-          reason: e.reason, raw_data: e.raw as unknown as Record<string, unknown>,
+          reason: e.reason, raw_data: asDbRecord(e.raw),
         })));
+        if (insertErrorsErr) log("WARN: row error insert failed", insertErrorsErr.message);
       }
 
       // increment running tallies on the batch
@@ -343,13 +344,14 @@ Deno.serve(async (req) => {
       const { data: cur } = await admin.from("erp_import_batches")
         .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments,created_user_ids")
         .eq("id", batchId).single();
+      if (!cur) return errorResponse("update_batch_tally", "Import batch was not found", { batchId }, 404);
 
       const prevSeen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
       const nextSeen = Array.from(new Set([...prevSeen, ...seenEnrInChunk]));
       const prevCreated: string[] = (cur as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
       const nextCreated = Array.from(new Set([...prevCreated, ...createdUserIds]));
 
-      await admin.from("erp_import_batches").update({
+      const { error: batchUpdateErr } = await admin.from("erp_import_batches").update({
         total_records: (cur?.total_records ?? 0) + rows.length,
         valid_count: (cur?.valid_count ?? 0) + validRows.length,
         invalid_count: (cur?.invalid_count ?? 0) + invalidRows.length,
@@ -360,6 +362,7 @@ Deno.serve(async (req) => {
         seen_enrollments: nextSeen,
         created_user_ids: nextCreated,
       }).eq("id", batchId);
+      if (batchUpdateErr) return errorResponse("update_batch_tally", dbMessage(batchUpdateErr));
 
       log("CHUNK_DONE", { createdCount, updatedCount, failedCount });
 
