@@ -71,6 +71,23 @@ function downloadErpTemplate() {
   XLSX.writeFile(wb, "campus_connect_erp_sync_template.xlsx");
 }
 
+async function readFunctionFailure(data: unknown, error: unknown, fallback: string) {
+  let payload = data;
+  const response = (error as { context?: Response } | null)?.context;
+  if ((!payload || typeof payload !== "object") && response) {
+    try {
+      payload = await response.clone().json();
+    } catch {
+      payload = null;
+    }
+  }
+  const body = payload && typeof payload === "object" ? payload as { error?: string; message?: string; step?: string } : null;
+  return {
+    message: body?.error ?? body?.message ?? (error instanceof Error ? error.message : fallback),
+    step: body?.step,
+  };
+}
+
 interface BatchSummary {
   total_records: number;
   valid_count: number;
@@ -148,7 +165,7 @@ export default function ErpSyncPage() {
         body: { step: "start", filename },
       });
       if (startErr || !startData?.batch) {
-        const msg = (startData as { error?: string } | null)?.error ?? startErr?.message ?? "Failed to start batch";
+        const { message: msg } = await readFunctionFailure(startData, startErr, "Failed to start batch");
         throw new Error(`[start] ${msg}`);
       }
       const batchId = startData.batch.id as string;
@@ -176,8 +193,7 @@ export default function ErpSyncPage() {
           },
         });
         if (cErr || !cd?.success) {
-          const msg = (cd as { error?: string; step?: string } | null)?.error ?? cErr?.message ?? "Chunk failed";
-          const step = (cd as { step?: string } | null)?.step ?? "commit_chunk";
+          const { message: msg, step } = await readFunctionFailure(cd, cErr, "Chunk failed");
           throw new Error(`[${step}] chunk ${i + 1}/${chunks.length}: ${msg}`);
         }
         totalCreated += cd.summary?.created_count ?? 0;
@@ -194,7 +210,7 @@ export default function ErpSyncPage() {
         body: { step: "finalize", batch_id: batchId, full_replacement: fullReplacement },
       });
       if (finErr || !finData?.summary) {
-        const msg = (finData as { error?: string } | null)?.error ?? finErr?.message ?? "Finalize failed";
+        const { message: msg } = await readFunctionFailure(finData, finErr, "Finalize failed");
         throw new Error(`[finalize] ${msg}`);
       }
 
