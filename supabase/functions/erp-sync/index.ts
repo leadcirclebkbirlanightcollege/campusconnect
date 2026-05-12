@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,6 +48,17 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function asDbRecord(row: IncomingRow): Record<string, unknown> {
+  return row as unknown as Record<string, unknown>;
+}
+
+function dbMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message?: unknown }).message ?? "Database error");
+  }
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 function errorResponse(step: string, message: string, extra: Record<string, unknown> = {}, status = 500) {
   log(`ERROR at ${step}`, { message, ...extra });
   return json({ success: false, step, error: message, ...extra }, status);
@@ -70,9 +81,9 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) return errorResponse("verify_auth", claimsErr?.message ?? "Invalid token", {}, 401);
-    const userId = claimsData.claims.sub as string;
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+    if (userErr || !userData?.user) return errorResponse("verify_auth", userErr?.message ?? "Invalid token", {}, 401);
+    const userId = userData.user.id;
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
@@ -141,11 +152,11 @@ Deno.serve(async (req) => {
       const errInserts = [
         ...invalidRows.map((r) => ({
           batch_id: batchId, college_id: collegeId, row_number: r.row_number,
-          reason: (r.errors ?? ["invalid"]).join("; "), raw_data: r as unknown as Record<string, unknown>,
+          reason: (r.errors ?? ["invalid"]).join("; "), raw_data: asDbRecord(r),
         })),
         ...dupRows.map((r) => ({
           batch_id: batchId, college_id: collegeId, row_number: r.row_number,
-          reason: "Duplicate enrollment_no in chunk", raw_data: r as unknown as Record<string, unknown>,
+          reason: "Duplicate enrollment_no in chunk", raw_data: asDbRecord(r),
         })),
       ];
       if (errInserts.length > 0) {
@@ -296,16 +307,18 @@ Deno.serve(async (req) => {
             }, { onConflict: "user_id" });
             if (profErr) throw profErr;
 
-            await admin.from("user_roles").upsert(
+            const { error: roleUpsertErr } = await admin.from("user_roles").upsert(
               { user_id: newUserId, role: "student", college_id: collegeId },
-              { onConflict: "user_id,role", ignoreDuplicates: true }
+              { onConflict: "user_id" }
             );
+            if (roleUpsertErr) throw roleUpsertErr;
 
             if (programmeId) {
-              await admin.from("student_programme_allotments").upsert(
+              const { error: allotErr } = await admin.from("student_programme_allotments").upsert(
                 { student_user_id: newUserId, programme_id: programmeId, allotted_by: userId },
                 { onConflict: "student_user_id,programme_id", ignoreDuplicates: true }
               );
+              if (allotErr) throw allotErr;
             }
             createdCount++;
             if (wasFreshCreate) createdUserIds.push(newUserId);
@@ -319,10 +332,11 @@ Deno.serve(async (req) => {
       }
 
       if (errorPayload.length > 0) {
-        await admin.from("erp_import_errors").insert(errorPayload.map((e) => ({
+        const { error: insertErrorsErr } = await admin.from("erp_import_errors").insert(errorPayload.map((e) => ({
           batch_id: batchId, college_id: collegeId, row_number: e.row_number,
-          reason: e.reason, raw_data: e.raw as unknown as Record<string, unknown>,
+          reason: e.reason, raw_data: asDbRecord(e.raw),
         })));
+        if (insertErrorsErr) log("WARN: row error insert failed", insertErrorsErr.message);
       }
 
       // increment running tallies on the batch
@@ -330,13 +344,14 @@ Deno.serve(async (req) => {
       const { data: cur } = await admin.from("erp_import_batches")
         .select("total_records,valid_count,invalid_count,duplicate_count,created_count,updated_count,failed_count,seen_enrollments,created_user_ids")
         .eq("id", batchId).single();
+      if (!cur) return errorResponse("update_batch_tally", "Import batch was not found", { batchId }, 404);
 
       const prevSeen: string[] = (cur as { seen_enrollments?: string[] } | null)?.seen_enrollments ?? [];
       const nextSeen = Array.from(new Set([...prevSeen, ...seenEnrInChunk]));
       const prevCreated: string[] = (cur as { created_user_ids?: string[] } | null)?.created_user_ids ?? [];
       const nextCreated = Array.from(new Set([...prevCreated, ...createdUserIds]));
 
-      await admin.from("erp_import_batches").update({
+      const { error: batchUpdateErr } = await admin.from("erp_import_batches").update({
         total_records: (cur?.total_records ?? 0) + rows.length,
         valid_count: (cur?.valid_count ?? 0) + validRows.length,
         invalid_count: (cur?.invalid_count ?? 0) + invalidRows.length,
@@ -347,6 +362,7 @@ Deno.serve(async (req) => {
         seen_enrollments: nextSeen,
         created_user_ids: nextCreated,
       }).eq("id", batchId);
+      if (batchUpdateErr) return errorResponse("update_batch_tally", dbMessage(batchUpdateErr));
 
       log("CHUNK_DONE", { createdCount, updatedCount, failedCount });
 
