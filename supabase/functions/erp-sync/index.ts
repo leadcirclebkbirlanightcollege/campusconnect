@@ -48,6 +48,17 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function asDbRecord(row: IncomingRow): Record<string, unknown> {
+  return row as unknown as Record<string, unknown>;
+}
+
+function dbMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message?: unknown }).message ?? "Database error");
+  }
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 function errorResponse(step: string, message: string, extra: Record<string, unknown> = {}, status = 500) {
   log(`ERROR at ${step}`, { message, ...extra });
   return json({ success: false, step, error: message, ...extra }, status);
@@ -141,11 +152,11 @@ Deno.serve(async (req) => {
       const errInserts = [
         ...invalidRows.map((r) => ({
           batch_id: batchId, college_id: collegeId, row_number: r.row_number,
-          reason: (r.errors ?? ["invalid"]).join("; "), raw_data: r as unknown as Record<string, unknown>,
+          reason: (r.errors ?? ["invalid"]).join("; "), raw_data: asDbRecord(r),
         })),
         ...dupRows.map((r) => ({
           batch_id: batchId, college_id: collegeId, row_number: r.row_number,
-          reason: "Duplicate enrollment_no in chunk", raw_data: r as unknown as Record<string, unknown>,
+          reason: "Duplicate enrollment_no in chunk", raw_data: asDbRecord(r),
         })),
       ];
       if (errInserts.length > 0) {
@@ -303,10 +314,11 @@ Deno.serve(async (req) => {
             if (roleUpsertErr) throw roleUpsertErr;
 
             if (programmeId) {
-              await admin.from("student_programme_allotments").upsert(
+              const { error: allotErr } = await admin.from("student_programme_allotments").upsert(
                 { student_user_id: newUserId, programme_id: programmeId, allotted_by: userId },
                 { onConflict: "student_user_id,programme_id", ignoreDuplicates: true }
               );
+              if (allotErr) throw allotErr;
             }
             createdCount++;
             if (wasFreshCreate) createdUserIds.push(newUserId);
