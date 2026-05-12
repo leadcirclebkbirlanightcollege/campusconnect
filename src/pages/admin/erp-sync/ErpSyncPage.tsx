@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/layout/PageHeader";
 import { parseErpFile, type ErpParsedRow } from "@/lib/erp";
+import * as XLSX from "xlsx";
 
 type Phase = "idle" | "parsing" | "preview" | "committing" | "done";
 
@@ -24,6 +25,51 @@ const STEPS = [
   { key: "archiving", label: "Archiving old students" },
   { key: "done", label: "Sync complete" },
 ];
+
+const ERP_TEMPLATE_HEADERS = [
+  "Name",
+  "Enrolment Number",
+  "Programme",
+  "Organizational Unit",
+  "Gender",
+  "Guardian Name",
+  "Mobile Number",
+  "Personal Email",
+  "Roll Number",
+  "Admission Number",
+  "Category",
+  "Enrollment Status",
+  "Student ID",
+  "Validity Start",
+  "Validity End",
+  "Discipline",
+];
+
+function downloadErpTemplate() {
+  const sample = [
+    "Aarav Sharma",
+    "MU034112024000001",
+    "1151061 : Bachelor of Science (Computer Science)",
+    "Main College Campus",
+    "Male",
+    "Raj Sharma",
+    "9876543210",
+    "aarav.sharma@example.com",
+    "CS-001",
+    "ADM-2024-001",
+    "General",
+    "Active",
+    "ERP-0001",
+    "2024-06-01",
+    "2028-05-31",
+    "Computer Science",
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([ERP_TEMPLATE_HEADERS, sample]);
+  ws["!cols"] = ERP_TEMPLATE_HEADERS.map((header) => ({ wch: Math.max(header.length + 4, 18) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ERP Students");
+  XLSX.writeFile(wb, "campus_connect_erp_sync_template.xlsx");
+}
 
 interface BatchSummary {
   total_records: number;
@@ -255,6 +301,9 @@ export default function ErpSyncPage() {
             <Button variant="outline" onClick={downloadFailedRows} disabled={counts.invalid === 0}>
               <Download className="h-4 w-4" /> Download failed rows
             </Button>
+            <Button variant="outline" onClick={downloadErpTemplate}>
+              <FileSpreadsheet className="h-4 w-4" /> Excel format
+            </Button>
             <Button variant="ghost" onClick={reset}>Cancel</Button>
           </div>
 
@@ -308,6 +357,17 @@ function UploadStage({
       </p>
       <Button className="mt-5">
         <Upload className="h-4 w-4" /> Choose ERP file
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-3"
+        onClick={(e) => {
+          e.stopPropagation();
+          downloadErpTemplate();
+        }}
+      >
+        <Download className="h-4 w-4" /> Download Excel format
       </Button>
     </Card>
   );
