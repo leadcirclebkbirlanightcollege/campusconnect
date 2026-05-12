@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,9 +70,9 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) return errorResponse("verify_auth", claimsErr?.message ?? "Invalid token", {}, 401);
-    const userId = claimsData.claims.sub as string;
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+    if (userErr || !userData?.user) return errorResponse("verify_auth", userErr?.message ?? "Invalid token", {}, 401);
+    const userId = userData.user.id;
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
@@ -296,10 +296,11 @@ Deno.serve(async (req) => {
             }, { onConflict: "user_id" });
             if (profErr) throw profErr;
 
-            await admin.from("user_roles").upsert(
+            const { error: roleUpsertErr } = await admin.from("user_roles").upsert(
               { user_id: newUserId, role: "student", college_id: collegeId },
-              { onConflict: "user_id,role", ignoreDuplicates: true }
+              { onConflict: "user_id" }
             );
+            if (roleUpsertErr) throw roleUpsertErr;
 
             if (programmeId) {
               await admin.from("student_programme_allotments").upsert(
