@@ -96,7 +96,6 @@ const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
-const ErpSyncPage                  = lazy(() => import("@/pages/admin/erp-sync/ErpSyncPage"));
 const OnboardingFlow               = lazy(() => import("@/pages/student/onboarding/OnboardingFlow"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
@@ -215,7 +214,7 @@ export default function AppRouter() {
             <Route path="reports/export"           element={<AdminExportPage />} />
             <Route path="channels"                 element={<AdminChannelsPage />} />
             <Route path="permissions"              element={<AdminPermissionsPage />} />
-            <Route path="erp-sync"                 element={<ErpSyncPage />} />
+            <Route path="erp-sync"                 element={<Navigate to="/platform/admin/students" replace />} />
             {/* Legacy redirects */}
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />

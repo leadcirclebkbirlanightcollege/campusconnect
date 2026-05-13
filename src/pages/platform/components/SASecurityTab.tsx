@@ -12,6 +12,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import ResetStudentsPanel from "@/pages/platform/components/ResetStudentsPanel";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 type AuditEntry = {
@@ -476,6 +477,9 @@ export default function SASecurityTab() {
           <TabsContent value="alerts"     className="mt-0"><SecurityAlertsTab /></TabsContent>
         </Tabs>
       </div>
+
+      {/* Danger zone */}
+      <ResetStudentsPanel />
     </div>
   );
 }
