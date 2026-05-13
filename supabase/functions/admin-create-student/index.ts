@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
       return json(409, { error: 'A user with this email already exists' })
     }
 
-    // Use provided password or fallback to role-based defaults
+    // Phase 6: default student password is the literal "student"; faculty unchanged.
     const defaultPassword = body.password?.trim()
       ? body.password.trim()
       : targetRole === 'faculty' ? 'faculty123' : 'student'
@@ -109,7 +109,8 @@ Deno.serve(async (req) => {
       email,
       password: defaultPassword,
       email_confirm: true,
-      user_metadata: { must_change_password: true },
+      // No forced password reset — students log in directly with the default.
+      user_metadata: { must_change_password: false },
     })
 
     if (createError || !created.user) {
