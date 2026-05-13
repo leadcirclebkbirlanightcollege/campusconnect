@@ -1,166 +1,60 @@
+## Phase 6 — Admin & Super Admin Enterprise Redesign
 
-# ERP Master Sync Engine — Implementation Plan
-
-## Important architectural reconciliation
-
-Your spec mentions **Clerk** and a dedicated **`students`** table. The existing Campus Connect platform uses:
-
-- **Supabase Auth** (not Clerk) — already integrated, with `auth.users` + `profiles` + `user_roles`
-- **`profiles`** as the student/user record (no separate `students` table)
-- **`colleges`**, **`programmes`**, **`student_programme_allotments`** already exist
-- Multi-tenant `college_id` isolation via `get_my_college_id()` + RLS — already enforced
-
-I will **extend** this existing architecture rather than introduce a parallel system. Specifically:
-
-- Keep **Supabase Auth** as the identity provider (Clerk would require ripping out the auth stack — out of scope and would break every existing module).
-- Extend `profiles` with ERP fields instead of creating a duplicate `students` table.
-- Add new `departments` table + extend existing `programmes`.
-- All ERP metadata and onboarding flags live on `profiles`.
-
-If you genuinely need Clerk instead of Supabase Auth, that's a separate migration project — please confirm before we proceed and I'll plan it independently.
+Executed in 3 sequenced batches. Batch A is mandatory & destructive (ERP removal, password reset, hard-delete tool). Batches B/C are the visual/UX redesign.
 
 ---
 
-## Scope of this build
+### BATCH A — Mandatory cleanup & data tools (ship first)
 
-A complete ERP-driven onboarding + yearly replacement engine, broken into 5 deliverable phases.
+**A1. Remove ERP Sync Engine completely**
+- Delete `src/pages/admin/erp-sync/ErpSyncPage.tsx`
+- Delete `src/lib/erp/` (types, parseExcel, programmeParser, departmentExtractor, rowValidator, columnMap, index)
+- Delete edge function `supabase/functions/erp-sync/` and call `supabase--delete_edge_functions(["erp-sync"])`
+- Remove ERP route from `src/router/AppRouter.tsx`
+- Remove ERP nav item from `src/pages/admin/adminNavConfig.ts`
+- Remove `xlsx` dependency if only used by ERP
+- Keep DB tables (`erp_import_*`) for now — non-blocking; flag for later cleanup migration
+- Keep `OnboardingGuard` minimal but disable forced onboarding (password = `student` policy)
 
-### Phase A — Database foundation (1 migration)
+**A2. Simplify student auth — password = `student`**
+- New edge function `admin-create-student` (or update existing) sets default password literal `student`
+- Remove forced password-change requirement in `OnboardingFlow` / `OnboardingGuard`: students go straight to dashboard after login
+- Keep `OnboardingFlow` accessible as optional profile-completion, but no longer blocking
 
-New tables:
-- `departments` (college_id, name, normalized_name UNIQUE per college, is_active)
-- `erp_import_staging` (batch_id, raw JSON, parsed JSON, validation_state, parsed_state)
-- `erp_import_batches` (batch_id PK, college_id, admin_id, filename, totals: total/valid/invalid/created/updated/archived, status, started_at, completed_at)
-- `erp_import_errors` (batch_id, row_number, reason, raw_data)
-
-Extend `programmes`:
-- add `department_id`, `programme_code`, `is_active` (if missing)
-- unique (college_id, programme_code)
-
-Extend `profiles`:
-- `enrollment_no` (UNIQUE per college), `roll_no`, `admission_no`, `erp_student_id`
-- `gender`, `guardian_name`, `mobile`, `category`, `enrollment_status`
-- `validity_start`, `validity_end`, `academic_session`
-- `department_id`, `programme_id`
-- `is_active`, `archived_at`
-- `onboarding_completed` (bool), `profile_completed` (bool), `password_changed` (bool)
-- `must_change_password` (bool, default true for ERP-created accounts)
-
-RLS: admins read/write only their own `college_id`; students read own row; super_admin global. Mirror existing patterns using `get_my_college_id()` + `is_admin()`.
-
-History preservation: archival is a flag flip (`is_active=false`, `archived_at=now()`), never a hard delete. Foreign keys to attendance/events/points already cascade-safe via existing `is_deleted` patterns.
-
-### Phase B — ERP parser library (`src/lib/erp/`)
-
-Pure TS modules, fully unit-testable:
-- `parseExcel.ts` — uses `xlsx` (already viable in browser) to read .xlsx/.csv into rows
-- `columnMap.ts` — fixed mapping per spec (Name → full_name, etc.)
-- `programmeParser.ts` — split `"1151061 : Bachelor of Science (Computer Science)"` → `{ code, name }`
-- `departmentExtractor.ts` — derive department from `Discipline` else from parenthetical in programme name; normalize (lowercase, trim, collapse whitespace) for dedup matching
-- `rowValidator.ts` — Zod schema for required fields (name, enrollment_no, email format, mobile shape); collects per-row errors
-- `diffEngine.ts` — given existing `profiles` slice + parsed rows, produces `{ create[], update[], archive[], unchanged[] }` keyed by `enrollment_no`
-
-### Phase C — Edge function `erp-sync` (staged pipeline)
-
-Single function with `step` parameter, called sequentially by the UI to keep work chunked and resumable:
-
-1. `start` — create `erp_import_batches` row, return `batch_id`
-2. `upload` — UI POSTs parsed rows in chunks (≤500/req), inserts into `erp_import_staging`
-3. `validate` — runs validators, writes per-row state + errors to `erp_import_errors`
-4. `preview` — returns counts: valid / duplicate / invalid / new / updated / archived (computed via diff against `profiles`)
-5. `commit` — chunked transaction:
-   - Upsert `colleges` (admin's college only, by `get_my_college_id()`)
-   - Upsert `departments` (normalized name match)
-   - Upsert `programmes` (by `programme_code`)
-   - For each student row:
-     - If new: call Supabase Admin API to create auth user with default password `${enrollment_no}@123`, insert `profiles` + `user_roles(role='student')` + `student_programme_allotments`
-     - If existing (match by `enrollment_no` within college): update ERP fields only (do not touch user-edited profile fields like avatar, bio, dob)
-   - Mark students missing from upload as `is_active=false, archived_at=now()`
-   - Update batch totals + status='completed'
-6. `errors` — returns CSV download of failed rows
-
-Security:
-- `verify_jwt` validation in code (admin role required)
-- All writes scoped to `auth.uid()`'s college via server-side `get_my_college_id()`
-- Service role key used only for `auth.admin.createUser` — never exposed to client
-- Rate limit: one active batch per admin
-
-Performance:
-- Chunked inserts (500 rows per RPC call)
-- Bulk upserts via single `INSERT ... ON CONFLICT`
-- Validation runs in DB where possible
-
-### Phase D — Admin UI (`src/pages/admin/erp-sync/`)
-
-Route: `Admin → Student Management → ERP Sync`
-
-Components:
-- `ErpSyncDashboard.tsx` — landing: "Start new sync" + history table
-- `ErpUploader.tsx` — drag/drop + file picker, client-side parse with progress
-- `ErpStepper.tsx` — Parsing → Validating → Creating Structures → Comparing → Creating Accounts → Archiving → Done
-- `ErpPreview.tsx` — the colored summary card (✔312 valid / ⚠8 dup / ❌2 invalid / 🗂120 archive / 🔄54 update)
-- `ErpErrorTable.tsx` — failed rows with download CSV + retry
-- `ErpHistoryTable.tsx` — past batches with status, totals, drill-down
-
-Responsive: mobile uses card stack instead of table; uploader becomes full-width tap target.
-
-### Phase E — Student forced onboarding
-
-- New route guard `OnboardingGuard.tsx` wrapping student routes — redirects to `/onboarding` if `must_change_password || !onboarding_completed`
-- `/onboarding` flow: 4 steps
-  1. Change password (Supabase auth.updateUser)
-  2. Complete profile (DOB, emergency contact, skills, bio) — ERP fields shown read-only
-  3. Upload avatar (existing `avatars` bucket)
-  4. Accept terms → set `onboarding_completed=true`
-- ERP-imported fields rendered as locked inputs across the app (small lock icon + tooltip "Synced from ERP")
+**A3. Super Admin "Reset Student Database" tool**
+- New edge function `super-admin-reset-students`:
+  - Verifies caller is `super_admin`
+  - Deletes from `attendance`, `points_ledger`, `student_programme_allotments`, `student_intelligence`, `student_streaks`, `student_achievements`, `daily_checkins`, `notification_recipients` (student rows), `profiles` (where role=student), `user_roles` where role='student', then `auth.admin.deleteUser` for each
+- Frontend: new tile in Super Admin Security/Platform Settings page → "Reset Student Database"
+  - Danger modal, typed confirmation `DELETE ALL STUDENTS`, double-confirm, success toast with count
 
 ---
 
-## Files to be created
+### BATCH B — Admin Command Center redesign (operational focus)
 
-```
-supabase/migrations/<ts>_erp_sync_engine.sql
-supabase/functions/erp-sync/index.ts
-src/lib/erp/parseExcel.ts
-src/lib/erp/columnMap.ts
-src/lib/erp/programmeParser.ts
-src/lib/erp/departmentExtractor.ts
-src/lib/erp/rowValidator.ts
-src/lib/erp/diffEngine.ts
-src/lib/erp/types.ts
-src/pages/admin/erp-sync/ErpSyncPage.tsx
-src/pages/admin/erp-sync/ErpUploader.tsx
-src/pages/admin/erp-sync/ErpStepper.tsx
-src/pages/admin/erp-sync/ErpPreview.tsx
-src/pages/admin/erp-sync/ErpErrorTable.tsx
-src/pages/admin/erp-sync/ErpHistoryTable.tsx
-src/pages/student/onboarding/OnboardingFlow.tsx
-src/pages/student/onboarding/steps/{ChangePassword,CompleteProfile,UploadAvatar,AcceptTerms}.tsx
-src/components/auth/OnboardingGuard.tsx
-```
+- `AdminOverviewPage` / `AdminOverviewTab`: top KPI strip (Students / Faculty / Attendance Today / Active Events / Pending Requests) using existing `MetricCard` with animated counters
+- Refresh `QuickActionsGrid`: replace current 8 generic actions with the requested operation-first set (Add Student, Add Faculty, Create Event, Create Announcement, Approve Stalls, Approve Point Claims) — larger cards, clearer iconography, clean dark-mode contrast
+- Tighten `AdminLayout` topbar density; ensure no invisible buttons / opacity issues
+- Sidebar: drop ERP Sync, regroup nav into Operations / People / Academic / Engagement / Settings
 
-Files to be modified (small additive changes only):
-- `src/router/AppRouter.tsx` — add ERP sync route + onboarding route + guard
-- `src/pages/admin/adminNavConfig.ts` — add ERP Sync nav entry
-- existing student profile components — add read-only treatment for ERP fields
+### BATCH C — Tables, forms, Super Admin polish
 
-Dependency add: `xlsx` (npm) for client-side parse.
+- Create reusable `<EnterpriseTable>` primitive (sticky header, search toolbar, filter chips, pagination, row hover, status badges, mobile card fallback) and refactor 2 high-traffic admin tables (Students, Attendance Corrections) onto it as the pattern
+- Modal/form polish pass: spacious sections, sticky footer actions, inline validation styling tokens
+- Super Admin dashboard: elevate visual hierarchy vs Admin (gradient header strip, platform KPIs, system health widget tiles, security alerts panel) on `SuperAdminDashboard`
+- Pass on contrast / dark mode / button visibility across admin & super-admin shells
 
 ---
 
-## Out of scope (will NOT touch)
-- Clerk migration
-- Existing attendance / lectures / events modules
-- Faculty/subject ERP (architecture left modular for future)
-- Hard deletes of any existing data
+### What this plan does NOT touch
+- Student-facing pages (Phase 3–5) — untouched
+- E-Cell pages — untouched
+- Backend academic logic (lectures, attendance marking) — untouched
+- DB schema for ERP tables — left in place; only UI/edge function removed
 
 ---
 
-## Open questions before I build
-
-1. **Auth provider** — confirm Supabase Auth (existing) is fine, OR you really want a Clerk migration (separate project).
-2. **Default-password policy** — the spec says `EnrollmentNumber@123` (e.g. `230401@123`). This is weak. OK to use as-is given the forced password change on first login?
-3. **College auto-create** — admins are already scoped to one `college_id`. Should ERP "Organizational Unit" column be ignored (admin's college is the truth), or should mismatches throw a validation error? I'll go with **validation error** unless you say otherwise.
-4. **Yearly replacement trigger** — every commit performs full replacement (archive missing). Should there be a "partial sync" mode that skips archival? I'll add a checkbox in the preview step (default: full replacement on).
-
-If answers to (1)–(4) are "yes / proceed / your defaults are fine", I'll start with Phase A migration immediately on approval.
+### Confirmation needed before I start
+1. OK to **delete the `erp-sync` edge function and `src/lib/erp/`** (irreversible without revert)?
+2. OK that **`OnboardingFlow` becomes optional** (students log in straight to dashboard with `student` password, no forced reset)?
+3. For the **Reset Student Database** tool — should it also wipe `erp_import_batches/errors/staging` rows, or only student-owned data?
