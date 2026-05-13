@@ -130,6 +130,8 @@ Deno.serve(async (req) => {
       department: body.department ?? null,
       class_name: body.class_name ?? null,
       college_id: targetCollegeId,
+      must_change_password: false,
+      onboarding_completed: true,
     })
 
     if (profileError) {
