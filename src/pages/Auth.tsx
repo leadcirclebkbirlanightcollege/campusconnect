@@ -16,6 +16,7 @@ import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
+import { lovable } from "@/integrations/lovable";
 
 /* ── Feature chip ─────────────────────────────────────────────── */
 const FEATURES = [
