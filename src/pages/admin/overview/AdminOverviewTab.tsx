@@ -2,8 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock,
-  GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles,
+  AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock, Coins,
+  GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles, Store,
   TriangleAlert, TrendingUp, Users, Zap, FileEdit, BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
