@@ -85,7 +85,7 @@ export default function SuperAdminLayout() {
           <SidebarInset className="flex flex-col min-w-0">
             {/* ── Topbar ── */}
             <header className={cn(
-              "sticky top-0 z-40 glass-surface border-b border-border-subtle/70",
+              "sticky top-0 z-40 app-header-safe glass-surface border-b border-border-subtle/70",
               "shadow-[0_1px_0_hsl(var(--border-subtle)/0.8)]",
             )}>
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
