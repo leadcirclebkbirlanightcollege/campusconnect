@@ -101,7 +101,7 @@ export default function FacultyLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between h-14 px-4 border-b border-border/40 bg-card/50 shrink-0">
+        <header className="md:hidden app-header-safe flex items-center justify-between h-14 px-4 border-b border-border/40 bg-card/50 shrink-0">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-4 w-4" />
           </Button>
