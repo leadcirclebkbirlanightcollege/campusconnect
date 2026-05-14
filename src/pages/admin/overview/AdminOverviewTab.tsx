@@ -2,8 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock,
-  GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles,
+  AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock, Coins,
+  GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles, Store,
   TriangleAlert, TrendingUp, Users, Zap, FileEdit, BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -340,10 +340,12 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
             </div>
             <div className="p-2 space-y-0.5">
               <QuickAction icon={BookOpen} label="Create Lecture" to="/platform/admin/lectures" color="text-primary" bg="bg-primary/10" />
-              <QuickAction icon={Users} label="Manage Students" to="/platform/admin/students" color="text-success" bg="bg-success/10" />
+              <QuickAction icon={Users} label="Add Student" to="/platform/admin/students" color="text-success" bg="bg-success/10" />
               <QuickAction icon={GraduationCap} label="Add Faculty" to="/platform/admin/faculty" color="text-accent" bg="bg-accent/10" />
               <QuickAction icon={Megaphone} label="Announcements" to="/platform/admin/announcements" color="text-premium" bg="bg-premium/10" />
-              <QuickAction icon={ScanLine} label="ID Scanner" to="/platform/admin/scanner" color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={Store} label="Approve Stalls" to="/platform/admin/stalls" color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={Coins} label="Approve Point Claims" to="/platform/admin/point-claims" color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={ScanLine} label="ID Scanner" to="/platform/admin/scanner" color="text-success" bg="bg-success/10" />
               <QuickAction icon={FileEdit} label="Corrections" to="/platform/admin/attendance/corrections" color="text-danger" bg="bg-danger/10" />
             </div>
           </div>
