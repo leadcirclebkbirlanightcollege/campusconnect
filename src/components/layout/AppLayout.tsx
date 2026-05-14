@@ -190,7 +190,7 @@ export default function AppLayout() {
             {/* ── Command Header ─────────────────────────────────── */}
             <header
               className={cn(
-                "sticky top-0 z-40",
+                "sticky top-0 z-40 app-header-safe",
                 "glass-surface border-b border-border-subtle/70",
                 "shadow-[0_1px_0_hsl(var(--border-subtle)/0.8)]",
               )}
