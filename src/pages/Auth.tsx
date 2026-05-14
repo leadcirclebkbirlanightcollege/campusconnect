@@ -208,6 +208,25 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error("Google sign-in failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+      // result.redirected: browser will navigate away
+      // success: onAuthStateChange will route via redirectToDashboard
+    } catch {
+      toast.error("Google sign-in failed");
+      setLoading(false);
+    }
+  };
+
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
