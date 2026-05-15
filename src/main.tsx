@@ -19,4 +19,17 @@ import "./index.css";
   }
 })();
 
+// Globally swallow benign AbortErrors (e.g. Supabase fetch cancelled on unmount)
+// so they don't surface as unhandled promise rejections in the console / runtime panel.
+if (typeof window !== "undefined") {
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason: any = event.reason;
+    const name = reason?.name?.toLowerCase?.() ?? "";
+    const msg = (reason?.message ?? String(reason ?? "")).toLowerCase();
+    if (name === "aborterror" || msg.includes("aborted") || msg.includes("signal is aborted")) {
+      event.preventDefault();
+    }
+  });
+}
+
 createRoot(document.getElementById("root")!).render(<App />);
