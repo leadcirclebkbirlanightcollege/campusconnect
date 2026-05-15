@@ -19,6 +19,14 @@ export function useGlobalQueryErrors() {
       if (!error) return;
 
       const msg = error.message?.toLowerCase() ?? "";
+      const name = (error as any)?.name?.toLowerCase?.() ?? "";
+
+      // Suppress benign abort errors (component unmount / query cancellation)
+      if (
+        name === "aborterror" ||
+        msg.includes("aborted") ||
+        msg.includes("signal is aborted")
+      ) return;
 
       // Suppress auth-related errors (handled by AuthProvider)
       if (msg.includes("401") || msg.includes("unauthorized") || msg.includes("jwt")) return;
