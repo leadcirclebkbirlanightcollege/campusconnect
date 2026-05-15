@@ -789,3 +789,115 @@
   }
 }
 
+
+/* ══════════════════════════════════════════════
+   PHASE 8 — PREMIUM POLISH LAYER
+   Final consistency, microinteractions & motion refinement
+══════════════════════════════════════════════ */
+@layer utilities {
+  /* Unified premium focus ring — apply to inputs, buttons, links */
+  .focus-premium {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    transition: box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  /* Interactive card — hover lift + border glow + soft press */
+  .card-interactive {
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
+    will-change: transform;
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.35);
+    box-shadow:
+      0 8px 24px -8px hsl(var(--primary) / 0.18),
+      0 2px 6px -2px hsl(220 40% 10% / 0.08);
+  }
+  .card-interactive:active {
+    transform: translateY(0) scale(0.995);
+    transition-duration: var(--duration-fast);
+  }
+
+  /* Subtle gradient hairline border — premium accent */
+  .border-gradient-soft {
+    position: relative;
+    background-clip: padding-box;
+  }
+  .border-gradient-soft::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.35), hsl(var(--gradient-to) / 0.15));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Stagger fade for lists — pair with .stagger-item children */
+  .stagger-list > .stagger-item {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: stagger-fade var(--duration-slow, 200ms) var(--ease-out) both;
+  }
+  .stagger-list > .stagger-item:nth-child(1)  { animation-delay:  20ms; }
+  .stagger-list > .stagger-item:nth-child(2)  { animation-delay:  60ms; }
+  .stagger-list > .stagger-item:nth-child(3)  { animation-delay: 100ms; }
+  .stagger-list > .stagger-item:nth-child(4)  { animation-delay: 140ms; }
+  .stagger-list > .stagger-item:nth-child(5)  { animation-delay: 180ms; }
+  .stagger-list > .stagger-item:nth-child(6)  { animation-delay: 220ms; }
+  .stagger-list > .stagger-item:nth-child(7)  { animation-delay: 260ms; }
+  .stagger-list > .stagger-item:nth-child(8)  { animation-delay: 300ms; }
+  .stagger-list > .stagger-item:nth-child(n+9){ animation-delay: 340ms; }
+
+  /* Smoother input border focus */
+  .input-premium {
+    transition:
+      border-color var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+  .input-premium:focus-within,
+  .input-premium:focus {
+    border-color: hsl(var(--primary) / 0.55);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+  }
+
+  /* Premium status pills */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium;
+    border: 1px solid transparent;
+  }
+  .status-pill::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 9999px;
+    background: currentColor;
+    box-shadow: 0 0 0 3px currentColor;
+    opacity: 0.18;
+  }
+
+  /* Soft scroll-fade mask for horizontal strips */
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+            mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+}
+
+@keyframes stagger-fade {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Universal skeleton upgrade — smoother shimmer everywhere */
+.animate-pulse {
+  animation: shimmer-v2 1.8s linear infinite;
+  background: linear-gradient(
+    110deg,
+    hsl(var(--surface-2)) 8%,
+    hsl(var(--surface-3)) 18%,
+    hsl(var(--surface-2)) 33%
+  );
+  background-size: 200% 100%;
+}

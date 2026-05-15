@@ -1,12 +1,18 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Adds hover lift, border glow, and press feedback for clickable cards. */
+  interactive?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
         "rounded-2xl border border-border-subtle bg-surface-1 shadow-sm transition-all duration-base ease-out",
+        interactive && "card-interactive cursor-pointer",
         className,
       )}
       {...props}
