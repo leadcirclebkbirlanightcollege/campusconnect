@@ -39,6 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import StudentProfileDialog from "./StudentProfileDialog";
 import CreateStudentDialog from "./CreateStudentDialog";
 import BulkImportDialog from "./BulkImportDialog";
+import DangerDeleteAllStudentsPanel from "@/components/admin/DangerDeleteAllStudentsPanel";
 
 export type StudentRow = {
   id: string;
@@ -618,6 +619,17 @@ export default function StudentManagementTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Advanced Operations — Danger Zone */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-1">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Advanced Operations
+          </h2>
+          <div className="flex-1 h-px bg-border-subtle" />
+        </div>
+        <DangerDeleteAllStudentsPanel scope="college" />
+      </div>
     </div>
   );
 }
