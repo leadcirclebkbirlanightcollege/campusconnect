@@ -12,7 +12,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import ResetStudentsPanel from "@/pages/platform/components/ResetStudentsPanel";
+import DangerDeleteAllStudentsPanel from "@/components/admin/DangerDeleteAllStudentsPanel";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 type AuditEntry = {
