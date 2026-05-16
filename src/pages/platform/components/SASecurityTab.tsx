@@ -479,7 +479,7 @@ export default function SASecurityTab() {
       </div>
 
       {/* Danger zone */}
-      <ResetStudentsPanel />
+      <DangerDeleteAllStudentsPanel scope="platform" />
     </div>
   );
 }
