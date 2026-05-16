@@ -39,6 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import StudentProfileDialog from "./StudentProfileDialog";
 import CreateStudentDialog from "./CreateStudentDialog";
 import BulkImportDialog from "./BulkImportDialog";
+import DangerDeleteAllStudentsPanel from "@/components/admin/DangerDeleteAllStudentsPanel";
 
 export type StudentRow = {
   id: string;
