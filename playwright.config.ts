@@ -43,25 +43,30 @@ export default defineConfig({
     timezoneId: "UTC",
   },
   projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "mobile-light",
       use: { ...devices["iPhone 13"], colorScheme: "light" },
       metadata: { theme: "light", form: "mobile" },
+      dependencies: ["setup"],
     },
     {
       name: "mobile-dark",
       use: { ...devices["iPhone 13"], colorScheme: "dark" },
       metadata: { theme: "dark", form: "mobile" },
+      dependencies: ["setup"],
     },
     {
       name: "desktop-light",
       use: { viewport: { width: 1440, height: 900 }, colorScheme: "light" },
       metadata: { theme: "light", form: "desktop" },
+      dependencies: ["setup"],
     },
     {
       name: "desktop-dark",
       use: { viewport: { width: 1440, height: 900 }, colorScheme: "dark" },
       metadata: { theme: "dark", form: "desktop" },
+      dependencies: ["setup"],
     },
   ],
   webServer: process.env.VR_BASE_URL
