@@ -93,6 +93,7 @@ const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/Ad
 const AdminExportPage              = lazy(() => import("@/pages/admin/reports/AdminExportPage"));
 const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/AdminChannelsPage"));
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
+const AdminPromotionPage           = lazy(() => import("@/pages/admin/promotion/AdminPromotionPage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
@@ -189,6 +190,7 @@ export default function AppRouter() {
             <Route path="students"                 element={<AdminStudentsPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />
+            <Route path="promotion"                element={<AdminPromotionPage />} />
             <Route path="programmes"               element={<AdminProgrammesPage />} />
             <Route path="allotments"               element={<AdminAllotmentsPage />} />
             <Route path="faculty"                  element={<AdminFacultyPage />} />
