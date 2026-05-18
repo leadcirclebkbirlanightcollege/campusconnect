@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_promotion_runs: {
+        Row: {
+          college_id: string
+          created_at: string
+          details: Json
+          from_session: string | null
+          id: string
+          performed_by: string
+          reversed_at: string | null
+          reversed_by: string | null
+          to_session: string
+          total_graduated: number
+          total_promoted: number
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          details?: Json
+          from_session?: string | null
+          id?: string
+          performed_by: string
+          reversed_at?: string | null
+          reversed_by?: string | null
+          to_session: string
+          total_graduated?: number
+          total_promoted?: number
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          details?: Json
+          from_session?: string | null
+          id?: string
+          performed_by?: string
+          reversed_at?: string | null
+          reversed_by?: string | null
+          to_session?: string
+          total_graduated?: number
+          total_promoted?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_promotion_runs_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_deletion_requests: {
         Row: {
           admin_note: string | null
@@ -496,6 +546,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "channels_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_promotion_rules: {
+        Row: {
+          college_id: string
+          created_at: string
+          created_by: string | null
+          from_class: string
+          graduates: boolean
+          id: string
+          next_year: number | null
+          to_class: string | null
+          updated_at: string
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          created_by?: string | null
+          from_class: string
+          graduates?: boolean
+          id?: string
+          next_year?: number | null
+          to_class?: string | null
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          created_by?: string | null
+          from_class?: string
+          graduates?: boolean
+          id?: string
+          next_year?: number | null
+          to_class?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_promotion_rules_college_id_fkey"
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
@@ -1885,6 +1979,7 @@ export type Database = {
           class_name: string | null
           college_id: string | null
           created_at: string
+          current_year: number | null
           deleted_at: string | null
           department: string | null
           department_id: string | null
@@ -1893,6 +1988,7 @@ export type Database = {
           enrollment_status: string | null
           erp_student_id: string | null
           gender: string | null
+          graduation_status: string
           graduation_year: number | null
           guardian_name: string | null
           id: string
@@ -1906,6 +2002,7 @@ export type Database = {
           phone: string | null
           profile_completed: boolean
           programme_id: string | null
+          promoted_at: string | null
           roll_no: string | null
           status: string
           student_id: string | null
@@ -1926,6 +2023,7 @@ export type Database = {
           class_name?: string | null
           college_id?: string | null
           created_at?: string
+          current_year?: number | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
@@ -1934,6 +2032,7 @@ export type Database = {
           enrollment_status?: string | null
           erp_student_id?: string | null
           gender?: string | null
+          graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
           id?: string
@@ -1947,6 +2046,7 @@ export type Database = {
           phone?: string | null
           profile_completed?: boolean
           programme_id?: string | null
+          promoted_at?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
@@ -1967,6 +2067,7 @@ export type Database = {
           class_name?: string | null
           college_id?: string | null
           created_at?: string
+          current_year?: number | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
@@ -1975,6 +2076,7 @@ export type Database = {
           enrollment_status?: string | null
           erp_student_id?: string | null
           gender?: string | null
+          graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
           id?: string
@@ -1988,6 +2090,7 @@ export type Database = {
           phone?: string | null
           profile_completed?: boolean
           programme_id?: string | null
+          promoted_at?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
