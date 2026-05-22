@@ -23,8 +23,6 @@ const FacultyProfile       = lazy(() => import("@/pages/faculty/FacultyProfile")
 const FacultyAnalytics     = lazy(() => import("@/pages/faculty/FacultyAnalytics"));
 const FacultyAssignments   = lazy(() => import("@/pages/faculty/FacultyAssignments"));
 
-// ── Collaboration Hub ─────────────────────────────────────────────────────────
-const CollaborationHub     = lazy(() => import("@/pages/student/messages/CollaborationHub"));
 
 // ── Student pages ─────────────────────────────────────────────────────────────
 const StudentDashboard    = lazy(() => import("@/pages/student/StudentDashboard"));
@@ -39,10 +37,6 @@ const ProgrammesList      = lazy(() => import("@/pages/student/programmes/Progra
 const ProgrammeDetail     = lazy(() => import("@/pages/student/programmes/ProgrammeDetail"));
 const StudentAnnouncementsFeed = lazy(() => import("@/pages/student/announcements/StudentAnnouncementsFeed"));
 const StudentEventsList   = lazy(() => import("@/pages/student/events/StudentEventsList"));
-const StudentPollsList     = lazy(() => import("@/pages/student/polls/StudentPollsList"));
-const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentDailyContent"));
-const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
-const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
 const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
 const StudentTimetable     = lazy(() => import("@/pages/student/StudentTimetable"));
 const StudentDocuments     = lazy(() => import("@/pages/student/StudentDocuments"));
@@ -79,8 +73,6 @@ const AdminAttendanceMonthlyPage   = lazy(() => import("@/pages/admin/pages/Admi
 const AdminAttendanceCorrectionsPage = lazy(() => import("@/pages/admin/pages/AdminAttendanceCorrectionsPage"));
 const AdminAnnouncementsPage       = lazy(() => import("@/pages/admin/pages/AdminAnnouncementsPage"));
 const AdminEventsPage              = lazy(() => import("@/pages/admin/pages/AdminEventsPage"));
-const AdminPollsPage               = lazy(() => import("@/pages/admin/pages/AdminPollsPage"));
-const AdminDailyContentPage        = lazy(() => import("@/pages/admin/pages/AdminDailyContentPage"));
 const AdminNotificationsPage       = lazy(() => import("@/pages/admin/pages/AdminNotificationsPage"));
 const AdminChallengesPage          = lazy(() => import("@/pages/admin/pages/AdminChallengesPage"));
 const AdminPointsPage              = lazy(() => import("@/pages/admin/pages/AdminPointsPage"));
@@ -91,7 +83,7 @@ const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/Ad
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
 const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
 const AdminExportPage              = lazy(() => import("@/pages/admin/reports/AdminExportPage"));
-const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/AdminChannelsPage"));
+
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
 const AdminPromotionPage           = lazy(() => import("@/pages/admin/promotion/AdminPromotionPage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
