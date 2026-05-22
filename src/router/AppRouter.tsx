@@ -23,8 +23,6 @@ const FacultyProfile       = lazy(() => import("@/pages/faculty/FacultyProfile")
 const FacultyAnalytics     = lazy(() => import("@/pages/faculty/FacultyAnalytics"));
 const FacultyAssignments   = lazy(() => import("@/pages/faculty/FacultyAssignments"));
 
-// ── Collaboration Hub ─────────────────────────────────────────────────────────
-const CollaborationHub     = lazy(() => import("@/pages/student/messages/CollaborationHub"));
 
 // ── Student pages ─────────────────────────────────────────────────────────────
 const StudentDashboard    = lazy(() => import("@/pages/student/StudentDashboard"));
@@ -39,10 +37,6 @@ const ProgrammesList      = lazy(() => import("@/pages/student/programmes/Progra
 const ProgrammeDetail     = lazy(() => import("@/pages/student/programmes/ProgrammeDetail"));
 const StudentAnnouncementsFeed = lazy(() => import("@/pages/student/announcements/StudentAnnouncementsFeed"));
 const StudentEventsList   = lazy(() => import("@/pages/student/events/StudentEventsList"));
-const StudentPollsList     = lazy(() => import("@/pages/student/polls/StudentPollsList"));
-const StudentDailyContent  = lazy(() => import("@/pages/student/content/StudentDailyContent"));
-const StudentAchievements  = lazy(() => import("@/pages/student/StudentAchievements"));
-const StudentAnalytics     = lazy(() => import("@/pages/student/StudentAnalytics"));
 const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignments"));
 const StudentTimetable     = lazy(() => import("@/pages/student/StudentTimetable"));
 const StudentDocuments     = lazy(() => import("@/pages/student/StudentDocuments"));
@@ -50,7 +44,7 @@ const StudentResults       = lazy(() => import("@/pages/student/StudentResults")
 const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
-const StudentCheckin       = lazy(() => import("@/pages/student/StudentCheckin"));
+
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
 const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
@@ -79,8 +73,6 @@ const AdminAttendanceMonthlyPage   = lazy(() => import("@/pages/admin/pages/Admi
 const AdminAttendanceCorrectionsPage = lazy(() => import("@/pages/admin/pages/AdminAttendanceCorrectionsPage"));
 const AdminAnnouncementsPage       = lazy(() => import("@/pages/admin/pages/AdminAnnouncementsPage"));
 const AdminEventsPage              = lazy(() => import("@/pages/admin/pages/AdminEventsPage"));
-const AdminPollsPage               = lazy(() => import("@/pages/admin/pages/AdminPollsPage"));
-const AdminDailyContentPage        = lazy(() => import("@/pages/admin/pages/AdminDailyContentPage"));
 const AdminNotificationsPage       = lazy(() => import("@/pages/admin/pages/AdminNotificationsPage"));
 const AdminChallengesPage          = lazy(() => import("@/pages/admin/pages/AdminChallengesPage"));
 const AdminPointsPage              = lazy(() => import("@/pages/admin/pages/AdminPointsPage"));
@@ -91,7 +83,7 @@ const AdminClassesPage             = lazy(() => import("@/pages/admin/classes/Ad
 const AdminFacultyPage             = lazy(() => import("@/pages/admin/pages/AdminFacultyPage"));
 const AdminReportsPage             = lazy(() => import("@/pages/admin/reports/AdminReportsPage"));
 const AdminExportPage              = lazy(() => import("@/pages/admin/reports/AdminExportPage"));
-const AdminChannelsPage            = lazy(() => import("@/pages/admin/channels/AdminChannelsPage"));
+
 const AdminTimetablePage           = lazy(() => import("@/pages/admin/timetable/AdminTimetablePage"));
 const AdminPromotionPage           = lazy(() => import("@/pages/admin/promotion/AdminPromotionPage"));
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
@@ -203,8 +195,6 @@ export default function AppRouter() {
             <Route path="documents"                element={<AdminDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
-            <Route path="polls"                    element={<AdminPollsPage />} />
-            <Route path="daily-content"            element={<AdminDailyContentPage />} />
             <Route path="notifications"            element={<AdminNotificationsPage />} />
             <Route path="challenges"               element={<AdminChallengesPage />} />
             <Route path="points"                   element={<AdminPointsPage />} />
@@ -214,15 +204,18 @@ export default function AppRouter() {
             <Route path="settings"                 element={<AdminSettingsPage />} />
             <Route path="reports"                  element={<AdminReportsPage />} />
             <Route path="reports/export"           element={<AdminExportPage />} />
-            <Route path="channels"                 element={<AdminChannelsPage />} />
             <Route path="permissions"              element={<AdminPermissionsPage />} />
             <Route path="erp-sync"                 element={<Navigate to="/platform/admin/students" replace />} />
-            {/* Legacy redirects */}
+            {/* Legacy redirects (removed modules) */}
+            <Route path="polls"          element={<Navigate to="/platform/admin/dashboard" replace />} />
+            <Route path="daily-content"  element={<Navigate to="/platform/admin/dashboard" replace />} />
+            <Route path="channels"       element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
           </Route>
+
 
           {/* ── Student (/app/*) ──────────────────────────────────────────────── */}
           <Route
@@ -244,7 +237,6 @@ export default function AppRouter() {
             <Route path="inbox"                  element={<StudentInbox />} />
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
-            <Route path="analytics"              element={<StudentAnalytics />} />
             <Route path="assignments"            element={<StudentAssignments />} />
             <Route path="timetable"              element={<StudentTimetable />} />
             <Route path="documents"              element={<StudentDocuments />} />
@@ -256,21 +248,22 @@ export default function AppRouter() {
             <Route path="programmes"             element={<FeatureGate feature="programmes"><ProgrammesList /></FeatureGate>} />
             <Route path="programmes/:id"         element={<FeatureGate feature="programmes"><ProgrammeDetail /></FeatureGate>} />
             <Route path="leaderboard"            element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
-            <Route path="leaderboard/weekly"     element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
-            <Route path="leaderboard/all-time"   element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
             <Route path="announcements"          element={<FeatureGate feature="announcements"><StudentAnnouncementsFeed /></FeatureGate>} />
             <Route path="events"                 element={<FeatureGate feature="events"><StudentEventsList /></FeatureGate>} />
-            <Route path="polls"                  element={<FeatureGate feature="polls"><StudentPollsList /></FeatureGate>} />
-            <Route path="daily"                  element={<FeatureGate feature="daily_content"><StudentDailyContent /></FeatureGate>} />
-            <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
-            <Route path="checkin"                element={<StudentCheckin />} />
             <Route path="points"                 element={<StudentPointsPage />} />
             <Route path="ecell"                  element={<StudentEcellHub />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="install"                element={<PwaInstallPage />} />
-            <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
-            <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
+            {/* Removed modules — redirect to dashboard */}
+            <Route path="analytics"     element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="polls"         element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="daily"         element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="achievements"  element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="checkin"       element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="messages"      element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="messages/*"    element={<Navigate to="/app/dashboard" replace />} />
           </Route>
+
 
           {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
           <Route

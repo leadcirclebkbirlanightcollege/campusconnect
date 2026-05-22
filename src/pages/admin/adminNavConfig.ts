@@ -70,7 +70,6 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { title: "Announcements",  url: "/platform/admin/announcements",  icon: "Megaphone" },
       { title: "Events",         url: "/platform/admin/events",         icon: "CalendarDays" },
-      { title: "Channels",       url: "/platform/admin/channels",       icon: "Hash" },
       { title: "Notifications",  url: "/platform/admin/notifications",  icon: "Bell" },
     ],
   },
@@ -85,17 +84,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { title: "Point Claims",    url: "/platform/admin/point-claims",    icon: "Coins" },
     ],
   },
-  {
-    label: "Engagement",
-    defaultOpen: false,
-    items: [
-      { title: "Polls",          url: "/platform/admin/polls",                 icon: "BarChart3" },
-      { title: "Challenges",     url: "/platform/admin/challenges",            icon: "Trophy" },
-      { title: "Leaderboard",    url: "/platform/admin/dashboard#leaderboard", icon: "Trophy" },
-      { title: "Achievements",   url: "/platform/admin/challenges",            icon: "Trophy" },
-      { title: "Daily Content",  url: "/platform/admin/daily-content",         icon: "Sparkles" },
-    ],
-  },
+
   {
     label: "System",
     defaultOpen: false,

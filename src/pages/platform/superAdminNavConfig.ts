@@ -18,7 +18,6 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
     label: "Command",
     items: [
       { title: "Overview",           url: "/platform/admin-control/dashboard",         icon: "LayoutDashboard" },
-      { title: "System Map",         url: "/platform/admin-control/system-map",        icon: "Network" },
       { title: "System Health",      url: "/platform/admin-control/system-health",     icon: "Activity" },
     ],
   },
@@ -36,25 +35,16 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
     ],
   },
   {
-    label: "Academic Monitor",
-    items: [
-      { title: "Lectures",           url: "/platform/admin-control/lectures",           icon: "BookOpen" },
-      { title: "Attendance",         url: "/platform/admin-control/attendance",         icon: "CheckSquare" },
-      { title: "Leaderboard",        url: "/platform/admin-control/leaderboard",        icon: "Trophy" },
-      { title: "Achievements",       url: "/platform/admin-control/achievements",       icon: "Award" },
-    ],
-  },
-  {
     label: "Platform",
     items: [
       { title: "Leads & CRM",       url: "/platform/admin-control/leads",              icon: "Target" },
       { title: "Notifications",      url: "/platform/admin-control/notifications",      icon: "Bell" },
-      { title: "Analytics",          url: "/platform/admin-control/analytics",          icon: "BarChart3" },
       { title: "Security",           url: "/platform/admin-control/security",           icon: "Shield" },
       { title: "Platform Settings",  url: "/platform/admin-control/platform-settings",  icon: "Settings" },
     ],
   },
 ];
+
 
 export interface PageMeta { title: string; description: string }
 

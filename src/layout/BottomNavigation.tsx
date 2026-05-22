@@ -1,14 +1,14 @@
 /**
  * BottomNavigation — premium mobile bottom nav
- * 5 tabs: Home · Lectures · Messages · Leaderboard · Profile
+ * 5 tabs: Home · Lectures · Timetable · Attendance · Profile
  */
 
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   BookOpen,
-  MessageSquare,
-  Trophy,
+  CalendarDays,
+  CheckSquare,
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,10 +22,10 @@ interface NavTab {
 }
 
 const TABS: NavTab[] = [
-  { label: "Home",       href: "/app/dashboard",   icon: LayoutDashboard, match: ["/app/dashboard", "/app/analytics", "/app/timetable", "/app/results"] },
-  { label: "Lectures",   href: "/app/lectures",    icon: BookOpen,         match: ["/app/lectures", "/app/attendance", "/app/assignments"] },
-  { label: "Messages",   href: "/app/messages",    icon: MessageSquare,    match: ["/app/messages"] },
-  { label: "Leaderboard",href: "/app/leaderboard", icon: Trophy,           match: ["/app/leaderboard", "/app/achievements"] },
+  { label: "Home",       href: "/app/dashboard",   icon: LayoutDashboard, match: ["/app/dashboard"] },
+  { label: "Lectures",   href: "/app/lectures",    icon: BookOpen,         match: ["/app/lectures", "/app/assignments"] },
+  { label: "Timetable",  href: "/app/timetable",   icon: CalendarDays,     match: ["/app/timetable"] },
+  { label: "Attendance", href: "/app/attendance",  icon: CheckSquare,      match: ["/app/attendance"] },
   { label: "Profile",    href: "/app/settings",    icon: UserRound,        match: ["/app/settings", "/app/profile", "/app/id-card"] },
 ];
 
@@ -37,12 +37,13 @@ function isActive(pathname: string, tab: NavTab): boolean {
 }
 
 function prefetchRoute(path: string): void {
-  if (path.includes("dashboard"))  void import("@/pages/student/StudentDashboard");
-  else if (path.includes("lecture")) void import("@/pages/student/lectures/LecturesList");
-  else if (path.includes("message")) void import("@/pages/student/messages/CollaborationHub");
-  else if (path.includes("leaderboard")) void import("@/pages/Leaderboard");
-  else if (path.includes("settings")) void import("@/pages/student/StudentProfile");
+  if (path.includes("dashboard"))       void import("@/pages/student/StudentDashboard");
+  else if (path.includes("lecture"))    void import("@/pages/student/lectures/LecturesList");
+  else if (path.includes("timetable"))  void import("@/pages/student/StudentTimetable");
+  else if (path.includes("attendance")) void import("@/pages/student/StudentAttendanceHistory");
+  else if (path.includes("settings"))   void import("@/pages/student/StudentProfile");
 }
+
 
 export function BottomNavigation() {
   const { pathname } = useLocation();
