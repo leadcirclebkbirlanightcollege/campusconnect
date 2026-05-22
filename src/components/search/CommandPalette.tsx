@@ -91,24 +91,6 @@ export default function CommandPalette() {
         });
       });
 
-      // Search channels
-      const { data: channels } = await supabase
-        .from("channels")
-        .select("id, name, type")
-        .ilike("name", `%${q}%`)
-        .eq("is_active", true)
-        .limit(5);
-
-      channels?.forEach((c) => {
-        items.push({
-          id: `channel-${c.id}`,
-          label: c.name,
-          description: c.type,
-          icon: <MessageSquare className="h-4 w-4 text-muted-foreground" />,
-          href: `/app/messages`,
-          category: "Channels",
-        });
-      });
 
       return items;
     },
