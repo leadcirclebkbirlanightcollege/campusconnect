@@ -195,8 +195,6 @@ export default function AppRouter() {
             <Route path="documents"                element={<AdminDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
-            <Route path="polls"                    element={<AdminPollsPage />} />
-            <Route path="daily-content"            element={<AdminDailyContentPage />} />
             <Route path="notifications"            element={<AdminNotificationsPage />} />
             <Route path="challenges"               element={<AdminChallengesPage />} />
             <Route path="points"                   element={<AdminPointsPage />} />
@@ -206,15 +204,18 @@ export default function AppRouter() {
             <Route path="settings"                 element={<AdminSettingsPage />} />
             <Route path="reports"                  element={<AdminReportsPage />} />
             <Route path="reports/export"           element={<AdminExportPage />} />
-            <Route path="channels"                 element={<AdminChannelsPage />} />
             <Route path="permissions"              element={<AdminPermissionsPage />} />
             <Route path="erp-sync"                 element={<Navigate to="/platform/admin/students" replace />} />
-            {/* Legacy redirects */}
+            {/* Legacy redirects (removed modules) */}
+            <Route path="polls"          element={<Navigate to="/platform/admin/dashboard" replace />} />
+            <Route path="daily-content"  element={<Navigate to="/platform/admin/dashboard" replace />} />
+            <Route path="channels"       element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
           </Route>
+
 
           {/* ── Student (/app/*) ──────────────────────────────────────────────── */}
           <Route
@@ -236,7 +237,6 @@ export default function AppRouter() {
             <Route path="inbox"                  element={<StudentInbox />} />
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
-            <Route path="analytics"              element={<StudentAnalytics />} />
             <Route path="assignments"            element={<StudentAssignments />} />
             <Route path="timetable"              element={<StudentTimetable />} />
             <Route path="documents"              element={<StudentDocuments />} />
@@ -248,21 +248,22 @@ export default function AppRouter() {
             <Route path="programmes"             element={<FeatureGate feature="programmes"><ProgrammesList /></FeatureGate>} />
             <Route path="programmes/:id"         element={<FeatureGate feature="programmes"><ProgrammeDetail /></FeatureGate>} />
             <Route path="leaderboard"            element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
-            <Route path="leaderboard/weekly"     element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
-            <Route path="leaderboard/all-time"   element={<FeatureGate feature="leaderboard"><Leaderboard /></FeatureGate>} />
             <Route path="announcements"          element={<FeatureGate feature="announcements"><StudentAnnouncementsFeed /></FeatureGate>} />
             <Route path="events"                 element={<FeatureGate feature="events"><StudentEventsList /></FeatureGate>} />
-            <Route path="polls"                  element={<FeatureGate feature="polls"><StudentPollsList /></FeatureGate>} />
-            <Route path="daily"                  element={<FeatureGate feature="daily_content"><StudentDailyContent /></FeatureGate>} />
-            <Route path="achievements"           element={<FeatureGate feature="achievements"><StudentAchievements /></FeatureGate>} />
-            <Route path="checkin"                element={<StudentCheckin />} />
             <Route path="points"                 element={<StudentPointsPage />} />
             <Route path="ecell"                  element={<StudentEcellHub />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="install"                element={<PwaInstallPage />} />
-            <Route path="messages"               element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
-            <Route path="messages/*"             element={<FeatureGate feature="messages"><CollaborationHub /></FeatureGate>} />
+            {/* Removed modules — redirect to dashboard */}
+            <Route path="analytics"     element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="polls"         element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="daily"         element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="achievements"  element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="checkin"       element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="messages"      element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="messages/*"    element={<Navigate to="/app/dashboard" replace />} />
           </Route>
+
 
           {/* ── Faculty (/faculty/*) ──────────────────────────────────────────── */}
           <Route
