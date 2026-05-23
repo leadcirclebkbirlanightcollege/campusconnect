@@ -108,14 +108,27 @@ const Auth = () => {
 
   const redirectToDashboard = async (userId: string) => {
     try {
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
-      const role = data?.role;
-      if (role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
-      else if (role === "admin") navigate("/platform/admin/dashboard", { replace: true });
-      else if (role === "faculty") navigate("/faculty/dashboard", { replace: true });
-      else navigate("/app/dashboard", { replace: true });
+      const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
+      const r = role?.role;
+      if (r === "super_admin") return navigate("/platform/admin-control/dashboard", { replace: true });
+      if (r === "admin")       return navigate("/platform/admin/dashboard", { replace: true });
+      if (r === "faculty")     return navigate("/faculty/dashboard", { replace: true });
+
+      // Student: route based on onboarding/approval state
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_completed, approval_status, college_assigned")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!profile || !profile.profile_completed) {
+        navigate("/onboarding-wizard", { replace: true });
+      } else if (profile.approval_status !== "approved" || !profile.college_assigned) {
+        navigate("/pending-approval", { replace: true });
+      } else {
+        navigate("/app/dashboard", { replace: true });
+      }
     } catch {
-      navigate("/app/dashboard", { replace: true });
+      navigate("/onboarding-wizard", { replace: true });
     }
     // Fire-and-forget: log login activity + retention
     setTimeout(() => {

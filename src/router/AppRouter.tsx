@@ -190,6 +190,7 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
+            <Route path="verification"             element={<AdminStudentVerificationPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />
             <Route path="promotion"                element={<AdminPromotionPage />} />

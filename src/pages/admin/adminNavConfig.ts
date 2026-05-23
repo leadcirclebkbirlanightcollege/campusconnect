@@ -37,6 +37,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     defaultOpen: true,
     items: [
       { title: "Students",       url: "/platform/admin/students",       icon: "Users" },
+      { title: "Verification",   url: "/platform/admin/verification",   icon: "UserCheck", badge: true },
       { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
       { title: "Timetable",      url: "/platform/admin/timetable",      icon: "CalendarDays" },
@@ -103,6 +104,7 @@ export interface PageMeta { title: string; description: string }
 const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/dashboard":              { title: "Command Center",     description: "Overview & key metrics" },
   "/platform/admin/students":               { title: "Students",           description: "Manage student accounts" },
+  "/platform/admin/verification":           { title: "Student Verification", description: "Approve pending student registrations" },
   "/platform/admin/faculty":                { title: "Faculty",            description: "Manage faculty members" },
   "/platform/admin/create-student":         { title: "Create Student",     description: "Add a new student" },
   "/platform/admin/lectures":               { title: "Lectures",           description: "Schedule & manage lectures" },
