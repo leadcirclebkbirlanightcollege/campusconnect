@@ -187,33 +187,30 @@ const Auth = () => {
       const password = signupPassword;
       if (!name) throw new Error("Name is required");
       if (!email) throw new Error("Email is required");
-      if (!password) throw new Error("Password is required");
+      if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email, password,
-        options: { emailRedirectTo: window.location.origin },
+        options: {
+          emailRedirectTo: `${window.location.origin}/onboarding-wizard`,
+          data: { full_name: name },
+        },
       });
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
+      if (!authData.user) throw new Error("Failed to create account");
 
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: authData.user.id, name, email,
-        phone: signupPhone || null,
-        student_id: signupStudentId || null,
-        department: signupDepartment || null,
-        class_name: signupClass || null,
-        college_id: signupCollegeId || null,
-      });
-      if (profileError) throw profileError;
+      // Minimal profile row — the rest is collected in /onboarding-wizard
+      await supabase.from("profiles").upsert(
+        { user_id: authData.user.id, name, email, profile_completed: false, approval_status: "pending" },
+        { onConflict: "user_id" }
+      );
+      await supabase.from("user_roles").upsert(
+        { user_id: authData.user.id, role: "student" },
+        { onConflict: "user_id,role" }
+      );
 
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id, role: "student",
-        college_id: signupCollegeId || null,
-      });
-      if (roleError) throw roleError;
-
-      toast.success("Account created! 🎉");
-      navigate("/app/dashboard", { replace: true });
+      toast.success("Account created — let's set up your profile");
+      navigate("/onboarding-wizard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
