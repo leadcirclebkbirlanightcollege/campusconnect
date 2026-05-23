@@ -9,6 +9,12 @@ import AppLayout from "@/components/layout/AppLayout";
 
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
+import OnboardingGate from "@/components/auth/OnboardingGate";
+
+const OnboardingWizard = lazy(() => import("@/pages/onboarding/OnboardingWizard"));
+const PendingApproval  = lazy(() => import("@/pages/PendingApproval"));
+const AdminStudentVerificationPage = lazy(() => import("@/pages/admin/verification/AdminStudentVerificationPage"));
+
 
 
 // ── Faculty pages ──────────────────────────────────────────────────────────────
@@ -123,6 +129,10 @@ export default function AppRouter() {
           <Route path="/auth/login"  element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/auth/signup" element={<PublicRoute><Auth /></PublicRoute>} />
 
+          {/* Onboarding & approval gate (signed-in but not yet approved) */}
+          <Route path="/onboarding-wizard" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
+          <Route path="/pending-approval"  element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
+
           {/* Demo, Help & Public (public) */}
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/help" element={<HelpSupport />} />
@@ -180,6 +190,7 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
+            <Route path="verification"             element={<AdminStudentVerificationPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />
             <Route path="promotion"                element={<AdminPromotionPage />} />
@@ -222,7 +233,9 @@ export default function AppRouter() {
             path="/app"
             element={
               <ProtectedRoute>
-                <AppLayout />
+                <OnboardingGate>
+                  <AppLayout />
+                </OnboardingGate>
               </ProtectedRoute>
             }
           >

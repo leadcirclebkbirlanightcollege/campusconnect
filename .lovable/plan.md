@@ -1,83 +1,74 @@
-# Campus Connect — MVP Trim + Polish + Performance Pass
+# Enterprise Auth, Onboarding & Approval System
 
-Scope picked: **Hard delete code + drop tables** (keep E-CELL) · **Token audit · MVP trim · Timetable polish · Perf pass** · Timetable refined in-place.
+## Goal
+Extend (not rebuild) the existing Campus Connect auth with: Google sign-in, manual registration, mandatory multi-step onboarding, admin approval gate, and strict route protection — while preserving current RLS, tenancy, and architecture.
 
-This is a destructive pass. Below is exactly what gets deleted, kept, and refined. Nothing here touches auth, RLS model, edge function security, multi-tenancy, or the role hierarchy.
+## 1. Database (migration)
+Extend `profiles` with:
+- `profile_completed boolean default false`
+- `approval_status text default 'pending'` (check: pending/approved/rejected)
+- `college_assigned boolean default false`
+- `enrollment_number text unique` (Mumbai University)
+- `course_code text`, `course_name text`
+- `academic_year text` (FY/SY/TY)
+- `gender text`, `date_of_birth date`, `first_name text`, `last_name text`
+- `approved_by uuid`, `approved_at timestamptz`, `rejection_reason text`
+- Unique partial index on `lower(enrollment_number)`
 
----
+Backfill: existing students → `profile_completed=true, approval_status='approved', college_assigned=(college_id is not null)` so we don't lock out current users.
 
-## 1. Modules HARD-DELETED
+RLS:
+- Students: can update own profile only while `approval_status='pending'` for academic fields; always for personal fields. Cannot set `college_id`, `approval_status`, `college_assigned`, `approved_*`.
+- Admin: can update approval fields + `college_id` within their college scope (or unassigned rows for global admins).
 
-### Code + routes + nav entries removed
-| Area | Files removed |
-|------|---------------|
-| Chat / Collaboration | `src/pages/student/messages/`, `src/pages/admin/channels/` |
-| Polls | `src/pages/student/polls/`, `src/pages/admin/polls/` |
-| Daily Content | `src/pages/student/content/`, `src/pages/admin/content/` |
-| Daily Check-in | `src/pages/student/StudentCheckin.tsx` |
-| Challenges | `src/pages/admin/challenges/` |
-| Achievements (gamification) | `src/pages/student/StudentAchievements.tsx`, `src/pages/admin/pages/` achievement-related |
-| Points / Leaderboard | `src/pages/student/points/`, `src/pages/Leaderboard.tsx`, `src/pages/admin/points/` |
-| AI placeholders that hit LLMs | any `ai-*` widget that calls Lovable AI Gateway |
-| Heavy analytics | `src/pages/student/StudentAnalytics.tsx`, deep admin reports |
-| SuperAdmin bloat | `SAAchievementsTab/Page`, `SAFeedbackTab`, `SAMonitoringTab`, `SASystemMapTab/Page`, `SAActivityLogsTab`, `SABroadcastTab`, `SALecturesTab/Page`, `SALectureMonitorPage`, `SAAttendancePage`, `SALeaderboardPage`, `SAAchievementsPage` |
-| Events student-facing | `src/pages/student/events/` — **KEPT** because E-CELL stalls depend on it |
+New RPC `admin_approve_student(p_user_id, p_college_id, p_student_id)` and `admin_reject_student(p_user_id, p_reason)` — SECURITY DEFINER, admin-only.
 
-### Edge functions deleted (Supabase)
-`daily-checkin`, `daily-content-cron`, `recompute-intelligence`, `admin-adjust-points`
+## 2. Auth flow
+- `src/pages/Auth.tsx`: add "Continue with Google" via `lovable.auth.signInWithOAuth("google")` + manual register tab (email/password/confirm). Keep existing student-ID login.
+- Configure social auth: enable Google provider.
+- On sign-in: AuthProvider unchanged; new `useOnboardingStatus()` hook reads `profile_completed`, `approval_status`, `college_assigned`.
 
-### Edge functions KEPT
-auth-resolve-identifier, admin-create-student, admin-generate-attendance, admin-update-attendance, admin-reset-college-students, super-admin-*, academic-promote-students, ensure-admin-account, admin-backfill-user-roles, finalize-attendance, mark-attendance, lecture-status-notify, notification-scheduler, send-notification, subscribe-web-push, generate-vapid-keys, health-check, retention-on-login, update-user-email
+## 3. Onboarding (multi-step)
+New `src/pages/onboarding/OnboardingWizard.tsx` at `/onboarding`:
+- Step 1 — Personal: photo upload (avatars bucket), first/last name, phone, gender, DOB. Prefill from Google identity.
+- Step 2 — Academic: enrollment number (required, unique check), college student ID (optional), course dropdown (7 fixed options storing code+name), year (FY/SY/TY).
+- Submit → set `profile_completed=true`, `approval_status='pending'`. Redirect to `/pending-approval`.
 
-### Database tables DROPPED (single migration, CASCADE)
-`messages`, `channels`, `channel_members`, `polls`, `poll_votes` (if present), `daily_content`, `daily_checkins`, `daily_rewards_log`, `challenges`, `achievements`, `student_achievements` (if present), heavy `intelligence_*` snapshot tables that only fed analytics widgets.
+Modern dark glassmorphism, progress bar, framer-motion transitions, mobile-first.
 
-### Tables KEPT
-All academic + tenancy + auth tables: `colleges`, `profiles`, `user_roles`, `departments`, `classes`, `programmes`, `lectures`, `attendance`, `attendance_tokens`, `attendance_audit_log`, `assignments`, `documents`, `exams`, `exam_results`, `timetable_slots`, `class_promotion_rules`, `academic_promotion_runs`, `announcements`, `notifications`, `notification_recipients`, `notification_preferences`, `audit_logs`, `feedback`, `leads`, `login_activity`, `account_deletion_requests`, `core_team_members`, `events`, `erp_import_*`, `permissions`.
+## 4. Pending approval screen
+`src/pages/PendingApproval.tsx`: centered card, status pills (Submitted → Under Review → Approved/Rejected), Refresh Status (refetch), Logout. If `rejected` → show reason + "Edit & Resubmit" → reopens wizard, on resubmit flips status back to `pending`.
 
----
+## 5. Route guards
+Extend `ProtectedRoute` (and `AppGuard`) with onboarding gate:
+- `!profile_completed` → `/onboarding`
+- `profile_completed && (approval_status!=='approved' || !college_assigned)` → `/pending-approval`
+- else → render
+- Admins/super_admins/faculty bypass gate.
+- Hide bottom nav + sidebars when gated.
 
-## 2. Token & color audit
+## 6. Admin verification UI
+New `src/pages/admin/verification/PendingStudentsPage.tsx` + route in `adminNavConfig`:
+- Queue of pending students with photo, name, email, enrollment#, course, year, submitted at.
+- Search/filter, view photo modal.
+- Actions: Assign College (dropdown), Edit Student ID, Approve, Reject (with reason).
+- Calls new admin RPCs.
 
-- Confirm `src/index.css` HSL values match the brand palette (already updated last turn — verify each token).
-- `rg` sweep for hardcoded `#`, `rgb(`, `rgba(` in `src/components/**` and `src/pages/**`. Replace with semantic Tailwind classes (`bg-card`, `text-foreground`, `border-border-subtle`, `text-primary`, `bg-surface-2`, etc.).
-- Verify `tailwind.config.ts` exposes all tokens consumed; add `border-default = rgba(255,255,255,0.08)` only if missing.
-- Light-mode tokens untouched (project is dark-first; light mode kept functional).
+## 7. Security
+- Trigger on `profiles` BEFORE UPDATE: prevent students from changing `college_id`, `approval_status`, `college_assigned`, `approved_by`, `approved_at`.
+- Enrollment number uniqueness enforced at DB level.
+- Admin RPCs validate caller role + college scope.
 
-## 3. Timetable hero polish (in-place)
+## 8. Out of scope
+- No changes to existing attendance/lectures/timetable/E-Cell modules.
+- No changes to existing RLS on unrelated tables.
+- Faculty/admin onboarding unchanged.
 
-`src/pages/student/StudentTimetable.tsx` + admin timetable views:
-- Today card: gradient ring around primary, soft indigo glow, larger time chip, status pill (`Now / Next / Done`).
-- Weekly cards: day-letter avatars with active glow, lecture rows get hover lift + left primary accent bar for current hour.
-- Add subtle shimmer skeletons (existing token).
-- Empty states tightened with muted illustrations using existing icons.
-- No new dependencies, no layout reflow, no breakpoint changes.
-
-## 4. Performance pass
-
-- Audit `AppRouter.tsx`: every page already lazy — verify no eager imports leaked in. Remove imports of deleted pages.
-- React Query: confirm `staleTime: 30–60s` on heavy queries; add `placeholderData: keepPreviousData` to timetable, attendance, notifications lists.
-- Memoize timetable `slotsByDay` reductions and admin tables.
-- Drop `framer-motion` heavy variants from any deleted page consumers — keep micro-interactions via CSS only.
-- Confirm no orphan realtime subscriptions remain (messages channel subscription is removed with Collaboration Hub).
-
-## 5. Out of scope (explicitly NOT touched)
-
-- Auth (Supabase), RLS policies on kept tables, edge function logic on kept functions.
-- Database schema for kept tables.
-- E-CELL hub, stalls, events.
-- Routing skeleton, layout shells, PWA, push, network/offline overlays.
-- Light mode (kept working as-is).
-
----
+## Technical notes
+- Course list constant in `src/lib/courses.ts`.
+- Photo uploads → `avatars` bucket, path `onboarding/{user_id}.jpg`.
+- React Query keys: `["onboarding", userId]`, invalidate on submit + on admin approve.
+- Realtime: optional subscribe to own profile row on `/pending-approval` for live status flip.
 
 ## Execution order
-
-1. Token + nav/route cleanup (non-destructive).
-2. Code deletion (pages, edge functions).
-3. Single DB migration: drop tables with CASCADE — **requires your confirmation in the migration card**.
-4. Delete deployed edge functions on Supabase.
-5. Timetable polish.
-6. Verify build, console, network.
-
-After approval I will execute in that order. The DB migration card will surface separately for your explicit OK before any table is dropped.
+1. Migration (requires approval) → 2. Configure Google auth → 3. Onboarding wizard + pending screen → 4. Route guards → 5. Auth page Google button + manual register → 6. Admin verification page → 7. Smoke test.

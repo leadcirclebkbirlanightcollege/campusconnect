@@ -108,14 +108,27 @@ const Auth = () => {
 
   const redirectToDashboard = async (userId: string) => {
     try {
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
-      const role = data?.role;
-      if (role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
-      else if (role === "admin") navigate("/platform/admin/dashboard", { replace: true });
-      else if (role === "faculty") navigate("/faculty/dashboard", { replace: true });
-      else navigate("/app/dashboard", { replace: true });
+      const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
+      const r = role?.role;
+      if (r === "super_admin") return navigate("/platform/admin-control/dashboard", { replace: true });
+      if (r === "admin")       return navigate("/platform/admin/dashboard", { replace: true });
+      if (r === "faculty")     return navigate("/faculty/dashboard", { replace: true });
+
+      // Student: route based on onboarding/approval state
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_completed, approval_status, college_assigned")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!profile || !profile.profile_completed) {
+        navigate("/onboarding-wizard", { replace: true });
+      } else if (profile.approval_status !== "approved" || !profile.college_assigned) {
+        navigate("/pending-approval", { replace: true });
+      } else {
+        navigate("/app/dashboard", { replace: true });
+      }
     } catch {
-      navigate("/app/dashboard", { replace: true });
+      navigate("/onboarding-wizard", { replace: true });
     }
     // Fire-and-forget: log login activity + retention
     setTimeout(() => {
@@ -174,33 +187,30 @@ const Auth = () => {
       const password = signupPassword;
       if (!name) throw new Error("Name is required");
       if (!email) throw new Error("Email is required");
-      if (!password) throw new Error("Password is required");
+      if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email, password,
-        options: { emailRedirectTo: window.location.origin },
+        options: {
+          emailRedirectTo: `${window.location.origin}/onboarding-wizard`,
+          data: { full_name: name },
+        },
       });
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
+      if (!authData.user) throw new Error("Failed to create account");
 
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: authData.user.id, name, email,
-        phone: signupPhone || null,
-        student_id: signupStudentId || null,
-        department: signupDepartment || null,
-        class_name: signupClass || null,
-        college_id: signupCollegeId || null,
-      });
-      if (profileError) throw profileError;
+      // Minimal profile row — the rest is collected in /onboarding-wizard
+      await supabase.from("profiles").upsert(
+        { user_id: authData.user.id, name, email, profile_completed: false, approval_status: "pending" },
+        { onConflict: "user_id" }
+      );
+      await supabase.from("user_roles").upsert(
+        { user_id: authData.user.id, role: "student" },
+        { onConflict: "user_id,role" }
+      );
 
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id, role: "student",
-        college_id: signupCollegeId || null,
-      });
-      if (roleError) throw roleError;
-
-      toast.success("Account created! 🎉");
-      navigate("/app/dashboard", { replace: true });
+      toast.success("Account created — let's set up your profile");
+      navigate("/onboarding-wizard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
     } finally {
