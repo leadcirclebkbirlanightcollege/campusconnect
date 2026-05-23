@@ -1971,22 +1971,32 @@ export type Database = {
       profiles: {
         Row: {
           academic_session: string | null
+          academic_year: string | null
           admission_no: string | null
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           archived_at: string | null
           avatar_url: string | null
           bio: string | null
           category: string | null
           class_name: string | null
+          college_assigned: boolean
           college_id: string | null
+          course_code: string | null
+          course_name: string | null
           created_at: string
           current_year: number | null
+          date_of_birth: string | null
           deleted_at: string | null
           department: string | null
           department_id: string | null
           email: string
           enrollment_no: string | null
+          enrollment_number: string | null
           enrollment_status: string | null
           erp_student_id: string | null
+          first_name: string | null
           gender: string | null
           graduation_status: string
           graduation_year: number | null
@@ -1995,14 +2005,17 @@ export type Database = {
           is_active: boolean
           is_deleted: boolean
           is_verified: boolean
+          last_name: string | null
           mobile: string | null
           must_change_password: boolean
           name: string
           onboarding_completed: boolean
           phone: string | null
           profile_completed: boolean
+          profile_submitted_at: string | null
           programme_id: string | null
           promoted_at: string | null
+          rejection_reason: string | null
           roll_no: string | null
           status: string
           student_id: string | null
@@ -2015,22 +2028,32 @@ export type Database = {
         }
         Insert: {
           academic_session?: string | null
+          academic_year?: string | null
           admission_no?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           archived_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           category?: string | null
           class_name?: string | null
+          college_assigned?: boolean
           college_id?: string | null
+          course_code?: string | null
+          course_name?: string | null
           created_at?: string
           current_year?: number | null
+          date_of_birth?: string | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
           email: string
           enrollment_no?: string | null
+          enrollment_number?: string | null
           enrollment_status?: string | null
           erp_student_id?: string | null
+          first_name?: string | null
           gender?: string | null
           graduation_status?: string
           graduation_year?: number | null
@@ -2039,14 +2062,17 @@ export type Database = {
           is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
+          last_name?: string | null
           mobile?: string | null
           must_change_password?: boolean
           name: string
           onboarding_completed?: boolean
           phone?: string | null
           profile_completed?: boolean
+          profile_submitted_at?: string | null
           programme_id?: string | null
           promoted_at?: string | null
+          rejection_reason?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
@@ -2059,22 +2085,32 @@ export type Database = {
         }
         Update: {
           academic_session?: string | null
+          academic_year?: string | null
           admission_no?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           archived_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           category?: string | null
           class_name?: string | null
+          college_assigned?: boolean
           college_id?: string | null
+          course_code?: string | null
+          course_name?: string | null
           created_at?: string
           current_year?: number | null
+          date_of_birth?: string | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
           email?: string
           enrollment_no?: string | null
+          enrollment_number?: string | null
           enrollment_status?: string | null
           erp_student_id?: string | null
+          first_name?: string | null
           gender?: string | null
           graduation_status?: string
           graduation_year?: number | null
@@ -2083,14 +2119,17 @@ export type Database = {
           is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
+          last_name?: string | null
           mobile?: string | null
           must_change_password?: boolean
           name?: string
           onboarding_completed?: boolean
           phone?: string | null
           profile_completed?: boolean
+          profile_submitted_at?: string | null
           programme_id?: string | null
           promoted_at?: string | null
+          rejection_reason?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
@@ -2674,6 +2713,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_student: {
+        Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
+        Returns: undefined
+      }
       admin_get_attendance_corrections: {
         Args: {
           p_end_date?: string
@@ -2694,6 +2737,10 @@ export type Database = {
           student_user_id: string
           total_count: number
         }[]
+      }
+      admin_reject_student: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: undefined
       }
       award_points: {
         Args: {
