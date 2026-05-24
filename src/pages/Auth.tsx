@@ -164,18 +164,16 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const name = signupName.trim();
       const email = signupEmail.trim();
       const password = signupPassword;
-      if (!name) throw new Error("Name is required");
       if (!email) throw new Error("Email is required");
       if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
+      if (password !== signupConfirm) throw new Error("Passwords do not match");
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email, password,
         options: {
           emailRedirectTo: `${window.location.origin}/onboarding-wizard`,
-          data: { full_name: name },
         },
       });
       if (authError) throw authError;
@@ -183,7 +181,7 @@ const Auth = () => {
 
       // Minimal profile row — the rest is collected in /onboarding-wizard
       await supabase.from("profiles").upsert(
-        { user_id: authData.user.id, name, email, profile_completed: false, approval_status: "pending" },
+        { user_id: authData.user.id, email, profile_completed: false, approval_status: "pending" },
         { onConflict: "user_id" }
       );
       await supabase.from("user_roles").upsert(
@@ -199,6 +197,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
 
   const handleGoogleAuth = async () => {
     setLoading(true);
