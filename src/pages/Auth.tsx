@@ -72,29 +72,11 @@ const Auth = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  // Signup form
-  const [signupName, setSignupName] = useState("");
+  // Signup form (simplified — rest collected in onboarding wizard)
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
-  const [signupPhone, setSignupPhone] = useState("");
-  const [signupStudentId, setSignupStudentId] = useState("");
-  const [signupDepartment, setSignupDepartment] = useState("");
-  const [signupClass, setSignupClass] = useState("");
-  const [signupCollegeId, setSignupCollegeId] = useState("");
+  const [signupConfirm, setSignupConfirm] = useState("");
 
-  // Load active colleges for signup dropdown
-  const { data: colleges = [] } = useQuery({
-    queryKey: ["auth", "colleges"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("colleges")
-        .select("id,college_name")
-        .eq("is_active", true)
-        .order("college_name");
-      return data ?? [];
-    },
-    staleTime: 300_000,
-  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
