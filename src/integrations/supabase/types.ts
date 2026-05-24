@@ -1998,6 +1998,7 @@ export type Database = {
           erp_student_id: string | null
           first_name: string | null
           gender: string | null
+          google_connected: boolean
           graduation_status: string
           graduation_year: number | null
           guardian_name: string | null
@@ -2055,6 +2056,7 @@ export type Database = {
           erp_student_id?: string | null
           first_name?: string | null
           gender?: string | null
+          google_connected?: boolean
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
@@ -2112,6 +2114,7 @@ export type Database = {
           erp_student_id?: string | null
           first_name?: string | null
           gender?: string | null
+          google_connected?: boolean
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
