@@ -392,20 +392,6 @@ const Auth = () => {
             <TabsContent value="signup" className="mt-5">
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="signup-name" className="text-[13px] font-medium text-foreground">
-                    Full Name <span className="text-danger">*</span>
-                  </Label>
-                  <Input
-                    id="signup-name"
-                    placeholder="John Doe"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
                   <Label htmlFor="signup-email" className="text-[13px] font-medium text-foreground">
                     Email <span className="text-danger">*</span>
                   </Label>
@@ -423,81 +409,27 @@ const Auth = () => {
                 <PasswordInput
                   id="signup-password"
                   label="Password *"
-                  placeholder="Create a strong password"
+                  placeholder="Create a password"
                   value={signupPassword}
                   onChange={setSignupPassword}
                 />
 
-                {/* College selector */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-college" className="text-[13px] font-medium text-foreground">
-                    College <span className="text-danger">*</span>
-                  </Label>
-                  <Select value={signupCollegeId} onValueChange={setSignupCollegeId} required>
-                    <SelectTrigger
-                      id="signup-college"
-                      className="bg-surface-2 border-border-subtle text-[14px] h-10"
-                    >
-                      <SelectValue placeholder="Select your college" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colleges.map((c: { id: string; college_name: string }) => (
-                        <SelectItem key={c.id} value={c.id}>{c.college_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <PasswordInput
+                  id="signup-confirm"
+                  label="Confirm Password *"
+                  placeholder="Re-enter your password"
+                  value={signupConfirm}
+                  onChange={setSignupConfirm}
+                />
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-student-id" className="text-[13px] font-medium text-foreground">Student ID</Label>
-                    <Input
-                      id="signup-student-id"
-                      placeholder="CS-2024-001"
-                      value={signupStudentId}
-                      onChange={(e) => setSignupStudentId(e.target.value)}
-                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-phone" className="text-[13px] font-medium text-foreground">Phone</Label>
-                    <Input
-                      id="signup-phone"
-                      placeholder="9876543210"
-                      value={signupPhone}
-                      onChange={(e) => setSignupPhone(e.target.value)}
-                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-department" className="text-[13px] font-medium text-foreground">Department</Label>
-                    <Input
-                      id="signup-department"
-                      placeholder="Computer Science"
-                      value={signupDepartment}
-                      onChange={(e) => setSignupDepartment(e.target.value)}
-                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-class" className="text-[13px] font-medium text-foreground">Class</Label>
-                    <Input
-                      id="signup-class"
-                      placeholder="2024-A"
-                      value={signupClass}
-                      onChange={(e) => setSignupClass(e.target.value)}
-                      className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
-                    />
-                  </div>
-                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  You'll complete your profile (name, course, year, enrollment) in the next step.
+                </p>
 
                 <Button
                   type="submit"
                   className="w-full h-10 gap-2 shadow-primary text-[14px] mt-1"
-                  disabled={loading || !signupCollegeId}
+                  disabled={loading}
                 >
                   {loading
                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -507,6 +439,7 @@ const Auth = () => {
               </form>
             </TabsContent>
           </Tabs>
+
 
           {/* Footer note */}
           <p className="text-center text-[12px] text-muted-foreground/70">
