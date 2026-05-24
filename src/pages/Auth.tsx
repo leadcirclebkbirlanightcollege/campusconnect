@@ -181,13 +181,14 @@ const Auth = () => {
 
       // Minimal profile row — the rest is collected in /onboarding-wizard
       await supabase.from("profiles").upsert(
-        { user_id: authData.user.id, email, profile_completed: false, approval_status: "pending" },
+        [{ user_id: authData.user.id, email, profile_completed: false, approval_status: "pending" }],
         { onConflict: "user_id" }
       );
       await supabase.from("user_roles").upsert(
-        { user_id: authData.user.id, role: "student" },
+        [{ user_id: authData.user.id, role: "student" }],
         { onConflict: "user_id,role" }
       );
+
 
       toast.success("Account created — let's set up your profile");
       navigate("/onboarding-wizard", { replace: true });
