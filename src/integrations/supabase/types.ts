@@ -1980,6 +1980,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           category: string | null
+          class_id: string | null
           class_name: string | null
           college_assigned: boolean
           college_id: string | null
@@ -2038,6 +2039,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           category?: string | null
+          class_id?: string | null
           class_name?: string | null
           college_assigned?: boolean
           college_id?: string | null
@@ -2096,6 +2098,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           category?: string | null
+          class_id?: string | null
           class_name?: string | null
           college_assigned?: boolean
           college_id?: string | null
@@ -2144,6 +2147,13 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_college_id_fkey"
             columns: ["college_id"]
@@ -2718,7 +2728,7 @@ export type Database = {
     Functions: {
       admin_approve_student: {
         Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
-        Returns: undefined
+        Returns: Json
       }
       admin_get_attendance_corrections: {
         Args: {
@@ -2741,6 +2751,11 @@ export type Database = {
           total_count: number
         }[]
       }
+      admin_preview_student_assignment: {
+        Args: { p_college_id: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_regenerate_classes: { Args: never; Returns: Json }
       admin_reject_student: {
         Args: { p_reason?: string; p_user_id: string }
         Returns: undefined
@@ -2753,6 +2768,14 @@ export type Database = {
           p_source_id?: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      course_code_to_class_suffix: {
+        Args: { p_course_code: string }
+        Returns: string
+      }
+      ensure_department_classes: {
+        Args: { p_department_id: string }
         Returns: undefined
       }
       export_monthly_attendance_combined: {
@@ -2831,6 +2854,7 @@ export type Database = {
         Args: { p_code: string; p_metadata?: Json; p_user_id: string }
         Returns: boolean
       }
+      year_to_int: { Args: { p_year: string }; Returns: number }
     }
     Enums: {
       account_deletion_status:
