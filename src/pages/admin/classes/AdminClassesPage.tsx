@@ -218,17 +218,25 @@ export default function AdminClassesPage() {
 
             <div className="space-y-1.5">
               <Label>Department <span className="text-muted-foreground">(optional)</span></Label>
-              <Select value={form.department_id} onValueChange={(v) => setForm(f => ({ ...f, department_id: v }))}>
+              <Select
+                value={form.department_id || "__none__"}
+                onValueChange={(v) => setForm(f => ({ ...f, department_id: v === "__none__" ? "" : v }))}
+              >
                 <SelectTrigger className="bg-surface-2 border-border-subtle">
                   <SelectValue placeholder="Select department…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No department</SelectItem>
+                  <SelectItem value="__none__">No department</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {departments.length === 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  No departments yet. Create departments first to link classes.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
