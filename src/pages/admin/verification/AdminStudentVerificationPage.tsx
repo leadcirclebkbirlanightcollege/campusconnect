@@ -93,13 +93,18 @@ export default function AdminStudentVerificationPage() {
     if (mode !== "approve" || !target || !collegeId) { setPreview(null); return; }
     let cancelled = false;
     setPreviewBusy(true);
-    supabase.rpc("admin_preview_student_assignment", {
-      p_user_id: target.user_id, p_college_id: collegeId,
-    }).then(({ data, error }) => {
-      if (cancelled) return;
-      if (error) { setPreview({ ok: false, error: error.message }); }
-      else { setPreview(data); }
-    }).finally(() => !cancelled && setPreviewBusy(false));
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc("admin_preview_student_assignment", {
+          p_user_id: target.user_id, p_college_id: collegeId,
+        });
+        if (cancelled) return;
+        if (error) setPreview({ ok: false, error: error.message });
+        else setPreview(data);
+      } finally {
+        if (!cancelled) setPreviewBusy(false);
+      }
+    })();
     return () => { cancelled = true; };
   }, [mode, target, collegeId]);
 
