@@ -63,7 +63,7 @@ export default function FacultyLayout() {
           >
             <Icon className="h-4 w-4 shrink-0" />
             <span className="flex-1">{label}</span>
-            <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+            <ChevronRight className="h-3 w-3 opacity-40 group-hover:opacity-70 transition-opacity" />
           </NavLink>
         ))}
       </nav>
