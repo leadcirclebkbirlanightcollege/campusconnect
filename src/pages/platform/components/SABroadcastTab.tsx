@@ -258,7 +258,7 @@ export default function SABroadcastTab() {
                             onClick={() => {
                               if (confirm("Remove this broadcast?")) deleteBroadcast.mutate(a.id);
                             }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
+                            className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
                           >
                             ×
                           </button>

@@ -113,7 +113,7 @@ function QuickAction({ icon: Icon, label, to, color, bg }: {
         <Icon className={cn("h-4 w-4", color)} />
       </div>
       <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
-      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
     </Link>
   );
 }
