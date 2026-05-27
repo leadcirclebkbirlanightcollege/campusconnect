@@ -82,14 +82,14 @@ export function BottomNavigation() {
                 "rounded-xl mx-0.5 my-1.5",
                 "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
                 "select-none outline-none",
-                active ? "text-primary" : "text-muted-foreground active:bg-surface-3",
+                active ? "text-action-primary-foreground" : "text-control-muted active:bg-control-hover",
               )}
             >
               {/* Active background pill */}
               {active && (
                 <motion.div
                   layoutId="bottom-nav-active"
-                  className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/15"
+                  className="absolute inset-0 rounded-xl bg-action-primary border border-action-primary"
                   style={{ boxShadow: "0 0 16px -4px hsl(var(--primary)/0.25)" }}
                   transition={{ type: "spring", stiffness: 380, damping: 34 }}
                 />
@@ -103,14 +103,14 @@ export function BottomNavigation() {
               >
                 <Icon className={cn(
                   "h-[22px] w-[22px] transition-none",
-                  active ? "stroke-[2.2px]" : "opacity-55 stroke-[1.8px]",
+                  active ? "stroke-[2.2px]" : "text-control-muted stroke-[1.8px]",
                 )} />
               </motion.div>
 
               {/* Label */}
               <span className={cn(
                 "relative z-10 text-[9.5px] font-semibold leading-none tracking-wide",
-                active ? "text-primary" : "text-muted-foreground/55",
+                active ? "text-action-primary-foreground" : "text-control-muted",
               )}>
                 {label}
               </span>

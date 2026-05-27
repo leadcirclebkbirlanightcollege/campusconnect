@@ -336,16 +336,16 @@ const Auth = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-surface-2 border border-border-subtle p-0.5 rounded-lg h-9">
+            <TabsList className="grid w-full grid-cols-2 bg-control-bg border border-border-subtle p-0.5 rounded-lg h-9">
               <TabsTrigger
                 value="login"
-                className="rounded-md text-[13px] font-medium data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-xs text-muted-foreground"
+                className="rounded-md text-[13px] font-medium"
               >
                 Sign In
               </TabsTrigger>
               <TabsTrigger
                 value="signup"
-                className="rounded-md text-[13px] font-medium data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-xs text-muted-foreground"
+                className="rounded-md text-[13px] font-medium"
               >
                 Create Account
               </TabsTrigger>
