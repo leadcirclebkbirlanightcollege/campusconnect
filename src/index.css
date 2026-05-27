@@ -513,6 +513,8 @@
   /* ── Primary gradient button ── */
   .btn-gradient {
     background: linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+    color: hsl(var(--action-primary-text));
+    border-color: hsl(var(--action-primary-bg));
     box-shadow: var(--shadow-primary);
     transition: filter var(--duration-fast) var(--ease-out),
                 transform var(--duration-fast) var(--ease-out),
@@ -828,6 +830,20 @@
 @media (hover: none) and (pointer: coarse) {
   button, [role="button"], a.tap-ripple {
     min-height: 40px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    opacity: 1;
+    background-color: hsl(var(--action-disabled-bg));
+    color: hsl(var(--action-disabled-text));
+    border-color: hsl(var(--action-disabled-bg));
   }
 }
 
