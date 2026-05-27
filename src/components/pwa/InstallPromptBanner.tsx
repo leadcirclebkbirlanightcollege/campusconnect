@@ -26,7 +26,8 @@ export default function InstallPromptBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
-          className="fixed bottom-20 left-3 right-3 z-[9990] md:bottom-6 md:left-auto md:right-6 md:w-[360px]"
+          className="fixed left-3 right-3 z-[9990] md:left-auto md:right-6 md:w-[360px]"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
         >
           <div className="rounded-2xl border border-border/60 bg-surface-1 shadow-2xl overflow-hidden">
             {/* accent bar */}
@@ -63,7 +64,7 @@ export default function InstallPromptBanner() {
               </div>
               <button
                 onClick={dismiss}
-                className="ml-1 -mt-0.5 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                className="ml-1 -mt-0.5 rounded-md border border-border-subtle bg-action-secondary p-1 text-action-secondary-foreground hover:bg-action-secondary-hover transition-colors"
                 aria-label="Dismiss"
               >
                 <X className="h-4 w-4" />
