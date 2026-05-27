@@ -36,7 +36,7 @@ const AdminShell = ({ children }: AdminShellProps) => {
                 <LayoutDashboard className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-premium bg-clip-text text-transparent block">
+                <span className="text-xl font-bold text-foreground block">
                   Campus Connect
                 </span>
                 <span className="text-xs text-muted-foreground">Admin Dashboard</span>

@@ -47,7 +47,7 @@ export default function SemesterClosedScreen({ settings }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-6 left-0 right-0 text-center">
+      <div className="fixed left-0 right-0 text-center bottom-[calc(env(safe-area-inset-bottom,0px)+24px)]">
         <p className="text-xs text-muted-foreground">See you soon.</p>
       </div>
     </div>

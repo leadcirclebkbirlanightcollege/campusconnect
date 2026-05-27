@@ -107,10 +107,10 @@ interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
 }
 
 const ACTION_VARIANTS: Record<ActionVariant, string> = {
-  primary:   "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20 shadow-sm",
-  secondary: "bg-surface-2 text-foreground border border-border-subtle hover:bg-surface-3",
-  ghost:     "text-foreground hover:bg-surface-2",
-  danger:    "bg-danger text-danger-foreground hover:bg-danger/90",
+  primary:   "bg-action-primary text-action-primary-foreground border border-action-primary hover:bg-action-primary-hover shadow-primary/20 shadow-sm",
+  secondary: "bg-action-secondary text-action-secondary-foreground border border-border-subtle hover:bg-action-secondary-hover",
+  ghost:     "bg-transparent text-control-text border border-transparent hover:bg-control-hover",
+  danger:    "bg-action-danger text-action-danger-foreground border border-action-danger hover:bg-action-danger-hover",
   success:   "bg-success text-success-foreground hover:bg-success/90",
 };
 
@@ -141,7 +141,7 @@ export function ActionButton({
         "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         "active:scale-[0.97]",
-        "disabled:opacity-50 disabled:pointer-events-none",
+        "disabled:opacity-100 disabled:pointer-events-none disabled:bg-action-disabled disabled:text-action-disabled-foreground disabled:border-action-disabled",
         ACTION_VARIANTS[variant],
         ACTION_SIZES[size],
         fullWidth && "w-full",

@@ -80,14 +80,14 @@ export default function FeedbackButton() {
   return (
     <>
       {/* Floating trigger */}
-      <div className="fixed bottom-20 right-4 z-50 md:bottom-6">
+      <div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-[9999] md:bottom-[calc(env(safe-area-inset-bottom,0px)+24px)]">
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={() => { setOpen((v) => !v); setDone(false); }}
           className={cn(
-            "flex items-center justify-center h-11 w-11 rounded-full shadow-lg",
-            "bg-primary text-primary-foreground border border-primary/20",
-            "hover:bg-primary/90 transition-colors"
+            "flex items-center justify-center h-12 w-12 rounded-full shadow-lg",
+            "bg-action-primary text-action-primary-foreground border border-action-primary",
+            "hover:bg-action-primary-hover transition-colors"
           )}
           aria-label="Send feedback"
         >
@@ -114,7 +114,7 @@ export default function FeedbackButton() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="fixed bottom-36 right-4 z-50 w-80 rounded-2xl border border-border-subtle bg-surface-1/95 backdrop-blur-xl shadow-xl md:bottom-20"
+            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+152px)] z-[9998] w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border-subtle bg-surface-1 text-foreground shadow-xl md:bottom-[calc(env(safe-area-inset-bottom,0px)+88px)]"
           >
             {done ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">

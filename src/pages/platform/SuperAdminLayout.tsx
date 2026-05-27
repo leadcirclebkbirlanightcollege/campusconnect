@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useLogout";
 import { useMemo } from "react";
@@ -60,7 +60,7 @@ function SAProfileMenu({ userId }: { userId: string }) {
         <DropdownMenuSeparator className="bg-border-subtle" />
         <DropdownMenuItem onSelect={(e) => { e.preventDefault(); logout(); }}
           className="gap-2 text-[13px] text-danger focus:text-danger focus:bg-danger/8 cursor-pointer">
-          <UserRound className="h-3.5 w-3.5 opacity-0 absolute" />Sign Out
+          <LogOut className="h-3.5 w-3.5" />Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

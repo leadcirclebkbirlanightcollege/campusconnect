@@ -142,7 +142,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
         {trigger ?? (
           <Button
             size="sm"
-            className="h-9 gap-1.5 text-white border-0"
+            className="h-9 gap-1.5 text-action-primary-foreground border border-action-primary"
             style={{
               background: `linear-gradient(135deg, hsl(${ECELL}), hsl(280 80% 60%))`,
               boxShadow: `0 4px 14px -4px hsl(${ECELL} / 0.6)`,
@@ -178,7 +178,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
                 boxShadow: `0 6px 20px -6px hsl(${ECELL} / 0.6)`,
               }}
             >
-              <Store className="h-5 w-5 text-white" />
+              <Store className="h-5 w-5 text-action-primary-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: `hsl(${ECELL})` }}>
@@ -239,7 +239,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
                   boxShadow: `0 10px 30px -8px hsl(${ECELL} / 0.6)`,
                 }}
               >
-                <CheckCircle2 className="h-8 w-8 text-white" />
+                <CheckCircle2 className="h-8 w-8 text-action-primary-foreground" />
               </motion.div>
               <div>
                 <h3 className="text-[18px] font-bold text-foreground">You're in! 🚀</h3>
@@ -248,7 +248,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
                 </p>
               </div>
               <Button
-                className="w-full h-11 text-white border-0"
+                className="w-full h-11 text-action-primary-foreground border border-action-primary"
                 style={{
                   background: `linear-gradient(135deg, hsl(${ECELL}), hsl(280 80% 60%))`,
                 }}
@@ -370,7 +370,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 h-11 gap-1.5 text-white border-0"
+                  className="flex-1 h-11 gap-1.5 text-action-primary-foreground border border-action-primary"
                   style={{
                     background: `linear-gradient(135deg, hsl(${ECELL}), hsl(280 80% 60%))`,
                     boxShadow: `0 6px 18px -6px hsl(${ECELL} / 0.6)`,

@@ -158,7 +158,7 @@ function EcellTile({ to, icon: Icon, title, desc, badge, delay = 0 }: TileProps)
         style={{ boxShadow: "var(--shadow-sm)" }}
       >
         <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+          className="absolute inset-0 opacity-100 transition-opacity pointer-events-none"
           style={{
             background: `radial-gradient(120% 80% at 0% 0%, hsl(${ECELL} / 0.10), transparent 55%)`,
           }}
@@ -298,19 +298,19 @@ export default function StudentEcellHub() {
               boxShadow: `0 8px 28px -6px hsl(${ECELL} / 0.7)`,
             }}
           >
-            <Rocket className="h-6 w-6 text-white" />
+            <Rocket className="h-6 w-6 text-action-primary-foreground" />
           </motion.div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/65">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-action-primary-foreground/80">
               Entrepreneurship Cell
             </p>
-            <h1 className="text-[22px] font-bold text-white leading-tight tracking-tight mt-0.5">
+            <h1 className="text-[22px] font-bold text-action-primary-foreground leading-tight tracking-tight mt-0.5">
               Build. Compete. Grow.
             </h1>
           </div>
         </div>
 
-        <p className="relative mt-3 text-[13px] text-white/75 leading-relaxed max-w-xl">
+        <p className="relative mt-3 text-[13px] text-action-primary-foreground/85 leading-relaxed max-w-xl">
           Your launchpad on campus — discover events, register a stall, and
           earn points for the work you ship.
         </p>
@@ -324,12 +324,12 @@ export default function StudentEcellHub() {
           ].map((s) => (
             <div
               key={s.l}
-              className="rounded-lg border border-white/10 bg-white/5 backdrop-blur px-2 py-2 text-center"
+              className="rounded-lg border border-action-primary-foreground/20 bg-action-primary-foreground/10 px-2 py-2 text-center"
             >
-              <p className="text-[14px] font-black text-white leading-none tabular-nums">
+              <p className="text-[14px] font-black text-action-primary-foreground leading-none tabular-nums">
                 {s.v}
               </p>
-              <p className="text-[9px] uppercase tracking-wider text-white/55 mt-1">
+              <p className="text-[9px] uppercase tracking-wider text-action-primary-foreground/75 mt-1">
                 {s.l}
               </p>
             </div>

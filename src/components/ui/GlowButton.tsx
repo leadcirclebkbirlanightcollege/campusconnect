@@ -16,13 +16,13 @@ const GlowButton = React.memo(
         transition={PRESS_TRANSITION}
         className={cn(
           "relative isolate inline-flex h-12 min-w-[120px] items-center justify-center overflow-hidden rounded-xl px-5",
-          "text-sm font-semibold text-primary-foreground",
-          "bg-gradient-to-r from-primary to-primary/80",
-          "border border-primary/40 shadow-glow",
+          "text-sm font-semibold text-action-primary-foreground",
+          "bg-action-primary hover:bg-action-primary-hover",
+          "border border-action-primary shadow-glow",
           "transition-[transform,box-shadow,opacity] duration-180",
           "hover:shadow-[0_0_24px_hsl(var(--primary)/0.42)]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-60",
+          "disabled:pointer-events-none disabled:opacity-100 disabled:bg-action-disabled disabled:text-action-disabled-foreground disabled:border-action-disabled",
           "after:absolute after:left-1/2 after:top-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:-translate-y-1/2",
           "after:rounded-full after:bg-primary-foreground/30 after:opacity-0 after:transition-all after:duration-180",
           "active:after:h-24 active:after:w-24 active:after:opacity-100",

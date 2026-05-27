@@ -452,7 +452,7 @@ export default function SASecurityTab() {
       <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
         <Tabs defaultValue="attendance">
           <div className="px-5 pt-4 pb-0 border-b border-border-subtle">
-            <TabsList className="h-8 gap-1 bg-transparent p-0">
+            <TabsList className="h-8 gap-1 bg-control-bg p-1">
               {[
                 { value: "attendance", label: "Attendance Edits",  icon: Activity     },
                 { value: "audit",      label: "Audit Log",         icon: Eye          },
@@ -462,7 +462,7 @@ export default function SASecurityTab() {
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="h-8 px-3 text-[11px] gap-1.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg"
+                  className="h-7 px-3 text-[11px] gap-1.5 rounded-lg"
                 >
                   <tab.icon className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">{tab.label}</span>

@@ -113,7 +113,7 @@ export default function StudentProgrammesCard() {
                 style={{ backgroundColor: p.color }}
               />
               <div className="min-w-0">
-                <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">
                   {p.name}
                 </p>
                 {p.description && (

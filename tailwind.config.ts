@@ -36,7 +36,36 @@ export default {
 
         /* Brand accent */
         "primary-glow":  "hsl(var(--primary-glow))",
+        "primary-hover": "hsl(var(--primary-hover))",
         "accent-glow":   "hsl(var(--accent-glow))",
+
+        /* Enterprise interaction tokens */
+        "action-primary": {
+          DEFAULT: "hsl(var(--action-primary-bg))",
+          hover: "hsl(var(--action-primary-hover))",
+          foreground: "hsl(var(--action-primary-text))",
+        },
+        "action-secondary": {
+          DEFAULT: "hsl(var(--action-secondary-bg))",
+          hover: "hsl(var(--action-secondary-hover))",
+          foreground: "hsl(var(--action-secondary-text))",
+        },
+        "action-danger": {
+          DEFAULT: "hsl(var(--action-danger-bg))",
+          hover: "hsl(var(--action-danger-hover))",
+          foreground: "hsl(var(--action-danger-text))",
+        },
+        "action-disabled": {
+          DEFAULT: "hsl(var(--action-disabled-bg))",
+          foreground: "hsl(var(--action-disabled-text))",
+        },
+        "control-bg": "hsl(var(--control-bg))",
+        "control-hover": "hsl(var(--control-hover))",
+        "control-text": "hsl(var(--control-text))",
+        "control-muted": "hsl(var(--control-muted))",
+        "input-bg": "hsl(var(--input-bg))",
+        "input-text": "hsl(var(--input-text))",
+        "input-placeholder": "hsl(var(--input-placeholder))",
 
         /* Gold / premium */
         gold: {

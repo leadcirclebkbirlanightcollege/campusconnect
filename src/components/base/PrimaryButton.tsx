@@ -25,12 +25,12 @@ interface PrimaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  gradient: "btn-gradient text-white",
-  solid:    "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary",
-  outline:  "border border-border-strong bg-transparent text-foreground hover:bg-surface-2",
-  ghost:    "bg-transparent text-foreground hover:bg-surface-2",
-  danger:   "bg-danger text-danger-foreground hover:bg-danger/90",
-  success:  "bg-success text-success-foreground hover:bg-success/90",
+  gradient: "btn-gradient text-action-primary-foreground border border-action-primary",
+  solid:    "bg-action-primary text-action-primary-foreground border border-action-primary hover:bg-action-primary-hover shadow-primary",
+  outline:  "border border-border-strong bg-action-secondary text-action-secondary-foreground hover:bg-action-secondary-hover",
+  ghost:    "border border-transparent bg-transparent text-control-text hover:bg-control-hover",
+  danger:   "bg-action-danger text-action-danger-foreground border border-action-danger hover:bg-action-danger-hover",
+  success:  "bg-success text-success-foreground border border-success hover:bg-success/90",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -62,7 +62,7 @@ export function PrimaryButton({
         "inline-flex items-center justify-center",
         "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-        "disabled:opacity-50 disabled:pointer-events-none",
+        "disabled:opacity-100 disabled:pointer-events-none disabled:bg-action-disabled disabled:text-action-disabled-foreground disabled:border-action-disabled",
         "select-none",
         VARIANTS[variant],
         SIZES[size],

@@ -59,7 +59,7 @@ export default function PwaInstallPage() {
             />
             {isInstalled && (
               <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-success flex items-center justify-center shadow-sm">
-                <CheckCircle2 className="h-4 w-4 text-white" />
+                <CheckCircle2 className="h-4 w-4 text-success-foreground" />
               </span>
             )}
           </div>

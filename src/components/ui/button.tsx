@@ -9,7 +9,7 @@ const buttonVariants = cva(
     "tap-ripple ring-offset-background",
     "transition-[transform,background-color,box-shadow,opacity,border-color] duration-[120ms] ease-[cubic-bezier(0.0,0,0.2,1)]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    "disabled:pointer-events-none disabled:opacity-50",
+    "disabled:pointer-events-none disabled:opacity-100 disabled:bg-action-disabled disabled:text-action-disabled-foreground disabled:border-action-disabled",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
     "hover:scale-[1.02] active:scale-[0.97]",
     "select-none",
@@ -18,15 +18,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary disabled:bg-primary/60 disabled:text-primary-foreground",
+          "bg-action-primary text-action-primary-foreground border border-action-primary shadow-sm hover:bg-action-primary-hover hover:shadow-md active:bg-action-primary-hover",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 disabled:bg-destructive/60 disabled:text-destructive-foreground",
+          "bg-action-danger text-action-danger-foreground border border-action-danger shadow-sm hover:bg-action-danger-hover active:bg-action-danger-hover",
         outline:
-          "border border-border-strong bg-surface-1 text-foreground shadow-sm hover:bg-surface-2 hover:border-primary/50",
+          "border border-border-strong bg-action-secondary text-action-secondary-foreground shadow-sm hover:bg-action-secondary-hover hover:border-primary/50",
         secondary:
-          "bg-surface-2 text-foreground border border-border-subtle shadow-sm hover:bg-surface-3",
+          "bg-action-secondary text-action-secondary-foreground border border-border-subtle shadow-sm hover:bg-action-secondary-hover",
         ghost:
-          "hover:bg-surface-2 text-foreground hover:scale-100 active:scale-[0.98]",
+          "bg-transparent border border-transparent text-control-text hover:bg-control-hover hover:text-control-text hover:scale-100 active:scale-[0.98]",
         link:
           "text-primary underline-offset-4 hover:underline hover:scale-100 active:scale-100",
       },

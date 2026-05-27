@@ -84,7 +84,7 @@ export default function LaunchModeScreen({ settings }: Props) {
         </p>
       </div>
 
-      <div className="fixed bottom-6 left-0 right-0 text-center">
+      <div className="fixed left-0 right-0 text-center bottom-[calc(env(safe-area-inset-bottom,0px)+24px)]">
         <p className="text-xs text-muted-foreground">
           Developed by Atharv Jadhav — Department of Computer Science
         </p>

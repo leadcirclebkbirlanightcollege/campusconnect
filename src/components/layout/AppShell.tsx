@@ -133,7 +133,7 @@ function BellPopover({ userId, unreadCount }: { userId: string; unreadCount: num
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }} animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-danger text-white text-[9px] font-black flex items-center justify-center"
+            className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-danger text-danger-foreground text-[9px] font-black flex items-center justify-center"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </motion.span>
@@ -334,7 +334,7 @@ const AppShell = ({ children }: AppShellProps) => {
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center space-x-2 group">
               <img src={BRANDING.logo} alt={BRANDING.name} className="w-9 h-9 object-contain" />
-              <span className="text-xl font-bold bg-gradient-premium bg-clip-text text-transparent">{BRANDING.name}</span>
+              <span className="text-xl font-bold text-foreground">{BRANDING.name}</span>
             </Link>
 
             {showStudentNav && (
