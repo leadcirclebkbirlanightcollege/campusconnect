@@ -302,7 +302,7 @@ function ComposeForm({
           disabled={mutation.isPending}
           className={cn(
             "w-full h-10 gap-2 font-semibold",
-            isEmergency ? "bg-danger hover:bg-danger/90 text-white" : "",
+            isEmergency ? "bg-action-danger hover:bg-action-danger-hover text-action-danger-foreground" : "",
           )}
         >
           {mutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> :

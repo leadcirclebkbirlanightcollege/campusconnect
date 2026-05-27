@@ -249,7 +249,7 @@ export default function AdminStudentVerificationPage() {
               </Button>
               <Button
                 size="sm"
-                className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                className="h-9 gap-1.5 bg-success hover:bg-success/90 text-success-foreground shadow-sm"
                 onClick={() => openApprove(p)}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Approve
@@ -338,7 +338,7 @@ export default function AdminStudentVerificationPage() {
             <Button
               onClick={submitApprove}
               disabled={!collegeId || busy || (preview && preview.ok === false)}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-gray-700 disabled:text-gray-300 disabled:opacity-70"
+              className="gap-2 bg-success hover:bg-success/90 text-success-foreground"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" />} Approve Student
             </Button>
@@ -364,7 +364,8 @@ export default function AdminStudentVerificationPage() {
             <Button
               onClick={submitReject}
               disabled={busy}
-              className="gap-2 bg-red-600 hover:bg-red-700 text-white"
+              variant="destructive"
+              className="gap-2"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" />} Reject
             </Button>

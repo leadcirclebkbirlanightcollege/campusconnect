@@ -147,7 +147,7 @@ export default function StudentScanAttendance() {
                   "w-full py-3.5 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all duration-150",
                   selectedLectureId === liveLecture.id
                     ? "bg-success/15 border border-success/30 text-success"
-                    : "bg-danger text-white hover:bg-danger/90 shadow-lg shadow-danger/20",
+                    : "bg-action-danger text-action-danger-foreground border border-action-danger hover:bg-action-danger-hover shadow-lg shadow-danger/20",
                 )}
               >
                 {selectedLectureId === liveLecture.id ? (
