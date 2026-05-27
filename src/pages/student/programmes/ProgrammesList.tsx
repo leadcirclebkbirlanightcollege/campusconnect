@@ -124,7 +124,7 @@ export default function ProgrammesList() {
                   </div>
 
                   {/* Arrow */}
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-fast" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 transition-fast" />
                 </Link>
               </FadeIn>
             );

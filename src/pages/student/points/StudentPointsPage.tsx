@@ -512,7 +512,7 @@ function QuickCta({
           <p className="text-[13px] font-semibold text-foreground truncate">{title}</p>
           <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
         </div>
-        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:translate-x-0.5 transition-transform" />
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
       </div>
     </Link>
   );

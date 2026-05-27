@@ -141,8 +141,8 @@ export default function TopbarNotificationCenter({ userId }: { userId: string })
         transition={PRESS_TRANSITION}
         className={cn(
           "relative flex h-10 min-w-10 items-center justify-center gap-1 rounded-xl px-2",
-          "border border-border-subtle bg-surface-2",
-          "text-muted-foreground hover:text-foreground hover:bg-surface-3",
+          "border border-border-subtle bg-action-secondary",
+          "text-action-secondary-foreground hover:text-action-secondary-foreground hover:bg-action-secondary-hover",
           "transition-all duration-fast"
         )}
       >
