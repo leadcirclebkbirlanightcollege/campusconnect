@@ -80,7 +80,7 @@ export default function FeedbackButton() {
   return (
     <>
       {/* Floating trigger */}
-      <div className="fixed right-4 z-[9999]" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+      <div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-[9999] md:bottom-[calc(env(safe-area-inset-bottom,0px)+24px)]">
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={() => { setOpen((v) => !v); setDone(false); }}
@@ -114,8 +114,7 @@ export default function FeedbackButton() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="fixed right-4 z-[9998] w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border-subtle bg-surface-1 text-foreground shadow-xl"
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+152px)] z-[9998] w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border-subtle bg-surface-1 text-foreground shadow-xl md:bottom-[calc(env(safe-area-inset-bottom,0px)+88px)]"
           >
             {done ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
