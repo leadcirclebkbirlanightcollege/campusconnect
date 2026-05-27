@@ -25,11 +25,11 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 }
 
 const VARIANTS: Record<IconButtonVariant, string> = {
-  default: "bg-surface-2 text-foreground border border-border-subtle hover:bg-surface-3",
-  ghost:   "bg-transparent text-muted-foreground hover:bg-surface-2 hover:text-foreground",
-  outline: "bg-transparent text-foreground border border-border-strong hover:bg-surface-2",
-  primary: "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15",
-  danger:  "bg-danger/10  text-danger  border border-danger/20  hover:bg-danger/15",
+  default: "bg-action-secondary text-action-secondary-foreground border border-border-subtle hover:bg-action-secondary-hover",
+  ghost:   "bg-transparent text-control-text border border-transparent hover:bg-control-hover hover:text-control-text",
+  outline: "bg-action-secondary text-action-secondary-foreground border border-border-strong hover:bg-action-secondary-hover",
+  primary: "bg-action-primary text-action-primary-foreground border border-action-primary hover:bg-action-primary-hover",
+  danger:  "bg-action-danger text-action-danger-foreground border border-action-danger hover:bg-action-danger-hover",
 };
 
 const SIZES: Record<IconButtonSize, { btn: string; icon: string }> = {
@@ -60,7 +60,7 @@ export function IconButton({
         "relative inline-flex items-center justify-center shrink-0",
         "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        "active:scale-[0.93] disabled:opacity-50 disabled:pointer-events-none",
+        "active:scale-[0.93] disabled:opacity-100 disabled:pointer-events-none disabled:bg-action-disabled disabled:text-action-disabled-foreground disabled:border-action-disabled",
         round ? "rounded-full" : "rounded-xl",
         VARIANTS[variant],
         sz.btn,
@@ -76,7 +76,7 @@ export function IconButton({
           className={cn(
             "absolute -top-1 -right-1",
             "h-4 min-w-4 px-0.5 rounded-full",
-            "bg-danger text-white text-[9px] font-black",
+            "bg-danger text-danger-foreground text-[9px] font-black",
             "flex items-center justify-center leading-none",
             "animate-scale-in",
           )}
