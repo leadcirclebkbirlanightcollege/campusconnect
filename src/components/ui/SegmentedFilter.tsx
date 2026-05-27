@@ -33,7 +33,7 @@ export function SegmentedFilter<T extends string>({
     <div
       role="tablist"
       className={cn(
-        "inline-flex items-center gap-1 rounded-2xl border border-border-subtle bg-surface-2/70 p-1 backdrop-blur-sm",
+        "inline-flex items-center gap-1 rounded-2xl border border-border-subtle bg-control-bg p-1",
         scrollable && "max-w-full overflow-x-auto scrollbar-hide",
         className,
       )}
@@ -51,8 +51,8 @@ export function SegmentedFilter<T extends string>({
               "relative shrink-0 inline-flex items-center gap-1.5 rounded-xl font-medium transition-all duration-180",
               sz,
               active
-                ? "bg-foreground text-background shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-surface-3/60",
+                ? "bg-action-primary text-action-primary-foreground shadow-sm"
+                : "bg-transparent text-control-muted hover:bg-control-hover hover:text-control-text",
             )}
           >
             <span>{opt.label}</span>
@@ -60,7 +60,7 @@ export function SegmentedFilter<T extends string>({
               <span
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-                  active ? "bg-background/20 text-background" : "bg-surface-3 text-muted-foreground",
+                   active ? "bg-action-primary-foreground/20 text-action-primary-foreground" : "bg-control-hover text-control-muted",
                 )}
               >
                 {opt.count}
