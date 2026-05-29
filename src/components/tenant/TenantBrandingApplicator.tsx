@@ -42,14 +42,58 @@ function hslValue(h: number, s: number, l: number) {
   return `${h} ${Math.max(0, Math.min(100, s))}% ${Math.max(0, Math.min(100, l))}%`;
 }
 
+/**
+ * Properties we override per-tenant. Tracked so we can RESET them when the
+ * tenant has no (or an unsafe) brand color — otherwise a previous tenant's
+ * overrides would persist and clash with the next screen.
+ */
+const BRAND_PROPS = [
+  "--primary",
+  "--primary-hover",
+  "--primary-glow",
+  "--accent",
+  "--ring",
+  "--gradient-from",
+  "--action-primary-bg",
+  "--action-primary-hover",
+  "--action-primary-text",
+] as const;
+
+function resetBrand(root: CSSStyleDeclaration) {
+  BRAND_PROPS.forEach((p) => root.removeProperty(p));
+}
+
 export default function TenantBrandingApplicator() {
   const { college } = useTenant();
 
   useEffect(() => {
-    if (!college?.primary_color) return;
-    const hsl = hexToHslParts(college.primary_color);
-    if (!hsl) return;
     const root = document.documentElement.style;
+
+    if (!college?.primary_color) {
+      resetBrand(root);
+      return;
+    }
+
+    const hsl = hexToHslParts(college.primary_color);
+    if (!hsl) {
+      resetBrand(root);
+      return;
+    }
+
+    // Guardrail: reject brand colors that would fail contrast against white
+    // text (too light) or look like a paint glitch (too dark / pure black).
+    // White text on white bg = invisible button. Clamp + fall back to system
+    // default rather than render a broken UI.
+    if (hsl.l > 60 || hsl.l < 12) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[TenantBranding] Rejecting unsafe primary_color ${college.primary_color} (L=${hsl.l}). ` +
+        `Falling back to system default.`
+      );
+      resetBrand(root);
+      return;
+    }
+
     const primary = hsl.value;
     const hover = hslValue(hsl.h, Math.min(100, hsl.s + 4), Math.max(26, hsl.l - 8));
     const glow = hslValue(hsl.h, Math.min(100, hsl.s + 6), Math.min(74, hsl.l + 10));
