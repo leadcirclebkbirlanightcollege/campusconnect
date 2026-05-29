@@ -11,7 +11,7 @@
 import { useEffect } from "react";
 import { useTenant } from "@/providers/TenantProvider";
 
-function hexToHsl(hex: string): string | null {
+function hexToHslParts(hex: string): { h: number; s: number; l: number; value: string } | null {
   // Accepts "#rrggbb" or "#rgb"
   const cleaned = hex.replace("#", "");
   const full = cleaned.length === 3
@@ -34,7 +34,12 @@ function hexToHsl(hex: string): string | null {
       case b: h = ((r - g) / d + 4) / 6; break;
     }
   }
-  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  const parts = { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  return { ...parts, value: `${parts.h} ${parts.s}% ${parts.l}%` };
+}
+
+function hslValue(h: number, s: number, l: number) {
+  return `${h} ${Math.max(0, Math.min(100, s))}% ${Math.max(0, Math.min(100, l))}%`;
 }
 
 export default function TenantBrandingApplicator() {
@@ -42,10 +47,22 @@ export default function TenantBrandingApplicator() {
 
   useEffect(() => {
     if (!college?.primary_color) return;
-    const hsl = hexToHsl(college.primary_color);
+    const hsl = hexToHslParts(college.primary_color);
     if (!hsl) return;
-    document.documentElement.style.setProperty("--primary", hsl);
-    document.documentElement.style.setProperty("--primary-glow", hsl);
+    const root = document.documentElement.style;
+    const primary = hsl.value;
+    const hover = hslValue(hsl.h, Math.min(100, hsl.s + 4), Math.max(26, hsl.l - 8));
+    const glow = hslValue(hsl.h, Math.min(100, hsl.s + 6), Math.min(74, hsl.l + 10));
+
+    root.setProperty("--primary", primary);
+    root.setProperty("--primary-hover", hover);
+    root.setProperty("--primary-glow", glow);
+    root.setProperty("--accent", primary);
+    root.setProperty("--ring", primary);
+    root.setProperty("--gradient-from", primary);
+    root.setProperty("--action-primary-bg", primary);
+    root.setProperty("--action-primary-hover", hover);
+    root.setProperty("--action-primary-text", "0 0% 100%");
   }, [college?.primary_color]);
 
   return null;
