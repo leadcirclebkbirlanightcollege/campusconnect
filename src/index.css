@@ -180,24 +180,25 @@
     --primary-dim:        239 70% 58%;
     --primary-glow:       235 100% 74%;  /* #7C83FF — hover */
 
-    /* ── Enterprise interaction tokens (button/input/WebView safe) ── */
-    --action-primary-bg:       var(--primary);
-    --action-primary-hover:    var(--primary-hover);
-    --action-primary-text:     var(--primary-foreground);
+    /* ── Enterprise interaction tokens (button/input/WebView safe) ──
+       Raw HSL triplets only — no nested var() (WebView paint bug). */
+    --action-primary-bg:       239 84% 67%;
+    --action-primary-hover:    239 72% 58%;
+    --action-primary-text:     0 0% 100%;
     --action-secondary-bg:     222 30% 15%;
     --action-secondary-hover:  222 26% 20%;
     --action-secondary-text:   215 20% 88%;
-    --action-danger-bg:        var(--danger);
+    --action-danger-bg:        0 68% 44%;
     --action-danger-hover:     0 72% 52%;
-    --action-danger-text:      var(--danger-foreground);
+    --action-danger-text:      0 0% 100%;
     --action-disabled-bg:      220 14% 26%;
     --action-disabled-text:    215 16% 72%;
     --control-bg:             222 30% 15%;
     --control-hover:          222 26% 20%;
-    --control-text:           var(--text-primary);
+    --control-text:           210 40% 98%;
     --control-muted:          215 20% 72%;
     --input-bg:               222 32% 10%;
-    --input-text:             var(--text-primary);
+    --input-text:             210 40% 98%;
     --input-placeholder:      215 20% 68%;
 
     /* ── Accent Glow ── */
