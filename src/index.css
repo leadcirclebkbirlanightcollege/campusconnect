@@ -45,25 +45,29 @@
     --primary-dim:        225 55% 55%;
     --primary-glow:       225 80% 62%;
 
-    /* ── Enterprise interaction tokens (button/input/WebView safe) ── */
-    --action-primary-bg:       var(--primary);
-    --action-primary-hover:    var(--primary-hover);
-    --action-primary-text:     var(--primary-foreground);
-    --action-secondary-bg:     var(--surface-2);
-    --action-secondary-hover:  var(--surface-3);
+    /* ── Enterprise interaction tokens (button/input/WebView safe) ──
+       NOTE: These MUST contain raw H S% L% triplets, NEVER var() refs.
+       Android WebView and some Chrome versions fail to resolve nested
+       var() inside hsl(...) on first paint, causing white/invisible
+       buttons until an interaction triggers a repaint. */
+    --action-primary-bg:       225 76% 46%;
+    --action-primary-hover:    225 80% 40%;
+    --action-primary-text:     0 0% 100%;
+    --action-secondary-bg:     215 18% 97%;
+    --action-secondary-hover:  215 16% 93%;
     --action-secondary-text:   220 18% 18%;
-    --action-danger-bg:        var(--danger);
+    --action-danger-bg:        0 68% 44%;
     --action-danger-hover:     0 72% 38%;
-    --action-danger-text:      var(--danger-foreground);
+    --action-danger-text:      0 0% 100%;
     --action-disabled-bg:      220 10% 36%;
     --action-disabled-text:    220 12% 78%;
-    --control-bg:             var(--surface-2);
-    --control-hover:          var(--surface-3);
-    --control-text:           var(--text-primary);
-    --control-muted:          var(--text-secondary);
-    --input-bg:               var(--surface-1);
-    --input-text:             var(--text-primary);
-    --input-placeholder:      var(--text-muted);
+    --control-bg:             215 18% 97%;
+    --control-hover:          215 16% 93%;
+    --control-text:           220 38% 10%;
+    --control-muted:          220 18% 32%;
+    --input-bg:               0 0% 100%;
+    --input-text:             220 38% 10%;
+    --input-placeholder:      220 12% 54%;
 
     /* ── Accent Glow (Futuristic Electric Highlight) ── */
     --accent-glow:        220 100% 70%;
@@ -176,24 +180,25 @@
     --primary-dim:        239 70% 58%;
     --primary-glow:       235 100% 74%;  /* #7C83FF — hover */
 
-    /* ── Enterprise interaction tokens (button/input/WebView safe) ── */
-    --action-primary-bg:       var(--primary);
-    --action-primary-hover:    var(--primary-hover);
-    --action-primary-text:     var(--primary-foreground);
+    /* ── Enterprise interaction tokens (button/input/WebView safe) ──
+       Raw HSL triplets only — no nested var() (WebView paint bug). */
+    --action-primary-bg:       239 84% 67%;
+    --action-primary-hover:    239 72% 58%;
+    --action-primary-text:     0 0% 100%;
     --action-secondary-bg:     222 30% 15%;
     --action-secondary-hover:  222 26% 20%;
     --action-secondary-text:   215 20% 88%;
-    --action-danger-bg:        var(--danger);
+    --action-danger-bg:        0 68% 44%;
     --action-danger-hover:     0 72% 52%;
-    --action-danger-text:      var(--danger-foreground);
+    --action-danger-text:      0 0% 100%;
     --action-disabled-bg:      220 14% 26%;
     --action-disabled-text:    215 16% 72%;
     --control-bg:             222 30% 15%;
     --control-hover:          222 26% 20%;
-    --control-text:           var(--text-primary);
+    --control-text:           210 40% 98%;
     --control-muted:          215 20% 72%;
     --input-bg:               222 32% 10%;
-    --input-text:             var(--text-primary);
+    --input-text:             210 40% 98%;
     --input-placeholder:      215 20% 68%;
 
     /* ── Accent Glow ── */
