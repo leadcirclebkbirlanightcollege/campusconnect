@@ -11,6 +11,12 @@ importScripts(
 workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
 workbox.precaching.cleanupOutdatedCaches();
 
+// Production/PWA hotfix: do not let an older worker keep serving a stale
+// CSS/JS shell after a design-token rebuild. The new worker must activate
+// immediately and claim installed PWA tabs on the next load.
+self.skipWaiting();
+workbox.core.clientsClaim();
+
 // SPA navigation: network-first, skip OAuth/auth routes
 workbox.routing.registerRoute(
   new workbox.routing.NavigationRoute(
