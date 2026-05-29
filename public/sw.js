@@ -11,6 +11,28 @@ importScripts(
 workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
 workbox.precaching.cleanupOutdatedCaches();
 
+// Production/PWA hotfix: do not let an older worker keep serving a stale
+// CSS/JS shell after a design-token rebuild. The new worker must activate
+// immediately and claim installed PWA tabs on the next load.
+self.skipWaiting();
+workbox.core.clientsClaim();
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    await caches.delete("pages");
+    const windowClients = await self.clients.matchAll({
+      type: "window",
+      includeUncontrolled: true,
+    });
+    await Promise.all(windowClients.map((client) => {
+      const url = new URL(client.url);
+      if (url.searchParams.has("cc_sw_refresh")) return undefined;
+      url.searchParams.set("cc_sw_refresh", Date.now().toString());
+      return client.navigate(url.toString());
+    }));
+  })());
+});
+
 // SPA navigation: network-first, skip OAuth/auth routes
 workbox.routing.registerRoute(
   new workbox.routing.NavigationRoute(
