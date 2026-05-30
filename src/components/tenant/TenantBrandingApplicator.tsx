@@ -83,12 +83,16 @@ export default function TenantBrandingApplicator() {
     // Guardrail: reject brand colors that would fail contrast against white
     // text (too light) or look like a paint glitch (too dark / pure black).
     // White text on white bg = invisible button. Clamp + fall back to system
-    // default rather than render a broken UI.
-    if (hsl.l > 60 || hsl.l < 12) {
+    // default rather than render a broken UI. Also reject near-grey colors
+    // with no saturation (likely placeholder values).
+    const tooLight = hsl.l > 55;
+    const tooDark  = hsl.l < 14;
+    const tooGrey  = hsl.s < 12 && (hsl.l > 40 || hsl.l < 25);
+    if (tooLight || tooDark || tooGrey) {
       // eslint-disable-next-line no-console
       console.warn(
-        `[TenantBranding] Rejecting unsafe primary_color ${college.primary_color} (L=${hsl.l}). ` +
-        `Falling back to system default.`
+        `[TenantBranding] Rejecting unsafe primary_color ${college.primary_color} ` +
+        `(H=${hsl.h} S=${hsl.s}% L=${hsl.l}%). Falling back to system default.`
       );
       resetBrand(root);
       return;
