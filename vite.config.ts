@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       manifestFilename: "manifest.webmanifest",
-      includeAssets: ["favicon.ico", "pwa-512.png", "noise.png"],
+      includeAssets: ["favicon.ico", "pwa-512.png", "noise.png", "icons/*.png"],
       devOptions: { enabled: false },
       // Use custom SW that includes Web Push handlers
       strategies: "injectManifest",
