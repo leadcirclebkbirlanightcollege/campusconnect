@@ -28,7 +28,7 @@ const AdminShell = ({ children }: AdminShellProps) => {
       <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.02] pointer-events-none" />
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
       
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-premium">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-card/80 backdrop-blur-xl shadow-premium app-header-safe">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/admin" className="flex items-center space-x-2 group">

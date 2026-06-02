@@ -118,6 +118,8 @@ export default function SoftUpdateBanner() {
           transition={{ type: "spring", stiffness: 340, damping: 28 }}
           className="fixed top-0 left-0 right-0 z-[9998] flex items-center justify-between gap-3
                      px-4 py-2.5 bg-primary text-primary-foreground shadow-lg"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)" }}
+
         >
           {/* Left: icon + message */}
           <div className="flex items-center gap-2.5 min-w-0">
