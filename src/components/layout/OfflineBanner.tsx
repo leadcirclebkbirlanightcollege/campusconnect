@@ -18,9 +18,13 @@ export default function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[99999] flex items-center justify-center gap-2 bg-destructive/90 text-destructive-foreground text-xs py-2 px-4 text-center">
+    <div
+      className="fixed top-0 left-0 right-0 z-[99999] flex items-center justify-center gap-2 bg-destructive/90 text-destructive-foreground text-xs py-2 px-4 text-center"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+    >
       <WifiOff className="h-3.5 w-3.5 shrink-0" />
       You are offline. Some features may not work.
     </div>
+
   );
 }
