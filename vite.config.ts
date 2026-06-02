@@ -63,14 +63,14 @@ export default defineConfig(({ mode }) => ({
       },
       manifest: {
         name: "Campus Connect",
-        short_name: "CampusConnect",
-        description: "College lecture, attendance & points management for your campus.",
+        short_name: "Campus Connect",
+        description: "Unified Campus ERP, Student Engagement and Collaboration Platform.",
         start_url: "/?source=pwa",
         scope: "/",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#0b1220",
-        theme_color: "#1a56db",
+        background_color: "#0B1220",
+        theme_color: "#0B1220",
         categories: ["education", "productivity"],
         shortcuts: [
           {
