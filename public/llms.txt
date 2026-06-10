@@ -1,0 +1,18 @@
+# Campus Connect
+
+> A unified college ERP, student engagement, and collaboration platform — attendance, lectures, gamified points, leaderboards, announcements and real-time notifications for institutions.
+
+Campus Connect helps colleges run daily operations (lectures, attendance, results, documents) while keeping students engaged through points, streaks, achievements, leaderboards, and a digital ID. It ships as an installable PWA with offline-friendly caching and native web push.
+
+## Pages
+
+- [Home](/): Overview, features, and how Campus Connect modernizes campus operations.
+- [Book a Demo](/book-demo): Schedule a guided walkthrough for your institution.
+- [Live Demo](/demo): Explore a sandbox view of the platform.
+- [Contact](/contact): Reach the Campus Connect team.
+- [Help & Support](/help): Common questions and getting-started guidance.
+
+## Optional
+
+- [Privacy](/privacy): Data handling and privacy policy.
+- [Terms](/terms): Terms of service.

@@ -26,7 +26,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
 
-type LeaderboardMode = "alltime" | "weekly";
+type LeaderboardMode = "alltime" | "weekly" | "class";
 
 type LeaderboardRow = {
   user_id: string;
@@ -266,9 +266,32 @@ export default function Leaderboard() {
     refetchOnWindowFocus: false,
   });
 
-  const activeRows = mode === "alltime" ? allTimeQuery.data ?? [] : weeklyQuery.data ?? [];
+  const classQuery = useQuery({
+    queryKey: ["leaderboard", "class", visibleCount],
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("get_class_leaderboard" as any, {
+        p_limit: visibleCount,
+      } as any);
+      if (error) throw error;
+      return ((data ?? []) as LeaderboardRow[]);
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    enabled: mode === "class",
+  });
+
+  const activeRows =
+    mode === "alltime"
+      ? allTimeQuery.data ?? []
+      : mode === "weekly"
+      ? weeklyQuery.data ?? []
+      : classQuery.data ?? [];
   const compareRows = mode === "alltime" ? weeklyQuery.data ?? [] : allTimeQuery.data ?? [];
-  const isLoading = allTimeQuery.isLoading || weeklyQuery.isLoading || meQuery.isLoading;
+  const isLoading =
+    allTimeQuery.isLoading ||
+    weeklyQuery.isLoading ||
+    (mode === "class" && classQuery.isLoading) ||
+    meQuery.isLoading;
   const myId = meQuery.data?.id;
 
   const handlePullRefresh = useCallback(async () => {
@@ -276,8 +299,9 @@ export default function Leaderboard() {
       meQuery.refetch(),
       allTimeQuery.refetch(),
       weeklyQuery.refetch(),
+      classQuery.refetch(),
     ]);
-  }, [allTimeQuery, meQuery, weeklyQuery]);
+  }, [allTimeQuery, classQuery, meQuery, weeklyQuery]);
 
   const movementMap = useMemo(() => {
     const compareRankByUser = new Map(compareRows.map((row) => [row.user_id, row.rank]));
@@ -301,7 +325,13 @@ export default function Leaderboard() {
       <PageContainer className="space-y-6" withBottomNav>
         <PageHeader
           title="Leaderboard"
-          subtitle={mode === "alltime" ? "All-time competition standings" : "Weekly competition standings"}
+          subtitle={
+            mode === "alltime"
+              ? "All-time competition standings"
+              : mode === "weekly"
+              ? "Weekly competition standings"
+              : "Ranks within your class"
+          }
           variant="large"
           gradient
         />
@@ -328,6 +358,16 @@ export default function Leaderboard() {
                 )}
               >
                 Weekly
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("class")}
+                className={cn(
+                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                  mode === "class" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+                )}
+              >
+                My Class
               </button>
             </div>
           </motion.section>

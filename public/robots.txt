@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /platform/
+Disallow: /faculty/
+Disallow: /auth
+Disallow: /onboarding
+
+Sitemap: https://bkbnc-campus-connect.lovable.app/sitemap.xml
