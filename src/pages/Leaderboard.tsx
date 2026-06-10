@@ -325,7 +325,13 @@ export default function Leaderboard() {
       <PageContainer className="space-y-6" withBottomNav>
         <PageHeader
           title="Leaderboard"
-          subtitle={mode === "alltime" ? "All-time competition standings" : "Weekly competition standings"}
+          subtitle={
+            mode === "alltime"
+              ? "All-time competition standings"
+              : mode === "weekly"
+              ? "Weekly competition standings"
+              : "Ranks within your class"
+          }
           variant="large"
           gradient
         />
@@ -352,6 +358,16 @@ export default function Leaderboard() {
                 )}
               >
                 Weekly
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("class")}
+                className={cn(
+                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
+                  mode === "class" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
+                )}
+              >
+                My Class
               </button>
             </div>
           </motion.section>
