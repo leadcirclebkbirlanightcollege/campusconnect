@@ -26,7 +26,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
 
-type LeaderboardMode = "alltime" | "weekly";
+type LeaderboardMode = "alltime" | "weekly" | "class";
 
 type LeaderboardRow = {
   user_id: string;
