@@ -266,9 +266,32 @@ export default function Leaderboard() {
     refetchOnWindowFocus: false,
   });
 
-  const activeRows = mode === "alltime" ? allTimeQuery.data ?? [] : weeklyQuery.data ?? [];
+  const classQuery = useQuery({
+    queryKey: ["leaderboard", "class", visibleCount],
+    queryFn: async (): Promise<LeaderboardRow[]> => {
+      const { data, error } = await supabase.rpc("get_class_leaderboard" as any, {
+        p_limit: visibleCount,
+      } as any);
+      if (error) throw error;
+      return ((data ?? []) as LeaderboardRow[]);
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    enabled: mode === "class",
+  });
+
+  const activeRows =
+    mode === "alltime"
+      ? allTimeQuery.data ?? []
+      : mode === "weekly"
+      ? weeklyQuery.data ?? []
+      : classQuery.data ?? [];
   const compareRows = mode === "alltime" ? weeklyQuery.data ?? [] : allTimeQuery.data ?? [];
-  const isLoading = allTimeQuery.isLoading || weeklyQuery.isLoading || meQuery.isLoading;
+  const isLoading =
+    allTimeQuery.isLoading ||
+    weeklyQuery.isLoading ||
+    (mode === "class" && classQuery.isLoading) ||
+    meQuery.isLoading;
   const myId = meQuery.data?.id;
 
   const handlePullRefresh = useCallback(async () => {
