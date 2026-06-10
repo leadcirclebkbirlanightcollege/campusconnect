@@ -2787,6 +2787,18 @@ export type Database = {
         Returns: Json
       }
       get_admin_college_analytics: { Args: never; Returns: Json }
+      get_class_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          class_name: string
+          is_verified: boolean
+          name: string
+          points_total: number
+          rank: number
+          user_id: string
+        }[]
+      }
       get_college_admins: { Args: never; Returns: Json }
       get_event_stall_summary: { Args: { p_event_id: string }; Returns: Json }
       get_faculty_lecture_analytics: {
