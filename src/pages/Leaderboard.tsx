@@ -299,8 +299,9 @@ export default function Leaderboard() {
       meQuery.refetch(),
       allTimeQuery.refetch(),
       weeklyQuery.refetch(),
+      classQuery.refetch(),
     ]);
-  }, [allTimeQuery, meQuery, weeklyQuery]);
+  }, [allTimeQuery, classQuery, meQuery, weeklyQuery]);
 
   const movementMap = useMemo(() => {
     const compareRankByUser = new Map(compareRows.map((row) => [row.user_id, row.rank]));
