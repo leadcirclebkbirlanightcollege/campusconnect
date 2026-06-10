@@ -5,20 +5,19 @@
     <link rel="icon" type="image/png" href="/pwa-512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <title>Campus Connect - An LeadCircle Initiative</title>
+    <title>Campus Connect — College ERP, Attendance & Student Engagement Platform</title>
     <meta
       name="description"
-      content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community."
+      content="Campus Connect is a unified college ERP for lectures, attendance, results, gamified points and leaderboards — built for institutions and installable as a PWA."
     />
     <meta name="author" content="Campus Connect" />
+    <link rel="canonical" href="https://bkbnc-campus-connect.lovable.app/" />
 
     <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#1a56db" media="(prefers-color-scheme: light)" />
-    <!-- iOS standalone launch -->
     <meta name="mobile-web-app-capable" content="yes" />
-    <!-- Prevent address bar shrink on scroll -->
     <meta name="format-detection" content="telephone=no" />
 
     <!-- iOS PWA -->
@@ -29,7 +28,6 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
-    <!-- Prevent FOUC on iOS safe-area -->
     <style>
       body { background-color: #0b0f17; }
       html.light body { background-color: #ffffff; }
@@ -37,22 +35,37 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Campus Connect - College Lecture &amp; Attendance Management" />
+    <meta property="og:site_name" content="Campus Connect" />
+    <meta property="og:title" content="Campus Connect — College ERP & Student Engagement Platform" />
     <meta
       property="og:description"
-      content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community."
+      content="Unified ERP for lectures, attendance, results, gamified points and leaderboards. Installable PWA for students, faculty and admins."
     />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://bkbnc-campus-connect.lovable.app/" />
+    <meta property="og:image" content="https://bkbnc-campus-connect.lovable.app/icons/icon-512.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@CampusConnect" />
-    <meta name="twitter:title" content="Campus Connect - College Lecture &amp; Attendance Management" />
+    <meta name="twitter:title" content="Campus Connect — College ERP & Student Engagement Platform" />
     <meta
       name="twitter:description"
-      content="Complete platform for managing college lectures, tracking attendance, earning points, and staying connected with your academic community."
+      content="Unified ERP for lectures, attendance, results, gamified points and leaderboards. Installable PWA for students, faculty and admins."
     />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="https://bkbnc-campus-connect.lovable.app/icons/icon-512.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Campus Connect",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web, Android, iOS",
+        "description": "Unified college ERP, student engagement and collaboration platform.",
+        "url": "https://bkbnc-campus-connect.lovable.app/",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
   </head>
 
   <body>
