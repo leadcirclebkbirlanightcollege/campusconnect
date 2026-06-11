@@ -115,6 +115,7 @@ const SANotificationsPage   = lazy(() => import("@/pages/platform/pages/SANotifi
 const SAAnalyticsPage       = lazy(() => import("@/pages/platform/pages/SAAnalyticsPage"));
 const SASecurityPage        = lazy(() => import("@/pages/platform/pages/SASecurityPage"));
 const SAPlatformSettingsPage = lazy(() => import("@/pages/platform/pages/SAPlatformSettingsPage"));
+const SALandingEditorPage   = lazy(() => import("@/pages/platform/components/LandingContentEditor"));
 
 export default function AppRouter() {
   return (
@@ -174,6 +175,7 @@ export default function AppRouter() {
             <Route path="analytics"          element={<SAAnalyticsPage />} />
             <Route path="security"           element={<SASecurityPage />} />
             <Route path="platform-settings"  element={<SAPlatformSettingsPage />} />
+            <Route path="landing-editor"     element={<SALandingEditorPage />} />
             <Route path="leads"              element={<SALeadsPage />} />
           </Route>
 

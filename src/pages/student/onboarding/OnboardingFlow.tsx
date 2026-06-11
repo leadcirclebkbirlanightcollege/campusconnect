@@ -88,7 +88,7 @@ export default function OnboardingFlow() {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("profiles").update(patch).eq("user_id", user.id);
+      const { error } = await supabase.from("profiles").update(patch as any).eq("user_id", user.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
