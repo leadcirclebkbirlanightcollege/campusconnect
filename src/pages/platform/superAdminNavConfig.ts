@@ -41,6 +41,7 @@ export const SA_NAV_SECTIONS: SANavSection[] = [
       { title: "Notifications",      url: "/platform/admin-control/notifications",      icon: "Bell" },
       { title: "Security",           url: "/platform/admin-control/security",           icon: "Shield" },
       { title: "Platform Settings",  url: "/platform/admin-control/platform-settings",  icon: "Settings" },
+      { title: "Landing Page",       url: "/platform/admin-control/landing-editor",     icon: "LayoutTemplate" },
     ],
   },
 ];
@@ -65,6 +66,7 @@ const SA_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin-control/analytics":        { title: "Analytics",          description: "Cross-college insights & trends" },
   "/platform/admin-control/security":         { title: "Security Monitor",   description: "Audit logs, alerts & login activity" },
   "/platform/admin-control/platform-settings":{ title: "Platform Settings",  description: "Global configuration & branding" },
+  "/platform/admin-control/landing-editor":  { title: "Landing Page Editor", description: "Customize every section of the public homepage" },
 };
 
 export function getSAPageMeta(pathname: string): PageMeta {
