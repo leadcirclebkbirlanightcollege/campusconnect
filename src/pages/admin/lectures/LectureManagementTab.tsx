@@ -208,7 +208,7 @@ export default function LectureManagementTab() {
       const patch: Record<string, unknown> = { status };
       if (status === "live") { patch.live_started_at = nowIso; patch.ended_at = null; }
       if (status === "ended") patch.ended_at = nowIso;
-      const { error } = await supabase.from("lectures").update(patch).eq("id", id);
+      const { error } = await supabase.from("lectures").update(patch as any).eq("id", id);
       if (error) throw error;
       if (status === "live" || status === "ended") {
         const { error: ne } = await supabase.functions.invoke("lecture-status-notify", { body: { lecture_id: id, status } });
