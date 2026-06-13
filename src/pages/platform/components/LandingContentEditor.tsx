@@ -188,22 +188,60 @@ export default function LandingContentEditor() {
         )}
       />
 
+      {/* SOCIAL PROOF */}
+      <Card><CardHeader><CardTitle className="text-sm">Social Proof — "Built Using Real Student Feedback"</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <TextField label="Eyebrow" value={draft.socialProof.eyebrow} onChange={(v) => setDraft((d) => ({ ...d, socialProof: { ...d.socialProof, eyebrow: v } }))} />
+          <TextField label="Headline" value={draft.socialProof.title} onChange={(v) => setDraft((d) => ({ ...d, socialProof: { ...d.socialProof, title: v } }))} />
+          <div className="md:col-span-2"><TextField label="Description" value={draft.socialProof.description} onChange={(v) => setDraft((d) => ({ ...d, socialProof: { ...d.socialProof, description: v } }))} multiline /></div>
+          <div className="md:col-span-2"><TextField label="Bullets (one per line)" value={draft.socialProof.bullets.join("\n")} onChange={(v) => setDraft((d) => ({ ...d, socialProof: { ...d.socialProof, bullets: v.split("\n").map(s => s.trim()).filter(Boolean) } }))} multiline /></div>
+        </CardContent>
+      </Card>
+
       {/* FEATURES */}
       <HeadingFields title="Features — section heading" eyebrow={draft.featuresHeading.eyebrow} headline={draft.featuresHeading.title}
         onEyebrow={(v) => setDraft((d) => ({ ...d, featuresHeading: { ...d.featuresHeading, eyebrow: v } }))}
         onHeadline={(v) => setDraft((d) => ({ ...d, featuresHeading: { ...d.featuresHeading, title: v } }))} />
       <ListSection
-        title="Feature pills"
+        title="Feature cards"
         items={draft.features}
         onChange={(items) => setDraft((d) => ({ ...d, features: items }))}
-        empty={{ icon: "Sparkles" as LandingIconName, label: "" }}
+        empty={{ icon: "Sparkles" as LandingIconName, label: "", description: "" }}
         render={(item, set) => (
           <>
             <IconSelect value={item.icon} onChange={(v) => set({ ...item, icon: v })} />
             <TextField label="Label" value={item.label} onChange={(v) => set({ ...item, label: v })} />
+            <div className="md:col-span-2"><TextField label="Short description" value={item.description ?? ""} onChange={(v) => set({ ...item, description: v })} /></div>
           </>
         )}
       />
+
+      {/* ENTREPRENEURSHIP */}
+      <Card><CardHeader><CardTitle className="text-sm">Entrepreneurship (E-Cell) Section</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <TextField label="Eyebrow" value={draft.entrepreneurship.eyebrow} onChange={(v) => setDraft((d) => ({ ...d, entrepreneurship: { ...d.entrepreneurship, eyebrow: v } }))} />
+          <TextField label="Headline" value={draft.entrepreneurship.title} onChange={(v) => setDraft((d) => ({ ...d, entrepreneurship: { ...d.entrepreneurship, title: v } }))} />
+          <div className="md:col-span-2"><TextField label="Description" value={draft.entrepreneurship.description} onChange={(v) => setDraft((d) => ({ ...d, entrepreneurship: { ...d.entrepreneurship, description: v } }))} multiline /></div>
+        </CardContent>
+      </Card>
+
+      {/* ADMIN / INSTITUTIONS */}
+      <Card><CardHeader><CardTitle className="text-sm">Institutions Section — "Powerful Controls For Colleges"</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <TextField label="Eyebrow" value={draft.adminSection.eyebrow} onChange={(v) => setDraft((d) => ({ ...d, adminSection: { ...d.adminSection, eyebrow: v } }))} />
+          <TextField label="Headline" value={draft.adminSection.title} onChange={(v) => setDraft((d) => ({ ...d, adminSection: { ...d.adminSection, title: v } }))} />
+          <div className="md:col-span-2"><TextField label="Features (one per line)" value={draft.adminSection.features.join("\n")} onChange={(v) => setDraft((d) => ({ ...d, adminSection: { ...d.adminSection, features: v.split("\n").map(s => s.trim()).filter(Boolean) } }))} multiline /></div>
+        </CardContent>
+      </Card>
+
+      {/* FEEDBACK */}
+      <Card><CardHeader><CardTitle className="text-sm">Community Feedback Section</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <TextField label="Eyebrow" value={draft.feedbackSection.eyebrow} onChange={(v) => setDraft((d) => ({ ...d, feedbackSection: { ...d.feedbackSection, eyebrow: v } }))} />
+          <TextField label="Headline" value={draft.feedbackSection.title} onChange={(v) => setDraft((d) => ({ ...d, feedbackSection: { ...d.feedbackSection, title: v } }))} />
+          <div className="md:col-span-2"><TextField label="Description" value={draft.feedbackSection.description} onChange={(v) => setDraft((d) => ({ ...d, feedbackSection: { ...d.feedbackSection, description: v } }))} multiline /></div>
+        </CardContent>
+      </Card>
 
       {/* TESTIMONIALS */}
       <HeadingFields title="Testimonials — section heading" eyebrow={draft.testimonialsHeading.eyebrow} headline={draft.testimonialsHeading.title}
