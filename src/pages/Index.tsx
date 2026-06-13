@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, CalendarCheck, GraduationCap, Rocket, Sparkles, Target, Trophy,
-  UserRoundCheck, Star, Zap, BookOpen, Award, Bell, type LucideIcon,
+  UserRoundCheck, Star, Zap, BookOpen, Award, Bell, Users, Megaphone, IdCard,
+  MessageSquare, Lightbulb, BarChart3, ShieldCheck, Layers, Briefcase,
+  CalendarDays, Network, Check, type LucideIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -19,6 +21,8 @@ import type { LandingIconName } from "@/config/landing-content";
 const ICON_MAP: Record<LandingIconName, LucideIcon> = {
   CalendarCheck, Trophy, UserRoundCheck, Sparkles, Target, Rocket,
   GraduationCap, Star, Zap, BookOpen, Award, Bell,
+  Users, Megaphone, IdCard, MessageSquare, Lightbulb,
+  BarChart3, ShieldCheck, Layers, Briefcase, CalendarDays, Network,
 };
 const Icon = ({ name, className }: { name: LandingIconName; className?: string }) => {
   const C = ICON_MAP[name] ?? Sparkles;
@@ -85,6 +89,7 @@ export default function Index() {
       </header>
 
       <main className="mx-auto w-full max-w-[420px] space-y-10 px-4 py-8 md:max-w-7xl md:px-6 md:py-12">
+        {/* HERO */}
         <section className="space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
@@ -113,6 +118,7 @@ export default function Index() {
           </motion.div>
         </section>
 
+        {/* KPIs */}
         <section className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
           {content.kpis.map((kpi, i) => (
             <div key={i} className="rounded-2xl border border-border-subtle bg-surface-1 p-3 md:p-4">
@@ -122,12 +128,13 @@ export default function Index() {
           ))}
         </section>
 
+        {/* BENEFITS */}
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow={content.benefitsHeading.eyebrow} title={content.benefitsHeading.title} />
-          <div className="space-y-3">
+          <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
             {content.benefits.map((b, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.18, delay: i * 0.05 }}>
-                <GlassCard className="flex items-start gap-3" padding="lg">
+                <GlassCard className="flex items-start gap-3 h-full" padding="lg">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
                     <Icon name={b.icon} className="h-5 w-5" />
                   </div>
@@ -144,20 +151,64 @@ export default function Index() {
           </div>
         </motion.section>
 
+        {/* SOCIAL PROOF (bullets) */}
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
+          <SectionTitle eyebrow={content.socialProof.eyebrow} title={content.socialProof.title} />
+          <GlassCard padding="lg" className="space-y-4">
+            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.socialProof.description}</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {content.socialProof.bullets.map((b, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-foreground md:text-sm">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
+        </motion.section>
+
+        {/* FEATURES */}
         <motion.section id="student-features" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow={content.featuresHeading.eyebrow} title={content.featuresHeading.title} />
           <div className="grid gap-3 md:grid-cols-3">
             {content.features.map((f, i) => (
-              <GlassCard key={i} className="flex items-center gap-3" padding="lg" hover>
+              <GlassCard key={i} className="flex items-start gap-3" padding="lg" hover>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
                   <Icon name={f.icon} className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-semibold text-foreground">{f.label}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{f.label}</p>
+                  {f.description ? <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{f.description}</p> : null}
+                </div>
               </GlassCard>
             ))}
           </div>
         </motion.section>
 
+        {/* ENTREPRENEURSHIP */}
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
+          <GlassCard padding="lg" className="space-y-3">
+            <SectionTitle eyebrow={content.entrepreneurship.eyebrow} title={content.entrepreneurship.title} />
+            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.entrepreneurship.description}</p>
+          </GlassCard>
+        </motion.section>
+
+        {/* ADMIN / INSTITUTIONS */}
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
+          <SectionTitle eyebrow={content.adminSection.eyebrow} title={content.adminSection.title} />
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+            {content.adminSection.features.map((f, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-xl border border-border-subtle bg-surface-1 p-3">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-xs font-medium text-foreground">{f}</span>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* TESTIMONIALS */}
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow={content.testimonialsHeading.eyebrow} title={content.testimonialsHeading.title} />
           <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
@@ -180,6 +231,15 @@ export default function Index() {
           </div>
         </motion.section>
 
+        {/* FEEDBACK */}
+        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
+          <GlassCard padding="lg" className="space-y-2">
+            <SectionTitle eyebrow={content.feedbackSection.eyebrow} title={content.feedbackSection.title} />
+            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.feedbackSection.description}</p>
+          </GlassCard>
+        </motion.section>
+
+        {/* FINAL CTA */}
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-4 text-center">
           <SectionTitle eyebrow={content.finalCta.eyebrow} title={content.finalCta.title} />
           <p className="mx-auto max-w-md text-sm text-muted-foreground">{content.finalCta.description}</p>
