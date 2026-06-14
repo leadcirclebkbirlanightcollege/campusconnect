@@ -32,9 +32,9 @@ interface CardContainerProps {
 }
 
 const ELEVATION: Record<ElevationLevel, string> = {
-  1: "bg-card border border-border-subtle shadow-xs",
-  2: "bg-surface-1 border border-border-subtle shadow-sm",
-  3: "bg-surface-2 border border-border-strong shadow-md",
+  1: "card-premium bg-card border border-border-subtle",
+  2: "card-premium bg-surface-1 border border-border-subtle",
+  3: "card-premium bg-surface-2 border border-border-strong",
 };
 
 const PADDING: Record<PaddingSize, string> = {
