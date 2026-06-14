@@ -1084,3 +1084,171 @@
   );
   background-size: 200% 100%;
 }
+
+/* ══════════════════════════════════════════════
+   GLOBAL PREMIUM POLISH — applied app-wide
+   Typography rendering, selection, scrollbar,
+   surface chrome refinement (dialogs, popovers,
+   sheets, tooltips, badges, separators).
+══════════════════════════════════════════════ */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01", "ss03", "kern", "liga", "calt";
+    font-variant-ligatures: common-ligatures contextual;
+  }
+  body {
+    letter-spacing: -0.011em;
+  }
+  h1, h2, h3, h4, h5 {
+    letter-spacing: -0.022em;
+    font-feature-settings: "ss01", "ss03", "kern", "liga", "calt";
+  }
+  /* Tabular figures for numeric UI */
+  .tabular-nums, [data-numeric], .stat, .kpi, .count {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "ss01";
+  }
+  /* Premium selection */
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+    color: hsl(var(--foreground));
+  }
+  /* Refined scrollbar — desktop only */
+  @media (pointer: fine) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--border-strong) / 0.6) transparent;
+    }
+    *::-webkit-scrollbar { width: 10px; height: 10px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg,
+        hsl(var(--border-strong) / 0.55),
+        hsl(var(--border-strong) / 0.75));
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.55),
+        hsl(var(--primary) / 0.75));
+      background-clip: padding-box;
+      border: 2px solid transparent;
+    }
+  }
+}
+
+@layer utilities {
+  /* Premium overlay chrome — dialogs, popovers, dropdowns, sheets, tooltips */
+  [data-radix-popper-content-wrapper] > *,
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"],
+  [data-state="open"][data-side] {
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+  }
+  /* Dialog overlay — richer scrim */
+  [data-radix-dialog-overlay],
+  [data-state="open"][data-radix-portal] > [data-radix-dialog-overlay] {
+    background: radial-gradient(ellipse at center,
+      hsl(var(--background) / 0.55) 0%,
+      hsl(220 38% 4% / 0.72) 100%) !important;
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
+  }
+
+  /* Premium image treatment — subtle inner edge + loading shimmer base */
+  .img-premium {
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.05);
+    background: hsl(var(--surface-2));
+  }
+
+  /* KPI / stat number — large display digits */
+  .num-display {
+    font-feature-settings: "tnum", "ss01", "ss03";
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  /* Section eyebrow — uppercase micro-label used above headings */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+  }
+  .eyebrow::before {
+    content: "";
+    width: 18px; height: 1px;
+    background: linear-gradient(to right, transparent, hsl(var(--primary) / 0.7));
+  }
+
+  /* Soft pressable — universal tap-feedback wrapper */
+  .pressable {
+    transition: transform var(--duration-fast) var(--ease-out),
+                filter var(--duration-fast) var(--ease-out);
+  }
+  .pressable:active { transform: scale(0.97); filter: brightness(0.97); }
+
+  /* Premium link — animated underline */
+  .link-premium {
+    position: relative;
+    color: hsl(var(--primary));
+    font-weight: 500;
+  }
+  .link-premium::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -2px;
+    height: 1px;
+    background: linear-gradient(to right,
+      hsl(var(--primary)) 0%, hsl(var(--gradient-to)) 100%);
+    transform: scaleX(0); transform-origin: right;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .link-premium:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  /* Spotlight surface — hero/feature panels */
+  .surface-spotlight {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .surface-spotlight::before {
+    content: "";
+    position: absolute; inset: -40% -10% auto -10%;
+    height: 80%;
+    background: radial-gradient(ellipse at 50% 0%,
+      hsl(var(--primary) / 0.18) 0%,
+      transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark .surface-spotlight::before {
+    background: radial-gradient(ellipse at 50% 0%,
+      hsl(var(--primary) / 0.28) 0%,
+      transparent 60%);
+  }
+
+  /* Refined separator — replaces flat <Separator> look when class added */
+  .separator-premium {
+    height: 1px;
+    background: linear-gradient(to right,
+      transparent 0%,
+      hsl(var(--border-strong) / 0.55) 18%,
+      hsl(var(--border-strong) / 0.55) 82%,
+      transparent 100%);
+    border: 0;
+  }
+}
+
