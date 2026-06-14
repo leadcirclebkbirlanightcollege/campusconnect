@@ -32,9 +32,9 @@ interface CardContainerProps {
 }
 
 const ELEVATION: Record<ElevationLevel, string> = {
-  1: "bg-card border border-border-subtle shadow-xs",
-  2: "bg-surface-1 border border-border-subtle shadow-sm",
-  3: "bg-surface-2 border border-border-strong shadow-md",
+  1: "card-premium bg-card border border-border-subtle",
+  2: "card-premium bg-surface-1 border border-border-subtle",
+  3: "card-premium bg-surface-2 border border-border-strong",
 };
 
 const PADDING: Record<PaddingSize, string> = {
@@ -60,19 +60,15 @@ export function CardContainer({
       role={role ?? (onClick ? "button" : undefined)}
       onClick={onClick}
       className={cn(
-        "rounded-xl",
+        "relative overflow-hidden rounded-xl",
         ELEVATION[level],
         PADDING[padding],
         gradient && [
-          "before:absolute before:inset-0 before:rounded-xl before:opacity-[0.04]",
+          "before:absolute before:inset-0 before:rounded-xl before:opacity-[0.05]",
           "before:bg-gradient-to-br before:from-primary before:to-accent-glow",
-          "relative overflow-hidden",
         ],
         interactive && [
-          "cursor-pointer select-none",
-          "transition-all duration-[150ms] ease-[cubic-bezier(0,0,0.2,1)]",
-          "hover:-translate-y-[2px] hover:shadow-md",
-          "active:scale-[0.98] active:shadow-xs",
+          "cursor-pointer select-none card-interactive",
           glow && "hover:card-glow-border",
         ],
         !interactive && glow && "card-glow-border",
