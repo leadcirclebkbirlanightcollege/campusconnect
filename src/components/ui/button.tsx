@@ -18,9 +18,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-action-primary text-action-primary-foreground border border-action-primary shadow-sm hover:bg-action-primary-hover hover:shadow-md active:bg-action-primary-hover",
+          "btn-sheen bg-gradient-to-b from-action-primary to-[hsl(var(--action-primary-bg-hover))] text-action-primary-foreground border border-action-primary/80 shadow-primary hover:brightness-[1.06] hover:shadow-glow active:brightness-[0.96]",
         destructive:
-          "bg-action-danger text-action-danger-foreground border border-action-danger shadow-sm hover:bg-action-danger-hover active:bg-action-danger-hover",
+          "btn-sheen bg-action-danger text-action-danger-foreground border border-action-danger shadow-sm hover:bg-action-danger-hover hover:shadow-md active:bg-action-danger-hover",
         outline:
           "border border-border-strong bg-action-secondary text-action-secondary-foreground shadow-sm hover:bg-action-secondary-hover hover:border-primary/50",
         secondary:
