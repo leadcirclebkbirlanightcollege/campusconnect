@@ -107,12 +107,12 @@
     --premium:              43 90% 50%;
 
     /* ── Shadow Language ── */
-    --shadow-xs:      0 1px 2px hsl(220 38% 10% / 0.04);
-    --shadow-sm:      0 1px 3px hsl(220 38% 10% / 0.06), 0 1px 2px -1px hsl(220 38% 10% / 0.04);
-    --shadow-md:      0 4px 10px -2px hsl(220 38% 10% / 0.08), 0 2px 4px -2px hsl(220 38% 10% / 0.05);
-    --shadow-lg:      0 12px 28px -6px hsl(220 38% 10% / 0.10), 0 4px 8px -4px hsl(220 38% 10% / 0.06);
-    --shadow-primary: 0 4px 16px -3px hsl(225 76% 46% / 0.30);
-    --shadow-glow:    0 0 30px -8px hsl(220 100% 70% / 0.50), 0 4px 12px -4px hsl(225 76% 46% / 0.30);
+    --shadow-xs:      0 1px 2px hsl(220 38% 10% / 0.05);
+    --shadow-sm:      0 1px 2px hsl(220 38% 10% / 0.05), 0 2px 6px -2px hsl(220 38% 10% / 0.06);
+    --shadow-md:      0 2px 4px hsl(220 38% 10% / 0.05), 0 8px 20px -6px hsl(220 38% 10% / 0.10), 0 4px 10px -4px hsl(220 38% 10% / 0.06);
+    --shadow-lg:      0 4px 8px hsl(220 38% 10% / 0.04), 0 16px 36px -10px hsl(220 38% 10% / 0.14), 0 8px 18px -8px hsl(220 38% 10% / 0.08);
+    --shadow-primary: 0 2px 6px -1px hsl(225 76% 46% / 0.22), 0 8px 22px -6px hsl(225 76% 46% / 0.34);
+    --shadow-glow:    0 0 0 1px hsl(225 76% 60% / 0.18), 0 0 36px -8px hsl(220 100% 70% / 0.55), 0 8px 24px -8px hsl(225 76% 46% / 0.40);
 
     /* ── Motion ── */
     --duration-fast:   120ms;
@@ -238,12 +238,12 @@
     --premium:              43 88% 56%;
 
     /* ── Shadows (cinematic depth) ── */
-    --shadow-xs:      0 1px 2px hsl(224 38% 3% / 0.40);
-    --shadow-sm:      0 2px 6px hsl(224 38% 3% / 0.45), 0 1px 2px -1px hsl(224 38% 3% / 0.35);
-    --shadow-md:      0 6px 18px -4px hsl(224 38% 3% / 0.50), 0 2px 6px -2px hsl(224 38% 3% / 0.35);
-    --shadow-lg:      0 18px 40px -8px hsl(224 38% 3% / 0.60), 0 4px 10px -4px hsl(224 38% 3% / 0.40);
-    --shadow-primary: 0 4px 22px -4px hsl(239 84% 67% / 0.45);
-    --shadow-glow:    0 0 36px -6px hsl(235 100% 74% / 0.50), 0 4px 18px -4px hsl(239 84% 67% / 0.40);
+    --shadow-xs:      0 1px 2px hsl(224 38% 3% / 0.45);
+    --shadow-sm:      0 1px 2px hsl(224 38% 3% / 0.40), 0 4px 10px -3px hsl(224 38% 3% / 0.45);
+    --shadow-md:      0 2px 4px hsl(224 38% 3% / 0.45), 0 10px 24px -6px hsl(224 38% 3% / 0.55), 0 4px 12px -4px hsl(224 38% 3% / 0.35);
+    --shadow-lg:      0 6px 14px hsl(224 38% 3% / 0.50), 0 22px 48px -10px hsl(224 38% 3% / 0.65), 0 10px 22px -8px hsl(224 38% 3% / 0.45);
+    --shadow-primary: 0 2px 8px -1px hsl(239 84% 67% / 0.35), 0 10px 28px -6px hsl(239 84% 67% / 0.50);
+    --shadow-glow:    0 0 0 1px hsl(235 100% 74% / 0.22), 0 0 44px -8px hsl(235 100% 74% / 0.55), 0 10px 28px -8px hsl(239 84% 67% / 0.45);
 
     /* ── Sidebar ── */
     --sidebar-background:         222 47% 11%;
@@ -996,7 +996,78 @@
     -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
             mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
   }
+
+  /* ── Premium gradient text — for big numbers, hero words, KPI accents ── */
+  .text-gradient-primary {
+    background: linear-gradient(135deg,
+      hsl(var(--gradient-from)) 0%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--gradient-to)) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg,
+      hsl(var(--gradient-gold)) 0%,
+      hsl(var(--premium)) 60%,
+      hsl(var(--gradient-gold)) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+
+  /* ── Subtle film-grain noise — adds tactile depth to elevated surfaces ── */
+  .surface-noise { position: relative; isolation: isolate; }
+  .surface-noise::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.025;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-size: 160px 160px;
+  }
+  .dark .surface-noise::before { opacity: 0.04; }
+
+  /* ── Button sheen — quick light wipe on hover for primary CTAs ── */
+  .btn-sheen { position: relative; overflow: hidden; isolation: isolate; }
+  .btn-sheen::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -150%;
+    width: 60%; height: 100%;
+    background: linear-gradient(110deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.18) 50%,
+      transparent 100%);
+    transform: skewX(-18deg);
+    transition: left 600ms var(--ease-out);
+    pointer-events: none;
+  }
+  .btn-sheen:hover::after { left: 150%; }
+
+  /* ── Refined dual-layer focus ring ── */
+  .ring-premium:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--primary) / 0.55),
+      0 0 0 8px hsl(var(--primary) / 0.12);
+  }
+
+  /* ── Divider with gradient fade — premium section break ── */
+  .divider-gradient {
+    height: 1px;
+    background: linear-gradient(to right,
+      transparent,
+      hsl(var(--border-strong) / 0.7),
+      transparent);
+  }
 }
+
 
 @keyframes stagger-fade {
   to { opacity: 1; transform: translateY(0); }
