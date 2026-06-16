@@ -26,7 +26,6 @@ function AuthenticatedOverlays() {
     <>
       <AppSplash />
       <WhatsNewModal />
-      <InstallPromptBanner />
     </>
   );
 }
@@ -57,11 +56,12 @@ function AppInner() {
       {/* Offline overlay — never blocks rendering */}
       <OfflineAutoRecovery />
 
-      {/* Always-on: branding, connectivity, SW update */}
+      {/* Always-on: branding, connectivity, SW update, install prompt */}
       <TenantBrandingApplicator />
       <OfflineBanner />
       <SwUpdateManager />
       <NetworkHealthDot />
+      <InstallPromptBanner />
 
       <AppGuard overlays={<AuthenticatedOverlays />}>
         <AppRouter />
