@@ -32,7 +32,7 @@ export default function StudentSupport() {
   const [body, setBody] = useState("");
   const [reply, setReply] = useState("");
 
-  const ticketsQ = useQuery({
+  const ticketsQ = useQuery<any[]>({
     queryKey: ["student", "support-tickets"],
     enabled: !!user,
     queryFn: async () => {
@@ -45,7 +45,7 @@ export default function StudentSupport() {
     },
   });
 
-  const messagesQ = useQuery({
+  const messagesQ = useQuery<any[]>({
     queryKey: ["student", "ticket-messages", activeId],
     enabled: !!activeId,
     queryFn: async () => {

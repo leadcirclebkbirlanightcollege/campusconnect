@@ -28,7 +28,7 @@ export default function AdminTicketsPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
 
-  const ticketsQ = useQuery({
+  const ticketsQ = useQuery<any[]>({
     queryKey: ["admin", "support-tickets", statusFilter],
     queryFn: async () => {
       let q = supabase
@@ -52,7 +52,7 @@ export default function AdminTicketsPage() {
       || t.profiles?.student_id?.toLowerCase().includes(s);
   });
 
-  const messagesQ = useQuery({
+  const messagesQ = useQuery<any[]>({
     queryKey: ["admin", "ticket-messages", activeId],
     enabled: !!activeId,
     queryFn: async () => {
