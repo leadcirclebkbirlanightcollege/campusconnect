@@ -40,7 +40,7 @@ export default function AdminTicketsPage() {
       else if (statusFilter !== "all") q = q.eq("status", statusFilter);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
@@ -62,7 +62,7 @@ export default function AdminTicketsPage() {
         .eq("ticket_id", activeId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 

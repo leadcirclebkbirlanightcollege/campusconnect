@@ -41,7 +41,7 @@ export default function StudentSupport() {
         .select("*")
         .order("last_message_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
@@ -55,7 +55,7 @@ export default function StudentSupport() {
         .eq("ticket_id", activeId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 

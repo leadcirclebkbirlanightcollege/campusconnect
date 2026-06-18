@@ -90,6 +90,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "System",
     defaultOpen: false,
     items: [
+      { title: "Support Tickets",url: "/platform/admin/tickets",        icon: "LifeBuoy" },
       { title: "Permissions",    url: "/platform/admin/permissions",    icon: "SlidersHorizontal" },
       { title: "Reports",        url: "/platform/admin/reports",        icon: "BarChart2" },
       { title: "Export Data",    url: "/platform/admin/reports/export", icon: "Download" },
@@ -131,6 +132,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/stalls":                 { title: "E-Cell · Stall Requests", description: "Approve event stall registrations" },
   "/platform/admin/scanner":                { title: "ID Scanner",         description: "Digital ID verification" },
   "/platform/admin/settings":               { title: "Admin Settings",     description: "Profile & system settings" },
+  "/platform/admin/tickets":                { title: "Support Tickets",    description: "Triage and resolve student requests" },
   "/platform/admin/channels":               { title: "Channels",           description: "Manage messaging channels" },
   "/platform/admin/permissions":            { title: "Permissions",        description: "Role-based access control" },
   "/platform/admin/reports/export":         { title: "Export Reports",     description: "Download data as CSV" },
