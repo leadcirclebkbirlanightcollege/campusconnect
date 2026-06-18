@@ -56,6 +56,8 @@ const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEce
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
+const AdminTicketsPage     = lazy(() => import("@/pages/admin/pages/AdminTicketsPage"));
+const StudentSupport       = lazy(() => import("@/pages/student/StudentSupport"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
 const HelpSupport          = lazy(() => import("@/pages/HelpSupport"));
 const DemoPage             = lazy(() => import("@/pages/Demo"));
@@ -215,6 +217,7 @@ export default function AppRouter() {
             <Route path="stalls"                   element={<AdminStallsPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
+            <Route path="tickets"                  element={<AdminTicketsPage />} />
             <Route path="reports"                  element={<AdminReportsPage />} />
             <Route path="reports/export"           element={<AdminExportPage />} />
             <Route path="permissions"              element={<AdminPermissionsPage />} />
@@ -253,6 +256,7 @@ export default function AppRouter() {
             <Route path="scan"                   element={<StudentScanAttendance />} />
             <Route path="id-card"                element={<StudentDigitalId />} />
             <Route path="assignments"            element={<StudentAssignments />} />
+            <Route path="support"                element={<StudentSupport />} />
             <Route path="timetable"              element={<StudentTimetable />} />
             <Route path="documents"              element={<StudentDocuments />} />
             <Route path="results"                element={<StudentResults />} />
