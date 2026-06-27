@@ -44,6 +44,19 @@ export default function Index() {
   const { content } = useLandingContent();
   const { user, isLoading: authLoading } = useAuth();
 
+  // If launched as installed PWA, jump straight into the app shell.
+  useEffect(() => {
+    const isStandalone =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(display-mode: standalone)").matches ||
+        // iOS Safari
+        (window.navigator as any).standalone === true ||
+        new URLSearchParams(window.location.search).get("source") === "pwa");
+    if (isStandalone) {
+      navigate("/app/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (authLoading || !user) return;
     import("@/providers/QueryProvider").then(({ queryClient }) => {

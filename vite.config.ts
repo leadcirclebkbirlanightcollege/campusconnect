@@ -65,7 +65,7 @@ export default defineConfig(({ mode }) => ({
         name: "Campus Connect",
         short_name: "Campus Connect",
         description: "Unified Campus ERP, Student Engagement and Collaboration Platform.",
-        start_url: "/?source=pwa",
+        start_url: "/app/dashboard?source=pwa",
         scope: "/",
         display: "standalone",
         orientation: "portrait",
