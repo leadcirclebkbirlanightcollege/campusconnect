@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "app.lovable.853dc20549ab4f86bd92cff90b27ccd7",
+  appId: "in.edu.bkbnc.campusconnect",
   appName: "Campus Connect",
   webDir: "dist",
   server: {
