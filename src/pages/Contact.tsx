@@ -9,9 +9,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const CONTACT_INFO = [
-  { icon: Mail, label: "Email", value: "atharv@bkbirlanightcollege.qzz.io" },
-  { icon: Phone, label: "Phone", value: "+91 91727 82265" },
-  { icon: MapPin, label: "Location", value: "Pune, Maharashtra, India" },
+  { icon: Mail, label: "Email", value: "atharv@bkbirlanightcollege.qzz.io", href: "mailto:atharv@bkbirlanightcollege.qzz.io" },
+  { icon: Phone, label: "Phone", value: "+91 91727 82265", href: "tel:+919172782265" },
+  { icon: MapPin, label: "Location", value: "Pune, Maharashtra, India", href: null },
 ] as const;
 
 export default function Contact() {
@@ -67,15 +67,22 @@ export default function Contact() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          {CONTACT_INFO.map(({ icon: Icon, label, value }) => (
-            <GlassCard key={label} padding="lg" className="text-center space-y-2">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
-                <Icon className="h-4 w-4 text-primary" />
-              </div>
-              <p className="text-xs font-semibold">{label}</p>
-              <p className="text-xs text-muted-foreground">{value}</p>
-            </GlassCard>
-          ))}
+          {CONTACT_INFO.map(({ icon: Icon, label, value, href }) => {
+            const card = (
+              <GlassCard key={label} padding="lg" className="text-center space-y-2 h-full">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+                  <Icon className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-xs font-semibold">{label}</p>
+                <p className="text-xs text-muted-foreground break-all">{value}</p>
+              </GlassCard>
+            );
+            return href ? (
+              <a key={label} href={href} className="block hover:opacity-90 transition-opacity">{card}</a>
+            ) : (
+              <div key={label}>{card}</div>
+            );
+          })}
         </div>
 
         <GlassCard padding="lg">
