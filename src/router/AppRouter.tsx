@@ -227,6 +227,7 @@ export default function AppRouter() {
             <Route path="daily-content"  element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="channels"       element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
+            <Route path="audit"          element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
             <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
