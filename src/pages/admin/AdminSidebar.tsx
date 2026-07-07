@@ -105,12 +105,12 @@ export default function AdminSidebar() {
                   type="button"
                   onClick={() => toggleSection(section.label)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-1.5 px-3 py-2 group/sec",
-                    "text-[10px] font-bold uppercase tracking-[0.10em]",
+                    "w-full flex items-center justify-between gap-1.5 px-3 py-1.5 group/sec",
+                    "text-[10px] font-bold uppercase tracking-[0.12em]",
                     "transition-colors duration-fast rounded-md",
                     isEcell
-                      ? "text-[hsl(265_85%_70%)] hover:text-[hsl(265_85%_80%)]"
-                      : "text-muted-foreground/50 hover:text-muted-foreground",
+                      ? "text-[hsl(265_85%_72%)] hover:text-[hsl(265_85%_82%)]"
+                      : "text-muted-foreground/70 hover:text-foreground",
                   )}
                   aria-expanded={isOpen}
                 >
@@ -139,22 +139,28 @@ export default function AdminSidebar() {
                         <SidebarMenuButton
                           asChild isActive={active} tooltip={item.title}
                           className={cn(
-                            "h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item transition-all duration-fast",
+                            "relative h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item transition-all duration-fast",
                             active
                               ? isEcell
-                                ? "bg-[hsl(265_85%_65%/0.12)] text-[hsl(265_85%_75%)] font-medium shadow-[inset_0_0_0_1px_hsl(265_85%_65%/0.25)]"
-                                : "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                ? "bg-[hsl(265_85%_65%/0.10)] text-[hsl(265_85%_78%)] font-medium"
+                                : "bg-primary/8 text-primary font-medium"
+                              : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                           )}
                         >
                           <Link to={item.url} onClick={handleNav} className="flex items-center gap-2.5">
+                            {active && !collapsed && (
+                              <span className={cn(
+                                "absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-full",
+                                isEcell ? "bg-[hsl(265_85%_65%)]" : "bg-primary",
+                              )} />
+                            )}
                             <Icon className={cn(
                               "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
                               active
-                                ? isEcell ? "text-[hsl(265_85%_72%)]" : "text-primary"
+                                ? isEcell ? "text-[hsl(265_85%_75%)]" : "text-primary"
                                 : isEcell
-                                  ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_75%)]"
-                                  : "text-muted-foreground/60 group-hover/item:text-foreground/80",
+                                  ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_78%)]"
+                                  : "text-muted-foreground/70 group-hover/item:text-foreground",
                             )} />
                             <span className="flex-1 leading-none">{item.title}</span>
                           </Link>
