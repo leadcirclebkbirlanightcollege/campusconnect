@@ -33,12 +33,12 @@ const MetricCard = React.memo(function MetricCard({
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
         <Icon className="h-5 w-5" />
       </div>
-      <p className="text-[28px] font-black leading-none text-foreground tabular-nums">
+      <p className="font-heading text-[28px] font-black leading-none text-foreground tabular-nums">
         {prefix}
         {animatedValue}
         {suffix}
       </p>
-      <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 font-heading text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
     </article>
   );
 });
