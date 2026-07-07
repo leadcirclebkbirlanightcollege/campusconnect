@@ -142,6 +142,10 @@ export default function Index() {
           ))}
         </section>
 
+        {/* INSTITUTION PARTNERS */}
+        <InstitutionPartnersMarquee />
+
+
         {/* BENEFITS */}
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
           <SectionTitle eyebrow={content.benefitsHeading.eyebrow} title={content.benefitsHeading.title} />
