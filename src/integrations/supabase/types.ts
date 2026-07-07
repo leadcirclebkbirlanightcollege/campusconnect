@@ -1324,6 +1324,48 @@ export type Database = {
           },
         ]
       }
+      institution_partners: {
+        Row: {
+          badge: string | null
+          city: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          badge?: string | null
+          city?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          badge?: string | null
+          city?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           city: string | null
