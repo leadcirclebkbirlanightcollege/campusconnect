@@ -290,8 +290,11 @@ const Auth = () => {
 
         <div className="w-full max-w-[380px] space-y-6 animate-fade-in">
           {/* Heading */}
-          <div className="space-y-1">
-            <h1 className="text-[24px] font-semibold text-foreground tracking-tight">Sign in to continue</h1>
+          <div className="space-y-1.5">
+            <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              Welcome back
+            </p>
+            <h1 className="font-heading text-[26px] font-black text-foreground tracking-tight">Sign in to continue</h1>
             <p className="text-[14px] text-muted-foreground">Enter your credentials to access your dashboard</p>
           </div>
 
