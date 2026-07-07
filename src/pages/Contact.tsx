@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 const CONTACT_INFO = [
   { icon: Mail, label: "Email", value: "atharv@bkbirlanightcollege.qzz.io", href: "mailto:atharv@bkbirlanightcollege.qzz.io" },
   { icon: Phone, label: "Phone", value: "+91 91727 82265", href: "tel:+919172782265" },
-  { icon: MapPin, label: "Location", value: "Pune, Maharashtra, India", href: null },
+  { icon: MapPin, label: "Location", value: "B.K. Birla College, Kalyan, Maharashtra, India", href: "https://share.google/wxegMHTOp8DoULe0Z" },
 ] as const;
 
 export default function Contact() {
