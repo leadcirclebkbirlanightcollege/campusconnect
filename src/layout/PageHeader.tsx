@@ -31,9 +31,9 @@ interface PageHeaderProps {
 }
 
 const TITLE_CLASSES = {
-  default: "text-[20px] font-semibold leading-tight tracking-[-0.015em]",
-  large:   "text-[26px] font-bold   leading-tight tracking-[-0.025em]",
-  compact: "text-[16px] font-semibold leading-tight",
+  default: "font-heading text-[20px] font-bold leading-tight tracking-[-0.015em]",
+  large:   "font-heading text-[26px] font-black leading-tight tracking-[-0.025em]",
+  compact: "font-heading text-[16px] font-bold leading-tight",
 } as const;
 
 const SUBTITLE_CLASSES = {
