@@ -5,8 +5,10 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
 
 interface EmptyStateProps {
   /** Large emoji or icon component to show */
@@ -58,10 +60,11 @@ export function EmptyState({
         {emoji ? (
           <span className={cn("select-none", compact ? "text-2xl" : "text-3xl")}>{emoji}</span>
         ) : icon ? (
-          <div className="text-muted-foreground/50">{icon}</div>
+          <div className="text-muted-foreground">{icon}</div>
         ) : (
-          <span className={cn("select-none", compact ? "text-2xl" : "text-3xl")}>📭</span>
+          <Inbox className={cn("text-muted-foreground", compact ? "h-5 w-5" : "h-7 w-7")} strokeWidth={1.75} />
         )}
+
       </div>
 
       {/* Text */}
