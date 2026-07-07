@@ -237,9 +237,9 @@ function useSecurityLogs(page: number, pageSize: number) {
 function SectionFrame({ id, title, subtitle, children }: { id: string; title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <motion.section id={id} {...SECTION_ANIM} className="space-y-3">
-      <div>
-        <h2 className="text-sm font-bold text-foreground">{title}</h2>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      <div className="space-y-1">
+        <h2 className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{title}</h2>
+        <p className="font-heading text-[15px] font-bold text-foreground">{subtitle}</p>
       </div>
       {children}
     </motion.section>
