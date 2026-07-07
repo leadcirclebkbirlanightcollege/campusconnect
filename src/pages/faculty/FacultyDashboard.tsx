@@ -109,7 +109,7 @@ export default function FacultyDashboard() {
       {/* Today's Schedule */}
       {todayLectures.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-semibold text-foreground mb-2">Today's Schedule</h2>
+          <h2 className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">Today's Schedule</h2>
           <div className="space-y-2">
             {todayLectures.map((l) => (
               <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
@@ -134,7 +134,7 @@ export default function FacultyDashboard() {
       {/* Upcoming Lectures */}
       {upcomingLectures.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-semibold text-foreground mb-2">Upcoming Lectures</h2>
+          <h2 className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">Upcoming Lectures</h2>
           <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/30">
             {upcomingLectures.map((l) => (
               <div key={l.id} className="flex items-center gap-3 px-4 py-3">
