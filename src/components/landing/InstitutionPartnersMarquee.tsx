@@ -93,9 +93,13 @@ function PartnerCard({ partner, className }: { partner: Partner; className?: str
 export default function InstitutionPartnersMarquee() {
   const { data: partners = [], isLoading } = useActivePartners();
 
-  // Duplicate list for seamless infinite scroll. Repeat more if list is tiny.
+  // Only enable the infinite marquee when there are enough partners to scroll.
+  // With a single partner, show it once, centered — no duplication.
+  const shouldMarquee = partners.length > 3;
   const REPEAT = partners.length <= 2 ? 6 : partners.length <= 4 ? 3 : 2;
-  const loop = Array.from({ length: REPEAT }).flatMap(() => partners);
+  const loop = shouldMarquee
+    ? Array.from({ length: REPEAT }).flatMap(() => partners)
+    : partners;
 
   return (
     <section className="space-y-6">
@@ -113,19 +117,17 @@ export default function InstitutionPartnersMarquee() {
         </p>
       </div>
 
-      {/* Marquee */}
+      {/* Marquee / static row */}
       {isLoading ? (
         <div className="h-[110px] rounded-2xl border border-border-subtle bg-surface-1 animate-pulse" />
       ) : partners.length === 0 ? (
         <GlassCard padding="lg" className="text-center">
           <p className="text-sm text-muted-foreground">More institutional partners coming soon.</p>
         </GlassCard>
-      ) : (
+      ) : shouldMarquee ? (
         <div className="relative overflow-hidden group">
-          {/* Edge gradient masks */}
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 md:w-32 bg-gradient-to-r from-background to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 md:w-32 bg-gradient-to-l from-background to-transparent" />
-
           <div
             className="flex gap-4 md:gap-6 py-2 marquee-track motion-reduce:animate-none"
             style={{ animationDuration: `${Math.max(24, loop.length * 6)}s` }}
@@ -135,14 +137,20 @@ export default function InstitutionPartnersMarquee() {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6 py-2">
+          {loop.map((p) => (
+            <PartnerCard key={p.id} partner={p} />
+          ))}
+        </div>
       )}
 
-      {/* Footer note when only one partner */}
       {partners.length > 0 && partners.length <= 1 && (
         <p className="text-center text-[12px] text-muted-foreground">
           More institutional partners coming soon.
         </p>
       )}
+
     </section>
   );
 }
