@@ -349,20 +349,21 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="rounded-xl border border-border-subtle bg-surface-1">
-            <div className="px-4 py-3 border-b border-border-subtle">
-              <p className="text-sm font-semibold text-foreground">Quick Actions</p>
+          {/* Quick Actions — 2-col command grid */}
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Quick Actions</p>
+              <span className="text-[10px] font-semibold text-muted-foreground">8 tools</span>
             </div>
-            <div className="p-2 space-y-0.5">
-              <QuickAction icon={BookOpen} label="Create Lecture" to="/platform/admin/lectures" color="text-primary" bg="bg-primary/10" />
-              <QuickAction icon={Users} label="Add Student" to="/platform/admin/students" color="text-success" bg="bg-success/10" />
-              <QuickAction icon={GraduationCap} label="Add Faculty" to="/platform/admin/faculty" color="text-accent" bg="bg-accent/10" />
-              <QuickAction icon={Megaphone} label="Announcements" to="/platform/admin/announcements" color="text-premium" bg="bg-premium/10" />
-              <QuickAction icon={Store} label="Approve Stalls" to="/platform/admin/stalls" color="text-warning" bg="bg-warning/10" />
-              <QuickAction icon={Coins} label="Approve Point Claims" to="/platform/admin/point-claims" color="text-warning" bg="bg-warning/10" />
-              <QuickAction icon={ScanLine} label="ID Scanner" to="/platform/admin/scanner" color="text-success" bg="bg-success/10" />
-              <QuickAction icon={FileEdit} label="Corrections" to="/platform/admin/attendance/corrections" color="text-danger" bg="bg-danger/10" />
+            <div className="p-3 grid grid-cols-2 gap-2">
+              <QuickAction icon={BookOpen}     label="Create Lecture"  to="/platform/admin/lectures"                color="text-primary" bg="bg-primary/10" />
+              <QuickAction icon={Users}        label="Add Student"     to="/platform/admin/students"                color="text-success" bg="bg-success/10" />
+              <QuickAction icon={GraduationCap} label="Add Faculty"    to="/platform/admin/faculty"                 color="text-accent"  bg="bg-accent/10" />
+              <QuickAction icon={Megaphone}    label="Announcements"   to="/platform/admin/announcements"           color="text-premium" bg="bg-premium/10" />
+              <QuickAction icon={Store}        label="Approve Stalls"  to="/platform/admin/stalls"                  color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={Coins}        label="Point Claims"    to="/platform/admin/point-claims"            color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={ScanLine}     label="ID Scanner"      to="/platform/admin/scanner"                 color="text-success" bg="bg-success/10" />
+              <QuickAction icon={FileEdit}     label="Corrections"     to="/platform/admin/attendance/corrections"  color="text-danger"  bg="bg-danger/10" />
             </div>
           </div>
         </div>
