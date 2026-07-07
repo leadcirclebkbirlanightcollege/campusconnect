@@ -296,26 +296,38 @@ const Auth = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="signup" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-10 p-1 rounded-lg bg-surface-2 border border-border-subtle">
+            <TabsList
+              aria-label="Authentication mode"
+              className="grid w-full grid-cols-2 h-12 sm:h-11 p-1 rounded-xl bg-surface-2 border border-border-subtle"
+            >
               <TabsTrigger
                 value="signup"
-                className="h-full rounded-md text-[13px] font-medium text-muted-foreground border-transparent
+                aria-label="Create a new account"
+                className="h-full min-h-11 rounded-lg text-[13px] sm:text-[13px] font-medium
+                           text-muted-foreground border border-transparent
                            data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
                            data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
-                           hover:text-foreground transition-colors"
+                           hover:text-foreground
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40
+                           transition-colors motion-reduce:transition-none"
               >
                 Create Account
               </TabsTrigger>
               <TabsTrigger
                 value="login"
-                className="h-full rounded-md text-[13px] font-medium text-muted-foreground border-transparent
+                aria-label="Sign in to existing account"
+                className="h-full min-h-11 rounded-lg text-[13px] sm:text-[13px] font-medium
+                           text-muted-foreground border border-transparent
                            data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
                            data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
-                           hover:text-foreground transition-colors"
+                           hover:text-foreground
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40
+                           transition-colors motion-reduce:transition-none"
               >
                 Sign In
               </TabsTrigger>
             </TabsList>
+
 
 
 
