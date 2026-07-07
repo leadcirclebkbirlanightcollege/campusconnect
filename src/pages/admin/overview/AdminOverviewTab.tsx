@@ -64,7 +64,7 @@ function formatTime(val: string) {
   return new Date(val).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-/* ── KPI Card ──────────────────────────────────────── */
+/* ── KPI Card (Neo-Industrial compact) ─────────────── */
 function KpiCard({ label, value, icon: Icon, colorCls, bgCls, loading, suffix = "", danger, idx }: {
   label: string; value: number; icon: React.ElementType;
   colorCls: string; bgCls: string; loading: boolean;
@@ -73,47 +73,51 @@ function KpiCard({ label, value, icon: Icon, colorCls, bgCls, loading, suffix = 
   const counted = useMetricCountUp(loading ? 0 : value, 700 + idx * 60);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: idx * 0.04 }}
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, delay: idx * 0.03 }}
       className={cn(
-        "rounded-xl border p-5 flex flex-col justify-between min-h-[130px] transition-all hover:shadow-md",
-        danger && value > 0 ? "border-danger/30 bg-danger/5" : "border-border-subtle bg-surface-1",
+        "group relative rounded-2xl border p-4 flex flex-col justify-between min-h-[110px]",
+        "bg-surface-1 border-border-subtle transition-all duration-200",
+        "hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.15),0_10px_30px_-15px_hsl(var(--primary)/0.35)]",
+        danger && value > 0 && "border-danger/40 bg-danger/[0.04] hover:border-danger/60 hover:shadow-[0_0_0_1px_hsl(var(--danger)/0.2),0_10px_30px_-15px_hsl(var(--danger)/0.35)]",
       )}
     >
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
-        <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center", bgCls)}>
-          <Icon className={cn("h-4.5 w-4.5", colorCls)} />
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground leading-tight">{label}</p>
+        <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", bgCls)}>
+          <Icon className={cn("h-3.5 w-3.5", colorCls)} />
         </div>
       </div>
       {loading ? (
-        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-8 w-20 mt-2" />
       ) : (
-        <p className={cn(
-          "text-[38px] font-black tracking-tight tabular-nums leading-none",
-          danger && value > 0 ? "text-danger" : "text-foreground",
-        )}>
-          {counted.toLocaleString()}{suffix}
-        </p>
+        <div className="flex items-baseline gap-1.5 mt-2">
+          <p className={cn(
+            "font-heading text-[28px] font-bold tracking-tight tabular-nums leading-none",
+            danger && value > 0 ? "text-danger" : "text-foreground",
+          )}>
+            {counted.toLocaleString()}{suffix}
+          </p>
+        </div>
       )}
     </motion.div>
   );
 }
 
-/* ── Quick Action Button ───────────────────────────── */
+/* ── Quick Action Tile (Neo-Industrial 2-col grid) ─── */
 function QuickAction({ icon: Icon, label, to, color, bg }: {
   icon: React.ElementType; label: string; to: string; color: string; bg: string;
 }) {
   return (
     <Link to={to} className={cn(
-      "flex items-center gap-3 px-4 py-3 rounded-lg border border-transparent",
-      "hover:border-border-subtle hover:bg-surface-2 transition-all cursor-pointer group",
+      "group relative flex flex-col items-start gap-2 p-3 rounded-xl border border-border-subtle bg-surface-2/60",
+      "hover:border-primary/40 hover:bg-surface-1 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]",
+      "transition-all duration-200 cursor-pointer",
     )}>
-      <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", bg)}>
+      <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", bg)}>
         <Icon className={cn("h-4 w-4", color)} />
       </div>
-      <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
-      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-100 transition-colors" />
+      <span className="text-[11px] font-semibold text-foreground leading-tight">{label}</span>
     </Link>
   );
 }
@@ -234,38 +238,50 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
 
   return (
     <div className="w-full space-y-6">
-      {/* ── Premium Greeting Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/15 via-surface-2 to-surface-1 p-5 shadow-sm">
-        <div className="pointer-events-none absolute -top-12 -right-10 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
-        <div className="relative flex items-start justify-between gap-4">
+      {/* ── Neo-Industrial Hero ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/[0.12] via-surface-1 to-surface-1 p-6 shadow-sm">
+        <div className="pointer-events-none absolute -top-16 -right-12 h-56 w-56 rounded-full bg-primary/25 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,transparent,hsl(var(--surface-1))_70%)]" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{greeting}</p>
-            <h1 className="text-2xl font-black text-foreground mt-1">Command Center</h1>
-            <p className="text-sm text-muted-foreground mt-1">{today} · Real-time institutional overview</p>
-          </div>
-          {liveQ.data?.length ? (
-            <div className="hidden sm:flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2">
-              <Radio className="h-4 w-4 text-success" />
-              <span className="text-xs font-bold text-success">{liveQ.data.length} LIVE</span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                {greeting}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{today}</span>
             </div>
-          ) : null}
+            <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-foreground">Command Center</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">Real-time institutional overview · auto-refreshing every 30s</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {liveQ.data?.length ? (
+              <div className="flex items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3 py-2 shadow-[0_0_0_1px_hsl(var(--success)/0.15)]">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 rounded-full bg-success animate-ping opacity-70" />
+                  <span className="relative rounded-full h-2 w-2 bg-success" />
+                </span>
+                <span className="text-xs font-bold text-success tabular-nums">{liveQ.data.length} LIVE</span>
+              </div>
+            ) : null}
+            <div className="hidden md:flex items-center gap-2 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground">Ops Console</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── KPI Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
-        <KpiCard idx={0} label="Total Students" value={m?.totalStudents ?? 0} icon={Users} colorCls="text-primary" bgCls="bg-primary/10" loading={loading} />
-        <KpiCard idx={1} label="Total Faculty" value={m?.totalFaculty ?? 0} icon={GraduationCap} colorCls="text-accent" bgCls="bg-accent/10" loading={loading} />
-        <KpiCard idx={2} label="Total Lectures" value={m?.lecturesConducted ?? 0} icon={BookOpen} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
-        <KpiCard idx={3} label="Attendance Today" value={m?.attendanceToday ?? 0} icon={CheckSquare} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
-      </div>
-
-      {/* ── Secondary KPIs ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard idx={4} label="Live Now" value={m?.activeLectures ?? 0} icon={Radio} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
-        <KpiCard idx={5} label="Programmes" value={m?.totalProgrammes ?? 0} icon={GraduationCap} colorCls="text-premium" bgCls="bg-premium/10" loading={loading} />
-        <KpiCard idx={6} label="Points Awarded" value={m?.totalPoints ?? 0} icon={Zap} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
-        <KpiCard idx={7} label="At-Risk Students" value={m?.studentsAtRisk ?? 0} icon={TriangleAlert} colorCls="text-danger" bgCls="bg-danger/10" loading={loading} danger />
+      {/* ── Bento KPI Strip (8-up on xl, 4-up md, 2-up mobile) ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+        <KpiCard idx={0} label="Students"      value={m?.totalStudents ?? 0}     icon={Users}          colorCls="text-primary" bgCls="bg-primary/10" loading={loading} />
+        <KpiCard idx={1} label="Faculty"       value={m?.totalFaculty ?? 0}      icon={GraduationCap}  colorCls="text-accent"  bgCls="bg-accent/10"  loading={loading} />
+        <KpiCard idx={2} label="Lectures"      value={m?.lecturesConducted ?? 0} icon={BookOpen}       colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={3} label="Att. Today"    value={m?.attendanceToday ?? 0}   icon={CheckSquare}    colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+        <KpiCard idx={4} label="Live Now"      value={m?.activeLectures ?? 0}    icon={Radio}          colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={5} label="Programmes"    value={m?.totalProgrammes ?? 0}   icon={GraduationCap}  colorCls="text-premium" bgCls="bg-premium/10" loading={loading} />
+        <KpiCard idx={6} label="Points"        value={m?.totalPoints ?? 0}       icon={Zap}            colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+        <KpiCard idx={7} label="At-Risk"       value={m?.studentsAtRisk ?? 0}    icon={TriangleAlert}  colorCls="text-danger"  bgCls="bg-danger/10"  loading={loading} danger />
       </div>
 
       {/* ── Main Grid: Charts + Live + Quick Actions ── */}
@@ -279,14 +295,14 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         <div className="space-y-5">
           {/* Live Operations */}
           <div className={cn(
-            "rounded-xl border overflow-hidden",
+            "rounded-2xl border overflow-hidden",
             liveQ.data?.length ? "border-success/40 ring-1 ring-success/15" : "border-border-subtle",
             "bg-surface-1",
           )}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
               <div className="flex items-center gap-2">
                 <Radio className={cn("h-4 w-4", liveQ.data?.length ? "text-success" : "text-muted-foreground")} />
-                <p className="text-sm font-semibold text-foreground">Live Operations</p>
+                <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Live Operations</p>
               </div>
               {liveQ.data?.length ? (
                 <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.6 }}
@@ -333,20 +349,21 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="rounded-xl border border-border-subtle bg-surface-1">
-            <div className="px-4 py-3 border-b border-border-subtle">
-              <p className="text-sm font-semibold text-foreground">Quick Actions</p>
+          {/* Quick Actions — 2-col command grid */}
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Quick Actions</p>
+              <span className="text-[10px] font-semibold text-muted-foreground">8 tools</span>
             </div>
-            <div className="p-2 space-y-0.5">
-              <QuickAction icon={BookOpen} label="Create Lecture" to="/platform/admin/lectures" color="text-primary" bg="bg-primary/10" />
-              <QuickAction icon={Users} label="Add Student" to="/platform/admin/students" color="text-success" bg="bg-success/10" />
-              <QuickAction icon={GraduationCap} label="Add Faculty" to="/platform/admin/faculty" color="text-accent" bg="bg-accent/10" />
-              <QuickAction icon={Megaphone} label="Announcements" to="/platform/admin/announcements" color="text-premium" bg="bg-premium/10" />
-              <QuickAction icon={Store} label="Approve Stalls" to="/platform/admin/stalls" color="text-warning" bg="bg-warning/10" />
-              <QuickAction icon={Coins} label="Approve Point Claims" to="/platform/admin/point-claims" color="text-warning" bg="bg-warning/10" />
-              <QuickAction icon={ScanLine} label="ID Scanner" to="/platform/admin/scanner" color="text-success" bg="bg-success/10" />
-              <QuickAction icon={FileEdit} label="Corrections" to="/platform/admin/attendance/corrections" color="text-danger" bg="bg-danger/10" />
+            <div className="p-3 grid grid-cols-2 gap-2">
+              <QuickAction icon={BookOpen}     label="Create Lecture"  to="/platform/admin/lectures"                color="text-primary" bg="bg-primary/10" />
+              <QuickAction icon={Users}        label="Add Student"     to="/platform/admin/students"                color="text-success" bg="bg-success/10" />
+              <QuickAction icon={GraduationCap} label="Add Faculty"    to="/platform/admin/faculty"                 color="text-accent"  bg="bg-accent/10" />
+              <QuickAction icon={Megaphone}    label="Announcements"   to="/platform/admin/announcements"           color="text-premium" bg="bg-premium/10" />
+              <QuickAction icon={Store}        label="Approve Stalls"  to="/platform/admin/stalls"                  color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={Coins}        label="Point Claims"    to="/platform/admin/point-claims"            color="text-warning" bg="bg-warning/10" />
+              <QuickAction icon={ScanLine}     label="ID Scanner"      to="/platform/admin/scanner"                 color="text-success" bg="bg-success/10" />
+              <QuickAction icon={FileEdit}     label="Corrections"     to="/platform/admin/attendance/corrections"  color="text-danger"  bg="bg-danger/10" />
             </div>
           </div>
         </div>
@@ -355,11 +372,11 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
       {/* ── Bottom Grid: Schedule + Activity + Announcement ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Schedule */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 lg:col-span-1">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Upcoming Schedule</p>
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Upcoming</p>
             </div>
             <Link to="/platform/admin/lectures" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
           </div>
@@ -391,11 +408,11 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 lg:col-span-1">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-accent" />
-              <p className="text-sm font-semibold text-foreground">Recent Activity</p>
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Recent Activity</p>
             </div>
             <Link to="/platform/admin/audit" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
           </div>
@@ -423,24 +440,29 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
           </div>
         </div>
 
-        {/* Quick Announcement */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
-            <Megaphone className="h-4 w-4 text-premium" />
-            <p className="text-sm font-semibold text-foreground">Quick Announcement</p>
+        {/* Broadcast Composer — indigo elevated */}
+        <div className="relative rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.10] via-primary/[0.04] to-surface-1 lg:col-span-1 overflow-hidden shadow-[0_0_0_1px_hsl(var(--primary)/0.10)]">
+          <div className="pointer-events-none absolute -top-10 -right-8 h-32 w-32 rounded-full bg-primary/25 blur-3xl" />
+          <div className="relative px-4 py-3 border-b border-primary/20 flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-primary/15 flex items-center justify-center">
+              <Megaphone className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Broadcast</p>
+            <span className="ml-auto text-[10px] font-semibold text-muted-foreground">All students</span>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="relative p-4 space-y-3">
             <Input
               value={announcementTitle} onChange={(e) => setAnnouncementTitle(e.target.value)}
-              placeholder="Title" className="h-10 text-sm"
+              placeholder="Announcement title" className="h-10 text-sm bg-surface-1/80"
             />
             <Textarea
               value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)}
-              placeholder="Write announcement..." rows={4} className="text-sm resize-none"
+              placeholder="Write message to broadcast campus-wide…" rows={4} className="text-sm resize-none bg-surface-1/80"
             />
-            <Button className="w-full gap-2" onClick={() => announceMut.mutate()}
+            <Button className="w-full gap-2 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]" onClick={() => announceMut.mutate()}
               disabled={!announcementTitle.trim() || !announcementBody.trim() || announceMut.isPending}>
-              {announceMut.isPending ? "Sending…" : "Broadcast to All"}
+              <Megaphone className="h-4 w-4" />
+              {announceMut.isPending ? "Broadcasting…" : "Broadcast to Campus"}
             </Button>
           </div>
         </div>
