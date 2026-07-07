@@ -37,6 +37,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     defaultOpen: true,
     items: [
       { title: "Students",       url: "/platform/admin/students",       icon: "Users" },
+      { title: "Create Student", url: "/platform/admin/students/create", icon: "UserPlus" },
       { title: "Verification",   url: "/platform/admin/verification",   icon: "UserCheck", badge: true },
       { title: "Faculty",        url: "/platform/admin/faculty",        icon: "GraduationCap" },
       { title: "Lectures",       url: "/platform/admin/lectures",       icon: "BookOpen" },
