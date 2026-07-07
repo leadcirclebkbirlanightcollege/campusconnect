@@ -266,6 +266,9 @@
     scroll-behavior: smooth;
     /* Prevent layout shift from scrollbar */
     scrollbar-gutter: stable;
+    /* Use dynamic viewport so mobile browser chrome doesn't clip content */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   body {
@@ -277,7 +280,15 @@
     text-rendering: optimizeLegibility;
     /* Prevent text size adjustment on mobile after orientation change */
     -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
 
   /* ── Strict Typography Scale ── */
   h1 { font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
