@@ -31,7 +31,7 @@ export default function Terms() {
         <h3>6. Termination</h3>
         <p>We reserve the right to suspend accounts that violate these terms. Institutions may request data export before account closure.</p>
         <h3>7. Contact</h3>
-        <p>For questions, email <strong>legal@campusconnect.in</strong></p>
+        <p>For questions, email <strong>atharv@bkbirlanightcollege.qzz.io</strong></p>
       </main>
     </div>
   );

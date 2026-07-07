@@ -30,7 +30,7 @@ export default function Privacy() {
         <h3>5. Your Rights</h3>
         <p>You may request access to, correction of, or deletion of your personal data by contacting your institution administrator or our support team.</p>
         <h3>6. Contact</h3>
-        <p>For privacy inquiries, email <strong>privacy@campusconnect.in</strong></p>
+        <p>For privacy inquiries, email <strong>atharv@bkbirlanightcollege.qzz.io</strong></p>
       </main>
     </div>
   );
