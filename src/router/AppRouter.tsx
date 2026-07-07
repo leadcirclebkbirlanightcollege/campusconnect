@@ -73,6 +73,7 @@ const SALeadsPage          = lazy(() => import("@/pages/platform/pages/SALeadsPa
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
 const AdminOverviewPage            = lazy(() => import("@/pages/admin/pages/AdminOverviewPage"));
 const AdminStudentsPage            = lazy(() => import("@/pages/admin/pages/AdminStudentsPage"));
+const AdminCreateStudentPage       = lazy(() => import("@/pages/admin/students/AdminCreateStudentPage"));
 const AdminLecturesPage            = lazy(() => import("@/pages/admin/pages/AdminLecturesPage"));
 const AdminProgrammesPage          = lazy(() => import("@/pages/admin/pages/AdminProgrammesPage"));
 const AdminAllotmentsPage          = lazy(() => import("@/pages/admin/pages/AdminAllotmentsPage"));
@@ -194,6 +195,8 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
+            <Route path="students/create"          element={<AdminCreateStudentPage />} />
+            <Route path="create-student"           element={<Navigate to="/platform/admin/students/create" replace />} />
             <Route path="verification"             element={<AdminStudentVerificationPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />

@@ -6,7 +6,7 @@ import { useState, useMemo } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import {
-  LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
+  LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck, UserPlus,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
@@ -24,7 +24,7 @@ import {
 import { ADMIN_NAV_SECTIONS } from "@/pages/admin/adminNavConfig";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck,
+  LayoutDashboard, Users, BookOpen, GraduationCap, UserCheck, UserPlus,
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, Building2, School,
   Hash, BarChart2, FileText, Download, ClipboardList, Store,

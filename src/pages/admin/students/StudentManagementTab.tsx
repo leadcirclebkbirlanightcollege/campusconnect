@@ -485,8 +485,13 @@ export default function StudentManagementTab() {
                   </TableRow>
                 ) : (
                   filtered.map((s) => (
-                    <TableRow key={s.user_id} data-state={selected[s.user_id] ? "selected" : undefined}>
-                      <TableCell>
+                    <TableRow
+                      key={s.user_id}
+                      data-state={selected[s.user_id] ? "selected" : undefined}
+                      className="cursor-pointer hover:bg-muted/40"
+                      onClick={() => setOpenStudentUserId(s.user_id)}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={Boolean(selected[s.user_id])}
                           onCheckedChange={(v) =>
@@ -543,7 +548,7 @@ export default function StudentManagementTab() {
                         )}
                       </TableCell>
 
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="outline"
