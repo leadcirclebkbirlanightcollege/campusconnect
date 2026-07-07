@@ -64,7 +64,7 @@ function formatTime(val: string) {
   return new Date(val).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-/* ── KPI Card ──────────────────────────────────────── */
+/* ── KPI Card (Neo-Industrial compact) ─────────────── */
 function KpiCard({ label, value, icon: Icon, colorCls, bgCls, loading, suffix = "", danger, idx }: {
   label: string; value: number; icon: React.ElementType;
   colorCls: string; bgCls: string; loading: boolean;
@@ -73,47 +73,51 @@ function KpiCard({ label, value, icon: Icon, colorCls, bgCls, loading, suffix = 
   const counted = useMetricCountUp(loading ? 0 : value, 700 + idx * 60);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, delay: idx * 0.04 }}
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, delay: idx * 0.03 }}
       className={cn(
-        "rounded-xl border p-5 flex flex-col justify-between min-h-[130px] transition-all hover:shadow-md",
-        danger && value > 0 ? "border-danger/30 bg-danger/5" : "border-border-subtle bg-surface-1",
+        "group relative rounded-2xl border p-4 flex flex-col justify-between min-h-[110px]",
+        "bg-surface-1 border-border-subtle transition-all duration-200",
+        "hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.15),0_10px_30px_-15px_hsl(var(--primary)/0.35)]",
+        danger && value > 0 && "border-danger/40 bg-danger/[0.04] hover:border-danger/60 hover:shadow-[0_0_0_1px_hsl(var(--danger)/0.2),0_10px_30px_-15px_hsl(var(--danger)/0.35)]",
       )}
     >
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
-        <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center", bgCls)}>
-          <Icon className={cn("h-4.5 w-4.5", colorCls)} />
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground leading-tight">{label}</p>
+        <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", bgCls)}>
+          <Icon className={cn("h-3.5 w-3.5", colorCls)} />
         </div>
       </div>
       {loading ? (
-        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-8 w-20 mt-2" />
       ) : (
-        <p className={cn(
-          "text-[38px] font-black tracking-tight tabular-nums leading-none",
-          danger && value > 0 ? "text-danger" : "text-foreground",
-        )}>
-          {counted.toLocaleString()}{suffix}
-        </p>
+        <div className="flex items-baseline gap-1.5 mt-2">
+          <p className={cn(
+            "font-heading text-[28px] font-bold tracking-tight tabular-nums leading-none",
+            danger && value > 0 ? "text-danger" : "text-foreground",
+          )}>
+            {counted.toLocaleString()}{suffix}
+          </p>
+        </div>
       )}
     </motion.div>
   );
 }
 
-/* ── Quick Action Button ───────────────────────────── */
+/* ── Quick Action Tile (Neo-Industrial 2-col grid) ─── */
 function QuickAction({ icon: Icon, label, to, color, bg }: {
   icon: React.ElementType; label: string; to: string; color: string; bg: string;
 }) {
   return (
     <Link to={to} className={cn(
-      "flex items-center gap-3 px-4 py-3 rounded-lg border border-transparent",
-      "hover:border-border-subtle hover:bg-surface-2 transition-all cursor-pointer group",
+      "group relative flex flex-col items-start gap-2 p-3 rounded-xl border border-border-subtle bg-surface-2/60",
+      "hover:border-primary/40 hover:bg-surface-1 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]",
+      "transition-all duration-200 cursor-pointer",
     )}>
-      <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", bg)}>
+      <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", bg)}>
         <Icon className={cn("h-4 w-4", color)} />
       </div>
-      <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
-      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-100 transition-colors" />
+      <span className="text-[11px] font-semibold text-foreground leading-tight">{label}</span>
     </Link>
   );
 }
