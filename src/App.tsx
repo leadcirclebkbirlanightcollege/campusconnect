@@ -16,6 +16,7 @@ import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicat
 import { useAuth } from "@/providers/AuthProvider";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import NoInternet from "@/components/system/NoInternet";
+import AppFooter from "@/components/layout/AppFooter";
 import { AnimatePresence } from "framer-motion";
 
 /** Overlays that must only appear for logged-in users on protected routes */
