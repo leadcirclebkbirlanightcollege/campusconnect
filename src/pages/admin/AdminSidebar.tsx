@@ -105,12 +105,12 @@ export default function AdminSidebar() {
                   type="button"
                   onClick={() => toggleSection(section.label)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-1.5 px-3 py-2 group/sec",
-                    "text-[10px] font-bold uppercase tracking-[0.10em]",
+                    "w-full flex items-center justify-between gap-1.5 px-3 py-1.5 group/sec",
+                    "text-[10px] font-bold uppercase tracking-[0.12em]",
                     "transition-colors duration-fast rounded-md",
                     isEcell
-                      ? "text-[hsl(265_85%_70%)] hover:text-[hsl(265_85%_80%)]"
-                      : "text-muted-foreground/50 hover:text-muted-foreground",
+                      ? "text-[hsl(265_85%_72%)] hover:text-[hsl(265_85%_82%)]"
+                      : "text-muted-foreground/70 hover:text-foreground",
                   )}
                   aria-expanded={isOpen}
                 >
