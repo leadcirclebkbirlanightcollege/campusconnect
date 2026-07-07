@@ -92,66 +92,101 @@ export default function WhatsNewModal({ manualOpen, onManualClose }: WhatsNewMod
   const slide = slides[current];
   const Icon  = slide.icon;
 
+  const isLast = current === slides.length - 1;
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden border-border-subtle bg-surface-1/95 backdrop-blur-xl shadow-lg">
-        <div className="p-6 space-y-6">
-          <DialogTitle className="text-center">
-            <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
-              What's New in v{APP_VERSION}
-            </span>
+      <DialogContent className="max-w-md p-0 overflow-hidden border-border-subtle/70 bg-surface-1/95 backdrop-blur-2xl shadow-2xl">
+        {/* Ambient gradient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.18),transparent_70%)]"
+        />
+
+        <div className="relative p-7 pb-6 space-y-6">
+          {/* Header */}
+          <DialogTitle asChild>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                What's New
+              </span>
+              <span className="text-[10px] font-mono font-medium text-muted-foreground/70 px-2 py-0.5 rounded-full border border-border-subtle bg-surface-2">
+                v{APP_VERSION}
+              </span>
+            </div>
           </DialogTitle>
 
-          <div className="flex flex-col items-center text-center space-y-4 min-h-[200px] justify-center">
-            <div className="h-14 w-14 rounded-2xl bg-surface-3 border border-border-subtle flex items-center justify-center">
-              <Icon className={`h-7 w-7 ${slide.color}`} />
+          {/* Slide body */}
+          <div className="flex flex-col items-center text-center space-y-5 min-h-[220px] justify-center">
+            <div className="relative">
+              <div
+                aria-hidden
+                className="absolute inset-0 rounded-2xl bg-primary/20 blur-2xl scale-110"
+              />
+              <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-surface-3 to-surface-2 border border-border-subtle flex items-center justify-center shadow-inner">
+                <Icon className={`h-7 w-7 ${slide.color}`} strokeWidth={1.75} />
+              </div>
             </div>
-            <h3 className="text-[17px] font-semibold text-foreground">{slide.title}</h3>
-            <p className="text-[13px] text-muted-foreground leading-relaxed max-w-xs">{slide.description}</p>
+            <div className="space-y-2">
+              <h3 className="text-[18px] font-semibold text-foreground tracking-tight">
+                {slide.title}
+              </h3>
+              <p className="text-[13px] text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                {slide.description}
+              </p>
+            </div>
           </div>
 
           {/* Progress dots */}
-          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+          <div className="flex items-center justify-center gap-1.5">
             {slides.map((_, i) => (
               <button
                 key={i}
+                aria-label={`Go to slide ${i + 1}`}
                 onClick={() => setCurrent(i)}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === current ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/25"
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === current
+                    ? "w-5 bg-primary"
+                    : "w-1 bg-muted-foreground/25 hover:bg-muted-foreground/40"
                 }`}
               />
             ))}
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setCurrent((p) => Math.max(0, p - 1))}
               disabled={current === 0}
-              className="gap-1 text-muted-foreground"
+              className="gap-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" /> Back
             </Button>
 
-            {current < slides.length - 1 ? (
+            <span className="text-[11px] font-mono text-muted-foreground/60 tabular-nums">
+              {current + 1} / {slides.length}
+            </span>
+
+            {!isLast ? (
               <Button size="sm" onClick={() => setCurrent((p) => p + 1)} className="gap-1">
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button size="sm" onClick={handleClose}>
-                Get Started 🚀
+              <Button size="sm" onClick={handleClose} className="gap-1">
+                Get Started
               </Button>
             )}
           </div>
 
           {/* Don't show again */}
-          <div className="flex items-center justify-center gap-2 pt-2 border-t border-border-subtle">
+          <div className="flex items-center justify-center gap-2 pt-4 border-t border-border-subtle/60">
             <Checkbox
               id="dont-show"
               checked={dontShow}
               onCheckedChange={(v) => setDontShow(v === true)}
+              className="h-3.5 w-3.5"
             />
             <label htmlFor="dont-show" className="text-[11px] text-muted-foreground cursor-pointer select-none">
               Don't show again for this version
