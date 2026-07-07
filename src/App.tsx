@@ -65,7 +65,12 @@ function AppInner() {
       <InstallPromptBanner />
 
       <AppGuard overlays={<AuthenticatedOverlays />}>
-        <AppRouter />
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1">
+            <AppRouter />
+          </div>
+          <AppFooter />
+        </div>
       </AppGuard>
     </>
   );
