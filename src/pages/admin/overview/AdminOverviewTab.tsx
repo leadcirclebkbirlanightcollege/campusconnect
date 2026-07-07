@@ -440,24 +440,29 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
           </div>
         </div>
 
-        {/* Quick Announcement */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
-            <Megaphone className="h-4 w-4 text-premium" />
+        {/* Broadcast Composer — indigo elevated */}
+        <div className="relative rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.10] via-primary/[0.04] to-surface-1 lg:col-span-1 overflow-hidden shadow-[0_0_0_1px_hsl(var(--primary)/0.10)]">
+          <div className="pointer-events-none absolute -top-10 -right-8 h-32 w-32 rounded-full bg-primary/25 blur-3xl" />
+          <div className="relative px-4 py-3 border-b border-primary/20 flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-primary/15 flex items-center justify-center">
+              <Megaphone className="h-3.5 w-3.5 text-primary" />
+            </div>
             <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Broadcast</p>
+            <span className="ml-auto text-[10px] font-semibold text-muted-foreground">All students</span>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="relative p-4 space-y-3">
             <Input
               value={announcementTitle} onChange={(e) => setAnnouncementTitle(e.target.value)}
-              placeholder="Title" className="h-10 text-sm"
+              placeholder="Announcement title" className="h-10 text-sm bg-surface-1/80"
             />
             <Textarea
               value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)}
-              placeholder="Write announcement..." rows={4} className="text-sm resize-none"
+              placeholder="Write message to broadcast campus-wide…" rows={4} className="text-sm resize-none bg-surface-1/80"
             />
-            <Button className="w-full gap-2" onClick={() => announceMut.mutate()}
+            <Button className="w-full gap-2 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]" onClick={() => announceMut.mutate()}
               disabled={!announcementTitle.trim() || !announcementBody.trim() || announceMut.isPending}>
-              {announceMut.isPending ? "Sending…" : "Broadcast to All"}
+              <Megaphone className="h-4 w-4" />
+              {announceMut.isPending ? "Broadcasting…" : "Broadcast to Campus"}
             </Button>
           </div>
         </div>
