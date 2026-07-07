@@ -249,7 +249,10 @@ const Auth = () => {
         {/* Hero text */}
         <div className="relative z-10 space-y-5">
           <div className="space-y-3">
-            <h2 className="text-[32px] font-semibold text-foreground leading-tight tracking-tight">
+            <p className="font-heading text-[11px] font-bold uppercase tracking-[0.18em] text-primary/80">
+              Neo-Industrial Campus OS
+            </p>
+            <h2 className="font-heading text-[34px] font-black text-foreground leading-[1.05] tracking-tight">
               Your academic<br />intelligence hub
             </h2>
             <p className="text-[15px] text-muted-foreground leading-relaxed max-w-[320px]">
@@ -262,10 +265,10 @@ const Auth = () => {
             {FEATURES.map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-2.5 rounded-lg border border-border-subtle bg-surface-2 px-3.5 py-2.5"
+                className="flex items-center gap-2.5 rounded-xl border border-border-subtle bg-surface-2/80 px-3.5 py-2.5 transition-colors hover:border-primary/40"
               >
                 <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-[13px] font-medium text-foreground">{label}</span>
+                <span className="font-heading text-[11px] font-bold uppercase tracking-[0.1em] text-foreground">{label}</span>
               </div>
             ))}
           </div>
