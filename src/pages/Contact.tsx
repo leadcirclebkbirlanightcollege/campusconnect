@@ -77,8 +77,16 @@ export default function Contact() {
                 <p className="text-xs text-muted-foreground break-all">{value}</p>
               </GlassCard>
             );
+            const isExternal = href?.startsWith("http");
             return href ? (
-              <a key={label} href={href} className="block hover:opacity-90 transition-opacity">{card}</a>
+              <a
+                key={label}
+                href={href}
+                {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="block hover:opacity-90 transition-opacity"
+              >
+                {card}
+              </a>
             ) : (
               <div key={label}>{card}</div>
             );
