@@ -73,6 +73,7 @@ const SALeadsPage          = lazy(() => import("@/pages/platform/pages/SALeadsPa
 const AdminLayout                  = lazy(() => import("@/pages/admin/AdminLayout"));
 const AdminOverviewPage            = lazy(() => import("@/pages/admin/pages/AdminOverviewPage"));
 const AdminStudentsPage            = lazy(() => import("@/pages/admin/pages/AdminStudentsPage"));
+const AdminCreateStudentPage       = lazy(() => import("@/pages/admin/students/AdminCreateStudentPage"));
 const AdminLecturesPage            = lazy(() => import("@/pages/admin/pages/AdminLecturesPage"));
 const AdminProgrammesPage          = lazy(() => import("@/pages/admin/pages/AdminProgrammesPage"));
 const AdminAllotmentsPage          = lazy(() => import("@/pages/admin/pages/AdminAllotmentsPage"));
