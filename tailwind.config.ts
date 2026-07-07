@@ -18,7 +18,9 @@ export default {
     extend: {
       fontFamily: {
         syne: ['Syne', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', '"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', '"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['"Space Grotesk"', '"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
 
       /* ── Design Token Colors ── */
