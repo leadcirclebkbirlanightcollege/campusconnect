@@ -548,7 +548,7 @@ export default function StudentManagementTab() {
                         )}
                       </TableCell>
 
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="outline"
