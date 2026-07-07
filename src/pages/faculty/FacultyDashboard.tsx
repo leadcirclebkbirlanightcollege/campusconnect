@@ -6,17 +6,26 @@ import { BookOpen, Users, CheckSquare, TrendingUp, Clock, Zap } from "lucide-rea
 import { format, isToday } from "date-fns";
 
 /* ── helpers ─────────────────────────────────────────────────── */
-function StatCard({ icon: Icon, label, value, sub, color = "primary" }: {
-  icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string;
+const TONE_CLASSES: Record<string, { bg: string; fg: string }> = {
+  primary: { bg: "bg-primary/12", fg: "text-primary" },
+  success: { bg: "bg-success/12", fg: "text-success" },
+  warning: { bg: "bg-warning/12", fg: "text-warning" },
+  accent:  { bg: "bg-accent/15",  fg: "text-accent" },
+  info:    { bg: "bg-primary/10", fg: "text-primary" },
+};
+
+function StatCard({ icon: Icon, label, value, sub, tone = "primary" }: {
+  icon: React.ElementType; label: string; value: string | number; sub?: string; tone?: keyof typeof TONE_CLASSES;
 }) {
+  const t = TONE_CLASSES[tone] ?? TONE_CLASSES.primary;
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-4 flex items-start gap-3">
-      <div className={`h-9 w-9 rounded-lg bg-${color}/10 flex items-center justify-center shrink-0`}>
-        <Icon className={`h-4.5 w-4.5 text-${color}`} />
+    <div className="rounded-2xl border border-border-subtle bg-surface-1/90 p-4 flex items-start gap-3 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated">
+      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${t.bg} ${t.fg}`}>
+        <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-[22px] font-bold text-foreground leading-tight">{value}</p>
+        <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="font-heading text-[24px] font-black text-foreground leading-tight tabular-nums">{value}</p>
         {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
@@ -77,27 +86,30 @@ export default function FacultyDashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div>
-        <h1 className="text-[22px] font-bold text-foreground tracking-tight">Faculty Dashboard</h1>
-        <p className="text-[13px] text-muted-foreground mt-0.5">
+      <div className="space-y-1.5">
+        <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.16em] text-primary/80">
+          Faculty Cockpit
+        </p>
+        <h1 className="font-heading text-[26px] font-black text-foreground tracking-tight">Faculty Dashboard</h1>
+        <p className="text-[13px] text-muted-foreground">
           {format(new Date(), "EEEE, MMMM d, yyyy")}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatCard icon={Zap}        label="Live Now"      value={stats.live}         sub="Active lectures"      color="green-500" />
-        <StatCard icon={BookOpen}   label="Total Lectures" value={stats.total}       sub="All time"             />
-        <StatCard icon={Clock}      label="Today"         value={stats.today}        sub="Scheduled today"      color="yellow-500" />
-        <StatCard icon={CheckSquare} label="Upcoming"     value={stats.upcoming}     sub="Scheduled ahead"      />
-        <StatCard icon={Users}      label="Students Reached" value={stats.uniqueStudents} sub="Unique attendees" color="purple-500" />
-        <StatCard icon={TrendingUp} label="Total Attendance" value={attendanceSummary?.length ?? 0} sub="Records" color="blue-500" />
+        <StatCard icon={Zap}         label="Live Now"          value={stats.live}                       sub="Active lectures" tone="success" />
+        <StatCard icon={BookOpen}    label="Total Lectures"    value={stats.total}                      sub="All time" />
+        <StatCard icon={Clock}       label="Today"             value={stats.today}                      sub="Scheduled today" tone="warning" />
+        <StatCard icon={CheckSquare} label="Upcoming"          value={stats.upcoming}                   sub="Scheduled ahead" />
+        <StatCard icon={Users}       label="Students Reached"  value={stats.uniqueStudents}             sub="Unique attendees" tone="accent" />
+        <StatCard icon={TrendingUp}  label="Total Attendance"  value={attendanceSummary?.length ?? 0}   sub="Records" tone="info" />
       </div>
 
       {/* Today's Schedule */}
       {todayLectures.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-semibold text-foreground mb-2">Today's Schedule</h2>
+          <h2 className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">Today's Schedule</h2>
           <div className="space-y-2">
             {todayLectures.map((l) => (
               <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
@@ -122,7 +134,7 @@ export default function FacultyDashboard() {
       {/* Upcoming Lectures */}
       {upcomingLectures.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-semibold text-foreground mb-2">Upcoming Lectures</h2>
+          <h2 className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">Upcoming Lectures</h2>
           <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/30">
             {upcomingLectures.map((l) => (
               <div key={l.id} className="flex items-center gap-3 px-4 py-3">
