@@ -16,6 +16,11 @@ export default {
       screens: { "2xl": "1280px" },
     },
     extend: {
+      fontFamily: {
+        syne: ['Syne', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+
       /* ── Design Token Colors ── */
       colors: {
         /* Surface depth stack */
