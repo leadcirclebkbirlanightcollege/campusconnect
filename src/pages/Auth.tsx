@@ -44,7 +44,7 @@ function PasswordInput({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pr-10 bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px]"
+          className="pr-10 h-11 bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px]"
           required
         />
         <button
@@ -332,7 +332,7 @@ const Auth = () => {
                     placeholder="your@email.com or CS-2024-001"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
+                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-11"
                     required
                   />
                 </div>
@@ -347,7 +347,7 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-10 gap-2 shadow-primary text-[14px]"
+                  className="w-full h-11 gap-2 shadow-primary text-[14px] font-semibold"
                   disabled={loading}
                 >
                   {loading
@@ -371,7 +371,7 @@ const Auth = () => {
                     placeholder="your@email.com"
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
-                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-10"
+                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-11"
                     required
                   />
                 </div>
@@ -398,7 +398,7 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-10 gap-2 shadow-primary text-[14px] mt-1"
+                  className="w-full h-11 gap-2 shadow-primary text-[14px] font-semibold mt-1"
                   disabled={loading}
                 >
                   {loading
