@@ -272,26 +272,87 @@ export default function Index() {
         </motion.section>
       </main>
 
-      <footer className="border-t border-border-subtle bg-surface-1 py-6 safe-area-bottom">
-        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center gap-4 px-4 text-center md:max-w-7xl md:flex-row md:justify-between md:px-6 md:text-left">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/8">
-              <GraduationCap className="h-4 w-4 text-primary" />
+      <footer className="border-t border-border-subtle bg-surface-1 safe-area-bottom">
+        <div className="mx-auto w-full max-w-[420px] px-4 py-10 md:max-w-7xl md:px-8 md:py-14">
+          {/* Top: brand + link columns */}
+          <div className="grid gap-10 md:grid-cols-12">
+            {/* Brand block */}
+            <div className="md:col-span-5 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
+                  <GraduationCap className="h-4.5 w-4.5 text-primary" />
+                </div>
+                <span className="text-base font-bold tracking-tight text-foreground">
+                  {branding.brand_name}
+                </span>
+              </div>
+              <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">
+                A unified campus operating system — attendance, academics, engagement, and
+                communication built for modern institutions.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <ShieldCheck className="h-3 w-3 text-primary" />
+                  Enterprise-grade security
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  Made in India
+                </span>
+              </div>
             </div>
-            <span className="text-sm font-semibold text-foreground">{branding.brand_name}</span>
+
+            {/* Link columns */}
+            <div className="md:col-span-7 grid grid-cols-2 gap-8 sm:grid-cols-3">
+              <div className="space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                  Product
+                </p>
+                <ul className="space-y-2 text-[13px] text-muted-foreground">
+                  <li><Link to="/auth" className="hover:text-foreground transition-colors">Get Started</Link></li>
+                  <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                  <li><a href="#benefits" className="hover:text-foreground transition-colors">Why Campus Connect</a></li>
+                </ul>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                  Company
+                </p>
+                <ul className="space-y-2 text-[13px] text-muted-foreground">
+                  <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+                  <li><Link to="/help" className="hover:text-foreground transition-colors">Support</Link></li>
+                  <li><a href="#partners" className="hover:text-foreground transition-colors">Partners</a></li>
+                </ul>
+              </div>
+              <div className="col-span-2 space-y-3 sm:col-span-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                  Legal
+                </p>
+                <ul className="space-y-2 text-[13px] text-muted-foreground">
+                  {content.footerLinks.map((l, i) =>
+                    l.href.startsWith("/") ? (
+                      <li key={i}><Link to={l.href} className="hover:text-foreground transition-colors">{l.label}</Link></li>
+                    ) : (
+                      <li key={i}><a href={l.href} className="hover:text-foreground transition-colors">{l.label}</a></li>
+                    )
+                  )}
+                </ul>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground md:justify-end">
-            {content.footerLinks.map((l, i) =>
-              l.href.startsWith("/") ? (
-                <Link key={i} to={l.href} className="hover:text-foreground transition-colors">{l.label}</Link>
-              ) : (
-                <a key={i} href={l.href} className="hover:text-foreground transition-colors">{l.label}</a>
-              )
-            )}
+
+          {/* Divider + bottom bar */}
+          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-subtle pt-6 md:flex-row">
+            <p className="text-[11px] text-muted-foreground">
+              © {year} {branding.brand_name}. All rights reserved.
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Crafted with care for students, faculty & administrators.
+            </p>
           </div>
-          <p className="text-[11px] text-muted-foreground">© {year} {branding.brand_name}. All rights reserved.</p>
         </div>
       </footer>
+
 
       <WhatsAppButton />
     </div>
