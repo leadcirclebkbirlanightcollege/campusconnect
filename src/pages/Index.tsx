@@ -128,15 +128,16 @@ export default function Index() {
                 </span>
                 {content.hero.badge}
               </div>
-              <h1 className="font-syne text-[44px] font-bold leading-[1.02] tracking-[-0.035em] text-foreground md:text-[76px]">
+              <h1 className="font-syne text-[36px] font-bold leading-[1.05] tracking-[-0.03em] text-foreground md:text-[56px] lg:text-[64px]">
                 {content.hero.titleLine1}{" "}
                 <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   {content.hero.titleLine2}
                 </span>
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground md:text-base">
                 {content.hero.subtitle}
               </p>
+
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link to="/auth" className="w-full sm:w-auto">
                   <Button size="lg" className="h-12 w-full rounded-xl px-6 text-sm font-semibold shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] sm:w-auto">
