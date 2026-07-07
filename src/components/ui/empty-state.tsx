@@ -53,31 +53,31 @@ export function EmptyState({
     >
       {/* Illustration */}
       <div className={cn(
-        "flex items-center justify-center rounded-2xl",
+        "relative flex items-center justify-center rounded-2xl overflow-hidden",
         compact ? "h-12 w-12 mb-3" : "h-16 w-16 mb-4",
-        "bg-surface-3 border border-border-subtle",
+        "bg-gradient-to-br from-surface-3 via-surface-2 to-surface-1 border border-border-subtle shadow-card",
       )}>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
         {emoji ? (
-          <span className={cn("select-none", compact ? "text-2xl" : "text-3xl")}>{emoji}</span>
+          <span className={cn("relative select-none", compact ? "text-2xl" : "text-3xl")}>{emoji}</span>
         ) : icon ? (
-          <div className="text-muted-foreground">{icon}</div>
+          <div className="relative text-primary/80">{icon}</div>
         ) : (
-          <Inbox className={cn("text-muted-foreground", compact ? "h-5 w-5" : "h-7 w-7")} strokeWidth={1.75} />
+          <Inbox className={cn("relative text-primary/70", compact ? "h-5 w-5" : "h-7 w-7")} strokeWidth={1.75} />
         )}
-
       </div>
 
       {/* Text */}
       <h3 className={cn(
-        "font-semibold text-foreground",
-        compact ? "text-[13px]" : "text-[15px]",
+        "font-heading font-bold text-foreground tracking-tight",
+        compact ? "text-[14px]" : "text-[17px]",
       )}>
         {title}
       </h3>
       {description && (
         <p className={cn(
-          "text-muted-foreground mt-1 max-w-xs leading-relaxed",
-          compact ? "text-[11px]" : "text-[12px]",
+          "text-muted-foreground mt-1.5 max-w-xs leading-relaxed",
+          compact ? "text-[11.5px]" : "text-[12.5px]",
         )}>
           {description}
         </p>
