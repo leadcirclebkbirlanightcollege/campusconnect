@@ -836,13 +836,27 @@
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
-/* Sticky app header that respects iOS notch / Android status bar in WebView */
+/* Padding utilities that guarantee a minimum inset even without a notch */
+.safe-pad-top    { padding-top: max(16px, env(safe-area-inset-top, 16px)); }
+.safe-pad-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)); }
+.safe-pad-x {
+  padding-left:  max(16px, env(safe-area-inset-left, 16px));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
+}
+/* Sticky app header that respects iOS notch / Android status bar / cutouts */
 .app-header-safe {
   padding-top: env(safe-area-inset-top, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
-/* Increase tap targets on touch devices */
+
+/* Prefer dynamic viewport units where supported so browser chrome / gesture
+   bars don't clip fixed-height layouts (h-screen / min-h-screen). */
+@supports (height: 100dvh) {
+  .min-h-screen { min-height: 100dvh; }
+  .h-screen     { height: 100dvh; }
+}
+
 @media (hover: none) and (pointer: coarse) {
   button, [role="button"], a.tap-ripple {
     min-height: 40px;
