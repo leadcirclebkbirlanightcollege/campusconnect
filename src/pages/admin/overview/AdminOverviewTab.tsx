@@ -302,7 +302,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
               <div className="flex items-center gap-2">
                 <Radio className={cn("h-4 w-4", liveQ.data?.length ? "text-success" : "text-muted-foreground")} />
-                <p className="text-sm font-semibold text-foreground">Live Operations</p>
+                <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Live Operations</p>
               </div>
               {liveQ.data?.length ? (
                 <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.6 }}
@@ -376,7 +376,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Upcoming Schedule</p>
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Upcoming</p>
             </div>
             <Link to="/platform/admin/lectures" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
           </div>
@@ -412,7 +412,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-accent" />
-              <p className="text-sm font-semibold text-foreground">Recent Activity</p>
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Recent Activity</p>
             </div>
             <Link to="/platform/admin/audit" className="text-[11px] text-primary hover:underline font-medium">View All</Link>
           </div>
@@ -444,7 +444,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
             <Megaphone className="h-4 w-4 text-premium" />
-            <p className="text-sm font-semibold text-foreground">Quick Announcement</p>
+            <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-foreground">Broadcast</p>
           </div>
           <div className="p-4 space-y-3">
             <Input
