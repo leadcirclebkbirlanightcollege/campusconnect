@@ -505,9 +505,9 @@ const HeroStat = memo(function HeroStat({ label, value, suffix = "" }: { label: 
   const count = useMetricCountUp(value, 800);
 
   return (
-    <div className="rounded-xl bg-surface-2/70 p-3 text-center">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-black tabular-nums text-foreground">
+    <div className="rounded-xl border border-border-subtle/60 bg-surface-2/70 p-3 text-center">
+      <p className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className="mt-1 font-heading text-xl font-black tabular-nums text-foreground">
         {count}
         {suffix}
       </p>

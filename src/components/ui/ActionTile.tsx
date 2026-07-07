@@ -29,7 +29,7 @@ const ActionTile = React.memo(
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-action-primary text-action-primary-foreground transition-transform duration-180 group-hover:scale-105">
           <Icon className="h-5 w-5" />
         </span>
-        <span className="text-xs font-semibold text-foreground">{label}</span>
+        <span className="font-heading text-[11px] font-bold uppercase tracking-[0.1em] text-foreground">{label}</span>
       </motion.button>
     );
   }),
