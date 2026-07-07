@@ -118,8 +118,8 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   testimonialsHeading: { eyebrow: "Voices From Campus", title: "What People Say" },
   testimonials: [
     {
-      name: "Dr. Bipinchandra Wadekar",
-      role: "Principal, B. K. Birla Night Arts, Science & Commerce College",
+      name: "Dr. Harish Kumar Dubey",
+      role: "I/C Principal, B. K. Birla Night Arts, Science & Commerce College",
       quote: "Campus Connect is a forward-looking initiative that bridges communication, engagement, and academic collaboration within our institution. It empowers students and faculty through a unified digital ecosystem, fostering a more connected and progressive campus culture.",
       rating: 5,
     },
