@@ -219,7 +219,7 @@ export default function Index() {
           </div>
 
           {/* KPI BAR */}
-          <div className="mt-20 grid grid-cols-2 gap-6 border-y border-border-subtle py-8 md:grid-cols-4 md:gap-8 md:py-10">
+          <div className="mt-14 grid grid-cols-2 gap-6 border-y border-border-subtle py-8 md:grid-cols-4 md:gap-8 md:py-10">
             {content.kpis.map((kpi, i) => (
               <div key={i}>
                 <p className="text-2xl font-bold leading-none text-foreground md:text-3xl">{kpi.value}</p>
@@ -230,7 +230,7 @@ export default function Index() {
         </section>
 
         {/* ————— INSTITUTION PARTNERS ————— */}
-        <section id="partners" className="py-16 md:py-20">
+        <section id="partners" className="py-10 md:py-14">
           <InstitutionPartnersMarquee />
         </section>
 
@@ -238,7 +238,7 @@ export default function Index() {
         <motion.section
           id="benefits"
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-16 md:py-24"
+          className="py-12 md:py-16"
         >
           <div className="mb-12 max-w-2xl">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.benefitsHeading.eyebrow}</p>
@@ -269,7 +269,7 @@ export default function Index() {
         {/* ————— SOCIAL PROOF ————— */}
         <motion.section
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-16 md:py-20"
+          className="py-10 md:py-14"
         >
           <div className="grid gap-10 rounded-3xl border border-border-subtle bg-surface-1/50 p-8 md:grid-cols-12 md:p-14">
             <div className="md:col-span-5">
@@ -294,7 +294,7 @@ export default function Index() {
         <motion.section
           id="features"
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-16 md:py-24"
+          className="py-12 md:py-16"
         >
           <div className="mb-12 max-w-2xl">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.featuresHeading.eyebrow}</p>
@@ -321,7 +321,7 @@ export default function Index() {
         {/* ————— ADMIN / INSTITUTIONS ————— */}
         <motion.section
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-16 md:py-20"
+          className="py-10 md:py-14"
         >
           <div className="mb-10 max-w-2xl">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.adminSection.eyebrow}</p>
@@ -340,7 +340,7 @@ export default function Index() {
         {/* ————— TESTIMONIALS ————— */}
         <motion.section
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-16 md:py-24"
+          className="py-12 md:py-16"
         >
           <div className="mb-12 max-w-2xl">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.testimonialsHeading.eyebrow}</p>
@@ -367,7 +367,7 @@ export default function Index() {
         {/* ————— FINAL CTA ————— */}
         <motion.section
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
-          className="py-20 md:py-28"
+          className="py-14 md:py-20"
         >
           <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-surface-1/60 px-6 py-16 text-center md:px-12 md:py-24">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.28),transparent_60%)]" />
