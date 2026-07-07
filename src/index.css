@@ -589,6 +589,22 @@
   50%       { transform: translateY(-4px); }
 }
 
+/* Infinite marquee for institution partners strip. Duplicated content moves -50%. */
+@keyframes marquee-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.marquee-track {
+  width: max-content;
+  animation: marquee-scroll linear infinite;
+  will-change: transform;
+}
+.group:hover .marquee-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
+
+
 /* ══════════════════════════════════════════════
    EVENT THEMES (CSS var overrides)
 ══════════════════════════════════════════════ */
