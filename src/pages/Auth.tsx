@@ -296,20 +296,27 @@ const Auth = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="signup" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-control-bg border border-border-subtle p-0.5 rounded-lg h-9">
+            <TabsList className="grid w-full grid-cols-2 h-10 p-1 rounded-lg bg-surface-2 border border-border-subtle gap-1">
               <TabsTrigger
                 value="signup"
-                className="rounded-md text-[13px] font-medium"
+                className="rounded-md text-[13px] font-medium text-muted-foreground border-transparent
+                           data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
+                           data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
+                           hover:text-foreground transition-colors"
               >
                 Create Account
               </TabsTrigger>
               <TabsTrigger
                 value="login"
-                className="rounded-md text-[13px] font-medium"
+                className="rounded-md text-[13px] font-medium text-muted-foreground border-transparent
+                           data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
+                           data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
+                           hover:text-foreground transition-colors"
               >
                 Sign In
               </TabsTrigger>
             </TabsList>
+
 
 
             {/* ── Login ── */}
