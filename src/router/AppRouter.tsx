@@ -195,6 +195,8 @@ export default function AppRouter() {
             <Route path="dashboard"                element={<AdminOverviewPage />} />
             <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
+            <Route path="students/create"          element={<AdminCreateStudentPage />} />
+            <Route path="create-student"           element={<Navigate to="/platform/admin/students/create" replace />} />
             <Route path="verification"             element={<AdminStudentVerificationPage />} />
             <Route path="lectures"                 element={<AdminLecturesPage />} />
             <Route path="timetable"                element={<AdminTimetablePage />} />
