@@ -238,9 +238,6 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
 
   return (
     <div className="w-full space-y-6">
-      {/* ── Premium Greeting Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/15 via-surface-2 to-surface-1 p-5 shadow-sm">
-    <div className="w-full space-y-6">
       {/* ── Neo-Industrial Hero ── */}
       <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/[0.12] via-surface-1 to-surface-1 p-6 shadow-sm">
         <div className="pointer-events-none absolute -top-16 -right-12 h-56 w-56 rounded-full bg-primary/25 blur-3xl" />
