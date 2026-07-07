@@ -295,7 +295,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         <div className="space-y-5">
           {/* Live Operations */}
           <div className={cn(
-            "rounded-xl border overflow-hidden",
+            "rounded-2xl border overflow-hidden",
             liveQ.data?.length ? "border-success/40 ring-1 ring-success/15" : "border-border-subtle",
             "bg-surface-1",
           )}>
@@ -372,7 +372,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
       {/* ── Bottom Grid: Schedule + Activity + Announcement ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Schedule */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 lg:col-span-1">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
@@ -408,7 +408,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-xl border border-border-subtle bg-surface-1 lg:col-span-1">
+        <div className="rounded-2xl border border-border-subtle bg-surface-1 lg:col-span-1">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-accent" />
