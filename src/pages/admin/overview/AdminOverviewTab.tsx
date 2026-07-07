@@ -240,36 +240,51 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
     <div className="w-full space-y-6">
       {/* ── Premium Greeting Hero ── */}
       <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/15 via-surface-2 to-surface-1 p-5 shadow-sm">
-        <div className="pointer-events-none absolute -top-12 -right-10 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
-        <div className="relative flex items-start justify-between gap-4">
+    <div className="w-full space-y-6">
+      {/* ── Neo-Industrial Hero ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-gradient-to-br from-primary/[0.12] via-surface-1 to-surface-1 p-6 shadow-sm">
+        <div className="pointer-events-none absolute -top-16 -right-12 h-56 w-56 rounded-full bg-primary/25 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,transparent,hsl(var(--surface-1))_70%)]" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{greeting}</p>
-            <h1 className="text-2xl font-black text-foreground mt-1">Command Center</h1>
-            <p className="text-sm text-muted-foreground mt-1">{today} · Real-time institutional overview</p>
-          </div>
-          {liveQ.data?.length ? (
-            <div className="hidden sm:flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2">
-              <Radio className="h-4 w-4 text-success" />
-              <span className="text-xs font-bold text-success">{liveQ.data.length} LIVE</span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                {greeting}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{today}</span>
             </div>
-          ) : null}
+            <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-foreground">Command Center</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">Real-time institutional overview · auto-refreshing every 30s</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {liveQ.data?.length ? (
+              <div className="flex items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3 py-2 shadow-[0_0_0_1px_hsl(var(--success)/0.15)]">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 rounded-full bg-success animate-ping opacity-70" />
+                  <span className="relative rounded-full h-2 w-2 bg-success" />
+                </span>
+                <span className="text-xs font-bold text-success tabular-nums">{liveQ.data.length} LIVE</span>
+              </div>
+            ) : null}
+            <div className="hidden md:flex items-center gap-2 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground">Ops Console</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── KPI Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
-        <KpiCard idx={0} label="Total Students" value={m?.totalStudents ?? 0} icon={Users} colorCls="text-primary" bgCls="bg-primary/10" loading={loading} />
-        <KpiCard idx={1} label="Total Faculty" value={m?.totalFaculty ?? 0} icon={GraduationCap} colorCls="text-accent" bgCls="bg-accent/10" loading={loading} />
-        <KpiCard idx={2} label="Total Lectures" value={m?.lecturesConducted ?? 0} icon={BookOpen} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
-        <KpiCard idx={3} label="Attendance Today" value={m?.attendanceToday ?? 0} icon={CheckSquare} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
-      </div>
-
-      {/* ── Secondary KPIs ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard idx={4} label="Live Now" value={m?.activeLectures ?? 0} icon={Radio} colorCls="text-success" bgCls="bg-success/10" loading={loading} />
-        <KpiCard idx={5} label="Programmes" value={m?.totalProgrammes ?? 0} icon={GraduationCap} colorCls="text-premium" bgCls="bg-premium/10" loading={loading} />
-        <KpiCard idx={6} label="Points Awarded" value={m?.totalPoints ?? 0} icon={Zap} colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
-        <KpiCard idx={7} label="At-Risk Students" value={m?.studentsAtRisk ?? 0} icon={TriangleAlert} colorCls="text-danger" bgCls="bg-danger/10" loading={loading} danger />
+      {/* ── Bento KPI Strip (8-up on xl, 4-up md, 2-up mobile) ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+        <KpiCard idx={0} label="Students"      value={m?.totalStudents ?? 0}     icon={Users}          colorCls="text-primary" bgCls="bg-primary/10" loading={loading} />
+        <KpiCard idx={1} label="Faculty"       value={m?.totalFaculty ?? 0}      icon={GraduationCap}  colorCls="text-accent"  bgCls="bg-accent/10"  loading={loading} />
+        <KpiCard idx={2} label="Lectures"      value={m?.lecturesConducted ?? 0} icon={BookOpen}       colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={3} label="Att. Today"    value={m?.attendanceToday ?? 0}   icon={CheckSquare}    colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+        <KpiCard idx={4} label="Live Now"      value={m?.activeLectures ?? 0}    icon={Radio}          colorCls="text-success" bgCls="bg-success/10" loading={loading} />
+        <KpiCard idx={5} label="Programmes"    value={m?.totalProgrammes ?? 0}   icon={GraduationCap}  colorCls="text-premium" bgCls="bg-premium/10" loading={loading} />
+        <KpiCard idx={6} label="Points"        value={m?.totalPoints ?? 0}       icon={Zap}            colorCls="text-warning" bgCls="bg-warning/10" loading={loading} />
+        <KpiCard idx={7} label="At-Risk"       value={m?.studentsAtRisk ?? 0}    icon={TriangleAlert}  colorCls="text-danger"  bgCls="bg-danger/10"  loading={loading} danger />
       </div>
 
       {/* ── Main Grid: Charts + Live + Quick Actions ── */}
