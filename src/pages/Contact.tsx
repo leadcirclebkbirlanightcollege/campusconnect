@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const CONTACT_INFO = [
-  { icon: Mail, label: "Email", value: "hello@campusconnect.in" },
+  { icon: Mail, label: "Email", value: "atharv@bkbirlanightcollege.qzz.io" },
   { icon: Phone, label: "Phone", value: "+91 91727 82265" },
   { icon: MapPin, label: "Location", value: "Pune, Maharashtra, India" },
 ] as const;
