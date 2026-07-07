@@ -79,10 +79,13 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_10%_0%,hsl(var(--primary)/0.16),transparent_42%),radial-gradient(circle_at_95%_8%,hsl(var(--accent)/0.14),transparent_38%)]" />
+      {/* Ambient background glow */}
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(circle_at_18%_-10%,hsl(var(--primary)/0.22),transparent_45%),radial-gradient(circle_at_82%_0%,hsl(var(--primary)/0.12),transparent_40%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.035] [background-image:radial-gradient(hsl(var(--foreground))_1px,transparent_1px)] [background-size:36px_36px]" />
 
-      <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/90 backdrop-blur-xl safe-area-top">
-        <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-between px-4 md:max-w-7xl md:px-6">
+      {/* ————— NAV ————— */}
+      <header className="sticky top-0 z-40 border-b border-border-subtle/60 bg-background/80 backdrop-blur-xl safe-area-top">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
               {branding.logo_url ? (
@@ -91,186 +94,304 @@ export default function Index() {
                 <GraduationCap className="h-4.5 w-4.5 text-primary" />
               )}
             </div>
-            <div>
-              <p className="text-sm font-semibold leading-none text-foreground">{branding.brand_name}</p>
-              <p className="mt-1 text-[10px] leading-none text-muted-foreground">{content.header.tagline}</p>
-            </div>
+            <span className="text-sm font-bold tracking-tight text-foreground">{branding.brand_name}</span>
           </div>
-          <Link to="/auth" aria-label={content.header.ctaLabel}>
-            <Button size="sm" className="h-12 px-4 text-xs">{content.header.ctaLabel}</Button>
-          </Link>
+          <nav className="hidden items-center gap-8 md:flex">
+            <a href="#features" className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">Platform</a>
+            <a href="#benefits" className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">Solutions</a>
+            <a href="#partners" className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">Partners</a>
+            <Link to="/help" className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">Resources</Link>
+          </nav>
+          <div className="flex items-center gap-2 md:gap-3">
+            <Link to="/auth" className="hidden text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground md:inline">Log in</Link>
+            <Link to="/auth" aria-label={content.header.ctaLabel}>
+              <Button size="sm" className="h-9 rounded-full px-4 text-xs font-semibold">{content.header.ctaLabel}</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[420px] space-y-10 px-4 py-8 md:max-w-7xl md:px-6 md:py-12">
-        {/* HERO */}
-        <section className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
-            className="relative overflow-hidden rounded-[28px] border border-border-subtle"
-          >
-            <img src={heroImage} alt="Campus Connect hero" className="h-[520px] w-full object-cover md:h-[620px]" width={1920} height={1080} loading="eager" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background)/0.92)_8%,hsl(var(--background)/0.25)_58%,transparent)]" />
-            <div className="absolute inset-x-0 bottom-0 p-4 md:p-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-1/90 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+      <main className="mx-auto w-full max-w-7xl px-4 md:px-8">
+        {/* ————— HERO ————— */}
+        <section className="relative pt-16 pb-20 md:pt-24 md:pb-28">
+          <div className="grid items-center gap-12 md:grid-cols-12 md:gap-16">
+            {/* Left: copy */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+              className="md:col-span-7"
+            >
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
                 {content.hero.badge}
               </div>
-              <h1 className="mt-3 text-[34px] font-black leading-[0.95] tracking-[-0.04em] text-foreground md:max-w-4xl md:text-[72px]">
-                {content.hero.titleLine1}<br />{content.hero.titleLine2}
+              <h1 className="font-syne text-[44px] font-bold leading-[1.02] tracking-[-0.035em] text-foreground md:text-[76px]">
+                {content.hero.titleLine1}{" "}
+                <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  {content.hero.titleLine2}
+                </span>
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-secondary-foreground md:text-base">{content.hero.subtitle}</p>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                {content.hero.subtitle}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link to="/auth" className="w-full sm:w-auto">
-                  <GlowButton className="h-12 w-full sm:w-auto">{content.hero.primaryCtaLabel}<ArrowRight className="h-4 w-4" /></GlowButton>
+                  <Button size="lg" className="h-12 w-full rounded-xl px-6 text-sm font-semibold shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] sm:w-auto">
+                    {content.hero.primaryCtaLabel}
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </Link>
-                <a href="#student-features" className="w-full sm:w-auto">
-                  <Button variant="outline" className="h-12 w-full border-border-strong bg-surface-1/80 sm:w-auto">{content.hero.secondaryCtaLabel}</Button>
+                <a href="#features" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="h-12 w-full rounded-xl border-border-strong bg-surface-1/60 px-6 text-sm font-semibold sm:w-auto">
+                    {content.hero.secondaryCtaLabel}
+                  </Button>
                 </a>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Right: product mock */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+              className="md:col-span-5"
+            >
+              <div className="relative">
+                <div className="absolute -inset-6 rounded-[32px] bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.35),transparent_70%)] blur-2xl" />
+                <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface-1 shadow-2xl shadow-primary/10">
+                  {/* window chrome */}
+                  <div className="flex items-center gap-1.5 border-b border-border-subtle bg-surface-2/60 px-4 py-3">
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                    <span className="ml-3 text-[10px] font-medium text-muted-foreground">campus-connect.app / dashboard</span>
+                  </div>
+                  {/* mock content */}
+                  <div className="space-y-3 p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Today</p>
+                        <p className="text-sm font-bold text-foreground">Good morning, Aarav</p>
+                      </div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/25 bg-primary/10 text-primary">
+                        <Bell className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { label: "Attendance", value: "94%", icon: CalendarCheck },
+                        { label: "Rank", value: "#12", icon: Trophy },
+                        { label: "Streak", value: "27d", icon: Zap },
+                      ].map((s, i) => (
+                        <div key={i} className="rounded-lg border border-border-subtle bg-surface-2/60 p-2.5">
+                          <s.icon className="h-3.5 w-3.5 text-primary" />
+                          <p className="mt-2 text-[9px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                          <p className="text-sm font-bold text-foreground">{s.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      {[
+                        { t: "Data Structures — Live", s: "Prof. Sharma · Room 204", a: true },
+                        { t: "Assignment: OS Lab 4", s: "Due Fri · 2 days left" },
+                        { t: "Tech Fest 2026 — RSVP", s: "March 12 · 340 going" },
+                      ].map((r, i) => (
+                        <div key={i} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-[11px] font-semibold text-foreground">{r.t}</p>
+                            <p className="truncate text-[10px] text-muted-foreground">{r.s}</p>
+                          </div>
+                          {r.a && (
+                            <span className="ml-2 flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+                              <span className="h-1 w-1 rounded-full bg-primary" />
+                              LIVE
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* KPI BAR */}
+          <div className="mt-20 grid grid-cols-2 gap-6 border-y border-border-subtle py-8 md:grid-cols-4 md:gap-8 md:py-10">
+            {content.kpis.map((kpi, i) => (
+              <div key={i}>
+                <p className="text-2xl font-bold leading-none text-foreground md:text-3xl">{kpi.value}</p>
+                <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{kpi.label}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* KPIs */}
-        <section className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-          {content.kpis.map((kpi, i) => (
-            <div key={i} className="rounded-2xl border border-border-subtle bg-surface-1 p-3 md:p-4">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{kpi.label}</p>
-              <p className="mt-1 text-xl font-black leading-none text-foreground md:text-2xl">{kpi.value}</p>
-            </div>
-          ))}
+        {/* ————— INSTITUTION PARTNERS ————— */}
+        <section id="partners" className="py-16 md:py-20">
+          <InstitutionPartnersMarquee />
         </section>
 
-        {/* INSTITUTION PARTNERS */}
-        <InstitutionPartnersMarquee />
-
-
-        {/* BENEFITS */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
-          <SectionTitle eyebrow={content.benefitsHeading.eyebrow} title={content.benefitsHeading.title} />
-          <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
+        {/* ————— BENEFITS ————— */}
+        <motion.section
+          id="benefits"
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-16 md:py-24"
+        >
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.benefitsHeading.eyebrow}</p>
+            <h2 className="font-syne text-3xl font-bold tracking-tight text-foreground md:text-4xl">{content.benefitsHeading.title}</h2>
+            <p className="mt-4 text-sm text-muted-foreground md:text-base">Powerful primitives built to integrate with the way your campus already runs.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {content.benefits.map((b, i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.18, delay: i * 0.05 }}>
-                <GlassCard className="flex items-start gap-3 h-full" padding="lg">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
-                    <Icon name={b.icon} className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">{b.title}</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{b.description}</p>
-                    {b.stat ? (
-                      <p className="mt-2 inline-flex rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{b.stat}</p>
-                    ) : null}
-                  </div>
-                </GlassCard>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ duration: 0.25, delay: i * 0.05 }}
+                className="group rounded-2xl border border-border-subtle bg-surface-1/60 p-8 transition-colors hover:border-primary/30"
+              >
+                <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+                  <Icon name={b.icon} className="h-5 w-5" />
+                </div>
+                <h3 className="text-base font-semibold text-foreground">{b.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.description}</p>
+                {b.stat && (
+                  <p className="mt-4 inline-flex rounded-full border border-primary/25 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">{b.stat}</p>
+                )}
               </motion.div>
             ))}
           </div>
         </motion.section>
 
-        {/* SOCIAL PROOF (bullets) */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
-          <SectionTitle eyebrow={content.socialProof.eyebrow} title={content.socialProof.title} />
-          <GlassCard padding="lg" className="space-y-4">
-            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.socialProof.description}</p>
-            <ul className="grid gap-2 sm:grid-cols-2">
+        {/* ————— SOCIAL PROOF ————— */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-16 md:py-20"
+        >
+          <div className="grid gap-10 rounded-3xl border border-border-subtle bg-surface-1/50 p-8 md:grid-cols-12 md:p-14">
+            <div className="md:col-span-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.socialProof.eyebrow}</p>
+              <h2 className="font-syne text-2xl font-bold tracking-tight text-foreground md:text-3xl">{content.socialProof.title}</h2>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{content.socialProof.description}</p>
+            </div>
+            <ul className="grid gap-3 md:col-span-7 md:grid-cols-2">
               {content.socialProof.bullets.map((b, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-foreground md:text-sm">
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <li key={i} className="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-2/40 p-4 text-sm text-foreground">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
                     <Check className="h-3 w-3" />
                   </span>
-                  {b}
+                  <span className="leading-relaxed">{b}</span>
                 </li>
               ))}
             </ul>
-          </GlassCard>
+          </div>
         </motion.section>
 
-        {/* FEATURES */}
-        <motion.section id="student-features" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
-          <SectionTitle eyebrow={content.featuresHeading.eyebrow} title={content.featuresHeading.title} />
-          <div className="grid gap-3 md:grid-cols-3">
+        {/* ————— FEATURES ————— */}
+        <motion.section
+          id="features"
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-16 md:py-24"
+        >
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.featuresHeading.eyebrow}</p>
+            <h2 className="font-syne text-3xl font-bold tracking-tight text-foreground md:text-4xl">{content.featuresHeading.title}</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
             {content.features.map((f, i) => (
-              <GlassCard key={i} className="flex items-start gap-3" padding="lg" hover>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+              <div
+                key={i}
+                className="group flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-1/60 p-5 transition-colors hover:border-primary/30"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
                   <Icon name={f.icon} className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">{f.label}</p>
-                  {f.description ? <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{f.description}</p> : null}
+                  {f.description && <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{f.description}</p>}
                 </div>
-              </GlassCard>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* ENTREPRENEURSHIP */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
-          <GlassCard padding="lg" className="space-y-3">
-            <SectionTitle eyebrow={content.entrepreneurship.eyebrow} title={content.entrepreneurship.title} />
-            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.entrepreneurship.description}</p>
-          </GlassCard>
-        </motion.section>
-
-        {/* ADMIN / INSTITUTIONS */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
-          <SectionTitle eyebrow={content.adminSection.eyebrow} title={content.adminSection.title} />
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-            {content.adminSection.features.map((f, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-xl border border-border-subtle bg-surface-1 p-3">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-                <span className="text-xs font-medium text-foreground">{f}</span>
               </div>
             ))}
           </div>
         </motion.section>
 
-        {/* TESTIMONIALS */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
-          <SectionTitle eyebrow={content.testimonialsHeading.eyebrow} title={content.testimonialsHeading.title} />
-          <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0">
-            {content.testimonials.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.18, delay: i * 0.05 }}>
-                <GlassCard padding="lg" className="space-y-3 h-full" hover>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: Math.max(0, Math.min(5, t.rating || 0)) }).map((_, j) => (
-                      <Star key={j} className="h-3.5 w-3.5 fill-primary text-primary" />
-                    ))}
-                  </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground italic">"{t.quote}"</p>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">{t.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{t.role}</p>
-                  </div>
-                </GlassCard>
-              </motion.div>
+        {/* ————— ADMIN / INSTITUTIONS ————— */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-16 md:py-20"
+        >
+          <div className="mb-10 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.adminSection.eyebrow}</p>
+            <h2 className="font-syne text-2xl font-bold tracking-tight text-foreground md:text-3xl">{content.adminSection.title}</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {content.adminSection.features.map((f, i) => (
+              <div key={i} className="flex items-center gap-2.5 rounded-xl border border-border-subtle bg-surface-1/60 px-4 py-3.5">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-[13px] font-medium text-foreground">{f}</span>
+              </div>
             ))}
           </div>
         </motion.section>
 
-        {/* FEEDBACK */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }}>
-          <GlassCard padding="lg" className="space-y-2">
-            <SectionTitle eyebrow={content.feedbackSection.eyebrow} title={content.feedbackSection.title} />
-            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">{content.feedbackSection.description}</p>
-          </GlassCard>
+        {/* ————— TESTIMONIALS ————— */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-16 md:py-24"
+        >
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.testimonialsHeading.eyebrow}</p>
+            <h2 className="font-syne text-3xl font-bold tracking-tight text-foreground md:text-4xl">{content.testimonialsHeading.title}</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {content.testimonials.map((t, i) => (
+              <div key={i} className="flex h-full flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-1/60 p-6">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: Math.max(0, Math.min(5, t.rating || 0)) }).map((_, j) => (
+                    <Star key={j} className="h-3.5 w-3.5 fill-primary text-primary" />
+                  ))}
+                </div>
+                <p className="flex-1 text-sm leading-relaxed text-foreground/90">"{t.quote}"</p>
+                <div className="border-t border-border-subtle pt-4">
+                  <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </motion.section>
 
-        {/* FINAL CTA */}
-        <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-4 text-center">
-          <SectionTitle eyebrow={content.finalCta.eyebrow} title={content.finalCta.title} />
-          <p className="mx-auto max-w-md text-sm text-muted-foreground">{content.finalCta.description}</p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link to="/auth">
-              <GlowButton className="h-12 w-full sm:w-auto">{content.finalCta.primaryLabel}<ArrowRight className="h-4 w-4" /></GlowButton>
-            </Link>
-            <Link to="/contact">
-              <Button variant="outline" className="h-12 w-full sm:w-auto">{content.finalCta.secondaryLabel}</Button>
-            </Link>
+        {/* ————— FINAL CTA ————— */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}
+          className="py-20 md:py-28"
+        >
+          <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-surface-1/60 px-6 py-16 text-center md:px-12 md:py-24">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.28),transparent_60%)]" />
+            <div className="relative">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">{content.finalCta.eyebrow}</p>
+              <h2 className="mx-auto max-w-2xl font-syne text-4xl font-bold tracking-tight text-foreground md:text-5xl">{content.finalCta.title}</h2>
+              <p className="mx-auto mt-5 max-w-lg text-sm text-muted-foreground md:text-base">{content.finalCta.description}</p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link to="/auth" className="w-full sm:w-auto">
+                  <Button size="lg" className="h-12 w-full rounded-xl px-6 text-sm font-semibold shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] sm:w-auto">
+                    {content.finalCta.primaryLabel}
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/contact" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="h-12 w-full rounded-xl border-border-strong bg-surface-1/60 px-6 text-sm font-semibold sm:w-auto">
+                    {content.finalCta.secondaryLabel}
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </motion.section>
       </main>
+
+
 
       <footer className="border-t border-border-subtle bg-surface-1 safe-area-bottom">
         <div className="mx-auto w-full max-w-[420px] px-4 py-10 md:max-w-7xl md:px-8 md:py-14">
