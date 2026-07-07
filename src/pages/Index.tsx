@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import InstitutionPartnersMarquee from "@/components/landing/InstitutionPartnersMarquee";
 import studentHero from "@/assets/landing-student-hero.jpg";
 import type { LandingIconName } from "@/config/landing-content";
 
@@ -140,6 +141,10 @@ export default function Index() {
             </div>
           ))}
         </section>
+
+        {/* INSTITUTION PARTNERS */}
+        <InstitutionPartnersMarquee />
+
 
         {/* BENEFITS */}
         <motion.section initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.2 }} className="space-y-3">
