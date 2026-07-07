@@ -63,7 +63,7 @@ export function BottomNavigation() {
       }}
       aria-label="Main navigation"
     >
-      <div className="flex h-16 items-stretch justify-around px-1">
+      <div className="flex h-[60px] items-stretch justify-around px-1.5">
         {TABS.map((tab) => {
           const { label, href, icon: Icon } = tab;
           const active = isActive(pathname, tab);
@@ -74,44 +74,40 @@ export function BottomNavigation() {
               to={href}
               onMouseEnter={() => prefetchRoute(href)}
               onTouchStart={() => prefetchRoute(href)}
-              whileTap={{ scale: 0.94 }}
+              whileTap={{ scale: 0.96 }}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "tap-ripple relative flex flex-col items-center justify-center",
-                "gap-1 flex-1 min-h-[48px] px-1",
-                "rounded-xl mx-0.5 my-1.5",
-                "transition-all duration-[120ms] ease-[cubic-bezier(0,0,0.2,1)]",
+                "gap-[3px] flex-1 min-h-[48px] px-1 pt-2",
+                "rounded-xl mx-0.5",
+                "transition-colors duration-[160ms] ease-[cubic-bezier(0,0,0.2,1)]",
                 "select-none outline-none",
-                active ? "text-action-primary-foreground" : "text-control-muted active:bg-control-hover",
+                active ? "text-primary" : "text-control-muted active:text-foreground",
               )}
             >
-              {/* Active background pill */}
+              {/* Top active indicator */}
               {active && (
                 <motion.div
                   layoutId="bottom-nav-active"
-                  className="absolute inset-0 rounded-xl bg-action-primary border border-action-primary"
-                  style={{ boxShadow: "0 0 16px -4px hsl(var(--primary)/0.25)" }}
-                  transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                  className="absolute top-0 h-[3px] w-8 rounded-full bg-primary"
+                  style={{ boxShadow: "0 0 12px hsl(var(--primary)/0.55)" }}
+                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
                 />
               )}
 
-              {/* Icon */}
-              <motion.div
-                animate={active ? { scale: 1.12 } : { scale: 1 }}
-                transition={{ duration: 0.12, ease: [0, 0, 0.2, 1] }}
-                className="relative z-10"
-              >
-                <Icon className={cn(
-                  "h-[22px] w-[22px] transition-none",
-                  active ? "stroke-[2.2px]" : "text-control-muted stroke-[1.8px]",
-                )} />
-              </motion.div>
+              <Icon
+                className={cn(
+                  "h-[22px] w-[22px]",
+                  active ? "stroke-[2.15px]" : "stroke-[1.75px]",
+                )}
+              />
 
-              {/* Label */}
-              <span className={cn(
-                "relative z-10 text-[9.5px] font-semibold leading-none tracking-wide",
-                active ? "text-action-primary-foreground" : "text-control-muted",
-              )}>
+              <span
+                className={cn(
+                  "text-[10.5px] leading-none tracking-tight",
+                  active ? "font-semibold" : "font-medium",
+                )}
+              >
                 {label}
               </span>
             </MotionLink>
