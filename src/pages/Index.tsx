@@ -113,8 +113,9 @@ export default function Index() {
 
       <main className="mx-auto w-full max-w-7xl px-4 md:px-8">
         {/* ————— HERO ————— */}
-        <section className="relative pt-16 pb-20 md:pt-24 md:pb-28">
-          <div className="grid items-center gap-12 md:grid-cols-12 md:gap-16">
+        <section className="relative pt-10 pb-12 md:pt-16 md:pb-20">
+          <div className="grid items-center gap-10 md:grid-cols-12 md:gap-12">
+
             {/* Left: copy */}
             <motion.div
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
