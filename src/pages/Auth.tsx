@@ -295,21 +295,22 @@ const Auth = () => {
 
 
           {/* Tabs */}
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue="signup" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-control-bg border border-border-subtle p-0.5 rounded-lg h-9">
-              <TabsTrigger
-                value="login"
-                className="rounded-md text-[13px] font-medium"
-              >
-                Sign In
-              </TabsTrigger>
               <TabsTrigger
                 value="signup"
                 className="rounded-md text-[13px] font-medium"
               >
                 Create Account
               </TabsTrigger>
+              <TabsTrigger
+                value="login"
+                className="rounded-md text-[13px] font-medium"
+              >
+                Sign In
+              </TabsTrigger>
             </TabsList>
+
 
             {/* ── Login ── */}
             <TabsContent value="login" className="mt-5">
