@@ -470,7 +470,10 @@ export default function Index() {
               © {year} {branding.brand_name}. All rights reserved.
             </p>
             <p className="text-[11px] text-muted-foreground">
-              Crafted with care for students, faculty & administrators.
+              Contact:{" "}
+              <a href="mailto:atharv@bkbirlanightcollege.qzz.io" className="text-foreground hover:text-primary transition-colors">
+                atharv@bkbirlanightcollege.qzz.io
+              </a>
             </p>
           </div>
         </div>

@@ -99,15 +99,17 @@ export default function HelpSupport() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border hover:border-primary/30 transition-colors cursor-default">
-          <CardContent className="py-4 flex items-center gap-3">
-            <Mail className="h-5 w-5 text-amber-500 shrink-0" />
-            <div>
-              <p className="text-sm font-medium">Email Support</p>
-              <p className="text-xs text-muted-foreground">support@campusconnect.app</p>
-            </div>
-          </CardContent>
-        </Card>
+        <a href="mailto:atharv@bkbirlanightcollege.qzz.io" className="block">
+          <Card className="border-border hover:border-primary/30 transition-colors cursor-pointer">
+            <CardContent className="py-4 flex items-center gap-3">
+              <Mail className="h-5 w-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-sm font-medium">Email Support</p>
+                <p className="text-xs text-muted-foreground">atharv@bkbirlanightcollege.qzz.io</p>
+              </div>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       {/* FAQ */}
