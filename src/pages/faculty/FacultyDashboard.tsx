@@ -6,17 +6,26 @@ import { BookOpen, Users, CheckSquare, TrendingUp, Clock, Zap } from "lucide-rea
 import { format, isToday } from "date-fns";
 
 /* ── helpers ─────────────────────────────────────────────────── */
-function StatCard({ icon: Icon, label, value, sub, color = "primary" }: {
-  icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string;
+const TONE_CLASSES: Record<string, { bg: string; fg: string }> = {
+  primary: { bg: "bg-primary/12", fg: "text-primary" },
+  success: { bg: "bg-success/12", fg: "text-success" },
+  warning: { bg: "bg-warning/12", fg: "text-warning" },
+  accent:  { bg: "bg-accent/15",  fg: "text-accent" },
+  info:    { bg: "bg-primary/10", fg: "text-primary" },
+};
+
+function StatCard({ icon: Icon, label, value, sub, tone = "primary" }: {
+  icon: React.ElementType; label: string; value: string | number; sub?: string; tone?: keyof typeof TONE_CLASSES;
 }) {
+  const t = TONE_CLASSES[tone] ?? TONE_CLASSES.primary;
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-4 flex items-start gap-3">
-      <div className={`h-9 w-9 rounded-lg bg-${color}/10 flex items-center justify-center shrink-0`}>
-        <Icon className={`h-4.5 w-4.5 text-${color}`} />
+    <div className="rounded-2xl border border-border-subtle bg-surface-1/90 p-4 flex items-start gap-3 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated">
+      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${t.bg} ${t.fg}`}>
+        <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-[22px] font-bold text-foreground leading-tight">{value}</p>
+        <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="font-heading text-[24px] font-black text-foreground leading-tight tabular-nums">{value}</p>
         {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
