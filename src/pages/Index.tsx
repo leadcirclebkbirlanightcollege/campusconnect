@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import InstitutionPartnersMarquee from "@/components/landing/InstitutionPartnersMarquee";
 import studentHero from "@/assets/landing-student-hero.jpg";
 import type { LandingIconName } from "@/config/landing-content";
 
