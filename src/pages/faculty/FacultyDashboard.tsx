@@ -95,12 +95,12 @@ export default function FacultyDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatCard icon={Zap}        label="Live Now"      value={stats.live}         sub="Active lectures"      color="green-500" />
-        <StatCard icon={BookOpen}   label="Total Lectures" value={stats.total}       sub="All time"             />
-        <StatCard icon={Clock}      label="Today"         value={stats.today}        sub="Scheduled today"      color="yellow-500" />
-        <StatCard icon={CheckSquare} label="Upcoming"     value={stats.upcoming}     sub="Scheduled ahead"      />
-        <StatCard icon={Users}      label="Students Reached" value={stats.uniqueStudents} sub="Unique attendees" color="purple-500" />
-        <StatCard icon={TrendingUp} label="Total Attendance" value={attendanceSummary?.length ?? 0} sub="Records" color="blue-500" />
+        <StatCard icon={Zap}         label="Live Now"          value={stats.live}                       sub="Active lectures" tone="success" />
+        <StatCard icon={BookOpen}    label="Total Lectures"    value={stats.total}                      sub="All time" />
+        <StatCard icon={Clock}       label="Today"             value={stats.today}                      sub="Scheduled today" tone="warning" />
+        <StatCard icon={CheckSquare} label="Upcoming"          value={stats.upcoming}                   sub="Scheduled ahead" />
+        <StatCard icon={Users}       label="Students Reached"  value={stats.uniqueStudents}             sub="Unique attendees" tone="accent" />
+        <StatCard icon={TrendingUp}  label="Total Attendance"  value={attendanceSummary?.length ?? 0}   sub="Records" tone="info" />
       </div>
 
       {/* Today's Schedule */}
