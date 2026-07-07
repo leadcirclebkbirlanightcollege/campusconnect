@@ -5,8 +5,10 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
 
 interface EmptyStateProps {
   /** Large emoji or icon component to show */
