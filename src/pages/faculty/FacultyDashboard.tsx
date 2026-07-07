@@ -86,9 +86,12 @@ export default function FacultyDashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div>
-        <h1 className="text-[22px] font-bold text-foreground tracking-tight">Faculty Dashboard</h1>
-        <p className="text-[13px] text-muted-foreground mt-0.5">
+      <div className="space-y-1.5">
+        <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.16em] text-primary/80">
+          Faculty Cockpit
+        </p>
+        <h1 className="font-heading text-[26px] font-black text-foreground tracking-tight">Faculty Dashboard</h1>
+        <p className="text-[13px] text-muted-foreground">
           {format(new Date(), "EEEE, MMMM d, yyyy")}
         </p>
       </div>
