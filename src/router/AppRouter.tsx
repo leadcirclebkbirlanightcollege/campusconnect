@@ -98,6 +98,8 @@ const AdminPromotionPage           = lazy(() => import("@/pages/admin/promotion/
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
+const AdminVerifyDocumentsPage     = lazy(() => import("@/pages/admin/verify/AdminVerifyDocumentsPage"));
+const DocumentVerificationPage     = lazy(() => import("@/pages/verify/DocumentVerificationPage"));
 const OnboardingFlow               = lazy(() => import("@/pages/student/onboarding/OnboardingFlow"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
@@ -146,6 +148,9 @@ export default function AppRouter() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+
+          {/* Public document verification */}
+          <Route path="/verify/:reference" element={<DocumentVerificationPage />} />
 
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
@@ -211,6 +216,7 @@ export default function AppRouter() {
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />
             <Route path="exams"                    element={<AdminExamsPage />} />
             <Route path="documents"                element={<AdminDocumentsPage />} />
+            <Route path="verify"                   element={<AdminVerifyDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
             <Route path="notifications"            element={<AdminNotificationsPage />} />
