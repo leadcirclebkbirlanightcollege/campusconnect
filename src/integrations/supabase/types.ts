@@ -2848,6 +2848,81 @@ export type Database = {
           },
         ]
       }
+      verify_documents: {
+        Row: {
+          college: string | null
+          created_at: string
+          created_by: string | null
+          department: string | null
+          document_type: string
+          email: string | null
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          issued_by: string
+          last_verified_at: string | null
+          pdf_path: string | null
+          phone: string | null
+          reference: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          role: string | null
+          status: string
+          student_name: string
+          updated_at: string
+          verification_token: string
+          verified_count: number
+        }
+        Insert: {
+          college?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          document_type: string
+          email?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_by?: string
+          last_verified_at?: string | null
+          pdf_path?: string | null
+          phone?: string | null
+          reference: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          role?: string | null
+          status?: string
+          student_name: string
+          updated_at?: string
+          verification_token: string
+          verified_count?: number
+        }
+        Update: {
+          college?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          document_type?: string
+          email?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_by?: string
+          last_verified_at?: string | null
+          pdf_path?: string | null
+          phone?: string | null
+          reference?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          role?: string | null
+          status?: string
+          student_name?: string
+          updated_at?: string
+          verification_token?: string
+          verified_count?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2992,6 +3067,14 @@ export type Database = {
       unlock_achievement: {
         Args: { p_code: string; p_metadata?: Json; p_user_id: string }
         Returns: boolean
+      }
+      verify_document_public: {
+        Args: { p_reference: string; p_token: string }
+        Returns: Json
+      }
+      verify_document_touch: {
+        Args: { p_reference: string }
+        Returns: undefined
       }
       year_to_int: { Args: { p_year: string }; Returns: number }
     }
