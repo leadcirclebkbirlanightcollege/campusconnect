@@ -40,8 +40,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import PageHeader from "@/layout/PageHeader";
-import PageContainer from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { PageContainer } from "@/layout/PageContainer";
 
 type VerifyDoc = {
   id: string;
