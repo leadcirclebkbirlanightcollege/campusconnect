@@ -152,8 +152,8 @@ export default function AdminVerifyDocumentsPage() {
     <PageContainer>
       <PageHeader
         title="Document Verification"
-        description="Issue and manage tamper-proof documents with QR verification"
-        actions={
+        subtitle="Issue and manage tamper-proof documents with QR verification"
+        action={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button>
