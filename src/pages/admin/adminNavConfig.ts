@@ -62,8 +62,9 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "Exams & Content",
     defaultOpen: false,
     items: [
-      { title: "Exams & Results", url: "/platform/admin/exams",         icon: "ClipboardList" },
-      { title: "Documents",       url: "/platform/admin/documents",     icon: "FileText" },
+      { title: "Exams & Results",   url: "/platform/admin/exams",         icon: "ClipboardList" },
+      { title: "Documents",         url: "/platform/admin/documents",     icon: "FileText" },
+      { title: "Verify Documents",  url: "/platform/admin/verify",        icon: "ShieldCheck" },
     ],
   },
   {

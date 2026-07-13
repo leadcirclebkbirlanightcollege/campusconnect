@@ -17,7 +17,7 @@ import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 /** Routes that must NEVER be blocked by auth loading */
-const PUBLIC_PREFIXES = ["/auth", "/demo", "/help", "/book-demo", "/onboarding", "/start", "/contact", "/privacy", "/terms"];
+const PUBLIC_PREFIXES = ["/auth", "/demo", "/help", "/book-demo", "/onboarding", "/start", "/contact", "/privacy", "/terms", "/verify"];
 
 export function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;

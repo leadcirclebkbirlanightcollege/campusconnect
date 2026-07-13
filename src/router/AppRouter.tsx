@@ -149,6 +149,9 @@ export default function AppRouter() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
 
+          {/* Public document verification */}
+          <Route path="/verify/:reference" element={<DocumentVerificationPage />} />
+
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
             path="/platform/admin-control"
@@ -213,6 +216,7 @@ export default function AppRouter() {
             <Route path="attendance/corrections"   element={<AdminAttendanceCorrectionsPage />} />
             <Route path="exams"                    element={<AdminExamsPage />} />
             <Route path="documents"                element={<AdminDocumentsPage />} />
+            <Route path="verify"                   element={<AdminVerifyDocumentsPage />} />
             <Route path="announcements"            element={<AdminAnnouncementsPage />} />
             <Route path="events"                   element={<AdminEventsPage />} />
             <Route path="notifications"            element={<AdminNotificationsPage />} />
