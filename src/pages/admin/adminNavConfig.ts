@@ -124,6 +124,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/attendance/corrections": { title: "Corrections",        description: "Edit attendance records" },
   "/platform/admin/exams":                  { title: "Exams & Results",    description: "Manage exams and publish results" },
   "/platform/admin/documents":              { title: "Document Library",   description: "Study materials and resources" },
+  "/platform/admin/verify":                 { title: "Document Verification", description: "Issue tamper-proof documents with QR verification" },
   "/platform/admin/announcements":          { title: "Announcements",      description: "Broadcast to students" },
   "/platform/admin/events":                 { title: "Events",             description: "Campus events management" },
   "/platform/admin/polls":                  { title: "Polls",              description: "Poll & survey management" },
