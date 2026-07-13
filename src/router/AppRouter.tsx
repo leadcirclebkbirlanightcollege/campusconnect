@@ -98,6 +98,8 @@ const AdminPromotionPage           = lazy(() => import("@/pages/admin/promotion/
 const AdminDocumentsPage           = lazy(() => import("@/pages/admin/documents/AdminDocumentsPage"));
 const AdminExamsPage               = lazy(() => import("@/pages/admin/exams/AdminExamsPage"));
 const AdminPermissionsPage         = lazy(() => import("@/pages/admin/permissions/AdminPermissionsPage"));
+const AdminVerifyDocumentsPage     = lazy(() => import("@/pages/admin/verify/AdminVerifyDocumentsPage"));
+const DocumentVerificationPage     = lazy(() => import("@/pages/verify/DocumentVerificationPage"));
 const OnboardingFlow               = lazy(() => import("@/pages/student/onboarding/OnboardingFlow"));
 
 // ── Super Admin pages ─────────────────────────────────────────────────────────
