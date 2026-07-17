@@ -45,6 +45,8 @@ import {
 } from "@/motion/pageTransitions";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { getPageMeta } from "@/ui-engine/navigation-engine";
+import { useAppEventsBridge } from "@/hooks/use-app-events";
+import { useShellRealtime } from "@/hooks/use-shell-realtime";
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
@@ -177,6 +179,11 @@ export default function AppLayout() {
     },
     staleTime: 120_000,
   });
+
+  // Cross-module reactivity: translate app-events → query invalidations,
+  // and subscribe to realtime tables that ripple across the ecosystem.
+  useAppEventsBridge();
+  useShellRealtime(user?.id ?? null);
 
   return (
     <>
