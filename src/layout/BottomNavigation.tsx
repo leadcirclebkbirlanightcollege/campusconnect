@@ -1,14 +1,17 @@
 /**
- * BottomNavigation — premium mobile bottom nav
- * 5 tabs: Home · Lectures · Timetable · Attendance · Profile
+ * BottomNavigation — native-app 5-tab bar
+ * Tabs: Home · Academics · Campus · E-Cell · Profile
+ *
+ * Each tab owns a *family* of routes so the user never feels like they
+ * leave the tab when drilling into details.
  */
 
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
-  BookOpen,
-  CalendarDays,
-  CheckSquare,
+  Home,
+  GraduationCap,
+  Sparkles,
+  Rocket,
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,32 +21,79 @@ interface NavTab {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  match?: string[];
+  /** Route prefixes that keep this tab highlighted */
+  match: string[];
 }
 
+/**
+ * Tab families:
+ *  - Home      → Dashboard + Inbox
+ *  - Academics → Lectures, Timetable, Attendance, Assignments, Documents, Results
+ *  - Campus    → Events, Announcements, Programmes (learning circles)
+ *  - E-Cell    → E-Cell hub, Points, Leaderboard, Stalls
+ *  - Profile   → Settings, Digital ID, Support, Notifications
+ */
 const TABS: NavTab[] = [
-  { label: "Home",       href: "/app/dashboard",   icon: LayoutDashboard, match: ["/app/dashboard"] },
-  { label: "Lectures",   href: "/app/lectures",    icon: BookOpen,         match: ["/app/lectures", "/app/assignments"] },
-  { label: "Timetable",  href: "/app/timetable",   icon: CalendarDays,     match: ["/app/timetable"] },
-  { label: "Attendance", href: "/app/attendance",  icon: CheckSquare,      match: ["/app/attendance"] },
-  { label: "Profile",    href: "/app/settings",    icon: UserRound,        match: ["/app/settings", "/app/profile", "/app/id-card"] },
+  {
+    label: "Home",
+    href: "/app/dashboard",
+    icon: Home,
+    match: ["/app/dashboard", "/app/inbox"],
+  },
+  {
+    label: "Academics",
+    href: "/app/lectures",
+    icon: GraduationCap,
+    match: [
+      "/app/lectures",
+      "/app/timetable",
+      "/app/attendance",
+      "/app/assignments",
+      "/app/documents",
+      "/app/results",
+      "/app/scan",
+    ],
+  },
+  {
+    label: "Campus",
+    href: "/app/events",
+    icon: Sparkles,
+    match: ["/app/events", "/app/announcements", "/app/programmes"],
+  },
+  {
+    label: "E-Cell",
+    href: "/app/ecell",
+    icon: Rocket,
+    match: ["/app/ecell", "/app/points", "/app/leaderboard"],
+  },
+  {
+    label: "Profile",
+    href: "/app/settings",
+    icon: UserRound,
+    match: [
+      "/app/settings",
+      "/app/profile",
+      "/app/id-card",
+      "/app/notifications",
+      "/app/support",
+      "/app/install",
+    ],
+  },
 ];
 
 const MotionLink = motion(Link);
 
 function isActive(pathname: string, tab: NavTab): boolean {
-  if (tab.match) return tab.match.some(m => pathname === m || pathname.startsWith(m + "/"));
-  return pathname === tab.href || pathname.startsWith(tab.href + "/");
+  return tab.match.some((m) => pathname === m || pathname.startsWith(m + "/"));
 }
 
 function prefetchRoute(path: string): void {
   if (path.includes("dashboard"))       void import("@/pages/student/StudentDashboard");
-  else if (path.includes("lecture"))    void import("@/pages/student/lectures/LecturesList");
-  else if (path.includes("timetable"))  void import("@/pages/student/StudentTimetable");
-  else if (path.includes("attendance")) void import("@/pages/student/StudentAttendanceHistory");
+  else if (path.includes("lectures"))   void import("@/pages/student/lectures/LecturesList");
+  else if (path.includes("events"))     void import("@/pages/student/events/StudentEventsList");
+  else if (path.includes("ecell"))      void import("@/pages/student/ecell/StudentEcellHub");
   else if (path.includes("settings"))   void import("@/pages/student/StudentProfile");
 }
-
 
 export function BottomNavigation() {
   const { pathname } = useLocation();
@@ -74,7 +124,7 @@ export function BottomNavigation() {
               to={href}
               onMouseEnter={() => prefetchRoute(href)}
               onTouchStart={() => prefetchRoute(href)}
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.94 }}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "tap-ripple relative flex flex-col items-center justify-center",
@@ -85,7 +135,6 @@ export function BottomNavigation() {
                 active ? "text-primary" : "text-control-muted active:text-foreground",
               )}
             >
-              {/* Top active indicator */}
               {active && (
                 <motion.div
                   layoutId="bottom-nav-active"
