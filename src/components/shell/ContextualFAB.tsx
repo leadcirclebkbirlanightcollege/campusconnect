@@ -15,6 +15,7 @@ import {
   Trophy,
   BookOpenCheck,
   Bell,
+  Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
