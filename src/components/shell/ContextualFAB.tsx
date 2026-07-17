@@ -47,8 +47,8 @@ function resolveAction(pathname: string, nav: (to: string) => void): FabAction |
   return null;
 }
 
-// re-import Rocket up top; keep lint calm
-import { Rocket } from "lucide-react";
+
+
 
 export default function ContextualFAB() {
   const { pathname } = useLocation();
