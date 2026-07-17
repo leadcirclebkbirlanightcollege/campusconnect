@@ -1,104 +1,75 @@
-# Campus Connect — Improvement & Feature Roadmap
+# Native App Experience — Implementation Plan
 
-Focus: **eliminate manual work** for staff, ship **quick wins** across the platform, and add **2 substantial modules** that are already half-promised by the codebase. No monetization scope (per your direction).
+This is a large, multi-phase transformation. Shipping it all in one turn would produce shallow work. I'll deliver it in **6 focused phases**, each independently valuable. You approve phase-by-phase.
 
-## Current state (audit summary)
-
-The platform already has: attendance (QR/OTP), lectures, timetable, exams/results, assignments (text only), documents, programmes/circles, announcements, events, E-Cell stalls + point claims, notifications, leaderboard, digital ID, intelligence scoring, multi-tenant super admin, CRM leads, landing editor, PWA + push.
-
-Gaps surfaced: 3 feature flags are **defined but unimplemented** (`messages`, `polls`, `daily_content`), assignment uploads missing, no automated nudges, no in-app tickets, no segmented broadcasts, CRM is shallow, no product analytics, no gradebook for internal marks.
+Scope guardrail: **navigation, flow, and interconnection only** — no feature removal, no visual redesign of feature screens, no schema changes.
 
 ---
 
-## Phase 1 — Quick Wins (kills daily manual work)
+## Phase 1 — Persistent App Shell + New Bottom Nav (Student)
 
-Small, high-leverage changes shipped in one pass.
+Rebuild the mobile shell so screens live *inside* one continuous app frame instead of full-page swaps.
 
-**1. Assignment file uploads (student + faculty)**
-- Add Supabase Storage bucket `assignment-submissions` (private, RLS per `student_user_id`).
-- Student: drag-drop / file picker on `StudentAssignments.tsx`, attach up to 5 files (PDF/img/docx, 20 MB each).
-- Faculty: download all submissions as a zip from `FacultyAssignments.tsx`; show file list + grade inline.
+- New 5-tab bottom nav: **Home · Academics · Campus · E-Cell · Profile**
+  - Home = Dashboard
+  - Academics = Lectures + Timetable + Attendance + Assignments (tabbed sub-nav)
+  - Campus = Events + Announcements + Polls + Daily (tabbed)
+  - E-Cell = Leaderboard + Achievements + Programmes (Learning Circles) (tabbed)
+  - Profile = Settings + Digital ID + Inbox
+- Persistent shell: bottom nav + top header never unmount; only inner `<Outlet />` transitions
+- Shared-element style page transitions (slide for forward, fade for tab switch) via existing Framer Motion tokens
+- Preserve scroll position per tab (nav stack per tab, Instagram-style)
 
-**2. Segmented bulk notifications**
-- Extend admin notification composer with audience filters: department, class, year, attendance risk tier, programme, custom CSV of student IDs.
-- Live preview of recipient count before send. Saves admins from copy-pasting lists.
+## Phase 2 — Smart Back + Nav Stack Memory
 
-**3. Automated engagement triggers (cron via edge functions)**
-- Daily `pg_cron` → `engagement-triggers` edge function:
-  - Attendance < 75% → push + inbox alert (once per week).
-  - Streak about to break (no check-in by 8 PM) → push reminder.
-  - Assignment due in 24 h with no submission → push.
-  - Admin digest at 7 AM: live lectures today, pending claims, pending verifications.
-- All toggleable per user in `notification_preferences`.
+- Per-tab navigation stack (like iOS tab bars)
+- Back button pops the *contextual* stack, not browser history
+- Remember last-opened sub-tab inside each module (sessionStorage)
+- "Return to where you were" on app resume
 
-**4. CRM upgrades for super-admin Leads**
-- Add `lead_notes` table (timestamped notes per lead, author).
-- Follow-up date + reminder badge on lead row.
-- Source tag (landing/book-demo/referral/manual) and a conversion funnel chart on the Leads page.
+## Phase 3 — Global Search (⌘K + mobile pull-down)
 
-**5. Help & Support → real ticket system**
-- New `support_tickets` table (subject, body, category, status, priority, college_id).
-- Student submits from `HelpSupport.tsx`; admin triage page under System → Tickets with assign/reply/close. Threaded replies via `ticket_messages`.
+Extend existing `CommandPalette` into a universal search that queries in parallel:
+- students, faculty, events, lectures, documents, classes, programmes, departments, announcements
+- Grouped results, keyboard nav, direct deep-link on select
+- Accessible from header search icon on every screen
 
-**6. Admin polish**
-- Saved filters on Students table (e.g. "Risk <60%", "Pending verification").
-- Bulk actions: send notification, adjust points, export selected.
-- "Copy timetable from last week" button.
+## Phase 4 — Cross-Module Reactivity (the "alive" feeling)
 
----
+Centralize invalidations so one action ripples everywhere:
+- New `useAppEvents()` bus (React Query invalidation orchestrator)
+- Mark attendance → invalidates `dashboard`, `points`, `streak`, `leaderboard`, `intelligence`, `achievements`
+- Point claim approved → wallet + dashboard + leaderboard + celebration toast
+- Achievement unlocked → toast + profile + leaderboard badge refresh
+- Event register → dashboard upcoming + calendar reminder
+- Supabase Realtime subscription on `notifications`, `points_ledger`, `attendance_records` at shell level so any screen reflects updates live
 
-## Phase 2 — Bigger Features (close half-promised flags)
+## Phase 5 — Contextual FAB + Deep-Link Cards
 
-**A. Messaging & Class Channels** (`messages` flag — already advertised)
-- `channels` and `messages` tables already exist — wire UI:
-  - Student inbox tab "Channels": class channels (auto-joined by class/programme), DMs to faculty.
-  - Faculty: post to assigned class channels, pin messages, attach files.
-  - Realtime via Supabase Realtime; unread badge in bottom nav.
-  - Admin moderation: report message, delete with audit log.
+- Single `<ContextualFAB />` in shell; action changes by route:
+  - Dashboard → Quick Action sheet
+  - Attendance → Scan QR
+  - Events → Add Reminder
+  - Documents → Upload
+  - Profile → Edit
+- Audit dashboard cards → every card gets `onClick` deep-link to its detail page (no dead ends)
+- Every notification payload includes a `deep_link` field routed by a single handler
 
-**B. Polls & Surveys** (`polls` flag — `polls`/`poll_votes` tables exist)
-- Admin/faculty create poll (single/multi/rating, anonymous toggle, expiry, target audience reusing the segmentation from Phase 1).
-- Student widget on dashboard: "1 poll waiting" → vote inline.
-- Live results page with department/year breakdown and CSV export.
+## Phase 6 — Faculty / Admin / Super-Admin Parity
 
-**C. Daily Content Feed** (`daily_content` flag, table exists)
-- Admin schedules a daily card (quote, tip, video link, opportunity).
-- Student dashboard hero strip + dedicated `/app/today` feed with history and bookmarks.
-- Drives DAU; pairs naturally with the streak system.
-
-**D. Internal Gradebook (CIE marks)**
-- New `internal_assessments` (type: midterm/quiz/practical/CIE, max marks, weightage) and `internal_marks` tables.
-- Faculty enters per-student marks in a spreadsheet-style grid (paste from Excel).
-- Student sees a "Progressive Marks" tab inside Results with weighted total.
-- Removes the #1 manual workflow staff still do in spreadsheets.
-
----
-
-## Phase 3 — Platform-wide hygiene
-
-- **Product analytics**: lightweight self-hosted event logger (`analytics_events` table + `useTrack` hook) — page views, feature usage, funnel from landing → signup → onboarding → first attendance. Super-admin dashboard tile.
-- **Content moderation queue**: flagged announcements/messages/stall descriptions go into a queue with approve/reject + reason; auto-flag via simple keyword list.
-- **Data retention**: per-college retention policy (e.g. archive attendance > 3 years), nightly job moves rows to `*_archive` tables. GDPR delete-my-data button in student profile that triggers an `account_deletion_requests` row (table already exists).
-- **Audit log viewer**: filterable timeline in super-admin Security tab (already partially built — extend).
+Apply the same shell pattern (persistent nav, contextual FAB, cross-module invalidation, global search) to the other three roles. Their sidebars stay, but transitions, back-stack, and reactivity match the student experience.
 
 ---
 
 ## Technical Notes
 
-- **Database**: ~8 new tables (`support_tickets`, `ticket_messages`, `lead_notes`, `internal_assessments`, `internal_marks`, `analytics_events`, `moderation_queue`, `*_archive` shadows). All with strict `college_id` RLS using `get_my_college_id()` and explicit GRANTs per project rules.
-- **Edge functions**: `engagement-triggers` (cron), `send-segmented-notification`, `archive-old-records` (cron).
-- **Storage buckets**: `assignment-submissions`, `ticket-attachments`.
-- **Feature gating**: every new module wrapped in `FeatureGate` so super-admin can toggle per college.
-- **Mobile-first**: all student additions respect the max-420px policy; admin/faculty additions use the 12-col ERP grid.
-- **Performance**: keep React Query staleTime 30–60 s; reuse existing analytics RPC pattern for any dashboard tiles.
-- **No third-party SDKs** (Firebase/PostHog) per core rule — analytics is self-hosted.
+- No DB migrations. All changes are frontend routing + state.
+- Existing routes stay valid (backward compatible for bookmarks / push deep links).
+- New files: `src/layout/AppShellMobile.tsx`, `src/layout/TabStack.tsx`, `src/hooks/useAppEvents.ts`, `src/hooks/useNavStack.ts`, `src/components/shell/ContextualFAB.tsx`, `src/components/search/GlobalSearch.tsx`.
+- Bottom nav config moves into `src/ui-engine/navigation-engine.ts`.
 
 ---
 
-## Suggested Execution Order
+## Ask
 
-1. Phase 1 (#1–#6) — one PR per item, ~1 day each.
-2. Phase 2 A → B → C → D in that order (impact-weighted).
-3. Phase 3 last, alongside steady polish.
-
-Tell me which phase / items to start, or say "go" to begin with Phase 1 quick wins.
+Approve to start **Phase 1** now? Or reorder / drop phases? I recommend 1 → 4 → 3 → 5 → 2 → 6 for maximum perceived "aliveness" per phase.

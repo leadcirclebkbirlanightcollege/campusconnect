@@ -19,13 +19,13 @@ export interface PageMeta {
   description: string;
 }
 
-/** Bottom navigation items (mobile) */
+/** Bottom navigation items (mobile) — 5-tab native app shell */
 export const BOTTOM_NAV_ROUTES = [
-  "/app/dashboard",
-  "/app/attendance",
-  "/app/lectures",
-  "/app/leaderboard",
-  "/app/settings",
+  "/app/dashboard",   // Home
+  "/app/lectures",    // Academics
+  "/app/events",      // Campus
+  "/app/ecell",       // E-Cell
+  "/app/settings",    // Profile
 ] as const;
 
 /** Page metadata registry */

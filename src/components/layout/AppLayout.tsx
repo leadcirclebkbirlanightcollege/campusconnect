@@ -38,6 +38,7 @@ import { useNavigate } from "react-router-dom";
 import TopbarNotificationCenter from "@/components/notifications/TopbarNotificationCenter";
 import CommandPalette from "@/components/search/CommandPalette";
 import { BottomNavigation } from "@/layout/BottomNavigation";
+import ContextualFAB from "@/components/shell/ContextualFAB";
 import {
   PAGE_TRANSITION,
   PAGE_TRANSITION_VARIANTS,
@@ -271,6 +272,10 @@ export default function AppLayout() {
 
         {/* Mobile bottom navigation — new layout engine component */}
         <BottomNavigation />
+
+        {/* Contextual primary-action FAB — adapts to current route */}
+        <ContextualFAB />
+
 
         {/* Command Palette (Ctrl+K) */}
         <CommandPalette />
