@@ -675,7 +675,7 @@ const QuickTile = memo(function QuickTile({
   tint,
   onClick,
 }: {
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: React.ElementType;
   label: string;
   tint: Tint;
   onClick: () => void;
