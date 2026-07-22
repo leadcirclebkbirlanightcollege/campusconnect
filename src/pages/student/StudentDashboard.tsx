@@ -37,12 +37,16 @@ import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
 
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
+import { ActionTile } from "@/components/ui/ActionTile";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { MetricCard } from "@/components/ui/MetricCard";
+import { ProgressRing } from "@/components/ui/ProgressRing";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
