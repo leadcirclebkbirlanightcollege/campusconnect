@@ -2,28 +2,30 @@ import { memo, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Activity,
   ArrowRight,
+  Bell,
   BookOpen,
   CalendarCheck,
   CalendarDays,
-  CheckCircle2,
   Clock3,
+  FileText,
   Flame,
-  Lightbulb,
+  GraduationCap,
+  IdCard,
+  LayoutGrid,
   MessageSquare,
   Rocket,
+  Scan,
   ShieldAlert,
   Sparkles,
+  Star,
+  Store,
+  TrendingDown,
+  TrendingUp,
   Trophy,
-  User,
   Users,
   Zap,
   Brain,
-  Scan,
-  Store,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import { motion } from "framer-motion";
@@ -35,16 +37,12 @@ import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
 
-import { PageContainer } from "@/layout/PageContainer";
-import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
-import { ActionTile } from "@/components/ui/ActionTile";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { MetricCard } from "@/components/ui/MetricCard";
-import { ProgressRing } from "@/components/ui/ProgressRing";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +51,7 @@ import {
   SECTION_REVEAL_ITEM,
   SECTION_REVEAL_PARENT,
 } from "@/motion/microInteractions";
+
 
 type UpcomingLecture = {
   id: string;
