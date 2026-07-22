@@ -654,3 +654,50 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
     </motion.div>
   );
 });
+
+/* ── Pastel Quick-Action Tile (native app grid) ────────────────── */
+type Tint = "indigo" | "rose" | "amber" | "purple" | "emerald" | "sky" | "orange" | "slate";
+
+const TINT_CLASSES: Record<Tint, string> = {
+  indigo:  "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
+  rose:    "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
+  amber:   "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  purple:  "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300",
+  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+  sky:     "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
+  orange:  "bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300",
+  slate:   "bg-slate-100 text-slate-500 dark:bg-slate-500/15 dark:text-slate-300",
+};
+
+const QuickTile = memo(function QuickTile({
+  icon: Icon,
+  label,
+  tint,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  tint: Tint;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col items-center gap-2 outline-none active:scale-95 transition-transform"
+    >
+      <span
+        className={cn(
+          "w-14 h-14 rounded-2xl flex items-center justify-center",
+          "shadow-[0_4px_10px_-4px_rgba(15,23,42,0.08)]",
+          "border border-border-subtle/40",
+          TINT_CLASSES[tint],
+        )}
+      >
+        <Icon className="w-6 h-6" strokeWidth={2} />
+      </span>
+      <span className="text-[11px] font-semibold text-foreground/80 leading-none">{label}</span>
+    </button>
+  );
+});
+
