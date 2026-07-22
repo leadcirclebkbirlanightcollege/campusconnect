@@ -297,13 +297,112 @@ export default function StudentDashboard() {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <PageContainer className="space-y-6" withBottomNav>
-        <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
+      <PageContainer className="space-y-6 md:space-y-8 !px-0 md:!px-4" withBottomNav>
+        {/* Desktop-only classic header (keeps ERP context) */}
+        <div className="hidden md:block px-page">
+          <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
+        </div>
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-          {/* HERO — premium gradient welcome */}
-          <motion.section variants={SECTION_REVEAL_ITEM}>
-            <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-surface-1 p-5 shadow-elevated">
+          {/* ═══ PREMIUM NATIVE HERO — curved gradient header + overlapping stat cards ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="md:hidden">
+            <div className="relative">
+              {/* Gradient header */}
+              <div
+                className="relative overflow-hidden px-5 pt-6 pb-20 rounded-b-[36px]"
+                style={{
+                  background:
+                    "linear-gradient(180deg, hsl(231 68% 22%) 0%, hsl(231 65% 30%) 55%, hsl(232 62% 36%) 100%)",
+                }}
+              >
+                {/* Decorative glows */}
+                <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+                <div className="pointer-events-none absolute top-24 -left-10 h-40 w-40 rounded-full bg-primary-glow/25 blur-3xl" />
+
+                {/* Top row: bell + brand + avatar */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/app/inbox")}
+                    aria-label="Notifications"
+                    className="p-2.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm active:scale-95 transition-transform"
+                  >
+                    <Bell className="h-5 w-5 text-white" strokeWidth={2} />
+                  </button>
+                  <span className="text-white font-extrabold tracking-[0.22em] text-[13px] uppercase">
+                    Campus Connect
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/app/settings")}
+                    aria-label="Open profile"
+                    className="h-10 w-10 rounded-full border-2 border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden active:scale-95 transition-transform flex items-center justify-center text-white font-bold text-sm"
+                  >
+                    {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}
+                  </button>
+                </div>
+
+                {/* Greeting */}
+                <div className="relative z-10 mt-7">
+                  <h1 className="text-white text-[26px] font-extrabold leading-tight flex items-center gap-2">
+                    Hello, {coreQuery.data.name}! <span className="text-2xl">👋</span>
+                  </h1>
+                  <p className="text-white/70 text-sm mt-1 font-medium">Stay connected. Stay ahead.</p>
+                </div>
+              </div>
+
+              {/* Overlapping stat cards */}
+              <div className="px-5 -mt-12 relative z-10 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/app/points")}
+                  className="text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    Your Tier
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-foreground text-lg font-extrabold leading-none">
+                        {tierConfig.label}
+                      </p>
+                      <p className="text-[hsl(var(--gold))] text-[11px] font-bold mt-1 tabular-nums">
+                        {coreQuery.data.totalPoints.toLocaleString()} Pts
+                      </p>
+                    </div>
+                    <div className="w-9 h-9 bg-[hsl(var(--gold)/0.12)] rounded-full flex items-center justify-center text-[hsl(var(--gold))]">
+                      <Star className="w-5 h-5 fill-current" />
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/app/attendance")}
+                  className="text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    Attendance
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-foreground text-lg font-extrabold leading-none tabular-nums">
+                        {attendancePct}%
+                      </p>
+                      <p className="text-primary text-[11px] font-bold mt-1">This Month</p>
+                    </div>
+                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                      <CalendarCheck className="w-5 h-5" strokeWidth={2.25} />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* ═══ Desktop-only compact hero (unchanged ERP feel) ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="hidden md:block px-page">
+            <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-surface-1 p-5 shadow-md">
               <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-primary/30 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
               <div className="relative space-y-4">
@@ -332,18 +431,21 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
-          {/* QUICK ACTIONS */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          {/* ═══ QUICK ACTIONS — pastel icon grid (Google Pay style) ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-4 px-5 md:px-page">
             <SectionHeader title="Quick Actions" subtitle="Jump straight in" />
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-              <ActionTile icon={CalendarCheck} label="Attendance" onClick={() => navigate("/app/attendance")} />
-              <ActionTile icon={BookOpen} label="Lectures" onClick={() => navigate("/app/lectures")} />
-              <ActionTile icon={CalendarDays} label="Events" onClick={() => navigate("/app/events")} />
-              <ActionTile icon={MessageSquare} label="Messages" onClick={() => navigate("/app/messages")} />
-              <ActionTile icon={Users} label="Circles" onClick={() => navigate("/app/programmes")} />
-              <ActionTile icon={Rocket} label="E-Cell" onClick={() => navigate("/app/ecell")} />
+            <div className="grid grid-cols-4 gap-y-5 gap-x-2">
+              <QuickTile icon={CalendarCheck} label="Attendance" tint="indigo" onClick={() => navigate("/app/attendance")} />
+              <QuickTile icon={Clock3}        label="Timetable"  tint="rose"   onClick={() => navigate("/app/timetable")} />
+              <QuickTile icon={BookOpen}      label="Tasks"      tint="amber"  onClick={() => navigate("/app/assignments")} />
+              <QuickTile icon={GraduationCap} label="Results"    tint="purple" onClick={() => navigate("/app/results")} />
+              <QuickTile icon={CalendarDays}  label="Events"     tint="emerald"onClick={() => navigate("/app/events")} />
+              <QuickTile icon={FileText}      label="Docs"       tint="sky"    onClick={() => navigate("/app/documents")} />
+              <QuickTile icon={IdCard}        label="ID Card"    tint="orange" onClick={() => navigate("/app/id-card")} />
+              <QuickTile icon={LayoutGrid}    label="More"       tint="slate"  onClick={() => navigate("/app/settings")} />
             </div>
           </motion.section>
+
 
           {/* UPCOMING EVENTS STRIP */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
