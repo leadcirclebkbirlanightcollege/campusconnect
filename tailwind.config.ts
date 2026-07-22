@@ -18,9 +18,9 @@ export default {
     extend: {
       fontFamily: {
         syne: ['Syne', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['"DM Sans"', '"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', '"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        heading: ['"Space Grotesk"', '"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', '"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', '"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
 
       /* ── Design Token Colors ── */
@@ -191,13 +191,14 @@ export default {
         "inner-subtle":"inset 0 1px 0 hsl(var(--border-subtle) / 0.5)",
       },
 
-      /* ── Border Radius ── */
+      /* ── Border Radius (premium native app scale) ── */
       borderRadius: {
-        sm:    "calc(var(--radius) - 4px)",   /* 8px */
-        md:    "calc(var(--radius) - 2px)",   /* 10px */
-        lg:    "var(--radius)",               /* 12px */
-        xl:    "calc(var(--radius) + 4px)",   /* 16px */
-        "2xl": "calc(var(--radius) + 12px)",  /* 24px */
+        sm:    "calc(var(--radius) - 8px)",   /* 12px */
+        md:    "calc(var(--radius) - 4px)",   /* 16px */
+        lg:    "var(--radius)",               /* 20px */
+        xl:    "calc(var(--radius) + 4px)",   /* 24px */
+        "2xl": "calc(var(--radius) + 12px)",  /* 32px */
+        "3xl": "calc(var(--radius) + 20px)",  /* 40px */
       },
 
       /* ── Motion ── */

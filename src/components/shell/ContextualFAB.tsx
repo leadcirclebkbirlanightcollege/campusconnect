@@ -69,10 +69,10 @@ export default function ContextualFAB() {
           onClick={action.onTap}
           aria-label={action.label}
           className={cn(
-            "fixed right-4 z-[9998] md:right-6",
-            // Sits above bottom-nav on mobile and above feedback fab spacing on desktop
-            "bottom-[calc(env(safe-area-inset-bottom,0px)+152px)] md:bottom-[calc(env(safe-area-inset-bottom,0px)+88px)]",
-            "flex items-center gap-2 rounded-full pl-3.5 pr-4 h-12",
+            // Desktop-only — mobile now uses the built-in Scan tab in BottomNavigation
+            "hidden md:flex fixed right-6 z-[9998]",
+            "bottom-[calc(env(safe-area-inset-bottom,0px)+88px)]",
+            "items-center gap-2 rounded-full pl-3.5 pr-4 h-12",
             "bg-primary text-primary-foreground",
             "border border-primary/30",
             "shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.55),0_4px_12px_-4px_hsl(var(--primary)/0.45)]",
