@@ -176,7 +176,8 @@ export default function StudentPointsPage() {
     : 100;
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto px-4 pt-4 pb-28">
+    <div className="mx-auto w-full max-w-[420px] space-y-4 px-4 pt-2 pb-[calc(96px+env(safe-area-inset-bottom,0px))]">
+
       {/* ── Hero ──────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: -8 }}
