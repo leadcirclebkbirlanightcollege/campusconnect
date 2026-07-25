@@ -176,12 +176,13 @@ export default function StudentPointsPage() {
     : 100;
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto px-4 pt-4 pb-28">
+    <div className="mx-auto w-full max-w-[420px] space-y-4 px-4 pt-2 pb-[calc(96px+env(safe-area-inset-bottom,0px))]">
+
       {/* ── Hero ──────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl border border-border-subtle p-5"
+        className="relative overflow-hidden rounded-[24px] border border-border-subtle p-5 shadow-[0_16px_40px_-20px_hsl(var(--warning)/0.35)]"
         style={{
           background: `
             radial-gradient(80% 100% at 100% 0%, hsl(var(--warning) / 0.18), transparent 60%),
