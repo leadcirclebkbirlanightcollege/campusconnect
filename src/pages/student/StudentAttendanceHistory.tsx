@@ -326,49 +326,48 @@ export default function StudentAttendanceHistory() {
           }
         />
 
-        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Attendance Overview" subtitle="Performance at a glance" />
-            <GlassCard padding="lg" className="space-y-4" elevation="high">
-              <div className="grid grid-cols-2 gap-3">
-                <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Attended" />
-                <MetricCard icon={BookOpen} value={totals.totalCount} label="Conducted" />
-              </div>
-              <MetricCard icon={TrendingUp} value={totals.percentage} suffix="%" label="Attendance" />
-            </GlassCard>
-          </motion.section>
-
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Attendance Ring" subtitle="Visual attendance health" />
-            <GlassCard className="flex items-center justify-center" padding="lg">
-              <div className="flex flex-col items-center gap-3">
-                <ProgressRing value={totals.percentage} size={120} />
-                <p className="text-sm font-semibold text-foreground">{totals.percentage}% overall attendance</p>
-              </div>
-            </GlassCard>
-          </motion.section>
-
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Summary Metrics" subtitle="Academic attendance breakdown" />
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={CalendarCheck} value={totals.attendedCount} label="Lectures Attended" />
-              <MetricCard icon={UserX} value={totals.missedCount} label="Lectures Missed" />
-              <MetricCard icon={BookOpen} value={totals.percentage} suffix="%" label="Attendance %" />
-              <GlassCard className="flex flex-col justify-between" padding="md">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Trend</p>
-                  {(() => {
-                    const TrendIcon = trendIcon;
-                    return <TrendIcon className="h-4 w-4 text-primary" />;
-                  })()}
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-5">
+          {/* Native Classic hero — curved gradient + ring + floating stat trio */}
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-primary via-primary to-primary-glow px-5 pt-6 pb-16 text-primary-foreground shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.55)]">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="rounded-full bg-white/15 p-1.5 ring-1 ring-white/25 backdrop-blur">
+                  <ProgressRing value={totals.percentage} size={96} />
                 </div>
-                <p className="text-2xl font-black text-foreground">{trendLabel}</p>
-                <StatusBadge status={trendDirection === "declining" ? "upcoming" : "active"}>
-                  {trendLabel}
-                </StatusBadge>
-              </GlassCard>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">Overall attendance</p>
+                  <p className="mt-1 text-[36px] font-black leading-none tabular-nums">{totals.percentage}%</p>
+                  <p className="mt-1.5 text-[12px] text-white/80">
+                    {totals.attendedCount} of {totals.totalCount} lectures attended
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="-mt-10 grid grid-cols-3 gap-2.5 px-1">
+              {[
+                { icon: CalendarCheck, label: "Attended", value: totals.attendedCount, tone: "text-success" },
+                { icon: UserX, label: "Missed", value: totals.missedCount, tone: "text-danger" },
+                { icon: (() => trendIcon)(), label: "Trend", value: trendLabel, tone: "text-primary", isText: true },
+              ].map((s, i) => {
+                const Icon = s.icon as any;
+                return (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-border-subtle bg-card px-3 py-3 shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.25)]"
+                  >
+                    <Icon className={cn("h-4 w-4", s.tone)} />
+                    <p className={cn("mt-1.5 font-black tabular-nums leading-none text-foreground", s.isText ? "text-[15px]" : "text-[20px]")}>
+                      {s.value}
+                    </p>
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                  </div>
+                );
+              })}
             </div>
           </motion.section>
+
 
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
             <SectionHeader title="Lecture Timeline" subtitle="Latest attendance records" />
