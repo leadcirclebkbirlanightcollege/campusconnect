@@ -236,10 +236,12 @@ export default function StudentInbox() {
                     <GlassCard
                       hover={false}
                       className={cn(
-                        "min-h-24 rounded-2xl border px-4 py-3",
-                        isUnread && "border-primary/35 shadow-glow"
+                        "min-h-24 rounded-2xl px-4 py-3 transition-shadow",
+                        isUnread &&
+                          "border-primary/40 shadow-[0_10px_28px_-16px_hsl(var(--primary)/0.45)] ring-1 ring-primary/15"
                       )}
                     >
+
                       <button
                         type="button"
                         onClick={() => {
