@@ -72,9 +72,10 @@ export default function FacultyAnalytics() {
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Faculty Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Lecture performance & student insights</p>
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-elevated">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Insights</p>
+        <h1 className="font-heading text-[24px] font-black tracking-tight">Faculty Analytics</h1>
+        <p className="text-[13px] opacity-85 mt-0.5">Lecture performance &amp; student insights</p>
       </div>
 
       {isLoading ? (
