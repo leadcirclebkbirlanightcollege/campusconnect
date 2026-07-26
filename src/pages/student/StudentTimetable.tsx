@@ -62,15 +62,20 @@ export default function StudentTimetable() {
   const todaySlots = slotsByDay[todayDay] ?? [];
 
   return (
-    <PageContainer className="space-y-5">
-      <PageHeader
-        title="Timetable"
-        subtitle="Your weekly class schedule"
-        gradient
-      />
+    <PageContainer className="space-y-5" noPadding>
+      {/* Curved gradient hero */}
+      <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary via-primary to-primary/80 px-5 pt-8 pb-14 text-primary-foreground">
+        <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_20%_10%,white,transparent_50%)]" aria-hidden />
+        <div className="relative space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">Weekly schedule</p>
+          <h1 className="font-heading text-[26px] font-black tracking-tight">Timetable</h1>
+          <p className="text-[13px] opacity-85">Today — {DAYS[todayDay]} · {todaySlots.length} classes</p>
+        </div>
+      </div>
 
+      <div className="px-4 -mt-8 space-y-5">
       {/* Today highlight */}
-      <GlassCard hover={false} className="space-y-3">
+      <GlassCard hover={false} className="space-y-3 shadow-elevated">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">Today — {DAYS[todayDay]}</span>
