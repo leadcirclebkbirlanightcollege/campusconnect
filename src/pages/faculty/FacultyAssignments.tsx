@@ -161,14 +161,15 @@ export default function FacultyAssignments() {
   }
 
   return (
-    <div className="p-6 space-y-4 max-w-3xl">
-      <div className="flex items-center justify-between">
+    <div className="p-6 space-y-5 max-w-3xl">
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Assignments</h1>
-          <p className="text-sm text-muted-foreground">Create and grade student assignments</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Coursework</p>
+          <h1 className="font-heading text-[22px] font-black tracking-tight">Assignments</h1>
+          <p className="text-[12px] opacity-85 mt-0.5">Create and grade student work</p>
         </div>
-        <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> New Assignment
+        <Button size="sm" className="gap-2 rounded-2xl bg-white text-primary hover:bg-white/90" onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" /> New
         </Button>
       </div>
 

@@ -22,18 +22,19 @@ export default function FacultyProfile() {
 
   return (
     <div className="max-w-md space-y-5">
-      <h1 className="text-[20px] font-bold text-foreground">My Profile</h1>
-
-      <div className="rounded-xl border border-border/50 bg-card p-5 flex flex-col items-center gap-4 text-center">
-        <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-          {profile?.avatar_url
-            ? <img src={profile.avatar_url} className="h-20 w-20 rounded-full object-cover" alt="avatar" />
-            : <UserCircle className="h-10 w-10 text-primary" />
-          }
-        </div>
-        <div>
-          <p className="text-[18px] font-bold text-foreground">{profile?.name ?? "—"}</p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">Faculty Member</p>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-elevated text-center">
+        <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_20%_10%,white,transparent_55%)]" aria-hidden />
+        <div className="relative flex flex-col items-center gap-3">
+          <div className="h-24 w-24 rounded-full bg-white/15 ring-4 ring-white/30 flex items-center justify-center overflow-hidden">
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} className="h-24 w-24 rounded-full object-cover" alt="avatar" />
+              : <UserCircle className="h-12 w-12 text-white" />
+            }
+          </div>
+          <div>
+            <p className="font-heading text-[20px] font-black">{profile?.name ?? "—"}</p>
+            <p className="text-[12px] opacity-85 mt-0.5">Faculty Member</p>
+          </div>
         </div>
       </div>
 
