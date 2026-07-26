@@ -51,13 +51,14 @@ export default function FacultyAnnouncements() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center justify-between">
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-bold text-foreground">Announcements</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">{announcements.length} posted</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Broadcast</p>
+          <h1 className="font-heading text-[22px] font-black tracking-tight">Announcements</h1>
+          <p className="text-[12px] opacity-85 mt-0.5">{announcements.length} posted</p>
         </div>
-        <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5 text-[13px]">
-          <Plus className="h-3.5 w-3.5" /> New Announcement
+        <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5 text-[13px] rounded-2xl bg-white text-primary hover:bg-white/90">
+          <Plus className="h-3.5 w-3.5" /> New
         </Button>
       </div>
 
