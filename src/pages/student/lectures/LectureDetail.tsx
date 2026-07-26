@@ -75,9 +75,9 @@ export default function LectureDetail() {
   }, [id, qc]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <Button asChild variant="outline" className="gap-2">
+    <div className="mx-auto w-full max-w-[720px] px-4 py-6 space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <Button asChild variant="outline" className="gap-2 rounded-2xl">
           <Link to="/lectures">
             <ArrowLeft className="h-4 w-4" />
             Back
