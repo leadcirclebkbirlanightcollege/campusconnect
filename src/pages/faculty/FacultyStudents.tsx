@@ -55,18 +55,19 @@ export default function FacultyStudents() {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      <div>
-        <h1 className="text-[20px] font-bold text-foreground">Students</h1>
-        <p className="text-[12px] text-muted-foreground mt-0.5">{students.length} unique students in your lectures</p>
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Roster Overview</p>
+        <h1 className="font-heading text-[22px] font-black tracking-tight">Students</h1>
+        <p className="text-[12px] opacity-85 mt-0.5">{students.length} unique students in your lectures</p>
       </div>
 
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search by name, ID or class..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-8 h-9 text-[13px] bg-card border-border/50"
+          className="pl-10 h-11 text-[13px] rounded-2xl bg-card border-border/50"
         />
       </div>
 
