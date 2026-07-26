@@ -157,6 +157,7 @@ export default function StudentTimetable() {
           );
         })}
       </div>
+      </div>
     </PageContainer>
   );
 }
