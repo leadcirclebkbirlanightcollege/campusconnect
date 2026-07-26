@@ -85,15 +85,14 @@ export default function FacultyDashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {/* Header */}
-      <div className="space-y-1.5">
-        <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.16em] text-primary/80">
-          Faculty Cockpit
-        </p>
-        <h1 className="font-heading text-[26px] font-black text-foreground tracking-tight">Faculty Dashboard</h1>
-        <p className="text-[13px] text-muted-foreground">
-          {format(new Date(), "EEEE, MMMM d, yyyy")}
-        </p>
+      {/* Premium gradient header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-elevated">
+        <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_85%_15%,white,transparent_55%)]" aria-hidden />
+        <div className="relative space-y-1.5">
+          <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Faculty Cockpit</p>
+          <h1 className="font-heading text-[28px] font-black tracking-tight">Faculty Dashboard</h1>
+          <p className="text-[13px] opacity-85">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>
+        </div>
       </div>
 
       {/* Stats Grid */}
