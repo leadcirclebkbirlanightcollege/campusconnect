@@ -338,37 +338,26 @@ export default function Leaderboard() {
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <div className="inline-flex rounded-xl border border-border-subtle bg-surface-2 p-1">
-              <button
-                type="button"
-                onClick={() => setMode("alltime")}
-                className={cn(
-                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
-                  mode === "alltime" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
-                )}
-              >
-                All-Time
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("weekly")}
-                className={cn(
-                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
-                  mode === "weekly" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
-                )}
-              >
-                Weekly
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("class")}
-                className={cn(
-                  "tap-ripple min-h-12 rounded-lg px-4 text-xs font-semibold transition-colors",
-                  mode === "class" ? "bg-surface-1 text-foreground" : "text-muted-foreground",
-                )}
-              >
-                My Class
-              </button>
+            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border-subtle bg-surface-2 p-1 shadow-card">
+              {([
+                { key: "alltime", label: "All-Time" },
+                { key: "weekly", label: "Weekly" },
+                { key: "class", label: "My Class" },
+              ] as { key: LeaderboardMode; label: string }[]).map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setMode(tab.key)}
+                  className={cn(
+                    "tap-ripple min-h-11 rounded-xl px-3 text-xs font-bold transition-all duration-200",
+                    mode === tab.key
+                      ? "bg-surface-1 text-foreground shadow-card"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </motion.section>
 
