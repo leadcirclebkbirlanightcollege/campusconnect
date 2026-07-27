@@ -10,8 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store, Rocket } from "lucide-react";
+import { format, isPast, isToday } from "date-fns";
+
+type EventFilter = "all" | "general" | "ecell";
 
 const initialForm = {
   title: "",
@@ -21,6 +23,7 @@ const initialForm = {
   event_time: "",
   flyer_url: "",
   is_featured: false,
+  is_ecell_event: false,
   max_stalls: "" as string,
 };
 
