@@ -184,7 +184,14 @@ export default function StudentEventsList() {
 
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-[14px] font-semibold text-foreground leading-snug">{e.title}</h3>
+                        <h3 className="text-[14px] font-semibold text-foreground leading-snug flex items-center gap-1.5 flex-wrap">
+                          {e.title}
+                          {e.is_ecell_event && (
+                            <Badge className="text-[9px] gap-1 bg-[hsl(265_85%_65%)] text-white hover:bg-[hsl(265_85%_65%)] shrink-0">
+                              <Rocket className="h-2.5 w-2.5" /> E-Cell
+                            </Badge>
+                          )}
+                        </h3>
                         {today && <Badge className="text-[9px] bg-success text-success-foreground shrink-0">Today</Badge>}
                         {!today && !past && <Badge variant="outline" className="text-[9px] shrink-0">Upcoming</Badge>}
                         {past && <Badge variant="secondary" className="text-[9px] shrink-0">Past</Badge>}
