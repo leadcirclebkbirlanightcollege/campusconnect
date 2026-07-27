@@ -72,14 +72,6 @@ export default function AdminEventsTab() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
-    onSuccess: () => {
-      toast.success("Event created");
-      setOpen(false);
-      setForm(initialForm);
-      qc.invalidateQueries({ queryKey: ["admin", "events"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
