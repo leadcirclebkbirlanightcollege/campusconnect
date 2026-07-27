@@ -230,6 +230,19 @@ export default function AdminEventsTab() {
                 <Label className="mb-0">Featured</Label>
               </div>
             </div>
+            <div className="rounded-lg border border-[hsl(265_85%_65%/0.3)] bg-[hsl(265_85%_65%/0.05)] p-3 flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0 flex items-center gap-1.5">
+                  <Rocket className="h-3.5 w-3.5 text-[hsl(265_85%_65%)]" />
+                  E-Cell Event
+                </Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Show in the E-Cell hub and add an E-Cell badge.</p>
+              </div>
+              <Switch
+                checked={form.is_ecell_event}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, is_ecell_event: v }))}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
