@@ -31,13 +31,14 @@ export default function AdminEventsTab() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [filter, setFilter] = useState<EventFilter>("all");
 
   const eventsQuery = useQuery({
-    queryKey: ["admin", "events", "v2"],
+    queryKey: ["admin", "events", "v3"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id,title,description,event_date,event_time,venue,poster_url,flyer_url,is_featured,max_stalls,created_at")
+        .select("id,title,description,event_date,event_time,venue,poster_url,flyer_url,is_featured,is_ecell_event,max_stalls,created_at")
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -57,11 +58,20 @@ export default function AdminEventsTab() {
         event_time: form.event_time,
         flyer_url: form.flyer_url.trim() || null,
         is_featured: form.is_featured,
+        is_ecell_event: form.is_ecell_event,
         max_stalls: max,
         created_by: user.id,
       });
       if (error) throw error;
     },
+    onSuccess: () => {
+      toast.success("Event created");
+      setOpen(false);
+      setForm(initialForm);
+      qc.invalidateQueries({ queryKey: ["admin", "events"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
     onSuccess: () => {
       toast.success("Event created");
       setOpen(false);
