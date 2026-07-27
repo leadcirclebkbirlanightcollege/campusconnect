@@ -106,13 +106,47 @@ export default function AdminEventsTab() {
         </Button>
       </div>
 
+      {/* Stats + Filter */}
+      {(() => {
+        const all = eventsQuery.data ?? [];
+        const today = new Date().toISOString().slice(0, 10);
+        const active = all.filter((e: any) => e.event_date >= today);
+        const ecell = all.filter((e: any) => e.is_ecell_event);
+        return (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Badge variant="outline">Total: {all.length}</Badge>
+              <Badge variant="outline">Upcoming: {active.length}</Badge>
+              <Badge variant="outline" className="gap-1"><Rocket className="h-3 w-3" /> E-Cell: {ecell.length}</Badge>
+            </div>
+            <div className="flex gap-1 rounded-md border border-input p-0.5 bg-background">
+              {(["all", "general", "ecell"] as EventFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 h-7 rounded text-xs font-medium capitalize transition ${
+                    filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "ecell" ? "E-Cell" : f}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="grid gap-4 sm:grid-cols-2">
-        {eventsQuery.data?.length === 0 && (
+        {(eventsQuery.data ?? []).filter((e: any) =>
+          filter === "all" ? true : filter === "ecell" ? e.is_ecell_event : !e.is_ecell_event,
+        ).length === 0 && (
           <Card className="col-span-full">
-            <CardContent className="py-8 text-center text-muted-foreground">No events yet.</CardContent>
+            <CardContent className="py-8 text-center text-muted-foreground">No events to show.</CardContent>
           </Card>
         )}
-        {eventsQuery.data?.map((e: any) => {
+        {(eventsQuery.data ?? [])
+          .filter((e: any) => (filter === "all" ? true : filter === "ecell" ? e.is_ecell_event : !e.is_ecell_event))
+          .map((e: any) => {
           const flyer = e.flyer_url || e.poster_url;
           return (
             <Card key={e.id} className="border-border/50 overflow-hidden">
@@ -120,9 +154,14 @@ export default function AdminEventsTab() {
               <CardContent className="py-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-medium text-foreground flex items-center gap-2">
+                    <h3 className="font-medium text-foreground flex items-center gap-2 flex-wrap">
                       {e.title}
                       {e.is_featured && <Star className="h-3.5 w-3.5 text-warning fill-warning" />}
+                      {e.is_ecell_event && (
+                        <Badge className="text-[9px] gap-1 bg-[hsl(265_85%_65%)] text-white hover:bg-[hsl(265_85%_65%)]">
+                          <Rocket className="h-2.5 w-2.5" /> E-Cell
+                        </Badge>
+                      )}
                     </h3>
                     {e.description && <p className="text-sm text-muted-foreground line-clamp-2">{e.description}</p>}
                   </div>
