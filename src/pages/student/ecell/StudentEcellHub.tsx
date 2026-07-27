@@ -208,17 +208,19 @@ function EcellTile({ to, icon: Icon, title, desc, badge, delay = 0 }: TileProps)
 /* ─── Page ────────────────────────────────────────────────── */
 export default function StudentEcellHub() {
   const { data: nextEvent } = useQuery({
-    queryKey: ["ecell", "next-featured"],
+    queryKey: ["ecell", "next-featured", "v2"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from("events")
-        .select("id,title,event_date,event_time,venue,is_featured,max_stalls")
+        .select("id,title,event_date,event_time,venue,is_featured,is_ecell_event,max_stalls")
+        .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today)
         .order("event_date", { ascending: true })
         .limit(5);
-      const list = (data ?? []) as (NextEvent & { is_featured?: boolean; max_stalls?: number | null })[];
+      const list = (data ?? []) as (NextEvent & { is_featured?: boolean; is_ecell_event?: boolean; max_stalls?: number | null })[];
       return (
+        list.find((e) => e.is_ecell_event) ??
         list.find((e) => e.is_featured) ??
         list.find((e) => e.max_stalls != null) ??
         list[0]
@@ -228,13 +230,13 @@ export default function StudentEcellHub() {
   });
 
   const { data: stallCount } = useQuery({
-    queryKey: ["ecell", "open-stalls"],
+    queryKey: ["ecell", "open-stalls", "v2"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { count } = await supabase
         .from("events")
         .select("id", { count: "exact", head: true })
-        .not("max_stalls", "is", null)
+        .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today);
       return count ?? 0;
     },
