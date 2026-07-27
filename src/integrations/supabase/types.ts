@@ -1132,6 +1132,7 @@ export type Database = {
           event_time: string
           flyer_url: string | null
           id: string
+          is_ecell_event: boolean
           is_featured: boolean
           max_stalls: number | null
           poster_url: string | null
@@ -1148,6 +1149,7 @@ export type Database = {
           event_time: string
           flyer_url?: string | null
           id?: string
+          is_ecell_event?: boolean
           is_featured?: boolean
           max_stalls?: number | null
           poster_url?: string | null
@@ -1164,6 +1166,7 @@ export type Database = {
           event_time?: string
           flyer_url?: string | null
           id?: string
+          is_ecell_event?: boolean
           is_featured?: boolean
           max_stalls?: number | null
           poster_url?: string | null

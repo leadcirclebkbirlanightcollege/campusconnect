@@ -10,8 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store, Rocket } from "lucide-react";
+import { format, isPast, isToday } from "date-fns";
+
+type EventFilter = "all" | "general" | "ecell";
 
 const initialForm = {
   title: "",
@@ -21,6 +23,7 @@ const initialForm = {
   event_time: "",
   flyer_url: "",
   is_featured: false,
+  is_ecell_event: false,
   max_stalls: "" as string,
 };
 
@@ -28,13 +31,14 @@ export default function AdminEventsTab() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [filter, setFilter] = useState<EventFilter>("all");
 
   const eventsQuery = useQuery({
-    queryKey: ["admin", "events", "v2"],
+    queryKey: ["admin", "events", "v3"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id,title,description,event_date,event_time,venue,poster_url,flyer_url,is_featured,max_stalls,created_at")
+        .select("id,title,description,event_date,event_time,venue,poster_url,flyer_url,is_featured,is_ecell_event,max_stalls,created_at")
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -54,6 +58,7 @@ export default function AdminEventsTab() {
         event_time: form.event_time,
         flyer_url: form.flyer_url.trim() || null,
         is_featured: form.is_featured,
+        is_ecell_event: form.is_ecell_event,
         max_stalls: max,
         created_by: user.id,
       });
@@ -101,13 +106,47 @@ export default function AdminEventsTab() {
         </Button>
       </div>
 
+      {/* Stats + Filter */}
+      {(() => {
+        const all = eventsQuery.data ?? [];
+        const today = new Date().toISOString().slice(0, 10);
+        const active = all.filter((e: any) => e.event_date >= today);
+        const ecell = all.filter((e: any) => e.is_ecell_event);
+        return (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Badge variant="outline">Total: {all.length}</Badge>
+              <Badge variant="outline">Upcoming: {active.length}</Badge>
+              <Badge variant="outline" className="gap-1"><Rocket className="h-3 w-3" /> E-Cell: {ecell.length}</Badge>
+            </div>
+            <div className="flex gap-1 rounded-md border border-input p-0.5 bg-background">
+              {(["all", "general", "ecell"] as EventFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 h-7 rounded text-xs font-medium capitalize transition ${
+                    filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "ecell" ? "E-Cell" : f}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="grid gap-4 sm:grid-cols-2">
-        {eventsQuery.data?.length === 0 && (
+        {(eventsQuery.data ?? []).filter((e: any) =>
+          filter === "all" ? true : filter === "ecell" ? e.is_ecell_event : !e.is_ecell_event,
+        ).length === 0 && (
           <Card className="col-span-full">
-            <CardContent className="py-8 text-center text-muted-foreground">No events yet.</CardContent>
+            <CardContent className="py-8 text-center text-muted-foreground">No events to show.</CardContent>
           </Card>
         )}
-        {eventsQuery.data?.map((e: any) => {
+        {(eventsQuery.data ?? [])
+          .filter((e: any) => (filter === "all" ? true : filter === "ecell" ? e.is_ecell_event : !e.is_ecell_event))
+          .map((e: any) => {
           const flyer = e.flyer_url || e.poster_url;
           return (
             <Card key={e.id} className="border-border/50 overflow-hidden">
@@ -115,9 +154,14 @@ export default function AdminEventsTab() {
               <CardContent className="py-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-medium text-foreground flex items-center gap-2">
+                    <h3 className="font-medium text-foreground flex items-center gap-2 flex-wrap">
                       {e.title}
                       {e.is_featured && <Star className="h-3.5 w-3.5 text-warning fill-warning" />}
+                      {e.is_ecell_event && (
+                        <Badge className="text-[9px] gap-1 bg-[hsl(265_85%_65%)] text-white hover:bg-[hsl(265_85%_65%)]">
+                          <Rocket className="h-2.5 w-2.5" /> E-Cell
+                        </Badge>
+                      )}
                     </h3>
                     {e.description && <p className="text-sm text-muted-foreground line-clamp-2">{e.description}</p>}
                   </div>
@@ -185,6 +229,19 @@ export default function AdminEventsTab() {
                 <Switch checked={form.is_featured} onCheckedChange={(v) => setForm((p) => ({ ...p, is_featured: v }))} />
                 <Label className="mb-0">Featured</Label>
               </div>
+            </div>
+            <div className="rounded-lg border border-[hsl(265_85%_65%/0.3)] bg-[hsl(265_85%_65%/0.05)] p-3 flex items-center justify-between gap-3">
+              <div>
+                <Label className="mb-0 flex items-center gap-1.5">
+                  <Rocket className="h-3.5 w-3.5 text-[hsl(265_85%_65%)]" />
+                  E-Cell Event
+                </Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Show in the E-Cell hub and add an E-Cell badge.</p>
+              </div>
+              <Switch
+                checked={form.is_ecell_event}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, is_ecell_event: v }))}
+              />
             </div>
           </div>
           <DialogFooter>

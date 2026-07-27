@@ -21,12 +21,12 @@ interface EcellEvent {
 
 export default function StudentEcellStalls() {
   const { data, isLoading } = useQuery({
-    queryKey: ["ecell_stall_events"],
+    queryKey: ["ecell_stall_events", "v2"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id,title,event_date,event_time,venue,max_stalls")
-        .not("max_stalls", "is", null)
+        .select("id,title,event_date,event_time,venue,max_stalls,is_ecell_event")
+        .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", new Date().toISOString().slice(0, 10))
         .order("event_date", { ascending: true });
       if (error) throw error;
