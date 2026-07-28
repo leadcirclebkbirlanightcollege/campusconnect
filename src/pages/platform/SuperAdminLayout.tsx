@@ -80,7 +80,7 @@ export default function SuperAdminLayout() {
     <CollegeProvider>
       <SessionGuard />
       <SidebarProvider defaultOpen>
-        <div className="min-h-svh flex w-full bg-background">
+        <div data-admin-shell className="min-h-svh flex w-full bg-background font-sans">
           <SuperAdminSidebar />
           <SidebarInset className="flex flex-col min-w-0">
             {/* ── Topbar ── */}
