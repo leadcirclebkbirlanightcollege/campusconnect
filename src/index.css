@@ -1293,3 +1293,73 @@
   }
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   ADMIN SHELL — Cloud White + Indigo (scoped)
+   Palette: #fafbfc / #e8ecf1 / #94a3b8 / #4f46e5
+   Type: Outfit (heading) + Figtree (body)
+   Applied only under [data-admin-shell]; leaves student
+   & faculty surfaces untouched.
+   ══════════════════════════════════════════════════════════ */
+[data-admin-shell] {
+  font-family: "Figtree", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Cloud White surfaces */
+  --bg-base:      210 20% 99%;   /* #fafbfc */
+  --background:   210 20% 99%;
+  --surface-1:    0 0% 100%;     /* pure white cards */
+  --surface-2:    214 30% 96%;   /* #e8ecf1 */
+  --surface-3:    214 22% 92%;
+  --surface-4:    214 20% 88%;
+  --card:         0 0% 100%;
+  --border:            214 22% 90%;
+  --border-subtle:     214 22% 92%;
+  --border-strong:     214 20% 82%;
+  --muted:             214 25% 94%;
+  --muted-foreground:  215 16% 47%;
+
+  /* Indigo accent */
+  --primary:              244 76% 62%;   /* #4f46e5 */
+  --primary-foreground:   0 0% 100%;
+  --primary-hover:        244 76% 55%;
+  --ring:                 244 76% 62%;
+  --accent:               244 76% 62%;
+  --accent-foreground:    0 0% 100%;
+
+  /* Sidebar — Cloud White */
+  --sidebar-background:         210 20% 99%;
+  --sidebar-foreground:         222 22% 22%;
+  --sidebar-primary:            244 76% 62%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent:             214 30% 94%;
+  --sidebar-accent-foreground:  222 22% 20%;
+  --sidebar-border:             214 22% 88%;
+  --sidebar-ring:               244 76% 62%;
+}
+
+.dark [data-admin-shell] {
+  /* Retain dark base but promote indigo accent for consistency */
+  --primary:            244 88% 68%;
+  --sidebar-primary:    244 88% 68%;
+  --ring:               244 88% 68%;
+}
+
+/* Outfit for headings inside admin shell */
+[data-admin-shell] .font-heading,
+[data-admin-shell] .font-display,
+[data-admin-shell] h1,
+[data-admin-shell] h2,
+[data-admin-shell] h3,
+[data-admin-shell] h4,
+[data-admin-shell] h5 {
+  font-family: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle card lift under Cloud White palette */
+[data-admin-shell] .rounded-2xl {
+  box-shadow: 0 1px 2px hsl(220 40% 12% / 0.04);
+}
+[data-admin-shell] .rounded-2xl:hover {
+  box-shadow: 0 8px 24px -12px hsl(244 76% 40% / 0.18), 0 2px 4px hsl(220 40% 12% / 0.05);
+}
