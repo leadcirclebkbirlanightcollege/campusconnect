@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  Search,
   UserRound,
   LogOut,
   CreditCard,
@@ -47,6 +49,9 @@ import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { getPageMeta } from "@/ui-engine/navigation-engine";
 import { useAppEventsBridge } from "@/hooks/use-app-events";
 import { useShellRealtime } from "@/hooks/use-shell-realtime";
+import { useSmartBack } from "@/hooks/use-smart-back";
+import ScrollMemory from "@/components/layout/ScrollMemory";
+
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
@@ -170,6 +175,8 @@ function ProfileMenu({ userId }: { userId: string }) {
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
+  const { canGoBack, goBack } = useSmartBack();
+
 
   const { data: user } = useQuery({
     queryKey: ["topbar", "user"],
@@ -188,6 +195,8 @@ export default function AppLayout() {
   return (
     <>
       <SessionGuard />
+      <ScrollMemory />
+
       <SidebarProvider defaultOpen>
         <div className="min-h-svh flex w-full bg-background">
           {/* Desktop sidebar */}
@@ -204,11 +213,23 @@ export default function AppLayout() {
               )}
             >
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
-                {/* Mobile: sidebar trigger */}
-                <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+                {/* Smart back (detail screens) — falls back to sidebar trigger on tab roots */}
+                {canGoBack ? (
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    aria-label="Go back"
+                    className="tap-ripple shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-muted-foreground transition-all duration-fast hover:bg-surface-3 hover:text-foreground active:scale-95"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+                )}
 
                 {/* Desktop: vertical divider */}
                 <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
 
                 {/* Page title area */}
                 <div className="min-w-0 flex-1">
@@ -235,6 +256,15 @@ export default function AppLayout() {
                 {/* Right controls */}
                 <div className="flex items-center gap-1.5 shrink-0">
                   <SystemStatus />
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event("campus:open-search"))}
+                    aria-label="Search"
+                    className="tap-ripple flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-muted-foreground transition-all duration-fast hover:bg-surface-3 hover:text-foreground active:scale-95"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+
                   {user && (
                     <>
                       <TopbarNotificationCenter userId={user.id} />

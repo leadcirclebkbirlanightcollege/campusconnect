@@ -1,5 +1,13 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
+
+/** Resolves a shareable deep link to its canonical in-app route. */
+function DeepLink({ to }: { to: string }) {
+  const params = useParams();
+  const target = to.replace(/:([A-Za-z0-9_]+)/g, (_m, key: string) => params[key] ?? "");
+  return <Navigate to={target} replace />;
+}
+
 import ProtectedRoute from "@/router/ProtectedRoute";
 import PublicRoute from "@/router/PublicRoute";
 import RouteLoader from "@/router/RouteLoader";
@@ -53,6 +61,8 @@ const NotificationSettings = lazy(() => import("@/pages/student/NotificationSett
 
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
 const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
+const AcademicsHub         = lazy(() => import("@/pages/student/hubs/AcademicsHub"));
+const CommunityHub         = lazy(() => import("@/pages/student/hubs/CommunityHub"));
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
@@ -282,7 +292,10 @@ export default function AppRouter() {
             <Route path="points"                 element={<StudentPointsPage />} />
             <Route path="ecell"                  element={<StudentEcellHub />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
+            <Route path="academics"              element={<AcademicsHub />} />
+            <Route path="community"              element={<CommunityHub />} />
             <Route path="install"                element={<PwaInstallPage />} />
+
             {/* Removed modules — redirect to dashboard */}
             <Route path="analytics"     element={<Navigate to="/app/dashboard" replace />} />
             <Route path="polls"         element={<Navigate to="/app/dashboard" replace />} />
@@ -327,7 +340,18 @@ export default function AppRouter() {
           <Route path="/app/admin/attendance/corrections" element={<Navigate to="/platform/admin/attendance/corrections" replace />} />
 
           {/* Other legacy routes */}
+          {/* Shareable deep links → canonical in-app routes */}
+          <Route path="/lecture/:id"      element={<DeepLink to="/app/lectures/:id" />} />
+          <Route path="/programme/:id"    element={<DeepLink to="/app/programmes/:id" />} />
+          <Route path="/event/:id"        element={<DeepLink to="/app/events" />} />
+          <Route path="/announcement/:id" element={<DeepLink to="/app/announcements" />} />
+          <Route path="/assignment/:id"   element={<DeepLink to="/app/assignments" />} />
+          <Route path="/document/:id"     element={<DeepLink to="/app/documents" />} />
+          <Route path="/profile/:id"      element={<DeepLink to="/app/settings" />} />
+          <Route path="/faculty/profile/:id" element={<DeepLink to="/faculty/profile" />} />
+
           <Route path="/student"          element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/student/:id"      element={<DeepLink to="/app/settings" />} />
           <Route path="/student/profile"  element={<Navigate to="/app/settings" replace />} />
           <Route path="/student/inbox"    element={<Navigate to="/app/inbox" replace />} />
           <Route path="/student/scan"     element={<Navigate to="/app/scan" replace />} />
