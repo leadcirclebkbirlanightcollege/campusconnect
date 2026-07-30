@@ -49,6 +49,9 @@ import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { getPageMeta } from "@/ui-engine/navigation-engine";
 import { useAppEventsBridge } from "@/hooks/use-app-events";
 import { useShellRealtime } from "@/hooks/use-shell-realtime";
+import { useSmartBack } from "@/hooks/use-smart-back";
+import ScrollMemory from "@/components/layout/ScrollMemory";
+
 
 /* ── System Status Dot ─────────────────────────────────────────── */
 function SystemStatus() {
