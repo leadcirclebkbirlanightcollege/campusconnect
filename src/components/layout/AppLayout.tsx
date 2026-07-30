@@ -204,11 +204,23 @@ export default function AppLayout() {
               )}
             >
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
-                {/* Mobile: sidebar trigger */}
-                <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+                {/* Smart back (detail screens) — falls back to sidebar trigger on tab roots */}
+                {canGoBack ? (
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    aria-label="Go back"
+                    className="tap-ripple shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-muted-foreground transition-all duration-fast hover:bg-surface-3 hover:text-foreground active:scale-95"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <SidebarTrigger className="md:hidden h-8 w-8 shrink-0" />
+                )}
 
                 {/* Desktop: vertical divider */}
                 <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
 
                 {/* Page title area */}
                 <div className="min-w-0 flex-1">
