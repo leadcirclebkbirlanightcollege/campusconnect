@@ -332,7 +332,18 @@ export default function AppRouter() {
           <Route path="/app/admin/attendance/corrections" element={<Navigate to="/platform/admin/attendance/corrections" replace />} />
 
           {/* Other legacy routes */}
+          {/* Shareable deep links → canonical in-app routes */}
+          <Route path="/lecture/:id"      element={<DeepLink to="/app/lectures/:id" />} />
+          <Route path="/programme/:id"    element={<DeepLink to="/app/programmes/:id" />} />
+          <Route path="/event/:id"        element={<DeepLink to="/app/events" />} />
+          <Route path="/announcement/:id" element={<DeepLink to="/app/announcements" />} />
+          <Route path="/assignment/:id"   element={<DeepLink to="/app/assignments" />} />
+          <Route path="/document/:id"     element={<DeepLink to="/app/documents" />} />
+          <Route path="/profile/:id"      element={<DeepLink to="/app/settings" />} />
+          <Route path="/faculty/profile/:id" element={<DeepLink to="/faculty/profile" />} />
+
           <Route path="/student"          element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/student/:id"      element={<DeepLink to="/app/settings" />} />
           <Route path="/student/profile"  element={<Navigate to="/app/settings" replace />} />
           <Route path="/student/inbox"    element={<Navigate to="/app/inbox" replace />} />
           <Route path="/student/scan"     element={<Navigate to="/app/scan" replace />} />
