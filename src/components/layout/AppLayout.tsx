@@ -172,6 +172,8 @@ function ProfileMenu({ userId }: { userId: string }) {
 export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
+  const { canGoBack, goBack } = useSmartBack();
+
 
   const { data: user } = useQuery({
     queryKey: ["topbar", "user"],
