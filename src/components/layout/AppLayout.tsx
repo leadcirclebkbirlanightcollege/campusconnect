@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  Search,
   UserRound,
   LogOut,
   CreditCard,
