@@ -195,6 +195,8 @@ export default function AppLayout() {
   return (
     <>
       <SessionGuard />
+      <ScrollMemory />
+
       <SidebarProvider defaultOpen>
         <div className="min-h-svh flex w-full bg-background">
           {/* Desktop sidebar */}
