@@ -53,6 +53,8 @@ const NotificationSettings = lazy(() => import("@/pages/student/NotificationSett
 
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
 const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
+const AcademicsHub         = lazy(() => import("@/pages/student/hubs/AcademicsHub"));
+const CommunityHub         = lazy(() => import("@/pages/student/hubs/CommunityHub"));
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
