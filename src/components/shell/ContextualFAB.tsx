@@ -29,7 +29,10 @@ interface FabAction {
 function resolveAction(pathname: string, nav: (to: string) => void): FabAction | null {
   // Order matters — more specific first
   if (pathname.startsWith("/app/scan"))          return null; // scanner IS the action
+  if (pathname.startsWith("/app/academics"))     return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
+  if (pathname.startsWith("/app/community"))     return { icon: CalendarPlus,  label: "Events",        onTap: () => nav("/app/events") };
   if (pathname.startsWith("/app/attendance"))    return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
+
   if (pathname.startsWith("/app/lectures"))      return { icon: QrCode,        label: "Join Lecture",  onTap: () => nav("/app/scan") };
   if (pathname.startsWith("/app/timetable"))     return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
   if (pathname.startsWith("/app/assignments"))   return { icon: BookOpenCheck, label: "My Assignments",onTap: () => nav("/app/assignments") };
