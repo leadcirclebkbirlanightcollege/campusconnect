@@ -1,5 +1,13 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
+
+/** Resolves a shareable deep link to its canonical in-app route. */
+function DeepLink({ to }: { to: string }) {
+  const params = useParams();
+  const target = to.replace(/:([A-Za-z0-9_]+)/g, (_m, key: string) => params[key] ?? "");
+  return <Navigate to={target} replace />;
+}
+
 import ProtectedRoute from "@/router/ProtectedRoute";
 import PublicRoute from "@/router/PublicRoute";
 import RouteLoader from "@/router/RouteLoader";
