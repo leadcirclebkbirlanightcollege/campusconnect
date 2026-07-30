@@ -34,7 +34,7 @@ export default function CommandPalette() {
   const debouncedQ = useDebounce(query, 250);
   const navigate = useNavigate();
 
-  // Keyboard shortcut
+  // Keyboard shortcut + global open event (top bar search button)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -42,8 +42,13 @@ export default function CommandPalette() {
         setOpen((o) => !o);
       }
     };
+    const openEvent = () => setOpen(true);
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("campus:open-search", openEvent);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("campus:open-search", openEvent);
+    };
   }, []);
 
   const { data: results = [] } = useQuery<SearchResult[]>({
