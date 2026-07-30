@@ -282,7 +282,10 @@ export default function AppRouter() {
             <Route path="points"                 element={<StudentPointsPage />} />
             <Route path="ecell"                  element={<StudentEcellHub />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
+            <Route path="academics"              element={<AcademicsHub />} />
+            <Route path="community"              element={<CommunityHub />} />
             <Route path="install"                element={<PwaInstallPage />} />
+
             {/* Removed modules — redirect to dashboard */}
             <Route path="analytics"     element={<Navigate to="/app/dashboard" replace />} />
             <Route path="polls"         element={<Navigate to="/app/dashboard" replace />} />
