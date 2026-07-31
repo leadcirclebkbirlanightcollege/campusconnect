@@ -24,6 +24,9 @@ import {
   Store,
   Coins,
   ChevronDown,
+  LayoutGrid,
+  LifeBuoy,
+
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
