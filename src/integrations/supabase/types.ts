@@ -1878,7 +1878,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "point_claims_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       points_ledger: {
         Row: {
@@ -2364,7 +2372,7 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description: string | null
-          event_id: string
+          event_id: string | null
           id: string
           requirements: string | null
           review_note: string | null
@@ -2383,7 +2391,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
-          event_id: string
+          event_id?: string | null
           id?: string
           requirements?: string | null
           review_note?: string | null
@@ -2402,7 +2410,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
-          event_id?: string
+          event_id?: string | null
           id?: string
           requirements?: string | null
           review_note?: string | null
@@ -2414,7 +2422,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stall_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_achievements: {
         Row: {
