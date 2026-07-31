@@ -442,7 +442,7 @@ export default function StudentDashboard() {
               <QuickTile icon={CalendarDays}  label="Events"     tint="emerald"onClick={() => navigate("/app/events")} />
               <QuickTile icon={FileText}      label="Docs"       tint="sky"    onClick={() => navigate("/app/documents")} />
               <QuickTile icon={IdCard}        label="ID Card"    tint="orange" onClick={() => navigate("/app/id-card")} />
-              <QuickTile icon={LayoutGrid}    label="More"       tint="slate"  onClick={() => navigate("/app/settings")} />
+              <QuickTile icon={LayoutGrid}    label="More"       tint="slate"  onClick={() => navigate("/app/more")} />
             </div>
           </motion.section>
 
