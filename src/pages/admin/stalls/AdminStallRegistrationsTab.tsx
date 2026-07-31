@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Store, Filter, Mail, Phone } from "lucide-react";
@@ -12,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type StallRow = {
   id: string;
-  event_id: string;
+  event_id: string | null;
   user_id: string;
   stall_name: string;
   contact_name: string;
@@ -45,7 +46,7 @@ export default function AdminStallRegistrationsTab() {
   });
 
   const eventIds = useMemo(
-    () => Array.from(new Set((stallsQuery.data ?? []).map((s) => s.event_id))),
+    () => Array.from(new Set((stallsQuery.data ?? []).map((s) => s.event_id).filter((id): id is string => !!id))),
     [stallsQuery.data],
   );
 
@@ -114,18 +115,25 @@ export default function AdminStallRegistrationsTab() {
               <Skeleton className="h-20" />
               <Skeleton className="h-20" />
             </>
+          ) : stallsQuery.isError ? (
+            <QueryErrorState
+              title="Couldn't load stall registrations"
+              error={stallsQuery.error}
+              onRetry={() => stallsQuery.refetch()}
+              isRetrying={stallsQuery.isFetching}
+            />
           ) : (stallsQuery.data ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">No registrations to show.</p>
           ) : (
             (stallsQuery.data ?? []).map((s) => {
-              const ev = eventsQuery.data?.[s.event_id];
+              const ev = s.event_id ? eventsQuery.data?.[s.event_id] : undefined;
               return (
                 <div key={s.id} className="rounded-lg border border-border-subtle p-3 space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{s.stall_name}</p>
                       <p className="text-[11px] text-muted-foreground capitalize">
-                        {s.type} • {ev?.title ?? "Event"}
+                        {s.type} • {ev?.title ?? (s.event_id ? "Loading event…" : "Event removed")}
                         {ev?.max_stalls != null && <span> • cap {ev.max_stalls}</span>}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
