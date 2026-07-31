@@ -321,8 +321,8 @@ export default function StudentEcellHub() {
         {/* Quick stats */}
         <div className="relative mt-4 grid grid-cols-3 gap-2">
           {[
-            { l: "Open Events", v: nextEvent ? "Live" : "—" },
-            { l: "Stalls Open", v: stallCount ?? 0 },
+            { l: "Open Events", v: ecellQuery.isError ? "!" : openEvents },
+            { l: "Stalls Open", v: ecellQuery.isError ? "!" : stallCount },
             { l: "Vibe", v: "🚀" },
           ].map((s) => (
             <div
@@ -340,8 +340,29 @@ export default function StudentEcellHub() {
         </div>
       </motion.section>
 
+      {/* ── Load failure (never silently shown as "empty") ──── */}
+      {ecellQuery.isError && (
+        <QueryErrorState
+          title="Couldn't load E-Cell events"
+          error={ecellQuery.error}
+          onRetry={() => ecellQuery.refetch()}
+          isRetrying={ecellQuery.isFetching}
+        />
+      )}
+
       {/* ── Featured countdown ─────────────────────────────── */}
       {nextEvent && <FeaturedCountdown event={nextEvent} />}
+
+      {/* ── Genuine empty state ────────────────────────────── */}
+      {!ecellQuery.isLoading && !ecellQuery.isError && openEvents === 0 && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <p className="text-[13px] font-semibold text-foreground">No E-Cell events yet</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            When your college publishes an E-Cell event, it will appear here.
+          </p>
+        </div>
+      )}
+
 
       {/* ── Quick Tiles (3) ────────────────────────────────── */}
       <section className="grid gap-2.5 sm:grid-cols-3">
