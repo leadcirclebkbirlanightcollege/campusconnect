@@ -12,7 +12,7 @@ import { Search, X, Sparkles } from "lucide-react";
 import {
   CalendarDays, ClipboardCheck, BookOpenCheck, FileText, GraduationCap,
   QrCode, Award, Calendar, Megaphone, Bell, Rocket, Store, Coins,
-  Trophy, CreditCard, UserRound, Settings, LifeBuoy, Download, BadgeCheck,
+  Trophy, CreditCard, UserRound, Settings, LifeBuoy, Download,
 } from "lucide-react";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
@@ -87,7 +87,6 @@ const GROUPS: Group[] = [
     items: [
       { label: "Profile", description: "Your details & academics", href: "/app/profile", icon: UserRound, tone: "primary", keywords: "account me" },
       { label: "Notification Settings", description: "Control what reaches you", href: "/app/settings/notifications", icon: Settings, tone: "info", keywords: "push preferences" },
-      { label: "Verify a Document", description: "Check document authenticity", href: "/verify/", icon: BadgeCheck, tone: "success", keywords: "verification certificate" },
       { label: "Install App", description: "Add Campus Connect to home", href: "/app/install", icon: Download, tone: "success", keywords: "pwa install apk" },
       { label: "Help & Support", description: "Raise a ticket, get answers", href: "/app/support", icon: LifeBuoy, tone: "warning", keywords: "ticket contact faq" },
     ],
