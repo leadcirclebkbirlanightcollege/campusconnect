@@ -211,13 +211,14 @@ export default function StudentEcellHub() {
     queryKey: ["ecell", "next-featured", "v2"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("events")
         .select("id,title,event_date,event_time,venue,is_featured,is_ecell_event,max_stalls")
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today)
         .order("event_date", { ascending: true })
         .limit(5);
+      if (error) console.warn("[ecell] featured event query failed", error.message);
       const list = (data ?? []) as (NextEvent & { is_featured?: boolean; is_ecell_event?: boolean; max_stalls?: number | null })[];
       return (
         list.find((e) => e.is_ecell_event) ??
@@ -227,20 +228,23 @@ export default function StudentEcellHub() {
       );
     },
     staleTime: 60_000,
+    retry: 1,
   });
 
   const { data: stallCount } = useQuery({
     queryKey: ["ecell", "open-stalls", "v2"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from("events")
         .select("id", { count: "exact", head: true })
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today);
+      if (error) console.warn("[ecell] stall count query failed", error.message);
       return count ?? 0;
     },
     staleTime: 60_000,
+    retry: 1,
   });
 
   return (
