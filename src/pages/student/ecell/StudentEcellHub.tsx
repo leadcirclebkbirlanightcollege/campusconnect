@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 
 const ECELL = "265 85% 65%";
 const ECELL_DEEP = "262 80% 50%";
@@ -207,8 +208,8 @@ function EcellTile({ to, icon: Icon, title, desc, badge, delay = 0 }: TileProps)
 
 /* ─── Page ────────────────────────────────────────────────── */
 export default function StudentEcellHub() {
-  const { data: nextEvent } = useQuery({
-    queryKey: ["ecell", "next-featured", "v2"],
+  const ecellQuery = useQuery({
+    queryKey: ["ecell", "hub", "v3"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase
@@ -216,36 +217,33 @@ export default function StudentEcellHub() {
         .select("id,title,event_date,event_time,venue,is_featured,is_ecell_event,max_stalls")
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today)
-        .order("event_date", { ascending: true })
-        .limit(5);
-      if (error) console.warn("[ecell] featured event query failed", error.message);
-      const list = (data ?? []) as (NextEvent & { is_featured?: boolean; is_ecell_event?: boolean; max_stalls?: number | null })[];
-      return (
+        .order("event_date", { ascending: true });
+      // Fail loudly — a broken read must never masquerade as "no events".
+      if (error) throw new Error(error.message);
+      const list = (data ?? []) as (NextEvent & {
+        is_featured?: boolean;
+        is_ecell_event?: boolean;
+        max_stalls?: number | null;
+      })[];
+      const featured =
         list.find((e) => e.is_ecell_event) ??
         list.find((e) => e.is_featured) ??
         list.find((e) => e.max_stalls != null) ??
-        list[0]
-      );
+        list[0];
+      return {
+        featured,
+        openEvents: list.length,
+        stallEvents: list.filter((e) => e.max_stalls != null).length,
+      };
     },
     staleTime: 60_000,
     retry: 1,
   });
 
-  const { data: stallCount } = useQuery({
-    queryKey: ["ecell", "open-stalls", "v2"],
-    queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { count, error } = await supabase
-        .from("events")
-        .select("id", { count: "exact", head: true })
-        .or("is_ecell_event.eq.true,max_stalls.not.is.null")
-        .gte("event_date", today);
-      if (error) console.warn("[ecell] stall count query failed", error.message);
-      return count ?? 0;
-    },
-    staleTime: 60_000,
-    retry: 1,
-  });
+  const nextEvent = ecellQuery.data?.featured;
+  const openEvents = ecellQuery.data?.openEvents ?? 0;
+  const stallCount = ecellQuery.data?.stallEvents ?? 0;
+
 
   return (
     <div className="min-h-full px-4 py-4 space-y-4 max-w-3xl mx-auto pb-24">
@@ -324,8 +322,8 @@ export default function StudentEcellHub() {
         {/* Quick stats */}
         <div className="relative mt-4 grid grid-cols-3 gap-2">
           {[
-            { l: "Open Events", v: nextEvent ? "Live" : "—" },
-            { l: "Stalls Open", v: stallCount ?? 0 },
+            { l: "Open Events", v: ecellQuery.isError ? "!" : openEvents },
+            { l: "Stalls Open", v: ecellQuery.isError ? "!" : stallCount },
             { l: "Vibe", v: "🚀" },
           ].map((s) => (
             <div
@@ -343,8 +341,29 @@ export default function StudentEcellHub() {
         </div>
       </motion.section>
 
+      {/* ── Load failure (never silently shown as "empty") ──── */}
+      {ecellQuery.isError && (
+        <QueryErrorState
+          title="Couldn't load E-Cell events"
+          error={ecellQuery.error}
+          onRetry={() => ecellQuery.refetch()}
+          isRetrying={ecellQuery.isFetching}
+        />
+      )}
+
       {/* ── Featured countdown ─────────────────────────────── */}
       {nextEvent && <FeaturedCountdown event={nextEvent} />}
+
+      {/* ── Genuine empty state ────────────────────────────── */}
+      {!ecellQuery.isLoading && !ecellQuery.isError && openEvents === 0 && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <p className="text-[13px] font-semibold text-foreground">No E-Cell events yet</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            When your college publishes an E-Cell event, it will appear here.
+          </p>
+        </div>
+      )}
+
 
       {/* ── Quick Tiles (3) ────────────────────────────────── */}
       <section className="grid gap-2.5 sm:grid-cols-3">

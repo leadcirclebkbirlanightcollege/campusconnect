@@ -7,6 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Store, ArrowLeft, CalendarDays } from "lucide-react";
+import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import StallRegistrationDialog from "@/pages/student/events/StallRegistrationDialog";
 
@@ -20,7 +21,7 @@ interface EcellEvent {
 }
 
 export default function StudentEcellStalls() {
-  const { data, isLoading } = useQuery({
+  const stallsQuery = useQuery({
     queryKey: ["ecell_stall_events", "v2"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,15 +30,13 @@ export default function StudentEcellStalls() {
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", new Date().toISOString().slice(0, 10))
         .order("event_date", { ascending: true });
-      if (error) {
-        console.warn("[ecell] stall events query failed", error.message);
-        return [] as EcellEvent[];
-      }
+      if (error) throw new Error(error.message);
       return (data ?? []) as EcellEvent[];
     },
     staleTime: 60_000,
     retry: 1,
   });
+  const { data, isLoading } = stallsQuery;
 
   return (
     <div className="min-h-full px-4 py-4 space-y-4 max-w-3xl mx-auto">
@@ -75,7 +74,16 @@ export default function StudentEcellStalls() {
         </div>
       )}
 
-      {!isLoading && (data?.length ?? 0) === 0 && (
+      {stallsQuery.isError && (
+        <QueryErrorState
+          title="Couldn't load stall events"
+          error={stallsQuery.error}
+          onRetry={() => stallsQuery.refetch()}
+          isRetrying={stallsQuery.isFetching}
+        />
+      )}
+
+      {!isLoading && !stallsQuery.isError && (data?.length ?? 0) === 0 && (
         <div className="rounded-xl border border-border bg-card p-6 text-center">
           <p className="text-[13px] text-muted-foreground">
             No events accepting stall registrations right now.

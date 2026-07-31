@@ -165,7 +165,19 @@ export default function AdminEventsTab() {
                     </h3>
                     {e.description && <p className="text-sm text-muted-foreground line-clamp-2">{e.description}</p>}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(e.id)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Delete "${e.title}"?\n\nStall registrations for this event will be kept but will no longer be linked to any event.`,
+                        )
+                      ) {
+                        deleteMutation.mutate(e.id);
+                      }
+                    }}
+                  >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>

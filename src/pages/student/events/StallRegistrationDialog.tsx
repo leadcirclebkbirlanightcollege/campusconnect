@@ -92,10 +92,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
         .eq("event_id", eventId)
         .eq("user_id", user!.id)
         .maybeSingle();
-      if (error) {
-        console.warn("[ecell] existing stall lookup failed", error.message);
-        return null;
-      }
+      if (error) throw new Error(error.message);
       return data;
     },
   });
