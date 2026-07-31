@@ -24,6 +24,9 @@ import {
   Store,
   Coins,
   ChevronDown,
+  LayoutGrid,
+  LifeBuoy,
+
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -122,54 +125,23 @@ export default function AppSidebar() {
       {
         label: "Main",
         items: [
-          { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
-        ],
-      },
-      {
-        label: "Academics",
-        items: [
-          { title: "Attendance",       url: "/app/attendance",  icon: CalendarDays },
-          { title: "Lectures",         url: "/app/lectures",    icon: BookOpen },
-          { title: "Learning Circles", url: "/app/programmes",  icon: Sparkles },
-        ],
-      },
-      {
-        label: "Campus",
-        items: [
-          { title: "Events",        url: "/app/events",        icon: Calendar },
-          { title: "Announcements", url: "/app/announcements", icon: Megaphone },
-          { title: "Messages",      url: "/app/messages",      icon: MessageSquare },
-          { title: "Inbox",         url: "/app/inbox",         icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
-        ],
-      },
-      {
-        label: "E-Cell",
-        accent: "ecell",
-        items: [
-          { title: "E-Cell Events",      url: "/app/ecell",        icon: Rocket },
-          { title: "Stall Registration", url: "/app/ecell/stalls", icon: Store },
-          { title: "Points & Rewards",   url: "/app/points",       icon: Coins },
-        ],
-      },
-      {
-        label: "Engagement",
-        items: [
-          { title: "Leaderboard",   url: "/app/leaderboard",   icon: Trophy },
-          { title: "Achievements",  url: "/app/achievements",  icon: Flame },
-          { title: "Polls",         url: "/app/polls",         icon: BarChart3 },
-          { title: "Daily",         url: "/app/daily",         icon: Sparkles },
+          { title: "Dashboard",    url: "/app/dashboard", icon: LayoutDashboard },
+          { title: "All Features", url: "/app/more",      icon: LayoutGrid },
+          { title: "Inbox",        url: "/app/inbox",     icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
         ],
       },
       {
         label: "Personal",
         items: [
-          { title: "Digital ID",          url: "/app/id-card",                icon: CreditCard },
-          { title: "Settings",            url: "/app/settings",               icon: UserRound },
-          { title: "Notification Settings", url: "/app/settings/notifications", icon: Settings },
+          { title: "Profile",       url: "/app/profile",                icon: UserRound },
+          { title: "Notifications", url: "/app/settings/notifications", icon: Settings },
+          { title: "Digital ID",    url: "/app/id-card",                icon: CreditCard },
+          { title: "Help & Support", url: "/app/support",               icon: LifeBuoy },
         ],
       },
     ],
     [unreadCount],
+
   );
 
   const adminSection: NavSection = useMemo(

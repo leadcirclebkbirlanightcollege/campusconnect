@@ -62,6 +62,7 @@ const NotificationSettings = lazy(() => import("@/pages/student/NotificationSett
 const StudentPointsPage    = lazy(() => import("@/pages/student/points/StudentPointsPage"));
 const StudentEcellHub      = lazy(() => import("@/pages/student/ecell/StudentEcellHub"));
 const AcademicsHub         = lazy(() => import("@/pages/student/hubs/AcademicsHub"));
+const MoreHub              = lazy(() => import("@/pages/student/hubs/MoreHub"));
 const CommunityHub         = lazy(() => import("@/pages/student/hubs/CommunityHub"));
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
@@ -293,6 +294,7 @@ export default function AppRouter() {
             <Route path="ecell"                  element={<StudentEcellHub />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="academics"              element={<AcademicsHub />} />
+            <Route path="more"                   element={<MoreHub />} />
             <Route path="community"              element={<CommunityHub />} />
             <Route path="install"                element={<PwaInstallPage />} />
 

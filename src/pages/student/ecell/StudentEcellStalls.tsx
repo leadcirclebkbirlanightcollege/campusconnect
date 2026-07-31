@@ -29,10 +29,14 @@ export default function StudentEcellStalls() {
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", new Date().toISOString().slice(0, 10))
         .order("event_date", { ascending: true });
-      if (error) throw error;
+      if (error) {
+        console.warn("[ecell] stall events query failed", error.message);
+        return [] as EcellEvent[];
+      }
       return (data ?? []) as EcellEvent[];
     },
     staleTime: 60_000,
+    retry: 1,
   });
 
   return (
