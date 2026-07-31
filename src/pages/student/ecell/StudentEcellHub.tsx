@@ -207,8 +207,8 @@ function EcellTile({ to, icon: Icon, title, desc, badge, delay = 0 }: TileProps)
 
 /* ─── Page ────────────────────────────────────────────────── */
 export default function StudentEcellHub() {
-  const { data: nextEvent } = useQuery({
-    queryKey: ["ecell", "next-featured", "v2"],
+  const ecellQuery = useQuery({
+    queryKey: ["ecell", "hub", "v3"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase
@@ -216,36 +216,33 @@ export default function StudentEcellHub() {
         .select("id,title,event_date,event_time,venue,is_featured,is_ecell_event,max_stalls")
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .gte("event_date", today)
-        .order("event_date", { ascending: true })
-        .limit(5);
-      if (error) console.warn("[ecell] featured event query failed", error.message);
-      const list = (data ?? []) as (NextEvent & { is_featured?: boolean; is_ecell_event?: boolean; max_stalls?: number | null })[];
-      return (
+        .order("event_date", { ascending: true });
+      // Fail loudly — a broken read must never masquerade as "no events".
+      if (error) throw new Error(error.message);
+      const list = (data ?? []) as (NextEvent & {
+        is_featured?: boolean;
+        is_ecell_event?: boolean;
+        max_stalls?: number | null;
+      })[];
+      const featured =
         list.find((e) => e.is_ecell_event) ??
         list.find((e) => e.is_featured) ??
         list.find((e) => e.max_stalls != null) ??
-        list[0]
-      );
+        list[0];
+      return {
+        featured,
+        openEvents: list.length,
+        stallEvents: list.filter((e) => e.max_stalls != null).length,
+      };
     },
     staleTime: 60_000,
     retry: 1,
   });
 
-  const { data: stallCount } = useQuery({
-    queryKey: ["ecell", "open-stalls", "v2"],
-    queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { count, error } = await supabase
-        .from("events")
-        .select("id", { count: "exact", head: true })
-        .or("is_ecell_event.eq.true,max_stalls.not.is.null")
-        .gte("event_date", today);
-      if (error) console.warn("[ecell] stall count query failed", error.message);
-      return count ?? 0;
-    },
-    staleTime: 60_000,
-    retry: 1,
-  });
+  const nextEvent = ecellQuery.data?.featured;
+  const openEvents = ecellQuery.data?.openEvents ?? 0;
+  const stallCount = ecellQuery.data?.stallEvents ?? 0;
+
 
   return (
     <div className="min-h-full px-4 py-4 space-y-4 max-w-3xl mx-auto pb-24">
