@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 
 const ECELL = "265 85% 65%";
 const ECELL_DEEP = "262 80% 50%";
