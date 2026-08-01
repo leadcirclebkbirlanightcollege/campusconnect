@@ -26,29 +26,36 @@ interface FabAction {
   onTap: () => void;
 }
 
+/** Read-only surfaces: a floating action here is noise, not help. */
+const FAB_HIDDEN_PREFIXES = [
+  "/app/scan",
+  "/app/results",
+  "/app/attendance",
+  "/app/timetable",
+  "/app/announcements",
+  "/app/profile",
+  "/app/settings",
+  "/app/id-card",
+  "/app/leaderboard",
+  "/app/points",
+];
+
 function resolveAction(pathname: string, nav: (to: string) => void): FabAction | null {
+  if (FAB_HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+
   // Order matters — more specific first
-  if (pathname.startsWith("/app/scan"))          return null; // scanner IS the action
   if (pathname.startsWith("/app/academics"))     return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
   if (pathname.startsWith("/app/community"))     return { icon: CalendarPlus,  label: "Events",        onTap: () => nav("/app/events") };
-  if (pathname.startsWith("/app/attendance"))    return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
-
   if (pathname.startsWith("/app/lectures"))      return { icon: QrCode,        label: "Join Lecture",  onTap: () => nav("/app/scan") };
-  if (pathname.startsWith("/app/timetable"))     return { icon: QrCode,        label: "Scan QR",       onTap: () => nav("/app/scan") };
   if (pathname.startsWith("/app/assignments"))   return { icon: BookOpenCheck, label: "My Assignments",onTap: () => nav("/app/assignments") };
   if (pathname.startsWith("/app/documents"))     return { icon: Upload,        label: "My Documents",  onTap: () => nav("/app/documents") };
   if (pathname.startsWith("/app/events"))        return { icon: CalendarPlus,  label: "Events",        onTap: () => nav("/app/events") };
-  if (pathname.startsWith("/app/announcements")) return { icon: Bell,          label: "Announcements", onTap: () => nav("/app/announcements") };
   if (pathname.startsWith("/app/programmes"))    return { icon: BookOpenCheck, label: "Learning",      onTap: () => nav("/app/programmes") };
-  if (pathname.startsWith("/app/leaderboard"))   return { icon: Trophy,        label: "Leaderboard",   onTap: () => nav("/app/leaderboard") };
   if (pathname.startsWith("/app/ecell"))         return { icon: Rocket,        label: "E-Cell",        onTap: () => nav("/app/ecell") };
-  if (pathname.startsWith("/app/points"))        return { icon: Zap,           label: "Points",        onTap: () => nav("/app/points") };
-  if (pathname.startsWith("/app/settings") ||
-      pathname.startsWith("/app/profile"))       return { icon: UserPen,       label: "Edit Profile",  onTap: () => nav("/app/settings") };
-  if (pathname.startsWith("/app/id-card"))       return { icon: UserPen,       label: "Edit Profile",  onTap: () => nav("/app/settings") };
   if (pathname.startsWith("/app/dashboard"))     return { icon: QrCode,        label: "Quick Scan",    onTap: () => nav("/app/scan") };
   return null;
 }
+
 
 
 
