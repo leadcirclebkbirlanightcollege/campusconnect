@@ -1377,3 +1377,33 @@
 [data-admin-shell] .rounded-2xl:hover {
   box-shadow: 0 8px 24px -12px hsl(244 76% 40% / 0.18), 0 2px 4px hsl(220 40% 12% / 0.05);
 }
+
+/* ══════════════════════════════════════════════
+   Native app feel — disable accidental text
+   selection & Android long-press callout on
+   informational UI, keep inputs fully editable.
+══════════════════════════════════════════════ */
+@layer base {
+  html,
+  body,
+  #root {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  [contenteditable=""],
+  .selectable,
+  .select-text {
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+}
