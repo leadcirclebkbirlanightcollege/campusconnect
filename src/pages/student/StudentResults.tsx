@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
-import { Award, BookOpen, TrendingUp, Trophy } from "lucide-react";
+import { BookOpen, GraduationCap, Trophy, TrendingUp } from "lucide-react";
 import { PageContainer } from "@/layout/PageContainer";
-import { PageHeader } from "@/layout/PageHeader";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
+import { PremiumEmpty } from "@/components/ui/premium-empty";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,36 @@ function gradeTone(pct: number) {
 }
 
 type Filter = "all" | "passed" | "top";
+
+const BANDS = [
+  { label: "A", min: 85, tone: "bg-success" },
+  { label: "B", min: 70, tone: "bg-info" },
+  { label: "C", min: 60, tone: "bg-warning" },
+  { label: "D", min: 0, tone: "bg-danger" },
+];
+
+function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-[20px] border border-border-subtle bg-surface-1 p-4",
+        "shadow-[0_16px_38px_-30px_hsl(var(--foreground)/0.55)]",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function GroupTitle({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2 px-1">
+      <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">{title}</h2>
+      {hint && <span className="text-[10.5px] text-muted-foreground/55">{hint}</span>}
+    </div>
+  );
+}
 
 export default function StudentResults() {
   const { user } = useAuth();
@@ -59,7 +90,34 @@ export default function StudentResults() {
 
   const avgPct = enriched.length ? enriched.reduce((s, r) => s + r.pct, 0) / enriched.length : 0;
   const passedCount = enriched.filter((r) => r.pct >= 60).length;
+  const failedCount = enriched.length - passedCount;
   const topCount = enriched.filter((r) => r.pct >= 85).length;
+  const cgpa = (avgPct / 9.5).toFixed(2);
+
+  /* Chronological trend (oldest → newest) */
+  const trend = useMemo(
+    () =>
+      [...enriched]
+        .reverse()
+        .slice(-8)
+        .map((r) => ({ label: r.exams?.subject?.slice(0, 3) ?? "—", pct: r.pct })),
+    [enriched],
+  );
+
+  const topSubjects = useMemo(
+    () => [...enriched].sort((a, b) => b.pct - a.pct).slice(0, 3),
+    [enriched],
+  );
+
+  const distribution = useMemo(
+    () =>
+      BANDS.map((b, i) => {
+        const upper = i === 0 ? 101 : BANDS[i - 1].min;
+        const count = enriched.filter((r) => r.pct >= b.min && r.pct < upper).length;
+        return { ...b, count };
+      }),
+    [enriched],
+  );
 
   const filtered = useMemo(() => {
     if (filter === "passed") return enriched.filter((r) => r.pct >= 60);
@@ -67,124 +125,244 @@ export default function StudentResults() {
     return enriched;
   }, [enriched, filter]);
 
-  const avgTone = gradeTone(avgPct);
-
   return (
-    <PageContainer className="space-y-4">
-      <PageHeader title="Exam Results" subtitle="Your academic performance overview" gradient />
-
-      {/* Hero summary */}
-      <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/15 via-surface-2 to-surface-1 p-5 shadow-elevated">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-border-subtle bg-surface-1 shadow-card">
-            <span className={cn("text-[26px] font-black tabular-nums", avgTone.text)}>
-              {avgPct.toFixed(0)}
-              <span className="text-sm">%</span>
+    <PageContainer className="pb-24" noPadding>
+      <ModuleHero
+        tone="academics"
+        eyebrow="Academics"
+        title="Results"
+        subtitle="Your academic performance at a glance"
+        icon={GraduationCap}
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex h-[86px] w-[86px] shrink-0 flex-col items-center justify-center rounded-3xl border border-white/20 bg-white/12 backdrop-blur-sm">
+            <span className="font-heading text-[26px] font-black leading-none tabular-nums">
+              {avgPct.toFixed(0)}<span className="text-[14px]">%</span>
+            </span>
+            <span className="mt-1 text-[9.5px] font-semibold uppercase tracking-wider text-white/70">
+              Average
             </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Average Score
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="font-heading text-[17px] font-bold leading-tight">
+              CGPA {enriched.length ? cgpa : "—"}
             </p>
-            <p className="mt-0.5 text-[18px] font-bold text-foreground">
+            <p className="text-[12px] text-white/80">
               {results.length} {results.length === 1 ? "exam" : "exams"} recorded
             </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <Stat icon={<TrendingUp className="h-3.5 w-3.5" />} label="Passed" value={passedCount} />
-              <Stat icon={<Trophy className="h-3.5 w-3.5" />} label="Top Grade" value={topCount} />
+            <div className="flex gap-2 pt-0.5">
+              <span className="rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10.5px] font-semibold">
+                {passedCount} passed
+              </span>
+              <span className="rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-[10.5px] font-semibold">
+                {topCount} top grade
+              </span>
             </div>
           </div>
         </div>
-      </div>
+      </ModuleHero>
 
-      <SegmentedFilter
-        value={filter}
-        onChange={(v) => setFilter(v as Filter)}
-        options={[
-          { value: "all", label: "All", count: enriched.length },
-          { value: "passed", label: "Passed", count: passedCount },
-          { value: "top", label: "Top", count: topCount },
-        ]}
-      />
-
-      {isLoading ? (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <GlassCard hover={false} className="text-center py-12">
-          <Award className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">No results to show</p>
-        </GlassCard>
-      ) : (
-        <div className="space-y-2.5">
-          {filtered.map((r) => {
-            const tone = gradeTone(r.pct);
-            return (
-              <article
-                key={r.id}
-                className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-semibold text-foreground">
-                      {r.exams?.title ?? "Exam"}
+      <HeroOverlap>
+        <div className="space-y-5">
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-24 rounded-[20px]" />
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-[20px]" />
+              ))}
+            </div>
+          ) : enriched.length === 0 ? (
+            <PremiumEmpty
+              art="results"
+              tone="primary"
+              title="No results published yet"
+              description="When your faculty publishes exam marks, your scores, trends and grade breakdown will show up here."
+              hint="Results usually appear a few days after each exam"
+            />
+          ) : (
+            <>
+              {/* Pass / fail summary */}
+              <section className="grid grid-cols-3 gap-2.5">
+                {[
+                  { label: "Passed", value: passedCount, tone: "text-success", icon: TrendingUp },
+                  { label: "Below 60", value: failedCount, tone: "text-danger", icon: BookOpen },
+                  { label: "Top grade", value: topCount, tone: "text-warning", icon: Trophy },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="rounded-2xl border border-border-subtle bg-card px-3 py-3 shadow-[0_12px_30px_-20px_hsl(var(--foreground)/0.4)]"
+                  >
+                    <s.icon className={cn("h-4 w-4", s.tone)} />
+                    <p className="mt-1.5 font-heading text-[20px] font-black leading-none tabular-nums text-foreground">
+                      {s.value}
                     </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <BookOpen className="h-3 w-3" /> {r.exams?.subject}
-                      </span>
-                      {r.exams?.exam_date && (
-                        <>
-                          <span>·</span>
-                          <span>{format(new Date(r.exams.exam_date), "dd MMM yyyy")}</span>
-                        </>
-                      )}
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {s.label}
+                    </p>
+                  </div>
+                ))}
+              </section>
+
+              {/* Performance trend */}
+              {trend.length > 1 && (
+                <section className="space-y-2">
+                  <GroupTitle title="Performance trend" hint="Recent exams" />
+                  <Panel>
+                    <div className="flex items-end justify-between gap-1.5">
+                      {trend.map((t, i) => (
+                        <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                          <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">
+                            {t.pct}
+                          </span>
+                          <div className="flex h-[76px] w-full items-end overflow-hidden rounded-lg bg-surface-3">
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: `${Math.max(t.pct, 6)}%` }}
+                              transition={{ duration: 0.45, delay: i * 0.04, ease: [0, 0, 0.2, 1] }}
+                              className={cn("w-full rounded-lg", gradeTone(t.pct).bg)}
+                            />
+                          </div>
+                          <span className="w-full truncate text-center text-[9.5px] uppercase text-muted-foreground/70">
+                            {t.label}
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                  </Panel>
+                </section>
+              )}
+
+              {/* Grade distribution */}
+              <section className="space-y-2">
+                <GroupTitle title="Grade distribution" />
+                <Panel className="space-y-2.5">
+                  {distribution.map((d) => {
+                    const pct = enriched.length ? (d.count / enriched.length) * 100 : 0;
+                    return (
+                      <div key={d.label} className="flex items-center gap-3">
+                        <span className="w-4 font-heading text-[12px] font-bold text-muted-foreground">{d.label}</span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-3">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
+                            className={cn("h-full rounded-full", d.tone)}
+                          />
+                        </div>
+                        <span className="w-5 text-right text-[11px] font-semibold tabular-nums text-muted-foreground">
+                          {d.count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </Panel>
+              </section>
+
+              {/* Top subjects */}
+              {topSubjects.length > 0 && (
+                <section className="space-y-2">
+                  <GroupTitle title="Top scoring" hint="Best 3" />
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {topSubjects.map((r, i) => (
+                      <div
+                        key={r.id}
+                        className="rounded-2xl border border-border-subtle bg-surface-1 p-3 text-center shadow-[0_12px_30px_-22px_hsl(var(--foreground)/0.45)]"
+                      >
+                        <span className="text-[15px]">{["🥇", "🥈", "🥉"][i]}</span>
+                        <p className="mt-1 truncate text-[11px] font-semibold text-foreground">
+                          {r.exams?.subject ?? "Subject"}
+                        </p>
+                        <p className={cn("mt-0.5 font-heading text-[15px] font-black tabular-nums", gradeTone(r.pct).text)}>
+                          {r.pct}%
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className={cn("text-[20px] font-black tabular-nums leading-none", tone.text)}>
-                      {r.marks_obtained}
-                      <span className="text-sm text-muted-foreground">/{r.max}</span>
-                    </p>
-                    <p className={cn("mt-1 text-[11px] font-semibold", tone.text)}>{r.pct}%</p>
-                  </div>
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
-                  <div className={cn("h-full rounded-full transition-all", tone.bg)} style={{ width: `${r.pct}%` }} />
-                </div>
-                {(r.grade || r.remarks) && (
-                  <div className="mt-2.5 flex items-center justify-between gap-2">
-                    {r.grade && (
-                      <Badge variant="secondary" className={cn("text-[10px] font-semibold", tone.soft)}>
-                        Grade {r.grade}
-                      </Badge>
-                    )}
-                    {r.remarks && (
-                      <p className="truncate text-[11px] italic text-muted-foreground">{r.remarks}</p>
-                    )}
+                </section>
+              )}
+
+              {/* All results */}
+              <section className="space-y-2.5">
+                <GroupTitle title="All results" hint={`${enriched.length} total`} />
+                <SegmentedFilter
+                  value={filter}
+                  onChange={(v) => setFilter(v as Filter)}
+                  options={[
+                    { value: "all", label: "All", count: enriched.length },
+                    { value: "passed", label: "Passed", count: passedCount },
+                    { value: "top", label: "Top", count: topCount },
+                  ]}
+                />
+
+                {filtered.length === 0 ? (
+                  <PremiumEmpty
+                    art="results"
+                    compact
+                    title="Nothing in this filter"
+                    description="Try switching back to “All” to see every published result."
+                  />
+                ) : (
+                  <div className="space-y-2.5">
+                    {filtered.map((r, i) => {
+                      const tone = gradeTone(r.pct);
+                      return (
+                        <motion.article
+                          key={r.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.2) }}
+                          className="rounded-[20px] border border-border-subtle bg-surface-1 p-4 shadow-[0_16px_38px_-30px_hsl(var(--foreground)/0.55)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-elevated"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-heading text-[14px] font-bold text-foreground">
+                                {r.exams?.title ?? "Exam"}
+                              </p>
+                              <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1">
+                                  <BookOpen className="h-3 w-3" /> {r.exams?.subject}
+                                </span>
+                                {r.exams?.exam_date && (
+                                  <>
+                                    <span>·</span>
+                                    <span>{format(new Date(r.exams.exam_date), "dd MMM yyyy")}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className={cn("font-heading text-[20px] font-black tabular-nums leading-none", tone.text)}>
+                                {r.marks_obtained}
+                                <span className="text-sm text-muted-foreground">/{r.max}</span>
+                              </p>
+                              <p className={cn("mt-1 text-[11px] font-semibold", tone.text)}>{r.pct}%</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                            <div className={cn("h-full rounded-full transition-[width] duration-500", tone.bg)} style={{ width: `${r.pct}%` }} />
+                          </div>
+                          {(r.grade || r.remarks) && (
+                            <div className="mt-2.5 flex items-center justify-between gap-2">
+                              {r.grade && (
+                                <Badge variant="secondary" className={cn("text-[10px] font-semibold", tone.soft)}>
+                                  Grade {r.grade}
+                                </Badge>
+                              )}
+                              {r.remarks && (
+                                <p className="truncate text-[11px] italic text-muted-foreground">{r.remarks}</p>
+                              )}
+                            </div>
+                          )}
+                        </motion.article>
+                      );
+                    })}
                   </div>
                 )}
-              </article>
-            );
-          })}
+              </section>
+            </>
+          )}
         </div>
-      )}
+      </HeroOverlap>
     </PageContainer>
-  );
-}
-
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl border border-border-subtle/60 bg-surface-1/70 px-2.5 py-1.5">
-      <div className="text-muted-foreground">{icon}</div>
-      <div className="min-w-0">
-        <p className="text-[14px] font-bold leading-none text-foreground tabular-nums">{value}</p>
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      </div>
-    </div>
   );
 }
