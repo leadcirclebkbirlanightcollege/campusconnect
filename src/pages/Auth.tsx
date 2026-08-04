@@ -129,17 +129,18 @@ const Auth = () => {
       const identifier = loginIdentifier.trim();
       if (!identifier) throw new Error("Please enter Email or Student ID");
 
-      let email = identifier;
+      // Emails are stored lowercase in Supabase Auth — always normalise.
+      let email = identifier.toLowerCase();
       if (!identifier.includes("@")) {
         const { data: resolved, error: resolveError } = await supabase.functions.invoke(
           "auth-resolve-identifier", { body: { identifier } },
         );
         if (resolveError || !resolved?.email) throw new Error("Invalid credentials");
-        email = String(resolved.email);
+        email = String(resolved.email).trim().toLowerCase();
       }
 
       const loginTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Login timed out. Please try again.")), 8000)
+        setTimeout(() => reject(new Error("Login timed out. Please try again.")), 12000)
       );
       const { data, error } = await Promise.race([
         supabase.auth.signInWithPassword({ email, password: loginPassword }),
@@ -150,8 +151,16 @@ const Auth = () => {
       if (data.user) redirectToDashboard(data.user.id);
     } catch (error: any) {
       const msg: string = error?.message || "";
-      if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
+      const lower = msg.toLowerCase();
+      if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
         toast.error("Network error. Please check your connection.");
+      } else if (lower.includes("email not confirmed")) {
+        toast.error("Email not verified", {
+          description: "We've sent a fresh verification link to your inbox.",
+        });
+        void supabase.auth.resend({ type: "signup", email: loginIdentifier.trim().toLowerCase() });
+      } else if (lower.includes("invalid login credentials")) {
+        toast.error("Invalid credentials", { description: "Check your email/Student ID and password." });
       } else {
         toast.error(msg || "Login failed");
       }
@@ -164,7 +173,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const email = signupEmail.trim();
+      const email = signupEmail.trim().toLowerCase();
       const password = signupPassword;
       if (!email) throw new Error("Email is required");
       if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
@@ -176,8 +185,29 @@ const Auth = () => {
           emailRedirectTo: `${window.location.origin}/onboarding-wizard`,
         },
       });
-      if (authError) throw authError;
+      if (authError) {
+        const lower = (authError.message || "").toLowerCase();
+        if (lower.includes("already registered") || lower.includes("already been registered")) {
+          throw new Error("This email is already registered. Please sign in instead.");
+        }
+        throw authError;
+      }
       if (!authData.user) throw new Error("Failed to create account");
+
+      // If email confirmation is required, no session is returned — never pretend
+      // the user is signed in. Otherwise ensure the session is active before writing
+      // profile rows (RLS requires an authenticated user).
+      let session = authData.session;
+      if (!session) {
+        const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          toast.success("Account created", {
+            description: "Check your inbox to verify your email, then sign in.",
+          });
+          return;
+        }
+        session = signIn.session;
+      }
 
       // Minimal profile row — the rest is collected in /onboarding-wizard
       await supabase.from("profiles").upsert(
