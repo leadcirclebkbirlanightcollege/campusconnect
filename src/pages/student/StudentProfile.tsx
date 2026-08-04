@@ -565,7 +565,7 @@ export default function StudentProfile() {
           {/* Account statistics */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Points", value: pointsQuery.data ?? 0 },
+              { label: "Role", value: roleLabel },
               { label: "Status", value: profile?.approval_status === "approved" ? "Active" : "Pending" },
               { label: "Year", value: profile?.academic_year ?? "—" },
             ].map((stat) => (

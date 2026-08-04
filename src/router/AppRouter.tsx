@@ -162,7 +162,6 @@ export default function AppRouter() {
 
           {/* Public document verification */}
           <Route path="/verify/:reference" element={<DocumentVerificationPage />} />
-          <Route path="/help/__profile_preview" element={<StudentProfile />} />
 
           {/* ── Super Admin (/platform/admin-control/*) ──────────────────────── */}
           <Route
