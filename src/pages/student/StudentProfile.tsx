@@ -8,12 +8,19 @@ import {
   BookOpen,
   Building2,
   Camera,
+  ChevronRight,
   Grid3X3,
+  HelpCircle,
+  Info,
   KeyRound,
+  Lock,
   LogOut,
   Megaphone,
+  MessageSquareHeart,
   MonitorSmartphone,
   Moon,
+  Palette,
+  Pencil,
   Save,
   Shield,
   Sparkles,
@@ -25,22 +32,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useThemeContext } from "@/providers/ThemeProvider";
 import { PageContainer } from "@/layout/PageContainer";
-import { PageHeader } from "@/layout/PageHeader";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { GlowButton } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { APP_VERSION } from "@/config/version";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-type ProfileForm = {
-  name: string;
-  email: string;
-};
+type ProfileForm = { name: string; email: string };
 
 type PasswordForm = {
   currentPassword: string;
@@ -65,8 +75,9 @@ const DEFAULT_PREFS: NotificationPrefs = {
 };
 
 const APP_PREFS_KEY = "campus_connect_app_prefs";
-
 const SECTION_TRANSITION = { duration: 0.18, ease: [0, 0, 0.2, 1] as const };
+
+type SheetKey = "edit" | "notifications" | "appearance" | "security" | "privacy" | "about" | null;
 
 function useLocalAppPrefs() {
   const [prefs, setPrefs] = useState({ animationEnabled: true, compactView: false });
@@ -94,6 +105,85 @@ function useLocalAppPrefs() {
   return { prefs, setPrefs };
 }
 
+/* ── Reusable settings row ─────────────────────────────────────── */
+function SettingsRow({
+  icon: Icon,
+  label,
+  hint,
+  onClick,
+  danger,
+  trailing,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  hint?: string;
+  onClick?: () => void;
+  danger?: boolean;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+        "hover:bg-surface-2 active:bg-surface-2",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+          danger ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={cn("block truncate text-[13.5px] font-semibold", danger ? "text-danger" : "text-foreground")}>
+          {label}
+        </span>
+        {hint && <span className="mt-0.5 block truncate text-[11.5px] text-muted-foreground">{hint}</span>}
+      </span>
+      {trailing ?? <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+    </button>
+  );
+}
+
+function SettingsGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h2 className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{title}</h2>
+      <div className="overflow-hidden rounded-[20px] border border-border-subtle bg-surface-1 shadow-[0_8px_24px_-18px_hsl(var(--foreground)/0.35)] divide-y divide-border-subtle">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function ToggleRow({
+  icon: Icon,
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex min-h-[52px] items-center justify-between rounded-xl border border-border-subtle bg-surface-2 px-3">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        <span className="text-[13px] font-semibold text-foreground">{label}</span>
+      </div>
+      <Switch checked={checked} disabled={disabled} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
 export default function StudentProfile() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -102,6 +192,7 @@ export default function StudentProfile() {
   const { prefs: appPrefs, setPrefs: setAppPrefs } = useLocalAppPrefs();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  const [sheet, setSheet] = useState<SheetKey>(null);
   const [form, setForm] = useState<ProfileForm>({ name: "", email: "" });
   const [pwForm, setPwForm] = useState<PasswordForm>({
     currentPassword: "",
@@ -115,7 +206,9 @@ export default function StudentProfile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,email,avatar_url,college_id")
+        .select(
+          "name,email,avatar_url,college_id,student_id,class_name,department,academic_year,approval_status,is_verified,created_at",
+        )
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -152,6 +245,17 @@ export default function StudentProfile() {
       return data?.college_name ?? "Unknown college";
     },
     staleTime: 120_000,
+  });
+
+  const pointsQuery = useQuery({
+    queryKey: ["settings", "points", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_my_points_total");
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
+    staleTime: 60_000,
   });
 
   const notificationQuery = useQuery({
@@ -225,7 +329,8 @@ export default function StudentProfile() {
       if (error) throw error;
     },
     onSuccess: async () => {
-      toast.success("Account settings updated");
+      toast.success("Profile updated");
+      setSheet(null);
       await qc.invalidateQueries({ queryKey: ["settings", "profile", user?.id] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Failed to update account"),
@@ -260,13 +365,9 @@ export default function StudentProfile() {
   const saveNotificationsMutation = useMutation({
     mutationFn: async (next: NotificationPrefs) => {
       if (!user?.id) throw new Error("You must be logged in");
-      const { error } = await supabase.from("notification_preferences").upsert(
-        {
-          user_id: user.id,
-          ...next,
-        },
-        { onConflict: "user_id" }
-      );
+      const { error } = await supabase
+        .from("notification_preferences")
+        .upsert({ user_id: user.id, ...next }, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -311,6 +412,7 @@ export default function StudentProfile() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    qc.clear();
     navigate("/auth", { replace: true });
   };
 
@@ -319,91 +421,228 @@ export default function StudentProfile() {
     const role = roleQuery.data;
     if (role === "super_admin") return "Super Admin";
     if (role === "admin") return "Admin";
+    if (role === "faculty") return "Faculty";
     return "Student";
   }, [roleQuery.data]);
 
   const notifPrefs = notificationQuery.data ?? DEFAULT_PREFS;
 
+  const completion = useMemo(() => {
+    const checks = [
+      Boolean(profile?.name),
+      Boolean(profile?.email),
+      Boolean(profile?.avatar_url),
+      Boolean(profile?.student_id),
+      Boolean(profile?.class_name),
+      Boolean(profile?.department),
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [profile]);
+
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+    : "—";
+
   if (authLoading || profileQuery.isLoading) {
     return (
-      <PageContainer className="space-y-6">
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <Skeleton className="h-56 w-full rounded-2xl" />
+      <PageContainer className="space-y-4" noPadding>
+        <Skeleton className="h-56 w-full rounded-b-[28px]" />
+        <div className="space-y-4 px-4">
+          <Skeleton className="h-24 w-full rounded-[20px]" />
+          <Skeleton className="h-40 w-full rounded-[20px]" />
+          <Skeleton className="h-40 w-full rounded-[20px]" />
+        </div>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer className="space-y-6">
-      <PageHeader
-        title="Settings"
-        subtitle="Your control center for profile, preferences, and security."
-        gradient
-      />
+    <PageContainer className="pb-28" noPadding withBottomNav>
+      <ModuleHero
+        tone="profile"
+        eyebrow="My account"
+        title={profile?.name ?? "Your profile"}
+        subtitle={profile?.email ?? user?.email ?? undefined}
+        stats={[
+          { label: "Points", value: pointsQuery.data ?? 0 },
+          { label: "Complete", value: `${completion}%` },
+          { label: "Member since", value: memberSince },
+        ]}
+        action={
+          <button
+            type="button"
+            onClick={() => setSheet("edit")}
+            aria-label="Edit profile"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/12 backdrop-blur-sm transition active:scale-95"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        }
+      >
+        <div className="mt-4 flex items-center gap-4">
+          <div className="relative">
+            <Avatar className="h-[72px] w-[72px] ring-2 ring-white/45 shadow-[0_12px_28px_-12px_rgba(0,0,0,0.5)]">
+              <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
+              <AvatarFallback className="bg-white/20 text-lg font-bold text-white">
+                {(profile?.name ?? "U").slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              aria-label="Change avatar"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-foreground shadow-md ring-2 ring-white/70 transition active:scale-95"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={SECTION_TRANSITION}>
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-primary via-primary to-primary-glow px-5 pt-6 pb-14 text-primary-foreground shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.55)]">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
-          <div className="relative flex items-center gap-4">
-            <div className="relative">
-              <Avatar className="h-16 w-16 ring-2 ring-white/40">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center rounded-full bg-white/22 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ring-1 ring-white/25">
+                {roleLabel}
+              </span>
+              {profile?.is_verified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
+                  <Shield className="h-3 w-3" /> Verified
+                </span>
+              )}
+              {collegeQuery.data && (
+                <span className="inline-flex max-w-[190px] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
+                  <Building2 className="h-3 w-3" />
+                  <span className="truncate">{collegeQuery.data}</span>
+                </span>
+              )}
+            </div>
+            <p className="mt-2 text-[11.5px] text-white/80">
+              {[profile?.student_id, profile?.class_name, profile?.department].filter(Boolean).join(" • ") ||
+                "Complete your profile to unlock everything"}
+            </p>
+          </div>
+        </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) uploadAvatarMutation.mutate(file);
+            event.currentTarget.value = "";
+          }}
+        />
+      </ModuleHero>
+
+      <HeroOverlap>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={SECTION_TRANSITION}
+          className="space-y-5"
+        >
+          {/* Profile completion */}
+          <div className="rounded-[20px] border border-border-subtle bg-surface-1 p-4 shadow-[0_10px_30px_-22px_hsl(var(--foreground)/0.5)]">
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] font-bold text-foreground">Profile completion</p>
+              <p className="text-[13px] font-bold text-primary">{completion}%</p>
+            </div>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-3">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${completion}%` }}
+                transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
+                className="h-full rounded-full bg-primary"
+              />
+            </div>
+            <p className="mt-2 text-[11.5px] text-muted-foreground">
+              {completion === 100
+                ? "Everything looks great — your profile is complete."
+                : "Add a photo and your academic details to reach 100%."}
+            </p>
+          </div>
+
+          {/* Account statistics */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Points", value: pointsQuery.data ?? 0 },
+              { label: "Status", value: profile?.approval_status === "approved" ? "Active" : "Pending" },
+              { label: "Year", value: profile?.academic_year ?? "—" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-[18px] border border-border-subtle bg-surface-1 px-3 py-3 text-center"
+              >
+                <p className="truncate text-[15px] font-black text-foreground">{stat.value}</p>
+                <p className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <SettingsGroup title="Account">
+            <SettingsRow icon={UserRound} label="Edit profile" hint="Name, email and photo" onClick={() => setSheet("edit")} />
+            <SettingsRow icon={Lock} label="Privacy" hint="Control what others can see" onClick={() => setSheet("privacy")} />
+            <SettingsRow icon={Shield} label="Security" hint="Password and active sessions" onClick={() => setSheet("security")} />
+          </SettingsGroup>
+
+          <SettingsGroup title="Preferences">
+            <SettingsRow
+              icon={Bell}
+              label="Notifications"
+              hint="Lectures, announcements and alerts"
+              onClick={() => setSheet("notifications")}
+            />
+            <SettingsRow
+              icon={Palette}
+              label="Appearance"
+              hint={theme === "dark" ? "Dark mode" : "Light mode"}
+              onClick={() => setSheet("appearance")}
+            />
+          </SettingsGroup>
+
+          <SettingsGroup title="Support">
+            <SettingsRow icon={HelpCircle} label="Help & support" hint="Guides and contact" onClick={() => navigate("/help")} />
+            <SettingsRow
+              icon={MessageSquareHeart}
+              label="Send feedback"
+              hint="Tell us what to improve"
+              onClick={() => navigate("/contact")}
+            />
+            <SettingsRow icon={Info} label="About Campus Connect" hint={`Version ${APP_VERSION}`} onClick={() => setSheet("about")} />
+          </SettingsGroup>
+
+          <SettingsGroup title="Session">
+            <SettingsRow icon={LogOut} label="Log out" hint="Sign out of this device" danger onClick={handleSignOut} />
+          </SettingsGroup>
+        </motion.div>
+      </HeroOverlap>
+
+      {/* ── Edit profile sheet ─────────────────────────────────── */}
+      <Sheet open={sheet === "edit"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom" className="max-h-[86vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Edit profile</SheetTitle>
+            <SheetDescription>Update how your name and email appear across Campus Connect.</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3 rounded-[18px] border border-border-subtle bg-surface-2 p-3">
+              <Avatar className="h-14 w-14">
                 <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
-                <AvatarFallback className="bg-white/20 text-white font-bold">
-                  {(profile?.name ?? "U").slice(0, 1).toUpperCase()}
+                <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                  {(form.name || "U").slice(0, 1).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                aria-label="Change avatar"
-                className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary shadow-md ring-2 ring-white/70"
-              >
-                <Camera className="h-3.5 w-3.5" />
-              </button>
+              <Button type="button" variant="outline" className="h-10" onClick={() => fileRef.current?.click()}>
+                <Camera className="h-4 w-4" />
+                {uploadAvatarMutation.isPending ? "Uploading…" : "Change photo"}
+              </Button>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[18px] font-bold leading-tight">{profile?.name ?? "User"}</p>
-              <p className="mt-0.5 truncate text-[12px] text-white/85">{profile?.email ?? user?.email ?? "No email"}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/25">
-                  {roleLabel}
-                </span>
-                {collegeQuery.data && (
-                  <span className="inline-flex max-w-[180px] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold text-white ring-1 ring-white/20">
-                    <Building2 className="h-3 w-3" />
-                    <span className="truncate">{collegeQuery.data}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) uploadAvatarMutation.mutate(file);
-              event.currentTarget.value = "";
-            }}
-          />
-        </div>
-      </motion.section>
-
-
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_TRANSITION, delay: 0.03 }}>
-        <GlassCard hover={false} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <UserRound className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Account Settings</h2>
-          </div>
-
-          <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="settings-name">Name</Label>
+              <Label htmlFor="settings-name">Full name</Label>
               <Input
                 id="settings-name"
                 value={form.name}
@@ -421,108 +660,115 @@ export default function StudentProfile() {
                 className="h-11"
               />
             </div>
+
+            <Button
+              type="button"
+              className="h-11 w-full"
+              disabled={saveAccountMutation.isPending}
+              onClick={() => saveAccountMutation.mutate()}
+            >
+              <Save className="h-4 w-4" />
+              {saveAccountMutation.isPending ? "Saving…" : "Save changes"}
+            </Button>
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <Button
-            type="button"
-            className="h-11 w-full"
-            disabled={saveAccountMutation.isPending}
-            onClick={() => saveAccountMutation.mutate()}
-          >
-            <Save className="h-4 w-4" />
-            Save account details
-          </Button>
-        </GlassCard>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_TRANSITION, delay: 0.06 }}>
-        <GlassCard hover={false} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Notification Settings</h2>
-          </div>
-
-          <div className="space-y-2">
+      {/* ── Notifications sheet ────────────────────────────────── */}
+      <Sheet open={sheet === "notifications"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom" className="max-h-[86vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Notifications</SheetTitle>
+            <SheetDescription>Choose what Campus Connect can alert you about.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
             {[
               { key: "lecture_alerts", label: "Lecture alerts", icon: BookOpen },
               { key: "announcements", label: "Announcements", icon: Megaphone },
-              { key: "achievement_alerts", label: "Achievement notifications", icon: Trophy },
+              { key: "achievement_alerts", label: "Achievements", icon: Trophy },
               { key: "attendance_alerts", label: "Attendance warnings", icon: AlertTriangle },
+              { key: "system_updates", label: "System updates", icon: Sparkles },
             ].map((item) => {
-              const Icon = item.icon;
               const key = item.key as keyof NotificationPrefs;
               return (
-                <div key={item.key} className="flex min-h-12 items-center justify-between rounded-xl border border-border-subtle bg-surface-2 px-3">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-foreground">{item.label}</span>
-                  </div>
-                  <Switch
-                    checked={notifPrefs[key]}
-                    disabled={saveNotificationsMutation.isPending}
-                    onCheckedChange={() =>
-                      saveNotificationsMutation.mutate({
-                        ...notifPrefs,
-                        [key]: !notifPrefs[key],
-                      })
-                    }
-                  />
-                </div>
+                <ToggleRow
+                  key={item.key}
+                  icon={item.icon}
+                  label={item.label}
+                  checked={notifPrefs[key]}
+                  disabled={saveNotificationsMutation.isPending}
+                  onChange={() => saveNotificationsMutation.mutate({ ...notifPrefs, [key]: !notifPrefs[key] })}
+                />
               );
             })}
           </div>
-        </GlassCard>
-      </motion.section>
+        </SheetContent>
+      </Sheet>
 
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_TRANSITION, delay: 0.09 }}>
-        <GlassCard hover={false} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">App Preferences</h2>
+      {/* ── Appearance sheet ───────────────────────────────────── */}
+      <Sheet open={sheet === "appearance"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom">
+          <SheetHeader className="text-left">
+            <SheetTitle>Appearance</SheetTitle>
+            <SheetDescription>Personalise how the app looks and moves.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
+            <ToggleRow
+              icon={Moon}
+              label="Dark mode"
+              checked={theme === "dark"}
+              onChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
+            <ToggleRow
+              icon={Sparkles}
+              label="Animations"
+              checked={appPrefs.animationEnabled}
+              onChange={(checked) => setAppPrefs((prev) => ({ ...prev, animationEnabled: checked }))}
+            />
+            <ToggleRow
+              icon={Grid3X3}
+              label="Compact view"
+              checked={appPrefs.compactView}
+              onChange={(checked) => setAppPrefs((prev) => ({ ...prev, compactView: checked }))}
+            />
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <div className="space-y-2">
-            <div className="flex min-h-12 items-center justify-between rounded-xl border border-border-subtle bg-surface-2 px-3">
-              <div className="flex items-center gap-2">
-                <Moon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">Dark mode</span>
-              </div>
-              <Switch checked={theme === "dark"} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
-            </div>
-
-            <div className="flex min-h-12 items-center justify-between rounded-xl border border-border-subtle bg-surface-2 px-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">Animations</span>
-              </div>
-              <Switch
-                checked={appPrefs.animationEnabled}
-                onCheckedChange={(checked) => setAppPrefs((prev) => ({ ...prev, animationEnabled: checked }))}
-              />
-            </div>
-
-            <div className="flex min-h-12 items-center justify-between rounded-xl border border-border-subtle bg-surface-2 px-3">
-              <div className="flex items-center gap-2">
-                <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">Compact view</span>
-              </div>
-              <Switch
-                checked={appPrefs.compactView}
-                onCheckedChange={(checked) => setAppPrefs((prev) => ({ ...prev, compactView: checked }))}
-              />
-            </div>
+      {/* ── Privacy sheet ──────────────────────────────────────── */}
+      <Sheet open={sheet === "privacy"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom" className="max-h-[86vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Privacy</SheetTitle>
+            <SheetDescription>How your information is used inside your college.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-2 text-[12.5px] leading-relaxed text-muted-foreground">
+            <p>
+              Your profile, attendance and points are visible only to your own college's faculty and administrators.
+              Leaderboards show your name, photo and points to classmates in your college.
+            </p>
+            <p>Documents and attachments you upload are stored in private buckets and require an authenticated link.</p>
           </div>
-        </GlassCard>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_TRANSITION, delay: 0.12 }}>
-        <GlassCard hover={false} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Security Settings</h2>
+          <div className="mt-4 space-y-2">
+            <Button variant="outline" className="h-11 w-full justify-start" onClick={() => navigate("/privacy")}>
+              <Lock className="h-4 w-4" /> Read privacy policy
+            </Button>
+            <Button variant="outline" className="h-11 w-full justify-start" onClick={() => navigate("/terms")}>
+              <Info className="h-4 w-4" /> Terms of use
+            </Button>
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <div className="space-y-3">
+      {/* ── Security sheet ─────────────────────────────────────── */}
+      <Sheet open={sheet === "security"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Security</SheetTitle>
+            <SheetDescription>Change your password and review active sessions.</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="current-password">Current password</Label>
               <Input
@@ -544,7 +790,7 @@ export default function StudentProfile() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="confirm-password">Confirm password</Label>
+              <Label htmlFor="confirm-password">Confirm new password</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -556,69 +802,68 @@ export default function StudentProfile() {
 
             <Button
               type="button"
-              variant="outline"
               className="h-11 w-full"
               onClick={() => updatePasswordMutation.mutate()}
               disabled={updatePasswordMutation.isPending}
             >
               <KeyRound className="h-4 w-4" />
-              Change password
+              {updatePasswordMutation.isPending ? "Updating…" : "Change password"}
             </Button>
-          </div>
 
-          <div className="rounded-xl border border-border-subtle bg-surface-2 p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />
-              <p className="text-xs font-semibold text-foreground">Active sessions</p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border-subtle bg-surface-1 px-2.5 py-2">
-                <p className="text-[11px] text-muted-foreground">Current session</p>
-                <p className="mt-0.5 text-xs font-medium text-foreground">
-                  {sessionQuery.data?.expires_at
-                    ? `Expires ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
-                    : "Session active"}
-                </p>
+            <div className="rounded-[18px] border border-border-subtle bg-surface-2 p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />
+                <p className="text-[12.5px] font-semibold text-foreground">Active sessions</p>
               </div>
-
-              {(activityQuery.data ?? []).slice(0, 3).map((entry) => (
-                <div key={entry.id} className="rounded-lg border border-border-subtle bg-surface-1 px-2.5 py-2">
-                  <p className="line-clamp-1 text-[11px] text-muted-foreground">{entry.user_agent ?? "Unknown device"}</p>
-                  <p className="mt-0.5 text-xs font-medium text-foreground">{new Date(entry.created_at).toLocaleString()}</p>
+              <div className="space-y-2">
+                <div className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2">
+                  <p className="text-[11px] text-muted-foreground">Current session</p>
+                  <p className="mt-0.5 text-[12px] font-medium text-foreground">
+                    {sessionQuery.data?.expires_at
+                      ? `Expires ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
+                      : "Session active"}
+                  </p>
                 </div>
-              ))}
+                {(activityQuery.data ?? []).slice(0, 3).map((entry) => (
+                  <div key={entry.id} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2">
+                    <p className="line-clamp-1 text-[11px] text-muted-foreground">{entry.user_agent ?? "Unknown device"}</p>
+                    <p className="mt-0.5 text-[12px] font-medium text-foreground">
+                      {new Date(entry.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3 h-10 w-full"
+                onClick={() => logoutOthersMutation.mutate()}
+                disabled={logoutOthersMutation.isPending}
+              >
+                <LogOut className="h-4 w-4" />
+                Log out from other devices
+              </Button>
             </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-3 h-10 w-full"
-              onClick={() => logoutOthersMutation.mutate()}
-              disabled={logoutOthersMutation.isPending}
-            >
-              <LogOut className="h-4 w-4" />
-              Log out from other devices
-            </Button>
           </div>
-        </GlassCard>
-      </motion.section>
+        </SheetContent>
+      </Sheet>
 
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_TRANSITION, delay: 0.15 }}>
-        <GlassCard
-          hover={false}
-          className={cn("space-y-3 border-danger/20", "bg-gradient-to-br from-surface-2 via-surface-1 to-danger/5")}
-        >
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-danger" />
-            <h2 className="text-sm font-bold text-foreground">Logout</h2>
-          </div>
-          <GlowButton className="h-12 w-full" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-            Logout and return to sign in
-          </GlowButton>
-        </GlassCard>
-      </motion.section>
+      {/* ── About sheet ────────────────────────────────────────── */}
+      <Sheet open={sheet === "about"} onOpenChange={(o) => !o && setSheet(null)}>
+        <SheetContent side="bottom">
+          <SheetHeader className="text-left">
+            <SheetTitle>About Campus Connect</SheetTitle>
+            <SheetDescription>Version {APP_VERSION}</SheetDescription>
+          </SheetHeader>
+          <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+            Campus Connect is your college's attendance, academics and community platform — lectures, points,
+            leaderboards, events and E-Cell in one premium mobile app.
+          </p>
+          <p className="mt-3 text-[12px] text-muted-foreground">
+            Designed &amp; proudly developed by the Department of Computer Science with ❤️
+          </p>
+        </SheetContent>
+      </Sheet>
     </PageContainer>
   );
 }
