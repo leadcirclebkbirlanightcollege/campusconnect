@@ -282,10 +282,10 @@ export default function ProgrammeManagementTab() {
                       {studentCount} students
                     </div>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(p)}>
+                      <Button aria-label="Edit" size="icon" variant="ghost" onClick={() => openEdit(p)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
+                      <Button aria-label="Delete"
                         size="icon"
                         variant="ghost"
                         className="text-destructive hover:text-destructive"

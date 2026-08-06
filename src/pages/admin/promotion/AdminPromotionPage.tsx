@@ -236,7 +236,7 @@ export default function AdminPromotionPage() {
                   )}
                   {r.next_year != null && <Badge variant="outline" className="text-[10px]">Year {r.next_year}</Badge>}
                 </div>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                <Button aria-label="Delete" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => deleteRule.mutate(r.id)}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

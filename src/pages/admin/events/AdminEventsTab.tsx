@@ -165,7 +165,7 @@ export default function AdminEventsTab() {
                     </h3>
                     {e.description && <p className="text-sm text-muted-foreground line-clamp-2">{e.description}</p>}
                   </div>
-                  <Button
+                  <Button aria-label="Delete"
                     variant="ghost"
                     size="icon"
                     onClick={() => {

@@ -193,7 +193,7 @@ export default function StudentAllotmentTab() {
                           <p className="font-medium text-sm">{s.name}</p>
                           <p className="text-xs text-muted-foreground">{s.student_id || s.email}</p>
                         </div>
-                        <Button
+                        <Button aria-label="Close"
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-destructive hover:text-destructive"

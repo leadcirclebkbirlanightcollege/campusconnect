@@ -260,7 +260,7 @@ export default function AdminExamsPage() {
                     >
                       <Award className="h-3 w-3" /> Results
                     </Button>
-                    <Button
+                    <Button aria-label="Delete"
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
