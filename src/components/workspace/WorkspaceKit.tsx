@@ -48,7 +48,7 @@ export function WorkspaceHero({
       className={cn(
         "relative overflow-hidden rounded-3xl px-5 py-5",
         "bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground",
-        "shadow-elevated",
+        "shadow-lg",
         className,
       )}
     >
@@ -65,7 +65,7 @@ export function WorkspaceHero({
           )}
           <div className="flex items-center gap-2">
             {Icon && (
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-current/20 bg-current/10">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/10">
                 <Icon className="h-4 w-4" />
               </span>
             )}
@@ -81,7 +81,7 @@ export function WorkspaceHero({
           {stats.map((s) => (
             <div
               key={s.label}
-              className="rounded-2xl border border-current/15 bg-current/10 px-3 py-2 backdrop-blur-sm"
+              className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/10 px-3 py-2 backdrop-blur-sm"
             >
               <p className="font-heading text-[18px] font-bold leading-none tabular-nums">{s.value}</p>
               <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide opacity-75">
