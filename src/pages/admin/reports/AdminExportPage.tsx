@@ -26,7 +26,7 @@ const REPORT_CONFIGS: Record<ReportType, ExportConfig> = {
   attendance:  { label: "Attendance Report",  description: "Student attendance records with status", icon: CheckSquare, color: "text-green-400" },
   students:    { label: "Student Report",      description: "Full student list with profiles",        icon: Users,       color: "text-blue-400" },
   faculty:     { label: "Faculty Report",      description: "Faculty members and lecture counts",     icon: GraduationCap, color: "text-purple-400" },
-  lectures:    { label: "Lecture Report",      description: "Lecture schedule and attendance data",   icon: BookOpen,    color: "text-amber-400" },
+  lectures:    { label: "Lecture Report",      description: "Lecture schedule and attendance data",   icon: BookOpen,    color: "text-warning" },
   assignments: { label: "Assignment Report",   description: "Assignments and submission stats",       icon: FileText,    color: "text-pink-400" },
 };
 

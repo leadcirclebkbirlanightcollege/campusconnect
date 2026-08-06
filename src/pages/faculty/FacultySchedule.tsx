@@ -44,7 +44,7 @@ export default function FacultySchedule() {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated">
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-lg">
         <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Timetable</p>
         <h1 className="font-heading text-[22px] font-black tracking-tight">Schedule</h1>
         <p className="text-[12px] opacity-85 mt-0.5">Week of {format(weekStart, "MMM d, yyyy")}</p>
@@ -69,7 +69,7 @@ export default function FacultySchedule() {
                 <div className="space-y-1">
                   {items.map((l) => (
                     <div key={l.id} className={`rounded-md px-1.5 py-1 text-[9px] font-medium truncate ${
-                      l.status === "live" ? "bg-green-500/15 text-green-700" :
+                      l.status === "live" ? "bg-success/15 text-success" :
                       l.status === "ended" ? "bg-muted/60 text-muted-foreground" :
                       "bg-primary/10 text-primary"
                     }`}>

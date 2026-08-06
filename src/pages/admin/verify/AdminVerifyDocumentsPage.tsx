@@ -219,7 +219,7 @@ export default function AdminVerifyDocumentsPage() {
                   </TableCell>
                   <TableCell>
                     {d.status === "active" ? (
-                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                      <Badge className="bg-success/15 text-success border-success/30">
                         Active
                       </Badge>
                     ) : d.status === "revoked" ? (
@@ -262,7 +262,7 @@ export default function AdminVerifyDocumentsPage() {
                       </Button>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => reactivateDoc(d)} title="Reactivate">
-                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                        <ShieldCheck className="h-4 w-4 text-success" />
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" onClick={() => deleteDoc(d)} title="Delete">

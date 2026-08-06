@@ -164,7 +164,7 @@ export default function AdminSetupWizard() {
               )}
             >
               {done ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> : <Icon className="h-4 w-4 text-muted-foreground shrink-0" />}
-              <span className={cn("font-medium", done && "text-emerald-600")}>{s.label}</span>
+              <span className={cn("font-medium", done && "text-success")}>{s.label}</span>
             </button>
           );
         })}

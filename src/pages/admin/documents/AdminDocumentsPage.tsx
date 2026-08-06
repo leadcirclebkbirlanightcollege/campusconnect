@@ -40,7 +40,7 @@ const TYPE_COLORS: Record<string, string> = {
   notes: "bg-blue-500/10 text-blue-600",
   syllabus: "bg-purple-500/10 text-purple-600",
   assignment: "bg-orange-500/10 text-orange-600",
-  resource: "bg-green-500/10 text-green-600",
+  resource: "bg-success/10 text-success",
 };
 
 type DocForm = {

@@ -55,7 +55,7 @@ export default function FacultyAttendance() {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated">
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-lg">
         <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Live Roster</p>
         <h1 className="font-heading text-[22px] font-black tracking-tight">Attendance Records</h1>
         <p className="text-[12px] opacity-85 mt-0.5">{attendance.length} records captured</p>
@@ -99,7 +99,7 @@ export default function FacultyAttendance() {
         <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/30">
           {(filtered as any[]).map((a) => (
             <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-              <div className={`h-2 w-2 rounded-full shrink-0 ${a.status === "present" ? "bg-green-500" : "bg-red-500"}`} />
+              <div className={`h-2 w-2 rounded-full shrink-0 ${a.status === "present" ? "bg-success" : "bg-destructive"}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium text-foreground">{a.profiles?.name ?? "Unknown"}</p>
                 <p className="text-[11px] text-muted-foreground">
@@ -108,7 +108,7 @@ export default function FacultyAttendance() {
               </div>
               <div className="text-right">
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
-                  a.status === "present" ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                  a.status === "present" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                 }`}>{a.status}</span>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(a.marked_at), "MMM d, HH:mm")}</p>
               </div>

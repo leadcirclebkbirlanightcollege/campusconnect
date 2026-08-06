@@ -51,7 +51,7 @@ export default function FacultyAnnouncements() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated flex items-center justify-between gap-3">
+      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-lg flex items-center justify-between gap-3">
         <div>
           <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Broadcast</p>
           <h1 className="font-heading text-[22px] font-black tracking-tight">Announcements</h1>

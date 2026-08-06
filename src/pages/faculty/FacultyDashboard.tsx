@@ -19,7 +19,7 @@ function StatCard({ icon: Icon, label, value, sub, tone = "primary" }: {
 }) {
   const t = TONE_CLASSES[tone] ?? TONE_CLASSES.primary;
   return (
-    <div className="rounded-2xl border border-border-subtle bg-surface-1/90 p-4 flex items-start gap-3 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated">
+    <div className="rounded-2xl border border-border-subtle bg-surface-1/90 p-4 flex items-start gap-3 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-lg">
       <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${t.bg} ${t.fg}`}>
         <Icon className="h-5 w-5" />
       </div>
@@ -86,7 +86,7 @@ export default function FacultyDashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Premium gradient header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-elevated">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-lg">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_85%_15%,white,transparent_55%)]" aria-hidden />
         <div className="relative space-y-1.5">
           <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Faculty Cockpit</p>
@@ -112,15 +112,15 @@ export default function FacultyDashboard() {
           <div className="space-y-2">
             {todayLectures.map((l) => (
               <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
-                <div className={`h-2 w-2 rounded-full shrink-0 ${l.status === "live" ? "bg-green-500 animate-pulse" : "bg-muted-foreground"}`} />
+                <div className={`h-2 w-2 rounded-full shrink-0 ${l.status === "live" ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium text-foreground truncate">{l.topic}</p>
                   <p className="text-[11px] text-muted-foreground">{l.venue} · {l.start_time} – {l.end_time}</p>
                 </div>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  l.status === "live" ? "bg-green-500/10 text-green-600" :
+                  l.status === "live" ? "bg-success/10 text-success" :
                   l.status === "ended" ? "bg-muted text-muted-foreground" :
-                  "bg-yellow-500/10 text-yellow-600"
+                  "bg-warning/10 text-warning"
                 }`}>
                   {l.status.toUpperCase()}
                 </span>
