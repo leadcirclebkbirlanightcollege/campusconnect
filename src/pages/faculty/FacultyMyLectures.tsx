@@ -88,11 +88,11 @@ export default function FacultyMyLectures() {
         searchLabel="Search lectures"
         placeholder="Search by topic or venue…"
       >
-        <WorkspaceFilterGroup
+        <WorkspaceFilterGroup<StatusFilter>
           label="Filter by status"
           value={statusFilter}
           onChange={setStatusFilter}
-          options={STATUS_OPTIONS}
+          options={[...STATUS_OPTIONS]}
         />
       </WorkspaceToolbar>
 
