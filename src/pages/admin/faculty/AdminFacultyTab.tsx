@@ -217,7 +217,7 @@ const FacultyCard = memo(function FacultyCard({
         </p>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
+            <Button aria-label="More options" variant="ghost" size="icon" className="h-7 w-7">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -331,7 +331,7 @@ export default function AdminFacultyTab() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleRefresh} disabled={isLoading}>
+          <Button aria-label="Refresh" variant="outline" size="icon" className="h-8 w-8" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
           <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
