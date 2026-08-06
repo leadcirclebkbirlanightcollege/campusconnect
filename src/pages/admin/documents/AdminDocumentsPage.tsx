@@ -40,7 +40,7 @@ const TYPE_COLORS: Record<string, string> = {
   notes: "bg-blue-500/10 text-blue-600",
   syllabus: "bg-purple-500/10 text-purple-600",
   assignment: "bg-orange-500/10 text-orange-600",
-  resource: "bg-green-500/10 text-green-600",
+  resource: "bg-success/10 text-success",
 };
 
 type DocForm = {
@@ -226,7 +226,7 @@ export default function AdminDocumentsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button
+                    <Button aria-label="Download"
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
@@ -234,7 +234,7 @@ export default function AdminDocumentsPage() {
                     >
                       <Download className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
+                    <Button aria-label="Delete"
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, BookOpen, Users, CheckSquare,
   Megaphone, Calendar, UserCircle, LogOut, Menu,
@@ -26,6 +26,14 @@ export default function FacultyLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Close the mobile drawer on Escape for keyboard users.
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSidebarOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sidebarOpen]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out");
@@ -48,12 +56,13 @@ export default function FacultyLayout() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Faculty sections" className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             onClick={() => setSidebarOpen(false)}
+            aria-label={label}
             className={({ isActive }) => cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150 group",
               isActive
@@ -71,6 +80,7 @@ export default function FacultyLayout() {
       {/* Footer */}
       <div className="p-3 border-t border-border/40">
         <button
+          type="button"
           onClick={handleLogout}
           className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all duration-150"
         >
@@ -82,7 +92,7 @@ export default function FacultyLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-dvh bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 border-r border-border/40 bg-card/50 shrink-0">
         <SidebarContent />
@@ -91,8 +101,8 @@ export default function FacultyLayout() {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r border-border z-10">
+          <div className="absolute inset-0 bg-foreground/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} aria-hidden />
+          <aside role="dialog" aria-modal="true" aria-label="Faculty navigation" className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r border-border z-10">
             <SidebarContent />
           </aside>
         </div>
@@ -102,7 +112,7 @@ export default function FacultyLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden app-header-safe flex items-center justify-between h-14 px-4 border-b border-border/40 bg-card/50 shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
+          <Button variant="ghost" size="icon" aria-label="Open navigation menu" aria-expanded={sidebarOpen} className="h-11 w-11" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2">
@@ -112,7 +122,7 @@ export default function FacultyLayout() {
           <div className="w-8" />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main id="faculty-main" className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-[max(16px,env(safe-area-inset-bottom))] md:p-6">
           <Outlet />
         </main>
       </div>

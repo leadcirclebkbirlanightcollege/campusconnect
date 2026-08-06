@@ -144,10 +144,10 @@ export default function AdminDepartmentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 justify-end">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(dept)}>
+                      <Button aria-label="Edit" size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(dept)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
+                      <Button aria-label="Delete"
                         size="icon" variant="ghost"
                         className="h-7 w-7 text-danger hover:bg-danger/10"
                         onClick={() => {

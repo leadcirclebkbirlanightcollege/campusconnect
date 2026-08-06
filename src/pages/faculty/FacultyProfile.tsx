@@ -22,7 +22,7 @@ export default function FacultyProfile() {
 
   return (
     <div className="max-w-md space-y-5">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-elevated text-center">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-lg text-center">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_20%_10%,white,transparent_55%)]" aria-hidden />
         <div className="relative flex flex-col items-center gap-3">
           <div className="h-24 w-24 rounded-full bg-white/15 ring-4 ring-white/30 flex items-center justify-center overflow-hidden">

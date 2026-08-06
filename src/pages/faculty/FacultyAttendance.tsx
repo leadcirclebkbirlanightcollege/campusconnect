@@ -6,6 +6,7 @@ import { CheckSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import { WorkspacePage, WorkspaceHero, WorkspaceLoading, WorkspaceEmpty, WorkspaceList, WorkspaceRow } from "@/components/workspace/WorkspaceKit";
 
 export default function FacultyAttendance() {
   const { user } = useAuth();
@@ -54,12 +55,17 @@ export default function FacultyAttendance() {
   }, [attendance, search]);
 
   return (
-    <div className="space-y-5 max-w-4xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Live Roster</p>
-        <h1 className="font-heading text-[22px] font-black tracking-tight">Attendance Records</h1>
-        <p className="text-[12px] opacity-85 mt-0.5">{attendance.length} records captured</p>
-      </div>
+    <WorkspacePage>
+      <WorkspaceHero
+        eyebrow="Live Roster"
+        title="Attendance Records"
+        icon={CheckSquare}
+        subtitle="Marked attendance across your lectures"
+        stats={[
+          { label: "Records", value: attendance.length },
+          { label: "Showing", value: filtered.length },
+        ]}
+      />
 
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[180px]">
@@ -87,19 +93,18 @@ export default function FacultyAttendance() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-xl bg-muted/50 animate-pulse" />)}
-        </div>
+<WorkspaceLoading rows={5} />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <CheckSquare className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-[14px]">No attendance records</p>
-        </div>
+        <WorkspaceEmpty
+          icon={CheckSquare}
+          title="No attendance records"
+          description="Records appear here as students mark attendance in your lectures."
+        />
       ) : (
-        <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/30">
+        <WorkspaceList label="Attendance records">
           {(filtered as any[]).map((a) => (
-            <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-              <div className={`h-2 w-2 rounded-full shrink-0 ${a.status === "present" ? "bg-green-500" : "bg-red-500"}`} />
+            <WorkspaceRow key={a.id}>
+              <div className={`h-2 w-2 rounded-full shrink-0 ${a.status === "present" ? "bg-success" : "bg-destructive"}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium text-foreground">{a.profiles?.name ?? "Unknown"}</p>
                 <p className="text-[11px] text-muted-foreground">
@@ -108,14 +113,14 @@ export default function FacultyAttendance() {
               </div>
               <div className="text-right">
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
-                  a.status === "present" ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                  a.status === "present" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                 }`}>{a.status}</span>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(a.marked_at), "MMM d, HH:mm")}</p>
               </div>
-            </div>
+            </WorkspaceRow>
           ))}
-        </div>
+        </WorkspaceList>
       )}
-    </div>
+    </WorkspacePage>
   );
 }

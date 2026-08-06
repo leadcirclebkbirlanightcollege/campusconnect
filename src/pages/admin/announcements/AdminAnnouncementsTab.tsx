@@ -127,7 +127,7 @@ export default function AdminAnnouncementsTab() {
                   <p className="text-sm text-muted-foreground">{a.description}</p>
                   <p className="text-xs text-muted-foreground">{format(new Date(a.created_at), "PPp")}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(a.id)}>
+                <Button aria-label="Delete" variant="ghost" size="icon" onClick={() => deleteMutation.mutate(a.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>

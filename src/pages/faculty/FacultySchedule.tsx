@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMemo } from "react";
 import { Calendar } from "lucide-react";
-import { format, startOfWeek, addDays, isToday, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isToday } from "date-fns";
+import { WorkspacePage, WorkspaceHero } from "@/components/workspace/WorkspaceKit";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -43,12 +44,14 @@ export default function FacultySchedule() {
   }, [lectures]);
 
   return (
-    <div className="space-y-5 max-w-4xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-5 text-primary-foreground shadow-elevated">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Timetable</p>
-        <h1 className="font-heading text-[22px] font-black tracking-tight">Schedule</h1>
-        <p className="text-[12px] opacity-85 mt-0.5">Week of {format(weekStart, "MMM d, yyyy")}</p>
-      </div>
+    <WorkspacePage>
+      <WorkspaceHero
+        eyebrow="Timetable"
+        title="Schedule"
+        icon={Calendar}
+        subtitle={`Week of ${format(weekStart, "MMM d, yyyy")}`}
+        stats={[{ label: "Lectures (2 weeks)", value: lectures.length }]}
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-7 gap-2">
@@ -69,7 +72,7 @@ export default function FacultySchedule() {
                 <div className="space-y-1">
                   {items.map((l) => (
                     <div key={l.id} className={`rounded-md px-1.5 py-1 text-[9px] font-medium truncate ${
-                      l.status === "live" ? "bg-green-500/15 text-green-700" :
+                      l.status === "live" ? "bg-success/15 text-success" :
                       l.status === "ended" ? "bg-muted/60 text-muted-foreground" :
                       "bg-primary/10 text-primary"
                     }`}>
@@ -106,6 +109,6 @@ export default function FacultySchedule() {
           })}
         </div>
       </div>
-    </div>
+    </WorkspacePage>
   );
 }

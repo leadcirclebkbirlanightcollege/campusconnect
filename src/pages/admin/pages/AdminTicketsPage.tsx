@@ -236,7 +236,7 @@ export default function AdminTicketsPage() {
                     className="flex-1 resize-none"
                     disabled={active.status === "closed"}
                   />
-                  <Button size="icon" onClick={() => sendReply.mutate()} disabled={sendReply.isPending || !reply.trim() || active.status === "closed"}>
+                  <Button aria-label="Send" size="icon" onClick={() => sendReply.mutate()} disabled={sendReply.isPending || !reply.trim() || active.status === "closed"}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

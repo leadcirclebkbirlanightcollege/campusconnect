@@ -225,7 +225,7 @@ export default function AdminTimetablePage() {
                           </Badge>
                         )}
                       </div>
-                      <Button
+                      <Button aria-label="Delete"
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"

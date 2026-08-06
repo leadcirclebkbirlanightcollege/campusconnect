@@ -277,7 +277,7 @@ export default function AdminStudentVerificationPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[13px]">Assign College <span className="text-red-500">*</span></Label>
+              <Label className="text-[13px]">Assign College <span className="text-destructive">*</span></Label>
               <Select value={collegeId} onValueChange={setCollegeId}>
                 <SelectTrigger><SelectValue placeholder="Select college" /></SelectTrigger>
                 <SelectContent>
@@ -304,17 +304,17 @@ export default function AdminStudentVerificationPage() {
                       <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Department:</span>
                       <span className="font-medium">{preview.department_name}</span>
-                      <Badge className="ml-auto bg-emerald-600/15 text-emerald-400 border-emerald-600/30 text-[10px]">Auto</Badge>
+                      <Badge className="ml-auto bg-success/15 text-success border-success/30 text-[10px]">Auto</Badge>
                     </div>
                     <div className="flex items-center gap-2">
                       <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Class:</span>
                       <span className="font-medium">{preview.class_name}</span>
-                      <Badge className="ml-auto bg-emerald-600/15 text-emerald-400 border-emerald-600/30 text-[10px]">Auto</Badge>
+                      <Badge className="ml-auto bg-success/15 text-success border-success/30 text-[10px]">Auto</Badge>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-amber-400">
+                  <p className="text-[12px] text-warning">
                     {friendly({ message: preview?.error ?? "preview_failed" })}
                   </p>
                 )}
