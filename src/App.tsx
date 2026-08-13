@@ -8,6 +8,7 @@ import AppSplash from "@/components/pwa/AppSplash";
 import InstallPromptBanner from "@/components/pwa/InstallPromptBanner";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import IndependenceDayLaunch from "@/components/seasonal/IndependenceDayLaunch";
+import SeasonalProvider from "@/components/seasonal/SeasonalProvider";
 import { AppProviders } from "@/providers/AppProviders";
 import { useWebVitals } from "@/hooks/use-web-vitals";
 import { useGlobalQueryErrors } from "@/hooks/use-global-query-errors";
@@ -60,6 +61,7 @@ function AppInner() {
       <OfflineAutoRecovery />
 
       {/* Always-on: branding, connectivity, SW update, install prompt */}
+      <SeasonalProvider />
       <TenantBrandingApplicator />
       <OfflineBanner />
       <SwUpdateManager />
