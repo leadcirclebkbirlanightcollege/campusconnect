@@ -414,6 +414,7 @@ export default function StudentDashboard() {
             <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-surface-1 p-5 shadow-md">
               <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-primary/30 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
+              <IndependenceDayHeroAccent rounded={false} />
               <div className="relative space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1.5">
