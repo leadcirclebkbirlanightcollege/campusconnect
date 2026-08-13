@@ -35,6 +35,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";
+import { SeasonalAccent } from "@/components/seasonal/SeasonalKit";
 
 import {
   Sidebar,
@@ -254,9 +255,10 @@ export default function AppSidebar() {
     >
       {/* ── Brand Lockup ─────────────────────────────────────────── */}
       <div className={cn(
-        "flex h-[52px] items-center gap-2.5 border-b border-sidebar-border shrink-0",
+        "relative flex h-[52px] items-center gap-2.5 border-b border-sidebar-border shrink-0",
         collapsed ? "justify-center px-2" : "px-3.5",
       )}>
+        <SeasonalAccent className="h-[2px]" />
         <img
           src={branding.logo_url ?? BRANDING.logo}
           alt={branding.brand_name}
