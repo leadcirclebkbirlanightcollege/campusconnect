@@ -49,6 +49,7 @@ export function BottomNavigation() {
       }}
       aria-label="Main navigation"
     >
+      <SeasonalAccent className="h-[2px]" />
       <div className="relative flex h-[62px] items-center justify-between px-2">
         {STUDENT_TABS.map((tab) => {
           const Icon = ICONS[tab.id] ?? Home;
