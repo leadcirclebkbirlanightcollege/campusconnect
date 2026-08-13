@@ -344,11 +344,15 @@ export default function StudentDashboard() {
 
                 {/* Greeting */}
                 <div className="relative z-10 mt-7">
+                  <IndependenceDayBadge className="mb-2.5" />
                   <h1 className="text-white text-[26px] font-extrabold leading-tight flex items-center gap-2">
                     Hello, {coreQuery.data.name}! <span className="text-2xl">👋</span>
                   </h1>
                   <p className="text-white/70 text-sm mt-1 font-medium">Stay connected. Stay ahead.</p>
+                  <IndependenceDayGreeting className="mt-1.5" />
                 </div>
+
+                <IndependenceDayHeroAccent />
               </div>
 
               {/* Overlapping stat cards */}
