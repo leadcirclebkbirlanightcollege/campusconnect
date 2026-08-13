@@ -9,6 +9,11 @@ export const INDEPENDENCE_DAY_MODE = true;
 export const INDEPENDENCE_DAY_START = "2026-08-13";
 export const INDEPENDENCE_DAY_END = "2026-08-17";
 
+/** Global CSS hook: <html data-season="independence"> while the campaign runs */
+export const SEASON_ATTRIBUTE = "data-season";
+export const SEASON_ID = "independence";
+
+
 /** Session key so the launch screen shows once per browser session */
 const LAUNCH_SEEN_KEY = "cc_independence_launch_seen_2026";
 
