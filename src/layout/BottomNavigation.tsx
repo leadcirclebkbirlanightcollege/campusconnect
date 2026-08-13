@@ -12,6 +12,7 @@ import { Home, GraduationCap, Users, Rocket, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { STUDENT_TABS, resolveActiveTab, type StudentTab } from "@/ui-engine/navigation-engine";
+import { SeasonalAccent, seasonalGradient, useSeasonal } from "@/components/seasonal/SeasonalKit";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   home: Home,
@@ -25,6 +26,7 @@ export function BottomNavigation() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const activeId = resolveActiveTab(pathname)?.id;
+  const { active: seasonal } = useSeasonal();
 
   const go = (tab: StudentTab) => {
     // Re-tapping the active tab pops back to the tab root (native behaviour)
@@ -47,6 +49,7 @@ export function BottomNavigation() {
       }}
       aria-label="Main navigation"
     >
+      <SeasonalAccent className="h-[2px]" />
       <div className="relative flex h-[62px] items-center justify-between px-2">
         {STUDENT_TABS.map((tab) => {
           const Icon = ICONS[tab.id] ?? Home;
@@ -84,7 +87,8 @@ export function BottomNavigation() {
               {active && (
                 <motion.span
                   layoutId="bottom-nav-active"
-                  className="absolute top-0 h-1 w-6 rounded-full bg-primary"
+                  className={cn("absolute top-0 h-1 w-6 rounded-full", !seasonal && "bg-primary")}
+                  style={seasonal ? { background: seasonalGradient } : undefined}
                   transition={{ type: "spring", stiffness: 420, damping: 34 }}
                 />
               )}

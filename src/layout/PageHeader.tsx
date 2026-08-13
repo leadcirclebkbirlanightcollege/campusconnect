@@ -11,6 +11,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { SeasonalAccent } from "@/components/seasonal/SeasonalKit";
 import { ChevronLeft } from "lucide-react";
 
 interface PageHeaderProps {
@@ -56,7 +57,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex items-start justify-between gap-3 pt-1",
+        "relative flex items-start justify-between gap-3 pt-1",
         sticky
           ? [
               "sticky z-30 top-[calc(52px+env(safe-area-inset-top,0px))]",
@@ -67,6 +68,7 @@ export function PageHeader({
         className,
       )}
     >
+      <SeasonalAccent position="bottom" className="h-[2px]" />
       {/* Left: back + title */}
       <div className="flex items-start gap-2 min-w-0 flex-1">
         {back && (

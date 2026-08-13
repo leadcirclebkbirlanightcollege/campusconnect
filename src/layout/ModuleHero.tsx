@@ -9,6 +9,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SeasonalAccent, SeasonalBackground } from "@/components/seasonal/SeasonalKit";
 
 export type ModuleTone = "academics" | "community" | "ecell" | "profile" | "brand";
 
@@ -82,6 +83,11 @@ export function ModuleHero({
         aria-hidden
         className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-2xl"
       />
+
+      {/* Seasonal layer (auto-disabled outside the campaign window) */}
+      <SeasonalBackground chakraSize={150} />
+      <SeasonalAccent />
+
 
       <div className="relative">
         <div className="flex items-start gap-3">
