@@ -1,57 +1,24 @@
 /**
- * Independence Day launch experience — full-screen seasonal welcome.
+ * Independence Day launch experience — cinematic full-screen seasonal welcome.
  * Visual-only layer: shows once per session inside the campaign window.
+ *
+ * Sequence: navy → tricolour lighting → logo → chakra → particles →
+ * wordmark → seasonal message → continue button.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { BRANDING } from "@/config/branding";
 import {
   TRICOLOUR,
   hasSeenIndependenceLaunch,
   isIndependenceDayActive,
+  isIndependenceDayItself,
   markIndependenceLaunchSeen,
 } from "@/config/seasonal";
-import AshokaChakra from "@/components/seasonal/AshokaChakra";
+import { SeasonalHeroAtmosphere } from "@/components/seasonal/SeasonalKit";
 
-function Particles({ reduced }: { reduced: boolean }) {
-  const dots = useMemo(
-    () =>
-      Array.from({ length: 14 }, (_, i) => ({
-        id: i,
-        left: (i * 37) % 100,
-        delay: (i % 7) * 0.45,
-        duration: 7 + (i % 5),
-        size: 4 + (i % 3) * 2,
-        color: i % 3 === 0 ? TRICOLOUR.saffron : i % 3 === 1 ? TRICOLOUR.green : TRICOLOUR.gold,
-      })),
-    [],
-  );
-
-  if (reduced) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      {dots.map((d) => (
-        <motion.span
-          key={d.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${d.left}%`,
-            width: d.size,
-            height: d.size,
-            background: d.color,
-            opacity: 0.5,
-            willChange: "transform, opacity",
-          }}
-          initial={{ y: "105vh", opacity: 0 }}
-          animate={{ y: "-10vh", opacity: [0, 0.6, 0] }}
-          transition={{ duration: d.duration, delay: d.delay, repeat: Infinity, ease: "linear" }}
-        />
-      ))}
-    </div>
-  );
-}
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function IndependenceDayLaunch() {
   const reduced = !!useReducedMotion();
@@ -72,6 +39,12 @@ export default function IndependenceDayLaunch() {
     setOpen(false);
   };
 
+  const step = (delay: number) => ({
+    initial: { opacity: 0, y: reduced ? 0 : 14 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, delay: reduced ? 0 : delay, ease: EASE },
+  });
+
   return (
     <AnimatePresence>
       {open && (
@@ -80,66 +53,47 @@ export default function IndependenceDayLaunch() {
           className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden px-6 text-center"
           style={{
             background:
-              "radial-gradient(120% 80% at 50% -10%, rgba(255,153,51,0.18) 0%, transparent 55%)," +
-              "radial-gradient(120% 80% at 50% 110%, rgba(19,136,8,0.18) 0%, transparent 55%)," +
-              "linear-gradient(180deg, hsl(231 68% 12%) 0%, hsl(231 60% 8%) 100%)",
+              "linear-gradient(180deg, hsl(231 68% 11%) 0%, hsl(231 62% 7%) 100%)",
             paddingTop: "max(24px, env(safe-area-inset-top, 0px))",
             paddingBottom: "max(24px, env(safe-area-inset-bottom, 0px))",
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: reduced ? 1 : 1.02 }}
-          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, scale: reduced ? 1 : 1.03, filter: "blur(4px)" }}
+          transition={{ duration: 0.5, ease: EASE }}
           role="dialog"
           aria-modal="true"
           aria-label="Independence Day welcome"
         >
-          {/* Tricolour sweep */}
+          {/* Stage 2 — tricolour lighting, chakra, particles fade in */}
           <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
-            style={{
-              background: `linear-gradient(90deg, ${TRICOLOUR.saffron}, #ffffff, ${TRICOLOUR.green})`,
-              backgroundSize: "200% 100%",
-            }}
-            animate={reduced ? undefined : { backgroundPositionX: ["0%", "200%"] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          />
-
-          <Particles reduced={reduced} />
-
-          {/* Chakra motif */}
-          <motion.div
-            className="pointer-events-none absolute"
-            style={{ willChange: "transform" }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 0.1, scale: 1, rotate: reduced ? 0 : 360 }}
-            transition={{
-              opacity: { duration: 0.8 },
-              scale: { duration: 0.8 },
-              rotate: { duration: 90, repeat: Infinity, ease: "linear" },
-            }}
-            aria-hidden="true"
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.4, delay: reduced ? 0 : 0.25, ease: "easeOut" }}
           >
-            <AshokaChakra size={320} color="#FFFFFF" />
+            <SeasonalHeroAtmosphere chakraSize={460} particles={16} />
           </motion.div>
 
           <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-6">
+            {/* Stage 3 — logo */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.86, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="relative flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/15 bg-white/10 backdrop-blur-sm"
+              initial={{ opacity: 0, scale: reduced ? 1 : 0.82 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: reduced ? 0 : 0.15, ease: EASE }}
+              className="relative flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/12 bg-white/[0.07] backdrop-blur-md"
+              style={{ boxShadow: "0 20px 60px -30px rgba(255,153,51,0.7)" }}
             >
               <span
                 className="absolute inset-0 rounded-[28px]"
                 style={{
                   padding: 1.5,
-                  background: `linear-gradient(140deg, ${TRICOLOUR.saffron}, rgba(255,255,255,0.9), ${TRICOLOUR.green})`,
+                  background: `linear-gradient(140deg, ${TRICOLOUR.saffron}, rgba(255,255,255,0.85), ${TRICOLOUR.green})`,
                   WebkitMask:
                     "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
                   WebkitMaskComposite: "xor",
                   maskComposite: "exclude",
+                  opacity: 0.85,
                 }}
                 aria-hidden="true"
               />
@@ -151,56 +105,73 @@ export default function IndependenceDayLaunch() {
               />
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="space-y-3"
-            >
-              <h1 className="text-[22px] font-black uppercase tracking-[0.28em] text-white">
+            <div className="space-y-3">
+              {/* Stage 6 — wordmark */}
+              <motion.h1
+                {...step(0.85)}
+                className="text-[22px] font-black uppercase tracking-[0.3em] text-white"
+              >
                 Campus Connect
-              </h1>
-              <div
-                className="mx-auto h-[3px] w-24 rounded-full"
+              </motion.h1>
+
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0.2 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ duration: 0.8, delay: reduced ? 0 : 1.0, ease: EASE }}
+                className="mx-auto h-[2px] w-28 rounded-full"
                 style={{
                   background: `linear-gradient(90deg, ${TRICOLOUR.saffron}, #ffffff, ${TRICOLOUR.green})`,
+                  boxShadow: "0 0 18px rgba(255,255,255,0.25)",
                 }}
               />
-              <p className="text-base font-semibold text-white/90">
+
+              {/* Stage 7 — seasonal message */}
+              <motion.p {...step(1.2)} className="text-[15px] font-semibold text-white/90">
                 Celebrating the Spirit of Freedom 🇮🇳
-              </p>
-              <p className="text-sm text-white/60">Together. Connected. Moving Forward.</p>
-              <p
+              </motion.p>
+              <motion.p {...step(1.35)} className="text-[13px] text-white/55">
+                Together. Connected. Moving Forward.
+              </motion.p>
+              <motion.p
+                {...step(1.5)}
                 className="text-[15px] font-bold"
                 style={{ color: TRICOLOUR.gold }}
               >
-                Happy Independence Day
-              </p>
-            </motion.div>
+                {isIndependenceDayItself()
+                  ? "Happy Independence Day"
+                  : "Happy Independence Day Week"}
+              </motion.p>
+            </div>
 
+            {/* Stage 8 — continue */}
             <motion.button
               type="button"
               onClick={dismiss}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.3 }}
+              {...step(1.8)}
               whileTap={{ scale: 0.97 }}
-              className="mt-2 w-full rounded-2xl px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-colors"
+              className="relative mt-2 w-full overflow-hidden rounded-2xl px-6 py-3.5 text-sm font-bold text-white"
               style={{
-                background: `linear-gradient(100deg, ${TRICOLOUR.saffron} 0%, #ffb066 45%, ${TRICOLOUR.green} 100%)`,
+                background: `linear-gradient(100deg, ${TRICOLOUR.saffron}dd 0%, #f7ede0 48%, ${TRICOLOUR.green}dd 100%)`,
+                color: "#0f142e",
+                boxShadow: "0 18px 40px -22px rgba(255,153,51,0.65)",
               }}
             >
-              Continue to Campus Connect
+              {!reduced && (
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 w-1/4"
+                  style={{
+                    background:
+                      "linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent)",
+                  }}
+                  initial={{ x: "-150%" }}
+                  animate={{ x: ["-150%", "450%"] }}
+                  transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.6 }}
+                />
+              )}
+              <span className="relative">Continue to Campus Connect</span>
             </motion.button>
           </div>
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px]"
-            style={{
-              background: `linear-gradient(90deg, ${TRICOLOUR.green}, #ffffff, ${TRICOLOUR.saffron})`,
-            }}
-          />
         </motion.div>
       )}
     </AnimatePresence>
