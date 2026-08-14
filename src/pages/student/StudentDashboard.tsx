@@ -33,6 +33,7 @@ import {
   IndependenceDayGreeting,
   IndependenceDayHeroAccent,
 } from "@/components/seasonal/IndependenceDayHeroAccent";
+import { SeasonalCardAccent } from "@/components/seasonal/SeasonalKit";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -341,6 +342,7 @@ export default function StudentDashboard() {
                     type="button"
                     onClick={() => navigate("/app/settings")}
                     aria-label="Open profile"
+                    data-seasonal-ring
                     className="h-10 w-10 rounded-full border-2 border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden active:scale-95 transition-transform flex items-center justify-center text-white font-bold text-sm"
                   >
                     {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}
@@ -365,8 +367,9 @@ export default function StudentDashboard() {
                 <button
                   type="button"
                   onClick={() => navigate("/app/points")}
-                  className="text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
+                  className="relative overflow-hidden text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
                 >
+                  <SeasonalCardAccent />
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                     Your Tier
                   </p>
@@ -388,8 +391,9 @@ export default function StudentDashboard() {
                 <button
                   type="button"
                   onClick={() => navigate("/app/attendance")}
-                  className="text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
+                  className="relative overflow-hidden text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
                 >
+                  <SeasonalCardAccent />
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                     Attendance
                   </p>
