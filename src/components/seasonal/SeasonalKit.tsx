@@ -87,24 +87,196 @@ export function SeasonalBadge({
   tone?: "onDark" | "onLight";
   className?: string;
 }) {
+  const reduced = !!useReducedMotion();
   if (!isIndependenceDayActive()) return null;
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
-        "text-[10px] font-bold uppercase tracking-[0.12em]",
-        tone === "onDark" ? "text-white" : "text-foreground",
+        "relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-2.5 py-[5px]",
+        "text-[9.5px] font-bold uppercase tracking-[0.16em] backdrop-blur-md",
+        tone === "onDark" ? "text-white/95" : "text-foreground",
         className,
       )}
       style={{
-        borderColor: tone === "onDark" ? "rgba(255,255,255,0.25)" : `${TRICOLOUR.saffron}55`,
-        background: seasonalGradientSoft,
+        borderColor: tone === "onDark" ? "rgba(255,255,255,0.22)" : `${TRICOLOUR.saffron}44`,
+        background:
+          tone === "onDark"
+            ? "linear-gradient(100deg, rgba(255,153,51,0.20) 0%, rgba(255,255,255,0.12) 50%, rgba(19,136,8,0.20) 100%)"
+            : seasonalGradientSoft,
+        boxShadow:
+          tone === "onDark"
+            ? "0 0 0 1px rgba(255,255,255,0.04), 0 6px 18px -10px rgba(255,153,51,0.55)"
+            : undefined,
       }}
     >
-      🇮🇳 {label}
+      {!reduced && (
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 w-1/3"
+          style={{
+            background:
+              "linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent)",
+          }}
+          initial={{ x: "-140%" }}
+          animate={{ x: ["-140%", "340%"] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 2.2 }}
+        />
+      )}
+      <span className="relative">🇮🇳 {label}</span>
     </span>
   );
 }
+
+/* ── Hero atmosphere (light beams + chakra + particles) ─── */
+
+function SeasonalParticles({ count = 12, reduced }: { count?: number; reduced: boolean }) {
+  const dots = React.useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: (i * 41) % 96,
+        delay: (i % 6) * 0.7,
+        duration: 9 + (i % 5) * 2,
+        size: 2 + (i % 3),
+        color:
+          i % 3 === 0 ? TRICOLOUR.saffron : i % 3 === 1 ? TRICOLOUR.green : "#FFFFFF",
+      })),
+    [count],
+  );
+  if (reduced) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {dots.map((d) => (
+        <motion.span
+          key={d.id}
+          className="absolute rounded-full"
+          style={{
+            left: `${d.left}%`,
+            width: d.size,
+            height: d.size,
+            background: d.color,
+            filter: "blur(0.3px)",
+            willChange: "transform, opacity",
+          }}
+          initial={{ y: "110%", opacity: 0 }}
+          animate={{ y: "-20%", opacity: [0, 0.45, 0] }}
+          transition={{ duration: d.duration, delay: d.delay, repeat: Infinity, ease: "linear" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Cinematic hero layer: three soft tricolour light beams, a cropped rotating
+ * Chakra and drifting particles. Drop inside any `relative overflow-hidden` hero.
+ */
+export function SeasonalHeroAtmosphere({
+  chakraSize = 300,
+  particles = 12,
+  className,
+}: {
+  chakraSize?: number;
+  particles?: number;
+  className?: string;
+}) {
+  const reduced = !!useReducedMotion();
+  if (!isIndependenceDayActive()) return null;
+
+  return (
+    <div
+      aria-hidden="true"
+      className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}
+    >
+      {/* Soft tricolour light beams */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            `radial-gradient(58% 46% at 4% 8%, ${TRICOLOUR.saffron}30 0%, transparent 62%),` +
+            `radial-gradient(52% 42% at 50% 0%, rgba(255,255,255,0.16) 0%, transparent 60%),` +
+            `radial-gradient(58% 46% at 98% 92%, ${TRICOLOUR.green}30 0%, transparent 62%)`,
+        }}
+      />
+      <motion.div
+        className="absolute -inset-x-10 top-0 h-full"
+        style={{
+          background:
+            `linear-gradient(112deg, transparent 12%, ${TRICOLOUR.saffron}22 24%, rgba(255,255,255,0.14) 34%, ${TRICOLOUR.green}22 44%, transparent 58%)`,
+          filter: "blur(22px)",
+          willChange: "transform",
+        }}
+        animate={reduced ? undefined : { x: ["-12%", "12%", "-12%"] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Cropped chakra with radial glow */}
+      <motion.div
+        className="absolute -right-16 -bottom-24"
+        style={{ willChange: "transform" }}
+        animate={reduced ? undefined : { rotate: 360 }}
+        transition={{ duration: 160, repeat: Infinity, ease: "linear" }}
+      >
+        <div
+          className="absolute inset-0 rounded-full blur-3xl"
+          style={{ background: `${TRICOLOUR.saffron}18` }}
+        />
+        <AshokaChakra size={chakraSize} color="#FFFFFF" opacity={0.07} />
+      </motion.div>
+
+      <SeasonalParticles count={particles} reduced={reduced} />
+    </div>
+  );
+}
+
+/* ── Light beam hairline (replaces the flat 3px line) ───── */
+
+export function SeasonalLightLine({
+  position = "top",
+  className,
+}: {
+  position?: "top" | "bottom";
+  className?: string;
+}) {
+  if (!isIndependenceDayActive()) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute inset-x-0 h-8 z-10",
+        position === "top" ? "top-0" : "bottom-0",
+        className,
+      )}
+    >
+      <div className="absolute inset-x-0 h-[2px] opacity-80" style={{ top: position === "top" ? 0 : "auto", bottom: position === "top" ? "auto" : 0, background: seasonalGradient }} />
+      <div
+        className="absolute inset-x-0 h-8 opacity-40"
+        style={{ background: seasonalGradient, filter: "blur(14px)" }}
+      />
+    </div>
+  );
+}
+
+/* ── Avatar / icon tricolour ring ───────────────────────── */
+
+export function SeasonalRing({ className }: { className?: string }) {
+  if (!isIndependenceDayActive()) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("pointer-events-none absolute -inset-[2px] rounded-full", className)}
+      style={{
+        padding: 1.5,
+        background: seasonalGradient,
+        opacity: 0.75,
+        WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+        WebkitMaskComposite: "xor",
+        maskComposite: "exclude",
+      }}
+    />
+  );
+}
+
 
 /* ── Background (hero lighting + Chakra watermark) ──────── */
 
