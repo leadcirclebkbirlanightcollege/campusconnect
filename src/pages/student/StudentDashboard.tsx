@@ -342,6 +342,7 @@ export default function StudentDashboard() {
                     type="button"
                     onClick={() => navigate("/app/settings")}
                     aria-label="Open profile"
+                    data-seasonal-ring
                     className="h-10 w-10 rounded-full border-2 border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden active:scale-95 transition-transform flex items-center justify-center text-white font-bold text-sm"
                   >
                     {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}

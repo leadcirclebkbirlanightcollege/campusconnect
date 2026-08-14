@@ -9,7 +9,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SeasonalAccent, SeasonalBackground } from "@/components/seasonal/SeasonalKit";
+import { SeasonalHeroAtmosphere, SeasonalLightLine } from "@/components/seasonal/SeasonalKit";
 
 export type ModuleTone = "academics" | "community" | "ecell" | "profile" | "brand";
 
@@ -85,8 +85,8 @@ export function ModuleHero({
       />
 
       {/* Seasonal layer (auto-disabled outside the campaign window) */}
-      <SeasonalBackground chakraSize={150} />
-      <SeasonalAccent />
+      <SeasonalHeroAtmosphere chakraSize={220} particles={8} />
+      <SeasonalLightLine position="top" />
 
 
       <div className="relative">
