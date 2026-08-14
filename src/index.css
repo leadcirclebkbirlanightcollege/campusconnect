@@ -1497,16 +1497,43 @@ html[data-season="independence"] [role="dialog"]::before {
   pointer-events: none;
 }
 
-/* Loading skeletons — faintly warm shimmer */
+/* Loading skeletons — subtle saffron → white → green shimmer */
+@keyframes season-shimmer {
+  0% { background-position: -140% 0; }
+  100% { background-position: 240% 0; }
+}
+
 html[data-season="independence"] .skeleton,
+html[data-season="independence"] .shimmer,
 html[data-season="independence"] [data-skeleton] {
   background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(var(--season-saffron) / 0.10) 50%,
-    transparent 100%
+    100deg,
+    transparent 8%,
+    hsl(var(--season-saffron) / 0.14) 32%,
+    hsl(0 0% 100% / 0.16) 50%,
+    hsl(var(--season-green) / 0.14) 68%,
+    transparent 92%
   );
+  background-size: 220% 100%;
+  animation: season-shimmer 2.4s linear infinite;
 }
+
+/* Avatars — whisper of a tricolour ring */
+html[data-season="independence"] [data-seasonal-ring],
+html[data-season="independence"] .avatar-ring {
+  box-shadow:
+    0 0 0 1.5px hsl(var(--season-saffron) / 0.45),
+    0 0 0 3px hsl(var(--season-green) / 0.22);
+}
+
+/* Primary buttons — faint warm rim so CTAs read as seasonal without recolouring */
+html[data-season="independence"] .btn-glow,
+html[data-season="independence"] button[data-variant="primary"] {
+  box-shadow:
+    0 0 0 1px hsl(var(--season-saffron) / 0.22),
+    0 12px 28px -18px hsl(var(--season-saffron) / 0.5);
+}
+
 
 /* Continuous seasonal motion is dropped when the user prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
