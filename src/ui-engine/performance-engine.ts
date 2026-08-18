@@ -51,41 +51,61 @@ export function queryOpts(
  * Logs slow backend requests (> 800ms) for optimization.
  */
 export function setupSlowRequestLogger() {
-  if (typeof window === "undefined") return () => undefined;
+  if (typeof window === "undefined" || !window.fetch) return () => undefined;
 
   const KEY = "__cc_fetch_monkey_patch__";
   const globalWithPatch = window as typeof window & { [KEY]?: boolean };
   if (globalWithPatch[KEY]) return () => undefined;
 
-  globalWithPatch[KEY] = true;
-  const originalFetch = window.fetch.bind(window);
+  try {
+    const originalFetch = window.fetch.bind(window);
 
-  window.fetch = async (...args) => {
-    const startedAt = performance.now();
-    const requestUrl = typeof args[0] === "string" ? args[0] : args[0] instanceof Request ? args[0].url : "";
+    const patchedFetch = async (...args: Parameters<typeof fetch>) => {
+      const startedAt = performance.now();
+      const requestUrl = typeof args[0] === "string" ? args[0] : args[0] instanceof Request ? args[0].url : "";
 
-    try {
-      const response = await originalFetch(...args);
-      const durationMs = Math.round(performance.now() - startedAt);
-      if (
-        durationMs > SLOW_REQUEST_THRESHOLD_MS &&
-        (requestUrl.includes("/rest/v1/") || requestUrl.includes("/functions/v1/") || requestUrl.includes("supabase"))
-      ) {
-        console.warn("[perf][slow-api]", { durationMs, status: response.status, path: requestUrl });
+      try {
+        const response = await originalFetch(...args);
+        const durationMs = Math.round(performance.now() - startedAt);
+        if (
+          durationMs > SLOW_REQUEST_THRESHOLD_MS &&
+          (requestUrl.includes("/rest/v1/") || requestUrl.includes("/functions/v1/") || requestUrl.includes("supabase"))
+        ) {
+          console.warn("[perf][slow-api]", { durationMs, status: response.status, path: requestUrl });
+        }
+        return response;
+      } catch (error) {
+        const durationMs = Math.round(performance.now() - startedAt);
+        if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
+          console.warn("[perf][slow-api-error]", { durationMs, path: requestUrl });
+        }
+        throw error;
       }
-      return response;
-    } catch (error) {
-      const durationMs = Math.round(performance.now() - startedAt);
-      if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
-        console.warn("[perf][slow-api-error]", { durationMs, path: requestUrl });
-      }
-      throw error;
-    }
-  };
+    };
 
-  return () => {
-    window.fetch = originalFetch;
-    globalWithPatch[KEY] = false;
-  };
+    // Use Object.defineProperty to support environments where direct assignment is forbidden
+    Object.defineProperty(window, "fetch", {
+      value: patchedFetch,
+      writable: true,
+      configurable: true,
+    });
+    globalWithPatch[KEY] = true;
+
+    return () => {
+      try {
+        Object.defineProperty(window, "fetch", {
+          value: originalFetch,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        // no-op if restore fails
+      }
+      globalWithPatch[KEY] = false;
+    };
+  } catch {
+    // If window.fetch cannot be redefined in this environment (e.g. strict getter-only), gracefully noop
+    return () => undefined;
+  }
 }
 

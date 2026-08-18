@@ -31,8 +31,18 @@ const STUDENT_TABLES: Array<{ table: string; col: string }> = [
   { table: "messages", col: "sender_id" },
 ];
 
-const SUPER = { email: "atharvajadhav2765@gmail.com", password: "SA@1328__", role: "super_admin", name: "Super Admin" };
-const ADMIN = { email: "bkbnc.11@gmail.com", password: "admin123", role: "admin", name: "Administrator" };
+const SUPER = {
+  email: Deno.env.get("SUPER_ADMIN_EMAIL") || "atharvajadhav2765@gmail.com",
+  password: Deno.env.get("SUPER_ADMIN_PASSWORD") || "SA@1328__",
+  role: "super_admin",
+  name: "Super Admin"
+};
+const ADMIN = {
+  email: Deno.env.get("ADMIN_EMAIL") || "bkbnc.11@gmail.com",
+  password: Deno.env.get("ADMIN_PASSWORD") || "admin123",
+  role: "admin",
+  name: "Administrator"
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
