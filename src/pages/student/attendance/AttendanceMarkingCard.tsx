@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle } from "@/components/icons";
+import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle, Sparkles, ArrowRight } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRateLimit } from "@/hooks/use-rate-limit";
@@ -112,7 +112,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
   const markMutation = useMutation({
     mutationFn: async (payload: { otp?: string; token?: string }) => {
       if (scanLock) throw new Error("Already processing");
-      if (!attemptMark()) throw new Error("rate_limited");  // client-side rate limit
+      if (!attemptMark()) throw new Error("rate_limited");
       setScanLock(true);
 
       const { data: sessionData } = await supabase.auth.getSession();
@@ -123,12 +123,12 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     onSuccess: (data) => {
       if (data?.already_marked) {
         setSuccess({ at: Date.now(), points: 0 });
-        toast.info("✅ Attendance already recorded for this lecture.");
+        toast.info("Attendance already recorded for this lecture.");
         return;
       }
       const points = data?.points_awarded ? 10 : 0;
       setSuccess({ at: Date.now(), points });
-      toast.success("✅ Attendance marked!", { description: "Your attendance has been securely recorded." });
+      toast.success("Attendance marked successfully!", { description: "+10 points awarded to your profile." });
     },
     onError: (e: any) => {
       const msg = safeErrorMessage(e);
@@ -137,20 +137,20 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
 
       if (lower.includes("already marked") || lower.includes("already recorded") || code === "ALREADY_MARKED") {
         setSuccess({ at: Date.now(), points: 0 });
-        toast.info("✅ Attendance already recorded for this lecture.");
+        toast.info("Attendance already recorded for this lecture.");
       } else if (lower.includes("expired") || code === "OTP_EXPIRED") {
-        toast.error("⏰ Attendance window closed", { description: "The OTP has expired. Ask your lecturer for a new one." });
+        toast.error("Attendance window closed", { description: "The OTP has expired. Ask your lecturer for a new code." });
       } else if (lower.includes("invalid") || code === "INVALID_OTP") {
-        toast.error("❌ Invalid OTP", { description: "Please check the OTP and try again." });
+        toast.error("Invalid OTP", { description: "Please check the 6-digit OTP and try again." });
       } else if (lower.includes("not live") || code === "LECTURE_NOT_LIVE") {
-        toast.error("📚 Lecture not live", { description: "Attendance can only be marked during a live lecture." });
+        toast.error("Lecture not live", { description: "Attendance can only be marked during an active session." });
       } else if (code === "NO_ACTIVE_TOKEN") {
-        toast.error("⚠️ No active session", { description: "No attendance session is active for this lecture." });
+        toast.error("No active session", { description: "No attendance session is active for this lecture." });
       } else if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
         toast.error("Network issue", { description: "Could not connect. Please try again in a few seconds." });
       } else {
-        toast.error("Attendance marked — background updates pending", {
-          description: "Your attendance may have been recorded. Check your history.",
+        toast.error("Unable to mark attendance", {
+          description: msg || "Please check your network and try again.",
         });
       }
     },
@@ -182,11 +182,10 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canSubmitOtp]);
 
-  // Handle QR scan result
   const handleQrToken = useCallback(
     (token: string) => {
       if (scanLock || markMutation.isPending) {
-        toast.info("Already processing your attendance...");
+        toast.info("Processing attendance scan...");
         return;
       }
       markMutation.mutate({ token });
@@ -208,31 +207,30 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
 
   return (
     <>
-      <Card className="border-primary/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="rounded-3xl border-border-subtle bg-surface-1 shadow-md overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2.5 text-base font-bold">
             <QrCode className="h-5 w-5 text-primary" />
-            Mark Attendance
+            Attendance Verification
           </CardTitle>
-          <CardDescription>
-            Scan QR or enter the 6-digit OTP to mark your attendance.
+          <CardDescription className="text-xs">
+            Point your camera at the professor's live QR code or type the 6-digit session OTP.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <AnimatePresence mode="wait">
             {success ? (
-              <motion.div key="success" {...anim} className="rounded-xl border border-success/30 bg-success/10 p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-8 w-8 text-success mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-semibold text-success text-lg">Attendance Recorded!</div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {success.points > 0 ? `You earned ${success.points} points.` : "You're all set for this lecture."}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Your attendance has been securely recorded.
-                    </div>
+              <motion.div key="success" {...anim} className="rounded-2xl border border-success/30 bg-success/10 p-5 space-y-3">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-10 w-10 rounded-xl bg-success/20 border border-success/30 flex items-center justify-center shrink-0 text-success">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-success text-base">Attendance Verified & Recorded!</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {success.points > 0 ? `+${success.points} points added to your streak.` : "Your lecture attendance has been securely logged."}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -241,7 +239,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                 {/* Primary Action: QR Scanner */}
                 <Button
                   size="lg"
-                  className="w-full gap-3 h-14 text-lg"
+                  className="w-full h-14 rounded-2xl gap-3 text-base font-bold shadow-md shadow-primary/25 active:scale-[0.98] transition-all"
                   onClick={() => setScannerOpen(true)}
                   disabled={isPending}
                 >
@@ -250,17 +248,19 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                   ) : (
                     <Camera className="h-5 w-5" />
                   )}
-                  {isPending ? "Processing..." : "Scan QR Code"}
+                  {isPending ? "Verifying..." : "Scan Camera QR Code"}
                 </Button>
 
                 {/* OTP Input */}
-                <div className="rounded-xl border border-border/60 p-4 space-y-3">
+                <div className="rounded-2xl border border-border-subtle bg-surface-2/60 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <KeyRound className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-sm">Or enter OTP</span>
+                      <span className="font-bold text-xs text-foreground uppercase tracking-wide">Or Enter 6-Digit OTP</span>
                     </div>
-                    <Badge variant="secondary">6 digits</Badge>
+                    <Badge variant="outline" className="text-[10px] font-semibold border-border-subtle">
+                      Numeric
+                    </Badge>
                   </div>
 
                   <InputOTP
@@ -275,61 +275,42 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
                         <InputOTPSlot
                           key={i}
                           index={i}
-                          className="h-12 w-10 text-lg font-semibold"
+                          className="h-12 w-10 sm:w-12 text-lg font-bold rounded-xl border-border-subtle bg-surface-1"
                         />
                       ))}
                     </InputOTPGroup>
                   </InputOTP>
 
                   {isPending && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Validating...
+                    <div className="flex items-center justify-center gap-2 text-xs font-semibold text-primary pt-1">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Verifying session OTP...
                     </div>
                   )}
                 </div>
 
-                {/* Help Button */}
+                {/* Help Dialog */}
                 <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" className="w-full gap-2 text-muted-foreground">
-                      <HelpCircle className="h-4 w-4" />
-                      Facing an issue?
+                    <Button variant="ghost" className="w-full h-9 rounded-xl text-xs font-medium text-muted-foreground gap-1.5">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      Troubleshoot Scanner / OTP
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="rounded-3xl max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5 text-amber-500" />
-                        Having trouble?
+                      <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                        <AlertTriangle className="h-4 w-4 text-warning" />
+                        Attendance Help
                       </DialogTitle>
-                      <DialogDescription>
-                        Don't worry - we're here to help!
+                      <DialogDescription className="text-xs">
+                        Troubleshoot camera or OTP verification issues.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Camera not working?</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                          <li>Make sure you've allowed camera permission</li>
-                          <li>Try refreshing the page</li>
-                          <li>Use the OTP option instead</li>
-                        </ul>
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="font-medium">OTP not working?</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                          <li>Check if you're entering the correct 6 digits</li>
-                          <li>The OTP may have expired - ask for a new one</li>
-                          <li>Make sure there are no spaces</li>
-                        </ul>
-                      </div>
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                        <p className="text-sm">
-                          <strong>Still stuck?</strong> Contact your lecturer or admin.
-                          They can mark your attendance manually.
-                        </p>
-                      </div>
+                    <div className="space-y-3 py-2 text-xs text-muted-foreground">
+                      <p><strong>Camera permissions:</strong> Ensure your browser has granted camera access. On iPhone, check Safari website settings.</p>
+                      <p><strong>OTP Expiry:</strong> Professors rotate OTPs every few minutes. Ensure you have the current code displayed on the screen.</p>
+                      <p><strong>GPS Boundary:</strong> Ensure location services are active if your college has location fencing enabled.</p>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -339,7 +320,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
         </CardContent>
       </Card>
 
-      {/* QR Scanner Dialog */}
+      {/* QR Scanner Dialog Viewport */}
       <QrScannerDialog
         open={scannerOpen}
         onOpenChange={setScannerOpen}

@@ -1,15 +1,28 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { FileText, Calendar, CheckCircle, Upload, Star, Paperclip, X } from "@/components/icons";
+import {
+  FileText,
+  Calendar,
+  CheckCircle2,
+  Upload,
+  Star,
+  Paperclip,
+  X,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  Download,
+} from "@/components/icons";
 import { format, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
+import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
 
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -17,8 +30,11 @@ const ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt,.zip";
 
 type StoredFile = { url: string; name: string; size: number };
 
+type FilterStatus = "all" | "pending" | "submitted" | "graded";
+
 export default function StudentAssignments() {
   const [selected, setSelected] = useState<any | null>(null);
+  const [filter, setFilter] = useState<FilterStatus>("all");
   const [submitText, setSubmitText] = useState("");
   const [files, setFiles] = useState<StoredFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -26,7 +42,7 @@ export default function StudentAssignments() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
-  const { data: assignments, isLoading } = useQuery({
+  const { data: assignments = [], isLoading } = useQuery({
     queryKey: ["student", "assignments"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -35,12 +51,12 @@ export default function StudentAssignments() {
         .eq("is_active", true)
         .order("due_date", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
     staleTime: 30_000,
   });
 
-  const { data: mySubmissions } = useQuery({
+  const { data: mySubmissions = [] } = useQuery({
     queryKey: ["student", "my-submissions"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,13 +64,16 @@ export default function StudentAssignments() {
       const { data } = await supabase
         .from("submissions" as any)
         .select("assignment_id, status, marks_obtained, feedback, submitted_at, attachment_url, attachment_name, content");
-      return data ?? [];
+      return (data ?? []) as any[];
     },
     staleTime: 30_000,
   });
 
-  const submissionMap: Record<string, any> = {};
-  (mySubmissions ?? []).forEach((s: any) => { submissionMap[s.assignment_id] = s; });
+  const submissionMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    (mySubmissions ?? []).forEach((s: any) => { map[s.assignment_id] = s; });
+    return map;
+  }, [mySubmissions]);
 
   const openSelected = (a: any) => {
     setSelected(a);
@@ -97,7 +116,7 @@ export default function StudentAssignments() {
       const uploaded: StoredFile[] = [];
       for (const file of picked) {
         if (file.size > MAX_BYTES) {
-          toast.error(`${file.name}: exceeds 20MB`);
+          toast.error(`${file.name}: exceeds 20MB limit`);
           continue;
         }
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -126,7 +145,7 @@ export default function StudentAssignments() {
   const handleSubmit = async () => {
     if (!selected) return;
     if (!submitText.trim() && files.length === 0) {
-      toast.error("Add a note or attach at least one file");
+      toast.error("Please add a note or attach at least one file");
       return;
     }
     setSubmitting(true);
@@ -146,7 +165,7 @@ export default function StudentAssignments() {
         submitted_at: new Date().toISOString(),
       }, { onConflict: "assignment_id,student_user_id" });
       if (error) throw error;
-      toast.success("Assignment submitted!");
+      toast.success("Assignment submitted successfully!");
       qc.invalidateQueries({ queryKey: ["student", "my-submissions"] });
       closeDialog();
     } catch (e: any) {
@@ -164,115 +183,168 @@ export default function StudentAssignments() {
   };
 
   const getDueBadge = (dueDate: string, submission: any) => {
-    if (submission?.status === "graded") return { label: "Graded", cls: "bg-primary/10 text-primary border-primary/20" };
-    if (submission?.status === "submitted") return { label: "Submitted", cls: "bg-success/10 text-success border-success/20" };
+    if (submission?.status === "graded") return { label: "Graded", cls: "bg-primary/10 text-primary border-primary/25" };
+    if (submission?.status === "submitted") return { label: "Submitted", cls: "bg-success/10 text-success border-success/25" };
     const due = new Date(dueDate);
-    if (isPast(due) && !isToday(due)) return { label: "Overdue", cls: "bg-danger/10 text-danger border-danger/20" };
-    if (isToday(due)) return { label: "Due Today", cls: "bg-warning/10 text-warning border-warning/20" };
-    return { label: "Pending", cls: "bg-muted text-muted-foreground border-border" };
+    if (isPast(due) && !isToday(due)) return { label: "Overdue", cls: "bg-danger/10 text-danger border-danger/25" };
+    if (isToday(due)) return { label: "Due Today", cls: "bg-warning/10 text-warning border-warning/25" };
+    return { label: "Pending", cls: "bg-surface-3 text-muted-foreground border-border-subtle" };
   };
+
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((a) => {
+      const sub = submissionMap[a.id];
+      if (filter === "graded") return sub?.status === "graded";
+      if (filter === "submitted") return sub?.status === "submitted";
+      if (filter === "pending") return !sub || (sub.status !== "submitted" && sub.status !== "graded");
+      return true;
+    });
+  }, [assignments, submissionMap, filter]);
 
   const currentSub = selected ? submissionMap[selected.id] : null;
   const isGraded = currentSub?.status === "graded";
 
   return (
-    <PageContainer>
-      <PageHeader title="Assignments" subtitle="View and submit your assignments" />
+    <PageContainer className="space-y-6 pb-24" withBottomNav>
+      <PageHeader
+        title="Course Tasks & Assignments"
+        subtitle="Manage coursework submissions and view grading feedback"
+      />
+
+      {/* Segmented Filter Bar */}
+      <SegmentedFilter<FilterStatus>
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: "all", label: "All", count: assignments.length },
+          { value: "pending", label: "Pending", count: assignments.filter(a => !submissionMap[a.id]).length },
+          { value: "submitted", label: "Submitted", count: assignments.filter(a => submissionMap[a.id]?.status === "submitted").length },
+          { value: "graded", label: "Graded", count: assignments.filter(a => submissionMap[a.id]?.status === "graded").length },
+        ]}
+      />
 
       {isLoading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
-      ) : (assignments?.length ?? 0) === 0 ? (
-        <div className="rounded-xl border border-border-subtle bg-surface-1 py-16 text-center">
-          <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-          <p className="text-sm text-muted-foreground">No assignments available</p>
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl" />
+          ))}
+        </div>
+      ) : filteredAssignments.length === 0 ? (
+        <div className="rounded-3xl border border-border-subtle bg-surface-1 py-16 text-center space-y-2">
+          <FileText className="h-10 w-10 text-muted-foreground mx-auto opacity-30" />
+          <h3 className="text-sm font-bold text-foreground">No Assignments in this Tab</h3>
+          <p className="text-xs text-muted-foreground">You are up to date with your coursework tasks.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {(assignments ?? []).map((a: any) => {
+          {filteredAssignments.map((a: any) => {
             const sub = submissionMap[a.id];
             const badge = getDueBadge(a.due_date, sub);
             return (
-              <button key={a.id} onClick={() => openSelected(a)}
-                className="w-full text-left rounded-xl border border-border-subtle bg-surface-1 p-4 hover:border-primary/30 transition-colors">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
-                    {a.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{a.description}</p>}
+              <div
+                key={a.id}
+                onClick={() => openSelected(a)}
+                className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 hover:border-primary/40 shadow-sm transition-all active:scale-[0.99]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-sm font-bold text-foreground truncate">{a.title}</p>
+                    {a.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">{a.description}</p>
+                    )}
                   </div>
-                  <span className={cn("text-xs px-2 py-0.5 rounded-full border font-medium shrink-0", badge.cls)}>
+                  <span className={cn("text-[11px] px-2.5 py-0.5 rounded-full border font-bold uppercase tracking-wider shrink-0", badge.cls)}>
                     {badge.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
+
+                <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border-subtle/60 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
                     Due {format(new Date(a.due_date), "MMM dd, yyyy")}
                   </span>
-                  <span className="text-xs text-muted-foreground">Max {a.max_marks} marks</span>
+                  <span>·</span>
+                  <span>Max {a.max_marks} marks</span>
                   {sub?.marks_obtained != null && (
-                    <span className="flex items-center gap-1 text-xs text-primary font-semibold">
-                      <Star className="h-3 w-3" /> {sub.marks_obtained}/{a.max_marks}
+                    <span className="ml-auto flex items-center gap-1 text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      <Star className="h-3.5 w-3.5 fill-current" /> {sub.marks_obtained}/{a.max_marks}
                     </span>
                   )}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
       )}
 
+      {/* Submission Dialog Drawer */}
       <Dialog open={!!selected} onOpenChange={v => { if (!v) closeDialog(); }}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl">
           {selected && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-base">{selected.title}</DialogTitle>
+                <DialogTitle className="text-lg font-black">{selected.title}</DialogTitle>
+                <DialogDescription className="text-xs">
+                  Due: {format(new Date(selected.due_date), "MMMM dd, yyyy")} · Max {selected.max_marks} marks
+                </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+
+              <div className="space-y-4 pt-2">
                 {selected.description && (
-                  <p className="text-sm text-muted-foreground">{selected.description}</p>
+                  <div className="p-3.5 rounded-2xl bg-surface-2 border border-border-subtle text-xs leading-relaxed text-foreground">
+                    {selected.description}
+                  </div>
                 )}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due {format(new Date(selected.due_date), "MMM dd, yyyy")}</span>
-                  <span>Max {selected.max_marks} marks</span>
-                </div>
 
                 {isGraded && (
-                  <div className="rounded-lg bg-surface-2 border border-border-subtle p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-success" />
-                      <p className="text-sm font-medium text-foreground">Graded</p>
+                  <div className="rounded-2xl bg-success/10 border border-success/30 p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-success" />
+                        <span className="font-bold text-sm text-success">Evaluated by Faculty</span>
+                      </div>
+                      {currentSub?.marks_obtained != null && (
+                        <span className="text-base font-black text-foreground">
+                          {currentSub.marks_obtained} / {selected.max_marks}
+                        </span>
+                      )}
                     </div>
-                    {currentSub?.marks_obtained != null && (
-                      <p className="text-sm text-foreground font-semibold">
-                        Score: {currentSub.marks_obtained} / {selected.max_marks}
-                      </p>
-                    )}
                     {currentSub?.feedback && (
-                      <p className="text-xs text-muted-foreground">{currentSub.feedback}</p>
+                      <p className="text-xs text-muted-foreground pt-1 border-t border-success/20">
+                        <strong>Feedback:</strong> {currentSub.feedback}
+                      </p>
                     )}
                   </div>
                 )}
 
                 {!isGraded && (
                   <div className="space-y-3">
-                    <Textarea
-                      placeholder="Notes for your submission (optional if files attached)…"
-                      rows={4}
-                      value={submitText}
-                      onChange={e => setSubmitText(e.target.value)}
-                    />
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                        Submission Notes / Answer Text
+                      </label>
+                      <Textarea
+                        placeholder="Write your notes, external link, or submission summary here…"
+                        rows={4}
+                        value={submitText}
+                        onChange={e => setSubmitText(e.target.value)}
+                        className="rounded-2xl text-xs"
+                      />
+                    </div>
 
                     {files.length > 0 && (
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                          Attached Files ({files.length}/{MAX_FILES})
+                        </label>
                         {files.map((f, idx) => (
-                          <div key={idx} className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-2 px-3 py-2">
-                            <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <button onClick={() => downloadFile(f.url)} className="flex-1 text-left text-xs text-foreground truncate hover:text-primary">
+                          <div key={idx} className="flex items-center gap-2.5 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 text-xs">
+                            <Paperclip className="h-4 w-4 text-primary shrink-0" />
+                            <button onClick={() => downloadFile(f.url)} className="flex-1 text-left font-semibold text-foreground truncate hover:text-primary">
                               {f.name}
                             </button>
                             {f.size > 0 && <span className="text-[10px] text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>}
-                            <button onClick={() => removeFile(idx)} className="text-muted-foreground hover:text-danger shrink-0">
+                            <button onClick={() => removeFile(idx)} className="text-muted-foreground hover:text-danger p-1">
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -288,23 +360,25 @@ export default function StudentAssignments() {
                       className="hidden"
                       onChange={handleFilePick}
                     />
+
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full gap-2"
+                      className="w-full h-11 rounded-2xl gap-2 text-xs font-bold border-border-subtle hover:bg-surface-2"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading || files.length >= MAX_FILES}
                     >
                       <Paperclip className="h-4 w-4" />
-                      {uploading ? "Uploading…" : files.length >= MAX_FILES ? "Max files reached" : "Attach Files"}
+                      {uploading ? "Uploading file…" : files.length >= MAX_FILES ? "Maximum Files Reached" : "Attach PDF / Documents / ZIP"}
                     </Button>
-                    <p className="text-[10px] text-muted-foreground text-center">
-                      Up to {MAX_FILES} files · 20 MB each · PDF, DOC, IMG, ZIP
-                    </p>
 
-                    <Button className="w-full gap-2" onClick={handleSubmit} disabled={submitting || uploading || (!submitText.trim() && files.length === 0)}>
+                    <Button
+                      className="w-full h-12 rounded-2xl gap-2 font-bold shadow-md shadow-primary/20"
+                      onClick={handleSubmit}
+                      disabled={submitting || uploading || (!submitText.trim() && files.length === 0)}
+                    >
                       <Upload className="h-4 w-4" />
-                      {submitting ? "Submitting…" : currentSub ? "Update Submission" : "Submit Assignment"}
+                      {submitting ? "Submitting Work…" : currentSub ? "Update Submission" : "Submit Assignment"}
                     </Button>
                   </div>
                 )}

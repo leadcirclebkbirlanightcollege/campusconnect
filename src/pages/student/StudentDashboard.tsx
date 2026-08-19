@@ -13,7 +13,6 @@ import {
   GraduationCap,
   IdCard,
   LayoutGrid,
-  MessageSquare,
   Rocket,
   Scan,
   ShieldAlert,
@@ -26,6 +25,9 @@ import {
   Users,
   Zap,
   Brain,
+  CheckCircle2,
+  AlertTriangle,
+  QrCode,
 } from "@/components/icons";
 import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import {
@@ -48,12 +50,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
-import { ActionTile } from "@/components/ui/ActionTile";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { GlowButton } from "@/components/ui/GlowButton";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { ProgressRing } from "@/components/ui/ProgressRing";
-import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMetricCountUp } from "@/components/ui/motion";
@@ -61,7 +58,6 @@ import {
   SECTION_REVEAL_ITEM,
   SECTION_REVEAL_PARENT,
 } from "@/motion/microInteractions";
-
 
 type UpcomingLecture = {
   id: string;
@@ -120,7 +116,7 @@ async function fetchDashboardCore() {
 async function fetchDashboardSecondary(userId: string) {
   const today = new Date().toISOString().split("T")[0];
 
-  const [{ count: attended }, { count: total }, { data: upcoming }, { data: points }] = await Promise.all([
+  const [{ count: attended }, { count: total }, { data: upcoming }, { data: points }, { data: assignments }] = await Promise.all([
     supabase
       .from("attendance")
       .select("id", { count: "exact", head: true })
@@ -141,6 +137,13 @@ async function fetchDashboardSecondary(userId: string) {
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("assignments" as any)
+      .select("id,title,due_date")
+      .eq("is_active", true)
+      .gte("due_date", today)
+      .order("due_date", { ascending: true })
+      .limit(3),
   ]);
 
   return {
@@ -148,6 +151,7 @@ async function fetchDashboardSecondary(userId: string) {
     total: total ?? 0,
     nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
     activities: (points ?? []) as RecentPoint[],
+    pendingAssignments: (assignments ?? []) as Array<{ id: string; title: string; due_date: string }>,
   };
 }
 
@@ -269,370 +273,264 @@ export default function StudentDashboard() {
   const totalLectures = secondaryQuery.data?.total ?? 0;
   const attended = secondaryQuery.data?.attended ?? 0;
   const attendancePct = totalLectures > 0 ? Math.round((attended / totalLectures) * 100) : 0;
+  const isAttendanceSafe = attendancePct >= 75;
 
   const tier = (intelligence.data?.tier ?? "bronze") as TierKey;
   const tierConfig = TIER_CONFIG[tier];
   const tierProgress = getTierProgress(coreQuery.data.totalPoints, tier);
 
-  const lecture = coreQuery.data.liveNow ?? secondaryQuery.data?.nextLecture ?? null;
-  const lectureIsLive = lecture?.status === "live";
+  const liveLecture = coreQuery.data.liveNow;
+  const nextLecture = secondaryQuery.data?.nextLecture;
+  const pendingAssignments = secondaryQuery.data?.pendingAssignments ?? [];
   const riskLevel = growth.data?.risk_probability ?? "low";
-
-  const insightCards = [
-    growth.data?.trend_direction === "improving"
-      ? { icon: TrendingUp, text: "Attendance is improving this week.", tone: "success" }
-      : growth.data?.trend_direction === "declining"
-      ? { icon: TrendingDown, text: "Risk is rising — attend your next lecture.", tone: "warning" }
-      : null,
-    tierProgress.remaining > 0
-      ? {
-          icon: Sparkles,
-          text: `${tierProgress.remaining} points to reach ${tierProgress.nextLabel}.`,
-          tone: "primary",
-        }
-      : null,
-    {
-      icon: Flame,
-      text:
-        coreQuery.data.currentStreak > 0
-          ? `${coreQuery.data.currentStreak}-day streak active. Keep your momentum.`
-          : "Start your streak with today’s check-in.",
-      tone: "warning",
-    },
-  ].filter(Boolean) as Array<{ icon: typeof Sparkles; text: string; tone: "success" | "warning" | "primary" }>;
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <PageContainer className="space-y-6 md:space-y-8 !px-0 md:!px-4" withBottomNav>
-        {/* Desktop-only classic header (keeps ERP context) */}
-        <div className="hidden md:block px-page">
-          <PageHeader title="Dashboard" subtitle={`${greeting}, ${coreQuery.data.name}`} variant="large" gradient />
+      <PageContainer className="space-y-6 pb-24 md:pb-12 !px-4 md:!px-6" withBottomNav>
+        {/* ═══ DESKTOP COCKPIT HEADER ═══ */}
+        <div className="hidden md:flex items-center justify-between border-b border-border-subtle pb-5">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Personal Campus OS</span>
+            <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight mt-0.5">
+              {greeting}, {coreQuery.data.name} 👋
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/app/scan")}
+              className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-2 shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              <QrCode className="h-4 w-4" />
+              Scan Attendance
+            </button>
+          </div>
+        </div>
+
+        {/* ═══ MOBILE HEADER (App Bar) ═══ */}
+        <div className="md:hidden flex items-center justify-between pt-1">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/app/profile")}
+              className="h-10 w-10 rounded-full border-2 border-primary/30 bg-primary/10 flex items-center justify-center text-primary font-black text-sm active:scale-95 transition-transform"
+            >
+              {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}
+            </button>
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground leading-none">{greeting}</p>
+              <p className="text-base font-black text-foreground leading-tight mt-0.5">{coreQuery.data.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/app/inbox")}
+              aria-label="Notifications"
+              className="h-10 w-10 rounded-xl border border-border-subtle bg-surface-1 flex items-center justify-center text-foreground active:scale-95 transition-transform"
+            >
+              <Bell className="h-4.5 w-4.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/app/scan")}
+              aria-label="Scan Attendance"
+              className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/25 active:scale-95 transition-transform"
+            >
+              <QrCode className="h-4.5 w-4.5" />
+            </button>
+          </div>
         </div>
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
-          {/* ═══ PREMIUM NATIVE HERO — curved gradient header + overlapping stat cards ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="md:hidden">
-            <div className="relative">
-              {/* Gradient header */}
-              <div
-                className="relative overflow-hidden px-5 pt-6 pb-20 rounded-b-[36px]"
-                style={{
-                  background:
-                    "linear-gradient(180deg, hsl(231 68% 22%) 0%, hsl(231 65% 30%) 55%, hsl(232 62% 36%) 100%)",
-                }}
-              >
-                {/* Decorative glows */}
-                <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
-                <div className="pointer-events-none absolute top-24 -left-10 h-40 w-40 rounded-full bg-primary-glow/25 blur-3xl" />
 
-                {/* Top row: bell + brand + avatar */}
-                <div className="relative z-10 flex items-center justify-between">
+          {/* ═══ 1. WHAT IS HAPPENING NOW? (Live Lecture or Next Up) ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM}>
+            {liveLecture ? (
+              <div className="relative overflow-hidden rounded-2xl border border-danger/40 bg-gradient-to-br from-danger/12 via-surface-1 to-surface-1 p-5 shadow-lg shadow-danger/10">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 bg-danger/15 border border-danger/30 px-2.5 py-1 rounded-full text-danger text-[11px] font-black uppercase tracking-widest">
+                    <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
+                    Live Class Right Now
+                  </div>
+                  <span className="text-xs font-mono font-bold text-muted-foreground">{liveLecture.start_time}</span>
+                </div>
+                <h2 className="text-lg font-black text-foreground">{liveLecture.topic}</h2>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                  <span>📍 {liveLecture.venue}</span>
+                  <span>·</span>
+                  <span>Attendance open</span>
+                </p>
+                <div className="mt-4 flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => navigate("/app/inbox")}
-                    aria-label="Notifications"
-                    className="p-2.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm active:scale-95 transition-transform"
+                    onClick={() => navigate("/app/scan")}
+                    className="flex-1 h-11 rounded-xl bg-danger text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-danger/30 active:scale-[0.98] transition-transform"
                   >
-                    <Bell className="h-5 w-5 text-white" strokeWidth={2} />
-                  </button>
-                  <span className="text-white font-extrabold tracking-[0.22em] text-[13px] uppercase">
-                    Campus Connect
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/app/settings")}
-                    aria-label="Open profile"
-                    data-seasonal-ring
-                    className="h-10 w-10 rounded-full border-2 border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden active:scale-95 transition-transform flex items-center justify-center text-white font-bold text-sm"
-                  >
-                    {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}
+                    <QrCode className="h-4 w-4" />
+                    Mark Live Attendance
                   </button>
                 </div>
-
-                {/* Greeting */}
-                <div className="relative z-10 mt-7">
-                  <IndependenceDayBadge className="mb-2.5" />
-                  <h1 className="text-white text-[26px] font-extrabold leading-tight flex items-center gap-2">
-                    Hello, {coreQuery.data.name}! <span className="text-2xl">👋</span>
-                  </h1>
-                  <p className="text-white/70 text-sm mt-1 font-medium">Stay connected. Stay ahead.</p>
-                  <IndependenceDayGreeting className="mt-1.5" />
+              </div>
+            ) : nextLecture ? (
+              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider text-primary">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Next Lecture Ahead
+                  </div>
+                  <p className="text-sm sm:text-base font-bold text-foreground truncate">{nextLecture.topic}</p>
+                  <p className="text-xs text-muted-foreground">{nextLecture.venue} · {nextLecture.start_time} ({nextLecture.lecture_date})</p>
                 </div>
-
-                <IndependenceDayHeroAccent />
-              </div>
-
-              {/* Overlapping stat cards */}
-              <div className="px-5 -mt-12 relative z-10 grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate("/app/points")}
-                  className="relative overflow-hidden text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
+                  onClick={() => navigate("/app/timetable")}
+                  className="shrink-0 h-9 px-3 rounded-xl border border-border-subtle bg-surface-2 text-foreground font-semibold text-xs hover:bg-surface-3 transition-colors"
                 >
-                  <SeasonalCardAccent />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    Your Tier
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-foreground text-lg font-extrabold leading-none">
-                        {tierConfig.label}
-                      </p>
-                      <p className="text-[hsl(var(--gold))] text-[11px] font-bold mt-1 tabular-nums">
-                        {coreQuery.data.totalPoints.toLocaleString()} Pts
-                      </p>
-                    </div>
-                    <div className="w-9 h-9 bg-[hsl(var(--gold)/0.12)] rounded-full flex items-center justify-center text-[hsl(var(--gold))]">
-                      <Star className="w-5 h-5 fill-current" />
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/attendance")}
-                  className="relative overflow-hidden text-left bg-card p-4 rounded-[20px] shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] border border-border-subtle active:scale-[0.98] transition-transform"
-                >
-                  <SeasonalCardAccent />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    Attendance
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-foreground text-lg font-extrabold leading-none tabular-nums">
-                        {attendancePct}%
-                      </p>
-                      <p className="text-primary text-[11px] font-bold mt-1">This Month</p>
-                    </div>
-                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <CalendarCheck className="w-5 h-5" strokeWidth={2.25} />
-                    </div>
-                  </div>
+                  Schedule →
                 </button>
               </div>
+            ) : null}
+          </motion.section>
+
+          {/* ═══ 2. KEY METRICS TRIO (Attendance Health + Points + Streak) ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="grid grid-cols-3 gap-2.5 sm:gap-4">
+            {/* Attendance Metric */}
+            <div
+              onClick={() => navigate("/app/attendance")}
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98]"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Attendance</p>
+              <p className={cn("text-xl sm:text-2xl font-black tabular-nums mt-1", isAttendanceSafe ? "text-foreground" : "text-danger")}>
+                {attendancePct}%
+              </p>
+              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold">
+                {isAttendanceSafe ? (
+                  <span className="text-success flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> Safe ≥75%</span>
+                ) : (
+                  <span className="text-danger flex items-center gap-0.5"><AlertTriangle className="h-3 w-3" /> Warning &lt;75%</span>
+                )}
+              </div>
+            </div>
+
+            {/* Streak Metric */}
+            <div
+              onClick={() => navigate("#daily-checkin")}
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-warning/40 transition-all active:scale-[0.98]"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Streak</p>
+              <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
+                {coreQuery.data.currentStreak}d 🔥
+              </p>
+              <p className="mt-1 text-[10px] font-semibold text-warning">Daily Check-In</p>
+            </div>
+
+            {/* Points & Tier Metric */}
+            <div
+              onClick={() => navigate("/app/points")}
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-accent/40 transition-all active:scale-[0.98]"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Points</p>
+              <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
+                {coreQuery.data.totalPoints.toLocaleString()}
+              </p>
+              <p className="mt-1 text-[10px] font-bold uppercase text-primary tracking-wide">
+                {tierConfig.label} Tier
+              </p>
             </div>
           </motion.section>
 
-          {/* ═══ Desktop-only compact hero (unchanged ERP feel) ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="hidden md:block px-page">
-            <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-surface-1 p-5 shadow-md">
-              <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-primary/30 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
-              <IndependenceDayHeroAccent rounded={false} />
-              <div className="relative space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {greeting} 👋
-                    </p>
-                    <h1 className="text-[26px] font-black leading-tight text-foreground truncate">
-                      {coreQuery.data.name}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">Ready to make today productive?</p>
-                    <StatusBadge status="active" className={cn("mt-1", tierConfig.bg, tierConfig.border, tierConfig.color)}>
-                      {tierConfig.label} Tier
-                    </StatusBadge>
-                  </div>
-                  <ProgressRing value={attendancePct} className="shrink-0" size={96} />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 border-t border-border-subtle/60 pt-4">
-                  <HeroStat label="Points" value={coreQuery.data.totalPoints} />
-                  <HeroStat label="Streak" value={coreQuery.data.currentStreak} suffix="d" />
-                  <HeroStat label="Attendance" value={attendancePct} suffix="%" />
-                </div>
-              </div>
+          {/* ═══ 3. QUICK ACTIONS GRID ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Quick Navigation</h2>
+              <button onClick={() => navigate("/app/more")} className="text-[11px] font-semibold text-primary hover:underline">
+                View All →
+              </button>
             </div>
-          </motion.section>
-
-          {/* ═══ QUICK ACTIONS — pastel icon grid (Google Pay style) ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-4 px-5 md:px-page">
-            <SectionHeader title="Quick Actions" subtitle="Jump straight in" />
-            <div className="grid grid-cols-4 gap-y-5 gap-x-2">
+            <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
               <QuickTile icon={CalendarCheck} label="Attendance" tint="indigo" onClick={() => navigate("/app/attendance")} />
               <QuickTile icon={Clock3}        label="Timetable"  tint="rose"   onClick={() => navigate("/app/timetable")} />
               <QuickTile icon={BookOpen}      label="Tasks"      tint="amber"  onClick={() => navigate("/app/assignments")} />
               <QuickTile icon={GraduationCap} label="Results"    tint="purple" onClick={() => navigate("/app/results")} />
-              <QuickTile icon={CalendarDays}  label="Events"     tint="emerald"onClick={() => navigate("/app/events")} />
-              <QuickTile icon={FileText}      label="Docs"       tint="sky"    onClick={() => navigate("/app/documents")} />
-              <QuickTile icon={IdCard}        label="ID Card"    tint="orange" onClick={() => navigate("/app/id-card")} />
+              <QuickTile icon={IdCard}        label="Digital ID" tint="sky"    onClick={() => navigate("/app/id-card")} />
+              <QuickTile icon={Trophy}        label="Ranks"      tint="emerald"onClick={() => navigate("/app/leaderboard")} />
+              <QuickTile icon={Rocket}        label="E-Cell"     tint="orange" onClick={() => navigate("/app/ecell")} />
               <QuickTile icon={LayoutGrid}    label="More"       tint="slate"  onClick={() => navigate("/app/more")} />
             </div>
           </motion.section>
 
+          {/* ═══ 4. ATTENTION ITEMS (Pending Assignments & Check-in) ═══ */}
+          {pendingAssignments.length > 0 && (
+            <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Action Required</h2>
+                <span className="text-[11px] font-semibold text-warning">{pendingAssignments.length} pending</span>
+              </div>
+              <div className="space-y-2">
+                {pendingAssignments.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => navigate("/app/assignments")}
+                    className="cursor-pointer flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-4 py-3 hover:border-warning/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-lg bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                        <BookOpen className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-foreground truncate">{a.title}</p>
+                        <p className="text-[11px] text-muted-foreground">Due: {a.due_date}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-primary shrink-0">Submit →</span>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
 
-          {/* UPCOMING EVENTS STRIP */}
+          {/* ═══ 5. DAILY CHECK-IN REWARD CARD ═══ */}
+          <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM}>
+            <DailyCheckinCard />
+          </motion.section>
+
+          {/* ═══ 6. UPCOMING EVENTS MARQUEE / STRIP ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             <UpcomingEventsStrip />
           </motion.section>
 
+          {/* ═══ 7. ACTIVITY FEED ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Lecture" subtitle={lectureIsLive ? "Happening now" : "Up next"} />
-            <GlassCard className="space-y-3" hover>
-              {lecture ? (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <StatusBadge status={lectureIsLive ? "live" : "upcoming"}>{lectureIsLive ? "Live" : "Upcoming"}</StatusBadge>
-                    <p className="text-xs text-muted-foreground">{lecture.lecture_date}</p>
-                  </div>
-                  <div>
-                    <p className="text-base font-bold text-foreground truncate">{lecture.topic}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{lecture.venue} · {lecture.start_time}</p>
-                  </div>
-                  <GlowButton className="w-full" onClick={() => navigate(lectureIsLive ? `/app/lectures/${lecture.id}` : "/app/lectures") }>
-                    {lectureIsLive ? <Scan className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-                    {lectureIsLive ? "Mark Attendance" : "View Lecture"}
-                  </GlowButton>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">No upcoming lecture scheduled right now.</p>
-              )}
-            </GlassCard>
-          </motion.section>
-
-          <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Daily Check-In" subtitle="Keep your streak alive" />
-            <DailyCheckinCard />
-          </motion.section>
-
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Academic Intelligence" subtitle="Your performance cockpit" />
-            {intelligence.isLoading ? (
-              <div className="grid grid-cols-2 gap-3">
-                <Skeleton className="h-36 rounded-2xl" />
-                <Skeleton className="h-36 rounded-2xl" />
-                <Skeleton className="h-36 rounded-2xl" />
-                <Skeleton className="h-36 rounded-2xl" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <MetricCard icon={CalendarCheck} value={intelligence.data?.attendanceConsistency ?? 0} label="Attendance" suffix="%" />
-                <MetricCard icon={Zap} value={intelligence.data?.engagementIndex ?? 0} label="Engagement" suffix="%" />
-                <MetricCard
-                  icon={Brain}
-                  value={Math.round(
-                    ((intelligence.data?.attendanceConsistency ?? 0) +
-                      (intelligence.data?.behaviourReliability ?? 0) +
-                      (intelligence.data?.engagementIndex ?? 0)) /
-                      3,
-                  )}
-                  label="Intelligence"
-                />
-                <GlassCard className="flex flex-col justify-between" hover>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Risk</p>
-                    <ShieldAlert className="h-4 w-4 text-warning" />
-                  </div>
-                  <p className="text-2xl font-black capitalize text-foreground">{riskLevel}</p>
-                  <StatusBadge status={riskLevel === "high" ? "upcoming" : "active"}>{riskLevel}</StatusBadge>
-                </GlassCard>
-              </div>
-            )}
-          </motion.section>
-
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Smart Insights" subtitle="Actionable nudges" />
-            <div className="space-y-3">
-              {insightCards.map((insight, index) => (
-                <GlassCard key={`${insight.text}-${index}`} className="flex items-start gap-3" hover={false}>
-                  <div className={cn(
-                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                    insight.tone === "success" && "bg-success/12 text-success",
-                    insight.tone === "warning" && "bg-warning/12 text-warning",
-                    insight.tone === "primary" && "bg-primary/12 text-primary",
-                  )}>
-                    <insight.icon className="h-4 w-4" />
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground">{insight.text}</p>
-                </GlassCard>
-              ))}
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Recent Points Activity</h2>
+              <button onClick={() => navigate("/app/points")} className="text-[11px] font-semibold text-primary hover:underline">
+                History →
+              </button>
             </div>
-          </motion.section>
-
-          {/* E-CELL MINI SECTION */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="E-Cell" subtitle="Build. Compete. Grow." />
-            <div className="relative overflow-hidden rounded-2xl border border-[hsl(265_85%_65%/0.25)] bg-gradient-to-br from-[hsl(265_85%_55%/0.18)] via-[hsl(245_70%_50%/0.10)] to-surface-1 p-4 shadow-card">
-              <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[hsl(265_85%_65%/0.30)] blur-3xl" />
-              <div className="relative space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-xl bg-[hsl(265_85%_65%/0.20)] text-[hsl(265_85%_70%)] flex items-center justify-center">
-                      <Rocket className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">Entrepreneurship Cell</p>
-                      <p className="text-[11px] text-muted-foreground">Events · Stalls · Points</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate("/app/ecell")}
-                    className="text-[11px] font-semibold text-[hsl(265_85%_75%)] hover:underline"
-                  >
-                    Open →
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => navigate("/app/ecell")}
-                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
-                  >
-                    <CalendarDays className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
-                    <p className="text-xs font-semibold text-foreground">Events</p>
-                  </button>
-                  <button
-                    onClick={() => navigate("/app/ecell/stalls")}
-                    className="rounded-xl border border-border-subtle bg-surface-2/60 p-3 text-left hover:border-[hsl(265_85%_65%/0.45)] transition-colors"
-                  >
-                    <Store className="h-4 w-4 text-[hsl(265_85%_70%)] mb-1.5" />
-                    <p className="text-xs font-semibold text-foreground">Stall Registration</p>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
-            <SectionHeader title="Activity Feed" subtitle="Latest 8 events" />
-            <GlassCard padding="none" className="overflow-hidden" hover={false}>
+            <div className="rounded-2xl border border-border-subtle bg-surface-1 divide-y divide-border-subtle overflow-hidden">
               {secondaryQuery.isLoading ? (
                 <div className="space-y-3 p-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 rounded-xl" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 rounded-xl" />
                   ))}
                 </div>
               ) : (secondaryQuery.data?.activities.length ?? 0) === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  No activity recorded yet. Scan attendance to earn points!
                 </div>
               ) : (
-                <div className="divide-y divide-border-subtle">
-                  {(secondaryQuery.data?.activities ?? []).map((activity, index) => (
-                    <ActivityRow key={activity.id} activity={activity} index={index} />
-                  ))}
-                </div>
+                (secondaryQuery.data?.activities ?? []).map((activity, index) => (
+                  <ActivityRow key={activity.id} activity={activity} index={index} />
+                ))
               )}
-            </GlassCard>
+            </div>
           </motion.section>
         </motion.div>
       </PageContainer>
     </PullToRefresh>
   );
 }
-
-const HeroStat = memo(function HeroStat({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
-  const count = useMetricCountUp(value, 800);
-
-  return (
-    <div className="rounded-xl border border-border-subtle/60 bg-surface-2/70 p-3 text-center">
-      <p className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-      <p className="mt-1 font-heading text-xl font-black tabular-nums text-foreground">
-        {count}
-        {suffix}
-      </p>
-    </div>
-  );
-});
 
 const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: RecentPoint; index: number }) {
   const meta = sourceMeta(activity.source);
@@ -649,38 +547,37 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="flex items-center gap-3 px-4 py-3"
+      transition={{ delay: index * 0.03 }}
+      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2/50 transition-colors"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-muted-foreground">
-        <Icon className="h-4 w-4" />
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-bold text-foreground">{meta.label}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{date} {activity.note ? `· ${activity.note}` : ""}</p>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{meta.label}</p>
-        <p className="truncate text-xs text-muted-foreground">{date}</p>
-        {activity.note ? <p className="truncate text-[11px] text-muted-foreground/80">{activity.note}</p> : null}
-      </div>
-      <div className={cn("text-sm font-bold tabular-nums", isPositive ? "text-success" : "text-danger")}>
+      <div className={cn("text-xs font-black tabular-nums shrink-0", isPositive ? "text-success" : "text-danger")}>
         {isPositive ? "+" : ""}
-        {activity.points}
+        {activity.points} pts
       </div>
-      <ArrowRight className="h-4 w-4 text-muted-foreground/60" />
     </motion.div>
   );
 });
 
-/* ── Pastel Quick-Action Tile (native app grid) ────────────────── */
 type Tint = "indigo" | "rose" | "amber" | "purple" | "emerald" | "sky" | "orange" | "slate";
 
 const TINT_CLASSES: Record<Tint, string> = {
-  indigo:  "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
-  rose:    "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
-  amber:   "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
-  purple:  "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300",
-  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
-  sky:     "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
-  orange:  "bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300",
-  slate:   "bg-slate-100 text-slate-500 dark:bg-slate-500/15 dark:text-slate-300",
+  indigo:  "bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-400 border-indigo-500/20",
+  rose:    "bg-rose-500/10 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400 border-rose-500/20",
+  amber:   "bg-amber-500/10 text-amber-500 dark:bg-amber-500/15 dark:text-amber-400 border-amber-500/20",
+  purple:  "bg-purple-500/10 text-purple-500 dark:bg-purple-500/15 dark:text-purple-400 border-purple-500/20",
+  emerald: "bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400 border-emerald-500/20",
+  sky:     "bg-sky-500/10 text-sky-500 dark:bg-sky-500/15 dark:text-sky-400 border-sky-500/20",
+  orange:  "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 dark:text-orange-400 border-orange-500/20",
+  slate:   "bg-slate-500/10 text-slate-500 dark:bg-slate-500/15 dark:text-slate-400 border-slate-500/20",
 };
 
 const QuickTile = memo(function QuickTile({
@@ -698,20 +595,12 @@ const QuickTile = memo(function QuickTile({
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col items-center gap-2 outline-none active:scale-95 transition-transform"
+      className="flex flex-col items-center gap-1.5 p-2 rounded-2xl border border-border-subtle bg-surface-1 hover:border-primary/30 active:scale-95 transition-all"
     >
-      <span
-        className={cn(
-          "w-14 h-14 rounded-2xl flex items-center justify-center",
-          "shadow-[0_4px_10px_-4px_rgba(15,23,42,0.08)]",
-          "border border-border-subtle/40",
-          TINT_CLASSES[tint],
-        )}
-      >
-        <Icon className="w-6 h-6" strokeWidth={2} />
-      </span>
-      <span className="text-[11px] font-semibold text-foreground/80 leading-none">{label}</span>
+      <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center border", TINT_CLASSES[tint])}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <span className="text-[11px] font-bold text-foreground leading-none">{label}</span>
     </button>
   );
 });
-

@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Radio, Clock, MapPin, BookOpen, QrCode,
-  Calendar, ChevronRight, Wifi, WifiOff,
+  Clock, MapPin, BookOpen, QrCode,
+  Calendar, ChevronRight, Wifi, WifiOff, CheckCircle2
 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +33,6 @@ function formatDate(d: string) {
   return new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-/* ── Live Pulse Dot ── */
 function LiveDot() {
   return (
     <span className="relative flex h-2.5 w-2.5">
@@ -73,27 +72,26 @@ export default function StudentScanAttendance() {
   }, [liveLecture?.id]);
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto pb-28">
-
-      {/* ── Header ── */}
+    <div className="space-y-6 max-w-2xl mx-auto pb-28">
+      {/* ── Native Page Header ── */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <QrCode className="h-5 w-5 text-primary" />
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+            <QrCode className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[20px] font-black text-foreground tracking-tight">Mark Attendance</h1>
-            <p className="text-[12px] text-muted-foreground">Scan QR or enter OTP to record your presence</p>
+            <h1 className="text-xl font-black text-foreground tracking-tight">Mark Lecture Attendance</h1>
+            <p className="text-xs text-muted-foreground">Scan dynamic QR code or enter the session OTP</p>
           </div>
         </div>
       </motion.div>
 
-      {/* ── Network / loading indicator ── */}
+      {/* ── Network Loading Indicator ── */}
       {lecturesQuery.isLoading && (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+        <div className="flex items-center gap-2.5 text-xs text-muted-foreground bg-surface-1 border border-border-subtle p-3.5 rounded-2xl">
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-3.5 w-3.5 border-2 border-primary border-t-transparent rounded-full" />
-          Checking for live lectures…
+            className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+          <span>Connecting to live campus attendance engine…</span>
         </div>
       )}
 
@@ -102,82 +100,66 @@ export default function StudentScanAttendance() {
         {liveLecture && (
           <motion.div
             key="live-banner"
-            initial={{ opacity: 0, scale: 0.97, y: -8 }}
+            initial={{ opacity: 0, scale: 0.98, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="rounded-2xl overflow-hidden border border-danger/30 bg-danger/5 shadow-[0_0_24px_hsl(var(--danger)/0.15)]"
+            className="rounded-3xl overflow-hidden border border-danger/30 bg-surface-1 shadow-lg shadow-danger/10"
           >
-            {/* Top accent */}
-            <div className="h-1 bg-gradient-to-r from-danger via-red-400 to-danger" />
-            <div className="p-5">
-              {/* LIVE badge row */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5 bg-danger/10 border border-danger/25 px-3 py-1.5 rounded-full">
+            <div className="h-1.5 bg-gradient-to-r from-danger via-red-400 to-danger" />
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 px-3 py-1 rounded-full">
                   <LiveDot />
-                  <span className="text-[12px] font-black text-danger tracking-widest uppercase">Live Now</span>
+                  <span className="text-[11px] font-black text-danger tracking-widest uppercase">Live Class</span>
                 </div>
-                <motion.div
-                  animate={{ opacity: [1, 0.4, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="text-[11px] font-semibold text-danger"
-                >
-                  Attendance Open
-                </motion.div>
+                <span className="text-xs font-mono font-bold text-danger">Attendance Open</span>
               </div>
 
-              {/* Lecture info */}
-              <h2 className="text-[17px] font-black text-foreground mb-3">{liveLecture.topic}</h2>
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5 text-danger/60" />
-                  {liveLecture.venue}
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5 text-danger/60" />
-                  {formatTime(liveLecture.start_time)} – {formatTime(liveLecture.end_time)}
+              <div>
+                <h2 className="text-lg font-black text-foreground">{liveLecture.topic}</h2>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1.5">
+                  <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-danger" /> {liveLecture.venue}</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-danger" /> {formatTime(liveLecture.start_time)} – {formatTime(liveLecture.end_time)}</span>
                 </div>
               </div>
 
-              {/* Mark Attendance CTA */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
+              <button
+                type="button"
                 onClick={() => setSelectedLectureId(liveLecture.id)}
                 className={cn(
-                  "w-full py-3.5 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all duration-150",
+                  "w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]",
                   selectedLectureId === liveLecture.id
                     ? "bg-success/15 border border-success/30 text-success"
-                    : "bg-action-danger text-action-danger-foreground border border-action-danger hover:bg-action-danger-hover shadow-lg shadow-danger/20",
+                    : "bg-danger text-white shadow-md shadow-danger/25 hover:bg-danger/90",
                 )}
               >
                 {selectedLectureId === liveLecture.id ? (
-                  <>✓ Marking this lecture</>
+                  <><CheckCircle2 className="h-4 w-4" /> Ready to mark attendance</>
                 ) : (
-                  <><QrCode className="h-4 w-4" /> Mark Attendance</>
+                  <><QrCode className="h-4 w-4" /> Select this lecture</>
                 )}
-              </motion.button>
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── No live lecture state ── */}
+      {/* ── No Live Lecture State ── */}
       {!lecturesQuery.isLoading && !liveLecture && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-border-subtle bg-surface-1 p-5 text-center shadow-sm"
-        >
-          <div className="h-12 w-12 rounded-2xl bg-surface-3 flex items-center justify-center mx-auto mb-3">
-            <WifiOff className="h-6 w-6 text-muted-foreground/50" />
+        <div className="rounded-3xl border border-border-subtle bg-surface-1 p-8 text-center space-y-2">
+          <div className="h-12 w-12 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto text-muted-foreground">
+            <WifiOff className="h-6 w-6 opacity-60" />
           </div>
-          <p className="text-[14px] font-semibold text-foreground mb-1">No Live Lecture</p>
-          <p className="text-[12px] text-muted-foreground">
-            When your professor starts a session, this page will update automatically.
+          <h3 className="text-sm font-bold text-foreground">No Live Session Right Now</h3>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            When your professor starts a lecture, this screen will update automatically with the QR scanner.
           </p>
-        </motion.div>
+        </div>
       )}
 
-      {/* ── Attendance Marking Card ── */}
+      {/* ── Active Marking Card Viewport ── */}
       <AnimatePresence mode="wait">
         {selectedLecture && (
           <motion.div
@@ -186,22 +168,22 @@ export default function StudentScanAttendance() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
+            className="space-y-3"
           >
-            {/* Lecture context strip */}
-            <div className="rounded-xl border border-border-subtle bg-surface-2 px-4 py-3 mb-3 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <BookOpen className="h-4 w-4 text-primary" />
+            <div className="rounded-2xl border border-border-subtle bg-surface-2/70 px-4 py-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <BookOpen className="h-4.5 w-4.5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-foreground truncate">{selectedLecture.topic}</p>
+                <p className="text-[13px] font-bold text-foreground truncate">{selectedLecture.topic}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {formatDate(selectedLecture.lecture_date)} · {formatTime(selectedLecture.start_time)} · {selectedLecture.venue}
                 </p>
               </div>
               {selectedLecture.status === "live" && (
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-danger flex-shrink-0">
-                  <LiveDot /> Live
-                </div>
+                <span className="text-[10px] font-black uppercase text-danger bg-danger/10 px-2 py-0.5 rounded-full shrink-0">
+                  Live
+                </span>
               )}
             </div>
 
@@ -210,72 +192,30 @@ export default function StudentScanAttendance() {
         )}
       </AnimatePresence>
 
-      {/* ── Upcoming Lectures ── */}
+      {/* ── Upcoming Schedule Ahead ── */}
       {upcomingLectures.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          className="rounded-2xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm"
-        >
-          <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border-subtle">
-            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-[14px] font-bold text-foreground">Upcoming Lectures</p>
-              <p className="text-[11px] text-muted-foreground">{upcomingLectures.length} scheduled</p>
-            </div>
+        <div className="rounded-3xl border border-border-subtle bg-surface-1 overflow-hidden shadow-sm">
+          <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Upcoming Today / This Week</h3>
+            <span className="text-xs font-semibold text-primary">{upcomingLectures.length} scheduled</span>
           </div>
-          <div className="divide-y divide-border-subtle/50">
-            {upcomingLectures.slice(0, 5).map((l, i) => (
-              <motion.button
+          <div className="divide-y divide-border-subtle">
+            {upcomingLectures.map((l) => (
+              <div
                 key={l.id}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.14 + i * 0.04 }}
-                whileTap={{ scale: 0.99 }}
                 onClick={() => setSelectedLectureId(l.id)}
-                className={cn(
-                  "w-full px-5 py-4 flex items-center gap-3 text-left transition-colors hover:bg-surface-2",
-                  selectedLectureId === l.id && "bg-primary/5 border-l-2 border-l-primary",
-                )}
+                className="cursor-pointer flex items-center justify-between p-4 hover:bg-surface-2/60 transition-colors"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{l.topic}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-primary font-medium">{formatDate(l.lecture_date)}</span>
-                    <span className="text-[10px] text-muted-foreground">{formatTime(l.start_time)} – {formatTime(l.end_time)}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />{l.venue}
-                  </p>
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-[13px] font-bold text-foreground truncate">{l.topic}</p>
+                  <p className="text-[11px] text-muted-foreground">{formatDate(l.lecture_date)} · {formatTime(l.start_time)} · {l.venue}</p>
                 </div>
-                <ChevronRight className={cn("h-4 w-4 transition-colors", selectedLectureId === l.id ? "text-primary" : "text-muted-foreground/40")} />
-              </motion.button>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+              </div>
             ))}
           </div>
-        </motion.div>
-      )}
-
-      {/* ── Scanner tip card ── */}
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        className="rounded-2xl border border-primary/15 bg-primary/5 p-4"
-      >
-        <div className="flex items-start gap-3">
-          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Wifi className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-foreground mb-1">Tips for marking attendance</p>
-            <ul className="space-y-1 text-[11px] text-muted-foreground">
-              <li>→ Ask your professor to show the QR code or OTP</li>
-              <li>→ Allow camera access when prompted for QR scanning</li>
-              <li>→ OTP auto-submits when all 6 digits are entered</li>
-              <li>→ Attendance can only be marked during a live lecture</li>
-            </ul>
-          </div>
         </div>
-      </motion.div>
+      )}
     </div>
   );
 }

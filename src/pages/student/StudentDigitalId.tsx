@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Share2, ShieldCheck } from "@/components/icons";
+import { Download, Share2, ShieldCheck, QrCode, Sparkles } from "@/components/icons";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/layout/PageContainer";
+import { PageHeader } from "@/layout/PageHeader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type ProfileRow = {
   name: string;
@@ -86,7 +89,7 @@ export default function StudentDigitalId() {
       link.download = `CampusConnect-ID-${profile?.student_id || "card"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-      toast.success("ID Card downloaded");
+      toast.success("Official ID Card downloaded");
     } catch {
       toast.error("Failed to download ID card");
     } finally {
@@ -119,18 +122,18 @@ export default function StudentDigitalId() {
 
   if (profileQuery.isLoading || meQuery.isLoading) {
     return (
-      <div className="flex flex-col items-center gap-6 py-8">
-        <Skeleton className="h-[420px] w-full max-w-sm rounded-xl" />
-        <Skeleton className="h-9 w-48" />
-      </div>
+      <PageContainer className="flex flex-col items-center gap-6 py-8">
+        <Skeleton className="h-[440px] w-full max-w-sm rounded-3xl" />
+        <Skeleton className="h-10 w-48 rounded-xl" />
+      </PageContainer>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-muted-foreground">Profile not found. Please complete your profile first.</p>
-      </div>
+      <PageContainer className="flex items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Profile not found. Please complete your registration.</p>
+      </PageContainer>
     );
   }
 
@@ -138,181 +141,160 @@ export default function StudentDigitalId() {
   const primaryProgramme = programmes[0]?.programmes?.name ?? null;
 
   return (
-    <div className="flex flex-col items-center gap-6 py-6">
-      {/* Visible card */}
+    <PageContainer className="flex flex-col items-center gap-6 py-4 pb-24" withBottomNav>
+      <div className="w-full max-w-sm text-center">
+        <PageHeader
+          title="Digital Identity Card"
+          subtitle="Official institutional credential with cryptographic verification"
+        />
+      </div>
+
+      {/* Visible Interactive ID Card */}
       <div ref={cardRef} className="w-full max-w-sm">
-        <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
-          {/* Top institution bar */}
-          <div className="bg-primary px-5 pt-4 pb-3 text-center">
-            <p className="text-[11px] font-bold tracking-[0.25em] text-primary-foreground uppercase">
+        <div className="relative overflow-hidden rounded-[28px] border border-border-subtle bg-surface-1 shadow-xl shadow-primary/5">
+          {/* Institutional Top Bar */}
+          <div className="bg-gradient-to-r from-primary to-accent px-6 pt-5 pb-4 text-center text-white">
+            <p className="text-[11px] font-black tracking-[0.25em] uppercase">
               Campus Connect
             </p>
-            <p className="text-[9px] text-primary-foreground/60 tracking-[0.15em] uppercase mt-0.5">
-              Student Identity Card
+            <p className="text-[9px] text-white/80 tracking-[0.15em] uppercase mt-0.5 font-bold">
+              Official Student Credential
             </p>
           </div>
 
-          {/* Main content */}
-          <div className="flex items-center gap-4 px-5 py-4 flex-1">
-            {/* Left: identity info */}
-            <div className="flex-1 space-y-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Full Name</p>
-              <p className="text-base font-semibold text-foreground leading-tight truncate">{profile.name}</p>
+          {/* Student Profile & QR Body */}
+          <div className="p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <Avatar className="h-16 w-16 rounded-2xl ring-2 ring-primary/20 border border-border-subtle">
+                <AvatarImage src={profile.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary font-black text-xl">
+                  {profile.name[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
 
+              <div className="shrink-0 bg-white p-2 rounded-2xl border border-border-subtle shadow-sm">
+                <QRCodeSVG
+                  value={qrPayload}
+                  size={84}
+                  level="H"
+                  includeMargin={false}
+                  bgColor="transparent"
+                  fgColor="#0f172a"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1 pt-1 border-t border-border-subtle">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Student Name</p>
+              <h2 className="text-base font-black text-foreground truncate">{profile.name}</h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
               {profile.student_id && (
-                <div className="pt-1">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Student ID</p>
-                  <p className="text-sm font-mono text-foreground tracking-widest">{profile.student_id}</p>
+                <div>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Roll / ID Number</p>
+                  <p className="font-mono font-bold text-foreground mt-0.5 tracking-wider">{profile.student_id}</p>
                 </div>
               )}
 
               {(primaryProgramme || profile.department) && (
-                <div className="pt-1">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Programme</p>
-                  <p className="text-xs text-foreground">{primaryProgramme ?? profile.department}</p>
+                <div>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Programme</p>
+                  <p className="font-bold text-foreground mt-0.5 truncate">{primaryProgramme ?? profile.department}</p>
                 </div>
               )}
 
               {profile.class_name && (
-                <div className="pt-0.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Class</p>
-                  <p className="text-xs text-foreground">{profile.class_name}</p>
+                <div>
+                  <p className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Class / Division</p>
+                  <p className="font-bold text-foreground mt-0.5">{profile.class_name}</p>
                 </div>
               )}
 
-              {profile.is_verified && (
-                <div className="pt-1.5">
-                  <Badge variant="secondary" className="gap-1 text-[10px] h-5 px-2">
-                    <ShieldCheck className="h-2.5 w-2.5" />
-                    Verified
-                  </Badge>
+              <div>
+                <p className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
+                <div className="flex items-center gap-1 text-success font-bold mt-0.5">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
                 </div>
-              )}
-            </div>
-
-            {/* Right: QR code */}
-            <div className="shrink-0">
-              <div className="rounded-lg border bg-background p-2">
-                <QRCodeSVG
-                  value={qrPayload}
-                  size={96}
-                  level="H"
-                  includeMargin={false}
-                  bgColor="transparent"
-                  fgColor="hsl(220, 65%, 38%)"
-                />
               </div>
-              <p className="text-[9px] text-muted-foreground text-center mt-1 tracking-wide">Scan to verify</p>
             </div>
           </div>
 
-          {/* Footer strip */}
-          <div className="border-t px-5 py-2 text-center bg-muted/30">
-            <p className="text-[9px] tracking-[0.2em] text-muted-foreground uppercase">
-              Campus Connect — Verified Student
+          {/* Hologram Bottom Security Strip */}
+          <div className="border-t border-border-subtle px-6 py-3 text-center bg-surface-2/80">
+            <p className="text-[9.5px] tracking-[0.2em] text-muted-foreground font-bold uppercase">
+              Secure Institutional Verification
             </p>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Action Buttons */}
       <div className="flex gap-3 w-full max-w-sm">
         <Button
           onClick={handleDownload}
           disabled={downloading}
-          className="flex-1 gap-2"
+          className="flex-1 h-11 rounded-2xl gap-2 text-xs font-bold border-border-subtle hover:bg-surface-2"
           variant="outline"
-          size="sm"
         >
-          <Download className="h-3.5 w-3.5" />
-          {downloading ? "Generating…" : "Download"}
+          <Download className="h-4 w-4" />
+          {downloading ? "Exporting…" : "Download PNG"}
         </Button>
         <Button
           onClick={handleShare}
           disabled={downloading}
-          className="flex-1 gap-2"
-          size="sm"
+          className="flex-1 h-11 rounded-2xl gap-2 text-xs font-bold shadow-md shadow-primary/20"
         >
-          <Share2 className="h-3.5 w-3.5" />
-          Share
+          <Share2 className="h-4 w-4" />
+          Share ID
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground max-w-sm text-center">
-        Official Campus Connect Digital ID. Share only when required.
-      </p>
 
-      {/* Hidden downloadable version — white institutional card */}
+      {/* Hidden high-res canvas rendering container */}
       <div className="fixed -left-[9999px] top-0">
         <div
           ref={downloadRef}
           style={{
             width: 480,
             backgroundColor: "#ffffff",
-            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            color: "#0f172a",
+            padding: "28px",
+            borderRadius: "24px",
             border: "1px solid #e2e8f0",
-            borderRadius: 12,
-            overflow: "hidden",
           }}
         >
-          {/* Header */}
-          <div style={{ backgroundColor: "hsl(220, 65%, 38%)", padding: "14px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#ffffff", letterSpacing: "0.25em", textTransform: "uppercase" }}>
+          <div style={{ backgroundColor: "#1e3a8a", color: "#ffffff", padding: "16px", borderRadius: "16px", textAlign: "center" }}>
+            <p style={{ fontSize: "14px", fontWeight: "900", letterSpacing: "0.25em", textTransform: "uppercase", margin: 0 }}>
               Campus Connect
+            </p>
+            <p style={{ fontSize: "10px", opacity: 0.8, letterSpacing: "0.15em", textTransform: "uppercase", margin: "4px 0 0" }}>
+              Official Student Credential
+            </p>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "24px" }}>
+            <div>
+              <p style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", margin: 0 }}>Student Name</p>
+              <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#0f172a", margin: "2px 0 0" }}>{profile.name}</h2>
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.65)", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>
-              Student Identity Card
+            <div style={{ padding: "8px", border: "1px solid #cbd5e1", borderRadius: "12px" }}>
+              <QRCodeSVG value={qrPayload} size={80} level="H" bgColor="#ffffff" fgColor="#0f172a" />
             </div>
           </div>
 
-          {/* Body */}
-          <div style={{ display: "flex", gap: 20, padding: "20px 24px", alignItems: "center" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Full Name</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: "#0f172a" }}>{profile.name}</div>
-
-              {profile.student_id && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Student ID</div>
-                  <div style={{ fontSize: 13, fontFamily: "monospace", color: "#0f172a", letterSpacing: "0.12em" }}>{profile.student_id}</div>
-                </div>
-              )}
-
-              {(primaryProgramme || profile.department) && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Programme</div>
-                  <div style={{ fontSize: 12, color: "#0f172a" }}>{primaryProgramme ?? profile.department}</div>
-                </div>
-              )}
-
-              {profile.class_name && (
-                <div style={{ marginTop: 6 }}>
-                  <div style={{ fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Class</div>
-                  <div style={{ fontSize: 12, color: "#0f172a" }}>{profile.class_name}</div>
-                </div>
-              )}
-
-              {profile.is_verified && (
-                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 4, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, padding: "3px 8px" }}>
-                  <span style={{ fontSize: 10, color: "#475569", fontWeight: 600 }}>✓ VERIFIED</span>
-                </div>
-              )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "20px", borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
+            <div>
+              <p style={{ fontSize: "10px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", margin: 0 }}>Student ID</p>
+              <p style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", margin: "2px 0 0" }}>{profile.student_id ?? "N/A"}</p>
             </div>
-
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 8, backgroundColor: "#f8fafc" }}>
-                <QRCodeSVG value={qrPayload} size={110} level="H" bgColor="transparent" fgColor="hsl(220, 65%, 38%)" />
-              </div>
-              <div style={{ fontSize: 9, color: "#94a3b8", textAlign: "center", marginTop: 4, letterSpacing: "0.05em" }}>Scan to verify</div>
+            <div>
+              <p style={{ fontSize: "10px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", margin: 0 }}>Programme</p>
+              <p style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", margin: "2px 0 0" }}>{primaryProgramme ?? profile.department ?? "General"}</p>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div style={{ borderTop: "1px solid #e2e8f0", padding: "8px 24px", textAlign: "center", backgroundColor: "#f8fafc" }}>
-            <div style={{ fontSize: 9, color: "#94a3b8", letterSpacing: "0.15em", textTransform: "uppercase" }}>Campus Connect — Verified Student</div>
-            <div style={{ fontSize: 8, color: "#cbd5e1", marginTop: 3 }}>– An LeadCircle Initiative · © Campus Connect. All Rights Reserved.</div>
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
