@@ -254,15 +254,19 @@ export default function AppLayout() {
                 </div>
 
                 {/* Right controls */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <SystemStatus />
                   <button
                     type="button"
                     onClick={() => window.dispatchEvent(new Event("campus:open-search"))}
                     aria-label="Search"
-                    className="tap-ripple flex h-8 w-8 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-muted-foreground transition-all duration-fast hover:bg-surface-3 hover:text-foreground active:scale-95"
+                    className="tap-ripple flex h-8 items-center gap-2 px-2.5 rounded-xl border border-border-subtle bg-surface-2/80 text-muted-foreground transition-all duration-fast hover:bg-surface-3 hover:text-foreground hover:border-border-strong active:scale-95"
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline text-[11px] font-medium text-muted-foreground">Search</span>
+                    <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground/80 bg-surface-1 border border-border-subtle rounded">
+                      ⌘K
+                    </kbd>
                   </button>
 
                   {user && (

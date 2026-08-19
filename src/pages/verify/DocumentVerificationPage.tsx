@@ -16,8 +16,12 @@ import {
   Building2,
   UserCircle2,
   Fingerprint,
+  CheckCircle2,
+  ArrowRight,
+  GraduationCap
 } from "@/components/icons";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
 
 type VerifyResult = {
   found: boolean;
@@ -71,12 +75,10 @@ export default function DocumentVerificationPage() {
         if (!alive) return;
         setResult(data as VerifyResult);
 
-        // Fire and forget: increment counter
         if ((data as VerifyResult)?.found && (data as VerifyResult)?.status === "active") {
           supabase.rpc("verify_document_touch", { p_reference: reference }).then(() => {});
         }
 
-        // If there is a PDF, get a short-lived signed URL
         const pdfPath = (data as VerifyResult)?.pdf_path;
         if (pdfPath) {
           const { data: signed } = await supabase.storage
@@ -106,73 +108,76 @@ export default function DocumentVerificationPage() {
   }, [loading, result]);
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-b from-background to-muted/30 py-10 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between py-12 px-4 relative overflow-hidden selection:bg-primary/20 selection:text-primary">
+      {/* Ambient background glow */}
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,hsl(var(--primary)/0.15),transparent_70%)]" />
+
+      <div className="max-w-2xl mx-auto w-full space-y-6">
         {/* Brand header */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <img src={BRANDING.logo} alt={BRANDING.name} className="h-10 w-10 rounded-lg" />
+        <Link to="/" className="flex items-center justify-center gap-3 group">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+            <GraduationCap className="h-5 w-5 text-primary" />
+          </div>
           <div className="text-left">
-            <div className="font-heading font-bold text-lg leading-tight">{BRANDING.name}</div>
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              Document Verification
+            <div className="font-heading font-black text-lg leading-tight tracking-tight text-foreground">{BRANDING.name}</div>
+            <div className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary">
+              Cryptographic Document Verification
             </div>
           </div>
-        </div>
+        </Link>
 
         {state === "loading" && (
-          <Card className="p-10 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Verifying document…</p>
+          <Card className="p-12 text-center rounded-3xl border-border-subtle bg-surface-1 shadow-lg space-y-3">
+            <Loader2 className="h-9 w-9 animate-spin text-primary mx-auto" />
+            <p className="font-heading text-base font-bold text-foreground">Verifying Cryptographic Reference...</p>
+            <p className="text-xs text-muted-foreground">Checking institutional verification database and signature</p>
           </Card>
         )}
 
         {state === "invalid" && (
-          <Card className="p-8 text-center border-destructive/40">
-            <div className="h-14 w-14 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto mb-4">
-              <ShieldX className="h-7 w-7 text-destructive" />
+          <Card className="p-10 text-center rounded-3xl border-danger/30 bg-surface-1 shadow-lg space-y-4">
+            <div className="h-16 w-16 rounded-2xl bg-danger/10 border border-danger/25 flex items-center justify-center mx-auto text-danger">
+              <ShieldX className="h-8 w-8" />
             </div>
-            <h1 className="font-heading text-2xl font-bold mb-2">Invalid Document</h1>
-            <p className="text-sm text-muted-foreground">
-              No document was found for reference <span className="font-mono">{reference}</span>.
-              The link may be incorrect or the document has been removed.
-            </p>
-            {error && <p className="text-xs text-muted-foreground mt-3">{error}</p>}
+            <div className="space-y-1">
+              <h1 className="font-heading text-2xl font-black text-foreground">Invalid Document Reference</h1>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                No matching academic record was found for reference <span className="font-mono font-bold text-foreground">{reference}</span>.
+              </p>
+            </div>
+            {error && <p className="text-xs text-danger font-medium bg-danger/10 py-1.5 px-3 rounded-lg max-w-sm mx-auto">{error}</p>}
           </Card>
         )}
 
         {state === "revoked" && result && (
-          <Card className="p-8 border-destructive/40">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center">
-                <ShieldAlert className="h-6 w-6 text-destructive" />
+          <Card className="p-8 rounded-3xl border-danger/30 bg-surface-1 shadow-lg space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-danger/10 border border-danger/25 flex items-center justify-center shrink-0">
+                <ShieldAlert className="h-6 w-6 text-danger" />
               </div>
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-destructive font-semibold">
-                  Revoked
-                </div>
-                <h1 className="font-heading text-xl font-bold">This document has been revoked</h1>
+                <span className="text-[10px] uppercase font-black tracking-widest text-danger">Document Revoked</span>
+                <h1 className="font-heading text-xl font-black text-foreground">This document has been officially revoked</h1>
               </div>
             </div>
             {result.revoked_reason && (
-              <p className="text-sm text-muted-foreground mb-4">
+              <div className="p-3.5 rounded-xl bg-danger/8 border border-danger/20 text-xs text-danger leading-relaxed">
                 <strong>Reason:</strong> {result.revoked_reason}
-              </p>
+              </div>
             )}
             <DocumentFacts result={result} />
           </Card>
         )}
 
         {state === "expired" && result && (
-          <Card className="p-8 border-amber-500/40">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                <ShieldAlert className="h-6 w-6 text-amber-500" />
+          <Card className="p-8 rounded-3xl border-warning/30 bg-surface-1 shadow-lg space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-warning/10 border border-warning/25 flex items-center justify-center shrink-0">
+                <ShieldAlert className="h-6 w-6 text-warning" />
               </div>
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-amber-500 font-semibold">
-                  Expired
-                </div>
-                <h1 className="font-heading text-xl font-bold">This document has expired</h1>
+                <span className="text-[10px] uppercase font-black tracking-widest text-warning">Validity Expired</span>
+                <h1 className="font-heading text-xl font-black text-foreground">This document validity period has ended</h1>
               </div>
             </div>
             <DocumentFacts result={result} />
@@ -180,56 +185,72 @@ export default function DocumentVerificationPage() {
         )}
 
         {state === "valid" && result && (
-          <Card className="overflow-hidden">
-            <div className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-b p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                  <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-semibold">
-                    Verified · Authentic
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            <Card className="overflow-hidden rounded-3xl border-border-subtle bg-surface-1 shadow-2xl">
+              {/* Genuine Header Banner */}
+              <div className="bg-gradient-to-br from-success/15 via-success/8 to-transparent border-b border-border-subtle p-6 sm:p-8">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="h-14 w-14 rounded-2xl bg-success/20 border border-success/35 flex items-center justify-center shrink-0 text-success shadow-md shadow-success/10">
+                    <ShieldCheck className="h-7 w-7" />
                   </div>
-                  <h1 className="font-heading text-xl font-bold">
-                    This document is genuine
-                  </h1>
+                  <div>
+                    <span className="inline-flex items-center gap-1 text-[11px] uppercase font-black tracking-widest text-success bg-success/15 border border-success/25 px-2.5 py-0.5 rounded-full mb-1">
+                      <CheckCircle2 className="h-3 w-3" /> Genuine & Verified
+                    </span>
+                    <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">
+                      Official Institutional Document
+                    </h1>
+                  </div>
+                </div>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  Issued by <strong className="text-foreground">{result.issued_by}</strong> on behalf of <strong className="text-foreground">{result.college ?? BRANDING.name}</strong>.
+                </p>
+              </div>
+
+              {/* Verified Metadata Grid */}
+              <div className="p-6 sm:p-8 space-y-6">
+                <DocumentFacts result={result} />
+
+                {pdfUrl && (
+                  <a href={pdfUrl} target="_blank" rel="noreferrer" className="block pt-2">
+                    <Button className="w-full h-12 rounded-xl font-bold shadow-md shadow-primary/25 text-sm gap-2" size="lg">
+                      <Download className="h-4 w-4" />
+                      Download Official Signed PDF
+                    </Button>
+                  </a>
+                )}
+
+                {/* Cryptographic Seal Footer */}
+                <div className="rounded-2xl border border-border-subtle bg-surface-2/60 p-4 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-foreground font-semibold">
+                    <Fingerprint className="h-4 w-4 text-primary" />
+                    <span>Cryptographic Verification Reference</span>
+                  </div>
+                  <p className="font-mono text-[11px] text-muted-foreground break-all">
+                    Ref: {result.reference} · Signature Token: ••••{result.token_tail}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/80 pt-1">
+                    Verified on {fmtDate(result.verified_at)} at {new Date(result.verified_at ?? Date.now()).toLocaleTimeString()}.
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Issued by {result.issued_by} on behalf of {result.college ?? BRANDING.name}.
-              </p>
-            </div>
-
-            <div className="p-6">
-              <DocumentFacts result={result} />
-
-              {pdfUrl && (
-                <a href={pdfUrl} target="_blank" rel="noreferrer" className="block mt-6">
-                  <Button className="w-full" size="lg">
-                    <Download className="h-4 w-4 mr-2" />
-                    View Official Document (PDF)
-                  </Button>
-                </a>
-              )}
-
-              <div className="mt-6 flex items-center gap-2 text-[11px] text-muted-foreground border-t pt-4">
-                <Fingerprint className="h-3.5 w-3.5" />
-                <span className="font-mono">
-                  Ref: {result.reference} · Token: ••••{result.token_tail}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Verified on {fmtDate(result.verified_at)} at {new Date(result.verified_at ?? Date.now()).toLocaleTimeString()}.
-              </p>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         )}
 
-        <div className="text-center mt-6">
-          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
-            ← Back to {BRANDING.name}
+        <div className="text-center pt-2">
+          <Link to="/" className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors">
+            ← Return to {BRANDING.name} Homepage
           </Link>
         </div>
+      </div>
+
+      <div className="text-center text-[11px] text-muted-foreground/60 pt-6">
+        © {new Date().getFullYear()} {BRANDING.name} · Digital Credential Authority
       </div>
     </div>
   );
@@ -237,15 +258,15 @@ export default function DocumentVerificationPage() {
 
 function DocumentFacts({ result }: { result: VerifyResult }) {
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <Fact icon={<FileText className="h-4 w-4" />} label="Document Type" value={result.document_type} />
-      <Fact icon={<UserCircle2 className="h-4 w-4" />} label="Issued To" value={result.student_name} />
-      <Fact icon={<Building2 className="h-4 w-4" />} label="Institution" value={result.college} />
-      <Fact icon={<Building2 className="h-4 w-4" />} label="Department" value={result.department} />
-      {result.role && <Fact icon={<Badge className="h-4 w-4 p-0" />} label="Role / Position" value={result.role} />}
-      <Fact icon={<Calendar className="h-4 w-4" />} label="Issue Date" value={fmtDate(result.issue_date)} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Fact icon={<FileText className="h-4 w-4 text-primary" />} label="Document Type" value={result.document_type} />
+      <Fact icon={<UserCircle2 className="h-4 w-4 text-primary" />} label="Student Name" value={result.student_name} />
+      <Fact icon={<Building2 className="h-4 w-4 text-primary" />} label="Institution" value={result.college} />
+      <Fact icon={<Building2 className="h-4 w-4 text-primary" />} label="Department" value={result.department} />
+      {result.role && <Fact icon={<Badge className="h-4 w-4 p-0" />} label="Role / Designation" value={result.role} />}
+      <Fact icon={<Calendar className="h-4 w-4 text-primary" />} label="Issue Date" value={fmtDate(result.issue_date)} />
       {result.expiry_date && (
-        <Fact icon={<Calendar className="h-4 w-4" />} label="Valid Until" value={fmtDate(result.expiry_date)} />
+        <Fact icon={<Calendar className="h-4 w-4 text-primary" />} label="Valid Through" value={fmtDate(result.expiry_date)} />
       )}
     </div>
   );
@@ -253,11 +274,12 @@ function DocumentFacts({ result }: { result: VerifyResult }) {
 
 function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string | null }) {
   return (
-    <div className="rounded-xl border bg-card/50 p-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
-        {icon} {label}
+    <div className="rounded-2xl border border-border-subtle bg-surface-2/60 p-3.5 space-y-1">
+      <div className="flex items-center gap-1.5 text-[10.5px] uppercase font-bold tracking-wider text-muted-foreground">
+        {icon}
+        <span>{label}</span>
       </div>
-      <div className="text-sm font-medium break-words">{value || "—"}</div>
+      <div className="text-[13.5px] font-bold text-foreground break-words">{value || "—"}</div>
     </div>
   );
 }

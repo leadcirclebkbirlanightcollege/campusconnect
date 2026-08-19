@@ -1,32 +1,29 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   Loader2, Eye, EyeOff,
-  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap,
+  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, GraduationCap, ShieldCheck, QrCode
 } from "@/components/icons";
 import { User } from "@supabase/supabase-js";
-import { cn } from "@/lib/utils";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
+import { motion } from "framer-motion";
 
-
-/* ── Feature chip ─────────────────────────────────────────────── */
-const FEATURES = [
-  { icon: BookOpen, label: "Track Lectures" },
-  { icon: CheckCircle2, label: "Mark Attendance" },
-  { icon: Trophy, label: "Leaderboard" },
-  { icon: Zap, label: "Earn Points" },
+/* ── Feature chips for left hero panel ── */
+const HIGHLIGHTS = [
+  { icon: QrCode, label: "Tamper-Proof QR Attendance", desc: "Instant GPS-fenced check-ins" },
+  { icon: BookOpen, label: "Live Timetable & Tasks", desc: "Always in sync with professors" },
+  { icon: Trophy, label: "Gamified Academic Tiers", desc: "Earn points, streaks & prestige" },
+  { icon: ShieldCheck, label: "Official Verified ID", desc: "Secure digital student credentials" },
 ];
 
-/* ── Input wrapper with show/hide ─────────────────────────────── */
+/* ── Input wrapper with show/hide ── */
 function PasswordInput({
   id, placeholder, value, onChange, label,
 }: {
@@ -36,7 +33,7 @@ function PasswordInput({
   const [show, setShow] = useState(false);
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-[13px] font-medium text-foreground">{label}</Label>
+      <Label htmlFor={id} className="text-[13px] font-semibold text-foreground">{label}</Label>
       <div className="relative">
         <Input
           id={id}
@@ -44,14 +41,14 @@ function PasswordInput({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pr-10 h-11 bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px]"
+          className="pr-10 h-11 bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] rounded-xl transition-all"
           required
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setShow(!show)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
           aria-label={show ? "Hide password" : "Show password"}
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -61,7 +58,7 @@ function PasswordInput({
   );
 }
 
-/* ── Auth page ─────────────────────────────────────────────────── */
+/* ── Auth page ── */
 const Auth = () => {
   const navigate = useNavigate();
   const { branding } = usePlatformBranding();
@@ -72,11 +69,10 @@ const Auth = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  // Signup form (simplified — rest collected in onboarding wizard)
+  // Signup form
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
-
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -129,7 +125,6 @@ const Auth = () => {
       const identifier = loginIdentifier.trim();
       if (!identifier) throw new Error("Please enter Email or Student ID");
 
-      // Emails are stored lowercase in Supabase Auth — always normalise.
       let email = identifier.toLowerCase();
       if (!identifier.includes("@")) {
         const { data: resolved, error: resolveError } = await supabase.functions.invoke(
@@ -194,9 +189,6 @@ const Auth = () => {
       }
       if (!authData.user) throw new Error("Failed to create account");
 
-      // If email confirmation is required, no session is returned — never pretend
-      // the user is signed in. Otherwise ensure the session is active before writing
-      // profile rows (RLS requires an authenticated user).
       let session = authData.session;
       if (!session) {
         const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -209,7 +201,6 @@ const Auth = () => {
         session = signIn.session;
       }
 
-      // Minimal profile row — the rest is collected in /onboarding-wizard
       await supabase.from("profiles").upsert(
         [{ user_id: authData.user.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
         { onConflict: "user_id" }
@@ -218,7 +209,6 @@ const Auth = () => {
         [{ user_id: authData.user.id, role: "student" }],
         { onConflict: "user_id,role" }
       );
-
 
       toast.success("Account created — let's set up your profile");
       navigate("/onboarding-wizard", { replace: true });
@@ -229,8 +219,6 @@ const Auth = () => {
     }
   };
 
-
-
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -238,137 +226,129 @@ const Auth = () => {
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
-          <p className="text-[13px] text-muted-foreground">Redirecting...</p>
+          <p className="text-[13px] font-medium text-muted-foreground">Redirecting to your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* ── Left Panel (hero — desktop only) ───────────────────── */}
-      <div className="hidden lg:flex lg:w-[42%] xl:w-[45%] bg-surface-1 border-r border-border-subtle flex-col justify-between p-10 relative overflow-hidden">
-        {/* Background grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
-            `,
-            backgroundSize: "40px 40px",
-          }}
-        />
+    <div className="min-h-screen flex bg-background text-foreground selection:bg-primary/20 selection:text-primary">
+      {/* ── Left Hero Panel (Desktop Showcase) ── */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[48%] bg-surface-1 border-r border-border-subtle flex-col justify-between p-12 relative overflow-hidden">
+        {/* Subtle mesh background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_20%_20%,hsl(var(--primary)/0.15),transparent_60%)]" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
 
-        {/* Glow orb */}
-        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/8 blur-[80px] pointer-events-none" />
-
-        {/* Brand */}
-        <div className="relative z-10 flex items-center gap-3">
-          <img
-            src={branding.logo_url ?? BRANDING.logo}
-            alt={branding.brand_name}
-            className="h-9 w-9 object-contain"
-          />
+        {/* Brand Header */}
+        <Link to="/" className="relative z-10 flex items-center gap-3 group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 shadow-sm transition-transform group-hover:scale-105">
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt={branding.brand_name} className="h-6 w-6 object-contain" />
+            ) : (
+              <GraduationCap className="h-5 w-5 text-primary" />
+            )}
+          </div>
           <div>
-            <p className="text-[15px] font-bold text-foreground leading-tight">{branding.brand_name}</p>
-            <p className="text-[11px] text-muted-foreground">{branding.tagline}</p>
+            <p className="text-base font-black tracking-tight text-foreground leading-tight">{branding.brand_name}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{branding.tagline}</p>
           </div>
-        </div>
+        </Link>
 
-        {/* Hero text */}
-        <div className="relative z-10 space-y-5">
+        {/* Main Value Proposition Content */}
+        <div className="relative z-10 space-y-8 my-auto py-10">
           <div className="space-y-3">
-            <p className="font-heading text-[11px] font-bold uppercase tracking-[0.18em] text-primary/80">
-              Neo-Industrial Campus OS
-            </p>
-            <h2 className="font-heading text-[34px] font-black text-foreground leading-[1.05] tracking-tight">
-              Your academic<br />intelligence hub
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Academic Operating System</span>
+            <h2 className="font-heading text-3xl sm:text-4xl font-black text-foreground tracking-tight leading-[1.08]">
+              One login for your entire college experience.
             </h2>
-            <p className="text-[15px] text-muted-foreground leading-relaxed max-w-[320px]">
-              Track attendance, earn points, climb leaderboards, and monitor your academic performance — all in one place.
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+              From GPS-verified QR attendance to automated timetable sync and departmental leaderboards.
             </p>
           </div>
 
-          {/* Feature chips */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {FEATURES.map(({ icon: Icon, label }) => (
+          {/* Feature Highlights Grid */}
+          <div className="grid grid-cols-1 gap-3">
+            {HIGHLIGHTS.map(({ icon: Icon, label, desc }) => (
               <div
                 key={label}
-                className="flex items-center gap-2.5 rounded-xl border border-border-subtle bg-surface-2/80 px-3.5 py-2.5 transition-colors hover:border-primary/40"
+                className="flex items-start gap-3.5 rounded-2xl border border-border-subtle bg-surface-2/60 p-3.5 transition-all hover:border-primary/30 hover:bg-surface-2"
               >
-                <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="font-heading text-[11px] font-bold uppercase tracking-[0.1em] text-foreground">{label}</span>
+                <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold text-foreground leading-tight">{label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer quote */}
-        <p className="relative z-10 text-[11px] text-muted-foreground/50">
-          Developed by Atharv Jadhav · Department of Computer Science
-        </p>
+        {/* Bottom Credits */}
+        <div className="relative z-10 flex items-center justify-between text-[11px] text-muted-foreground/60 border-t border-border-subtle/60 pt-4">
+          <span>Enterprise Campus Security</span>
+          <span>© {new Date().getFullYear()} Campus Connect</span>
+        </div>
       </div>
 
-      {/* ── Right Panel (form) ──────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
-        {/* Mobile brand */}
-        <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <img src={branding.logo_url ?? BRANDING.logo} alt={branding.brand_name} className="h-8 w-8 object-contain" />
-          <span className="text-[16px] font-bold text-foreground">{branding.brand_name}</span>
-        </div>
+      {/* ── Right Auth Form Panel ── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 relative">
+        {/* Ambient Top Glow for Mobile */}
+        <div className="lg:hidden absolute top-0 inset-x-0 h-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,hsl(var(--primary)/0.15),transparent_70%)] pointer-events-none" />
 
-        <div className="w-full max-w-[380px] space-y-6 animate-fade-in">
-          {/* Heading */}
-          <div className="space-y-1.5">
-            <p className="font-heading text-[10.5px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Welcome back
-            </p>
-            <h1 className="font-heading text-[26px] font-black text-foreground tracking-tight">Sign in to continue</h1>
-            <p className="text-[14px] text-muted-foreground">Enter your credentials to access your dashboard</p>
+        {/* Mobile Header */}
+        <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-8">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+            <GraduationCap className="h-5 w-5 text-primary" />
+          </div>
+          <span className="text-lg font-black tracking-tight text-foreground">{branding.brand_name}</span>
+        </Link>
+
+        {/* Focused Auth Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="w-full max-w-[400px] space-y-6"
+        >
+          {/* Header Title */}
+          <div className="space-y-1 text-center sm:text-left">
+            <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">Access Your Portal</h1>
+            <p className="text-[13px] text-muted-foreground">Sign in with your email or Student ID to continue.</p>
           </div>
 
-
-
-          {/* Tabs */}
-          <Tabs defaultValue="signup" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-10 p-1 rounded-lg bg-surface-2 border border-border-subtle">
-              <TabsTrigger
-                value="signup"
-                className="h-full rounded-md text-[13px] font-medium text-muted-foreground border-transparent
-                           data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
-                           data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
-                           hover:text-foreground transition-colors"
-              >
-                Create Account
-              </TabsTrigger>
+          {/* Form Tabs */}
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-11 p-1 rounded-xl bg-surface-2 border border-border-subtle">
               <TabsTrigger
                 value="login"
-                className="h-full rounded-md text-[13px] font-medium text-muted-foreground border-transparent
-                           data-[state=active]:bg-surface-1 data-[state=active]:text-foreground
-                           data-[state=active]:border-border-subtle data-[state=active]:shadow-sm
-                           hover:text-foreground transition-colors"
+                className="h-full rounded-lg text-[13px] font-bold text-muted-foreground data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
               >
                 Sign In
               </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="h-full rounded-lg text-[13px] font-bold text-muted-foreground data-[state=active]:bg-surface-1 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                New Account
+              </TabsTrigger>
             </TabsList>
 
-
-
-
-            {/* ── Login ── */}
-            <TabsContent value="login" className="mt-5">
+            {/* ── Login Tab ── */}
+            <TabsContent value="login" className="mt-5 space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-identifier" className="text-[13px] font-medium text-foreground">
+                  <Label htmlFor="login-identifier" className="text-[13px] font-semibold text-foreground">
                     Email or Student ID
                   </Label>
                   <Input
                     id="login-identifier"
-                    placeholder="your@email.com or CS-2024-001"
+                    placeholder="student@college.edu or CS-2024-001"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-11"
+                    className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] h-11 rounded-xl"
                     required
                   />
                 </div>
@@ -383,39 +363,40 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 gap-2 shadow-primary text-[14px] font-semibold"
+                  className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-2"
                   disabled={loading}
                 >
-                  {loading
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <>Sign In <ArrowRight className="h-4 w-4" /></>
-                  }
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>Sign In <ArrowRight className="h-4 w-4" /></>
+                  )}
                 </Button>
               </form>
             </TabsContent>
 
-            {/* ── Signup ── */}
-            <TabsContent value="signup" className="mt-5">
+            {/* ── Signup Tab ── */}
+            <TabsContent value="signup" className="mt-5 space-y-4">
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="signup-email" className="text-[13px] font-medium text-foreground">
-                    Email <span className="text-danger">*</span>
+                  <Label htmlFor="signup-email" className="text-[13px] font-semibold text-foreground">
+                    Email Address <span className="text-danger">*</span>
                   </Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="student@college.edu"
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
-                    className="bg-surface-2 border-border-subtle focus:border-primary/60 text-[14px] h-11"
+                    className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] h-11 rounded-xl"
                     required
                   />
                 </div>
 
                 <PasswordInput
                   id="signup-password"
-                  label="Password *"
-                  placeholder="Create a password"
+                  label="Create Password *"
+                  placeholder="At least 6 characters"
                   value={signupPassword}
                   onChange={setSignupPassword}
                 />
@@ -423,35 +404,34 @@ const Auth = () => {
                 <PasswordInput
                   id="signup-confirm"
                   label="Confirm Password *"
-                  placeholder="Re-enter your password"
+                  placeholder="Re-enter password"
                   value={signupConfirm}
                   onChange={setSignupConfirm}
                 />
 
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  You'll complete your profile (name, course, year, enrollment) in the next step.
+                  Academic details (course, semester, roll number) will be configured in the next onboarding step.
                 </p>
 
                 <Button
                   type="submit"
-                  className="w-full h-11 gap-2 shadow-primary text-[14px] font-semibold mt-1"
+                  className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-1"
                   disabled={loading}
                 >
-                  {loading
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <>Create Account <ArrowRight className="h-4 w-4" /></>
-                  }
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>Create Account <ArrowRight className="h-4 w-4" /></>
+                  )}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
 
-
-          {/* Footer note */}
-          <p className="text-center text-[12px] text-muted-foreground/70">
-            By continuing you agree to our Terms of Service
+          <p className="text-center text-[12px] text-muted-foreground pt-2">
+            By signing in you agree to institutional academic guidelines.
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

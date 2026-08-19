@@ -39,9 +39,9 @@ export function BottomNavigation() {
     <nav
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50 md:hidden",
-        "bg-white/95 dark:bg-surface-1/95 backdrop-blur-xl",
-        "border-t border-border-subtle/60",
-        "shadow-[0_-8px_28px_-8px_rgba(15,23,42,0.10)]",
+        "bg-background/90 dark:bg-surface-1/90 backdrop-blur-2xl",
+        "border-t border-border-subtle/80",
+        "shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.35)]",
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -51,7 +51,7 @@ export function BottomNavigation() {
       aria-label="Main navigation"
     >
       <SeasonalAccent className="h-[2px]" />
-      <div className="relative flex h-[62px] items-center justify-between px-2">
+      <div className="relative flex h-[64px] items-center justify-between px-3">
         {STUDENT_TABS.map((tab) => {
           const cfg = TAB_ICON_MAP[tab.id];
           const active = tab.id === activeId;
@@ -63,23 +63,37 @@ export function BottomNavigation() {
               onClick={() => go(tab)}
               onMouseEnter={tab.prefetch}
               onTouchStart={tab.prefetch}
-              whileTap={{ scale: 0.94 }}
+              whileTap={{ scale: 0.92 }}
               aria-current={active ? "page" : undefined}
               aria-label={tab.label}
               className={cn(
                 "relative flex flex-col items-center justify-center",
-                "flex-1 min-w-0 min-h-[48px] px-1 gap-1",
-                "rounded-2xl select-none outline-none",
-                "transition-colors duration-150",
-                active ? "text-primary" : "text-muted-foreground active:text-foreground",
+                "flex-1 min-w-0 min-h-[50px] px-1 py-1.5 gap-1",
+                "rounded-xl select-none outline-none",
+                "transition-all duration-150",
+                active
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground active:text-foreground",
               )}
             >
+              {active && (
+                <motion.div
+                  layoutId="bottom-nav-indicator-pill"
+                  className={cn(
+                    "absolute inset-x-1.5 inset-y-1 rounded-xl -z-10",
+                    !seasonal && "bg-primary/10 dark:bg-primary/15 border border-primary/20",
+                  )}
+                  style={seasonal ? { background: seasonalGradient, opacity: 0.15 } : undefined}
+                  transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                />
+              )}
+
               {cfg?.semantic ? (
                 <AppIcon
                   name={cfg.semantic}
                   active={active}
                   size={20}
-                  strokeWidth={active ? 2.0 : 1.5}
+                  strokeWidth={active ? 2.2 : 1.6}
                   className={cn(
                     "transition-transform duration-150",
                     active && "scale-105"
@@ -90,7 +104,7 @@ export function BottomNavigation() {
                   icon={active ? cfg?.iconActive : cfg?.iconInactive}
                   active={active}
                   size={20}
-                  strokeWidth={active ? 2.0 : 1.5}
+                  strokeWidth={active ? 2.2 : 1.6}
                   className={cn(
                     "transition-transform duration-150",
                     active && "scale-105"
@@ -99,20 +113,12 @@ export function BottomNavigation() {
               )}
               <span
                 className={cn(
-                  "text-[10px] leading-none tracking-tight truncate max-w-full",
-                  active ? "font-bold" : "font-semibold",
+                  "text-[10.5px] leading-none tracking-tight truncate max-w-full font-medium",
+                  active ? "font-bold text-primary" : "text-muted-foreground",
                 )}
               >
                 {tab.label}
               </span>
-              {active && (
-                <motion.span
-                  layoutId="bottom-nav-active"
-                  className={cn("absolute top-0 h-1 w-6 rounded-full", !seasonal && "bg-primary")}
-                  style={seasonal ? { background: seasonalGradient } : undefined}
-                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                />
-              )}
             </motion.button>
           );
         })}
