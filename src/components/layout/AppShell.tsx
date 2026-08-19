@@ -5,7 +5,7 @@ import {
   BookOpen, CalendarDays, MailOpen, UserRound, LogOut,
   BadgeCheck, Bell, BellOff, Megaphone, AlertTriangle,
   Trophy, Settings, ChevronRight, CheckCheck,
-} from "lucide-react";
+} from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";

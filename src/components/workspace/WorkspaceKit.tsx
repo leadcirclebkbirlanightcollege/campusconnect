@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Loader2, Search, Inbox, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Search, Inbox, AlertTriangle, ChevronLeft, ChevronRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

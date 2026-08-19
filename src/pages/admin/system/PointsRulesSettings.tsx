@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Save, Sparkles } from "lucide-react";
+import { Save, Sparkles } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

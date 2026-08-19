@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMemo } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar } from "@/components/icons";
 import { format, startOfWeek, addDays, isToday } from "date-fns";
 import { WorkspacePage, WorkspaceHero } from "@/components/workspace/WorkspaceKit";
 

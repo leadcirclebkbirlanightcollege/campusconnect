@@ -15,7 +15,7 @@ import {
   Building2, Users, GraduationCap, CheckSquare, UserCog, Activity,
   Radio, ShieldAlert, TrendingUp, RefreshCw, ArrowRight,
   Zap, Clock, ChevronRight, Globe, Server, AlertTriangle,
-} from "lucide-react";
+} from "@/components/icons";
 
 // ─── Data hooks ────────────────────────────────────────────────────────────────
 

@@ -24,7 +24,7 @@ import {
   Sparkles,
   ArrowRight,
   Zap,
-} from "lucide-react";
+} from "@/components/icons";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";

@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+import { Settings } from "@/components/icons";
 import { PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 interface Props {

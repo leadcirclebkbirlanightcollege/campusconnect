@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, MapPin, CalendarRange, Radio, ArrowRight, FlaskConical, BookOpen, Laptop } from "lucide-react";
+import { Clock, MapPin, CalendarRange, Radio, ArrowRight, FlaskConical, BookOpen, Laptop } from "@/components/icons";
 import { getDay } from "date-fns";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";

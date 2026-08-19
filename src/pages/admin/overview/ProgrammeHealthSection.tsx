@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, GraduationCap, Users } from "lucide-react";
+import { ArrowRight, GraduationCap, Users } from "@/components/icons";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 

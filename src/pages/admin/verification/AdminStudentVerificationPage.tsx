@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   Search, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Clock,
   Sparkles, RefreshCw, GraduationCap, Building2,
-} from "lucide-react";
+} from "@/components/icons";
 import { formatDistanceToNow } from "date-fns";
 
 type Pending = {

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays } from "@/components/icons";
 
 function toLocalDate(d = new Date()) {
   return d.toISOString().split("T")[0];

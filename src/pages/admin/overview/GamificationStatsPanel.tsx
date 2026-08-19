@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, Trophy, Zap, Star, ArrowRight } from "lucide-react";
+import { Flame, Trophy, Zap, Star, ArrowRight } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useMetricCountUp } from "@/components/ui/motion";

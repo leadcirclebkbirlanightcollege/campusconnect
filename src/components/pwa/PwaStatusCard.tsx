@@ -1,4 +1,4 @@
-import { Wifi, WifiOff, Smartphone, CheckCircle2, Download, RefreshCw } from "lucide-react";
+import { Wifi, WifiOff, Smartphone, CheckCircle2, Download, RefreshCw } from "@/components/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

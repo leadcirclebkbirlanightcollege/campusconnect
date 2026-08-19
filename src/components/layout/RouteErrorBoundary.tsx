@@ -3,7 +3,7 @@
  * Shows a compact error card instead of a full-page crash screen.
  */
 import { Component, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "@/components/icons";
 
 interface Props {
   children: ReactNode;

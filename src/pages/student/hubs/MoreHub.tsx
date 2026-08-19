@@ -8,12 +8,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, X, Sparkles, ChevronRight, LayoutGrid } from "lucide-react";
+import { Search, X, Sparkles, ChevronRight, LayoutGrid } from "@/components/icons";
 import {
   CalendarDays, ClipboardCheck, BookOpenCheck, FileText, GraduationCap,
   QrCode, Award, Calendar, Megaphone, Bell, Rocket, Store, Coins,
   Trophy, CreditCard, UserRound, Settings, LifeBuoy, Download,
-} from "lucide-react";
+} from "@/components/icons";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";

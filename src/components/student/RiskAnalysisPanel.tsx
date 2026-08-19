@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, ShieldAlert, ShieldX,
   AlertTriangle, CheckCircle2, ArrowRight, Lightbulb,
-} from "lucide-react";
+} from "@/components/icons";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";

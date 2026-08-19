@@ -7,7 +7,7 @@ import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import {
   CalendarHeart, Megaphone, Trophy, Users, LifeBuoy, Zap,
-} from "lucide-react";
+} from "@/components/icons";
 
 const TILES: HubTile[] = [
   { label: "Events",          description: "Campus events & registrations", href: "/app/events",        icon: CalendarHeart, tone: "primary" },

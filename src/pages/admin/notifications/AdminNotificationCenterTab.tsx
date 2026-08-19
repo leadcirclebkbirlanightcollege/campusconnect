@@ -11,7 +11,7 @@ import {
   Megaphone, AlertTriangle, BookOpen, Trophy, Settings,
   Users, GraduationCap, Search, RefreshCw, BarChart3,
   CheckCheck, Mail, Eye, X, Radio,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

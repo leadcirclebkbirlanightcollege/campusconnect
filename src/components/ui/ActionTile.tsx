@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/components/icons";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CARD_TAP_ANIMATION, PRESS_TRANSITION } from "@/motion/gestureAnimations";

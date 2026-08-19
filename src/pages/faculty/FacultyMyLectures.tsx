@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useState, useMemo } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen } from "@/components/icons";
 import { format } from "date-fns";
 import {
   WorkspacePage,

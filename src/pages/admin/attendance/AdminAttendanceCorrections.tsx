@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   History,
   Pencil,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

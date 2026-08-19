@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Inbox } from "lucide-react";
+import { Inbox } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 

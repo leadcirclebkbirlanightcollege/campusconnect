@@ -12,7 +12,7 @@ import {
   Eye,
   Loader2,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";

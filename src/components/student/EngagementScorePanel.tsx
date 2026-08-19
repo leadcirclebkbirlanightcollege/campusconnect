@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Zap, Flame, CalendarCheck, Award, Activity } from "lucide-react";
+import { Zap, Flame, CalendarCheck, Award, Activity } from "@/components/icons";
 import { useMetricCountUp } from "@/components/ui/motion";
 
 function EngagementMetric({

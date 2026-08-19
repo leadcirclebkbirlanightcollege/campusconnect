@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Rocket } from "lucide-react";
+import { Rocket } from "@/components/icons";
 import { PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 interface Props {

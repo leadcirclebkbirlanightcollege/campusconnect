@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMemo, useState } from "react";
-import { Users } from "lucide-react";
+import { Users } from "@/components/icons";
 import {
   WorkspacePage,
   WorkspaceHero,

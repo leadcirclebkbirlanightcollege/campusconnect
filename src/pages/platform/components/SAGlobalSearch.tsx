@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
-import { Search, Users, BookOpen, Building2, ShieldCheck, X } from "lucide-react";
+import { Search, Users, BookOpen, Building2, ShieldCheck, X } from "@/components/icons";
 
 type SearchResult = {
   id: string;

@@ -8,18 +8,19 @@
  */
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, GraduationCap, Users, Rocket, UserRound } from "lucide-react";
+import { AppIcon, type SemanticIconName } from "@/components/icons";
+import { Rocket01Icon, Rocket02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { STUDENT_TABS, resolveActiveTab, type StudentTab } from "@/ui-engine/navigation-engine";
 import { SeasonalAccent, seasonalGradient, useSeasonal } from "@/components/seasonal/SeasonalKit";
 
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  home: Home,
-  academics: GraduationCap,
-  community: Users,
-  ecell: Rocket,
-  profile: UserRound,
+const TAB_ICON_MAP: Record<string, { semantic?: SemanticIconName; iconInactive?: any; iconActive?: any }> = {
+  home: { semantic: "home" },
+  academics: { semantic: "lectures" },
+  community: { semantic: "participants" },
+  ecell: { iconInactive: Rocket01Icon, iconActive: Rocket02Icon },
+  profile: { semantic: "profile" },
 };
 
 export function BottomNavigation() {
@@ -52,7 +53,7 @@ export function BottomNavigation() {
       <SeasonalAccent className="h-[2px]" />
       <div className="relative flex h-[62px] items-center justify-between px-2">
         {STUDENT_TABS.map((tab) => {
-          const Icon = ICONS[tab.id] ?? Home;
+          const cfg = TAB_ICON_MAP[tab.id];
           const active = tab.id === activeId;
 
           return (
@@ -73,9 +74,29 @@ export function BottomNavigation() {
                 active ? "text-primary" : "text-muted-foreground active:text-foreground",
               )}
             >
-              <Icon
-                className={cn("h-[22px] w-[22px]", active ? "stroke-[2.2px]" : "stroke-[1.75px]")}
-              />
+              {cfg?.semantic ? (
+                <AppIcon
+                  name={cfg.semantic}
+                  active={active}
+                  size={20}
+                  strokeWidth={active ? 2.0 : 1.5}
+                  className={cn(
+                    "transition-transform duration-150",
+                    active && "scale-105"
+                  )}
+                />
+              ) : (
+                <AppIcon
+                  icon={active ? cfg?.iconActive : cfg?.iconInactive}
+                  active={active}
+                  size={20}
+                  strokeWidth={active ? 2.0 : 1.5}
+                  className={cn(
+                    "transition-transform duration-150",
+                    active && "scale-105"
+                  )}
+                />
+              )}
               <span
                 className={cn(
                   "text-[10px] leading-none tracking-tight truncate max-w-full",

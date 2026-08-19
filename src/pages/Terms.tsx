@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 export default function Terms() {

@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ArrowRight, ArrowLeft, Upload, CheckCircle2, User as UserIcon, GraduationCap } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Upload, CheckCircle2, User as UserIcon, GraduationCap } from "@/components/icons";
 import { COURSES, ACADEMIC_YEARS } from "@/lib/courses";
 
 type Gender = "male" | "female" | "other";

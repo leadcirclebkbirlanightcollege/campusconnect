@@ -9,7 +9,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "@/components/icons";
 import { toast } from "sonner";
 
 const PHRASE = "DELETE ALL STUDENTS";

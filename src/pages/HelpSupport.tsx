@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { HelpCircle, MessageSquare, Bug, ChevronDown, ChevronRight, Send, Mail, BookOpen, Shield } from "lucide-react";
+import { HelpCircle, MessageSquare, Bug, ChevronDown, ChevronRight, Send, Mail, BookOpen, Shield } from "@/components/icons";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Shield, Users, BookOpen, ChevronRight, Sparkles } from "lucide-react";
+import { GraduationCap, Shield, Users, BookOpen, ChevronRight, Sparkles } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

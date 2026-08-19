@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Shield, Clock, User, ArrowRight, Lock, Activity, AlertTriangle,
   CheckCircle2, RefreshCw, Eye, LogIn, Coins, Trophy, UserCog,
-} from "lucide-react";
+} from "@/components/icons";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

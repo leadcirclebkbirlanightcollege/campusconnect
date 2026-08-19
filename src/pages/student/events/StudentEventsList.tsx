@@ -9,7 +9,7 @@ import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, addDays, isSameDay } from "date-fns";
-import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users } from "lucide-react";
+import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users } from "@/components/icons";
 import StallRegistrationDialog from "./StallRegistrationDialog";
 
 type EventRow = {

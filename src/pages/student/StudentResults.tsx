@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
-import { BookOpen, GraduationCap, Trophy, TrendingUp } from "lucide-react";
+import { BookOpen, GraduationCap, Trophy, TrendingUp } from "@/components/icons";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { Badge } from "@/components/ui/badge";

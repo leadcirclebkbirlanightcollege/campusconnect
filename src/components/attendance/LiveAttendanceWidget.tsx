@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, CheckCircle2, KeyRound, Loader2, QrCode, Radio, AlertTriangle, HelpCircle } from "lucide-react";
+import { Camera, CheckCircle2, KeyRound, Loader2, QrCode, Radio, AlertTriangle, HelpCircle } from "@/components/icons";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";

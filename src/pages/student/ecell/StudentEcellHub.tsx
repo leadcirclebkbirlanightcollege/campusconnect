@@ -23,7 +23,7 @@ import {
   Sparkles,
   Flame,
   Timer,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/feedback/QueryErrorState";

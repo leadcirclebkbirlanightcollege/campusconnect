@@ -10,7 +10,7 @@ import {
 import {
   Brain, TrendingUp, TrendingDown, Minus,
   Target, CheckCircle2, Circle, Flame, CalendarCheck, Zap,
-} from "lucide-react";
+} from "@/components/icons";
 import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { useQuery } from "@tanstack/react-query";

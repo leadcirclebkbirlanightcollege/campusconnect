@@ -1,4 +1,4 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap } from "@/components/icons";
 import { PlatformModeSettings } from "@/hooks/use-platform-mode";
 
 interface Props {

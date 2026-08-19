@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, ShieldCheck, QrCode } from "lucide-react";
+import { TrendingUp, ShieldCheck, QrCode } from "@/components/icons";
 
 interface Props {
   attendanceToday: number;

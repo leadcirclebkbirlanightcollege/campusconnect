@@ -3,7 +3,7 @@
  * This is deliberately distinct from an empty state: empty means
  * "the database has no records", this means "we could not read them".
  */
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 interface Props {

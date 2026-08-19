@@ -6,7 +6,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Store, ArrowLeft, CalendarDays } from "lucide-react";
+import { Store, ArrowLeft, CalendarDays } from "@/components/icons";
 import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import StallRegistrationDialog from "@/pages/student/events/StallRegistrationDialog";

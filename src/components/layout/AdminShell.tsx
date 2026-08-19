@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, UserRound, Trophy } from "lucide-react";
+import { LogOut, LayoutDashboard, UserRound, Trophy } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

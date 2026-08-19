@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCollegeContext } from "@/contexts/CollegeContext";
-import { BookOpen, Radio, Clock, CheckCircle2, Zap } from "lucide-react";
+import { BookOpen, Radio, Clock, CheckCircle2, Zap } from "@/components/icons";
 import { useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";

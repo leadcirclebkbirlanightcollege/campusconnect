@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, X, Sparkles } from "lucide-react";
+import { RefreshCw, X, Sparkles } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION } from "@/config/version";
 import { toast } from "sonner";

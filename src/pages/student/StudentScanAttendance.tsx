@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Radio, Clock, MapPin, BookOpen, QrCode,
   Calendar, ChevronRight, Wifi, WifiOff,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";

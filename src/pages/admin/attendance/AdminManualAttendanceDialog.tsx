@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, UserCheck, AlertTriangle } from "lucide-react";
+import { Search, UserCheck, AlertTriangle } from "@/components/icons";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";

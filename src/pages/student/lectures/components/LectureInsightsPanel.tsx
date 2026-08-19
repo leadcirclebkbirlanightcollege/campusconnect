@@ -1,4 +1,4 @@
-import { AlertTriangle, Sparkles, TrendingUp } from "lucide-react";
+import { AlertTriangle, Sparkles, TrendingUp } from "@/components/icons";
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";

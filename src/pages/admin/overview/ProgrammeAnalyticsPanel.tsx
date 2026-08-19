@@ -9,7 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, Cell,
 } from "recharts";
-import { BarChart3, ArrowRight, GraduationCap } from "lucide-react";
+import { BarChart3, ArrowRight, GraduationCap } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

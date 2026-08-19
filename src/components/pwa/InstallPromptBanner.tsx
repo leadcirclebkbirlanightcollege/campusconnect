@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Smartphone, Share, Plus, MoreVertical } from "lucide-react";
+import { Download, X, Smartphone, Share, Plus, MoreVertical } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";

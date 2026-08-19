@@ -15,7 +15,7 @@
 
 import type { ReactNode } from "react";
 import { useFeatureGate, type FeatureKey, FEATURE_LABELS } from "@/hooks/use-feature-gate";
-import { Lock } from "lucide-react";
+import { Lock } from "@/components/icons";
 
 interface FeatureGateProps {
   feature: FeatureKey;

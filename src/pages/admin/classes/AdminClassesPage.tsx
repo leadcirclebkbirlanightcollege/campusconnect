@@ -21,7 +21,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { GraduationCap, Plus, Pencil, Trash2, Loader2 } from "@/components/icons";
 import { toast } from "sonner";
 
 type Department = { id: string; name: string };

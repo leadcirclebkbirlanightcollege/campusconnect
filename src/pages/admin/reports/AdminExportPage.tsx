@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Download, Filter, FileSpreadsheet, Loader2,
   Calendar, Users, BookOpen, CheckSquare, FileText, GraduationCap,
-} from "lucide-react";
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

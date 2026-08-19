@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, Sparkles, Shield,
   ScanLine, Smartphone, TrendingUp, Zap,
   Activity, MessageSquarePlus,
-} from "lucide-react";
+} from "@/components/icons";
 import { APP_VERSION } from "@/config/version";
 
 const STORAGE_KEY   = "cc_last_seen_version";

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CalendarDays, Clock, MapPin, ArrowRight } from "lucide-react";
+import { CalendarDays, Clock, MapPin, ArrowRight } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

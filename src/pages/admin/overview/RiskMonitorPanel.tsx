@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, TrendingDown, Users, ArrowRight } from "lucide-react";
+import { AlertTriangle, TrendingDown, Users, ArrowRight } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { UserPlus, X, Search, Users } from "lucide-react";
+import { UserPlus, X, Search, Users } from "@/components/icons";
 
 type Programme = {
   id: string;

@@ -1,4 +1,4 @@
-import { WifiOff, RefreshCw } from "lucide-react";
+import { WifiOff, RefreshCw } from "@/components/icons";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";

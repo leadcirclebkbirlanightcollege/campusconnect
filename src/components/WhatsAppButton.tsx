@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle } from "@/components/icons";
 
 const WA_NUMBER = "919172782265";
 const WA_MSG = encodeURIComponent("Hi, I'm interested in Campus Connect for my college. Can you share more details?");

@@ -4,7 +4,7 @@
  * Submits to the `feedback` table with RLS (user_id = auth.uid()).
  */
 import { useState } from "react";
-import { MessageSquarePlus, X, Send, CheckCircle2 } from "lucide-react";
+import { MessageSquarePlus, X, Send, CheckCircle2 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

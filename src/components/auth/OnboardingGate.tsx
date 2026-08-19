@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 import { useAuth } from "@/providers/AuthProvider";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
 

@@ -5,7 +5,7 @@
  */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export interface HubTile {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Search, FileText, FileType2 } from "lucide-react";
+import { Download, Search, FileText, FileType2 } from "@/components/icons";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { GlassCard } from "@/components/ui/GlassCard";

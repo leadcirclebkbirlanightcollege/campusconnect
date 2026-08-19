@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { BookOpen, Users, TrendingUp, Activity, Award, AlertTriangle } from "lucide-react";
+import { BookOpen, Users, TrendingUp, Activity, Award, AlertTriangle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 function KpiCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: any; color: string }) {

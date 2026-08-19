@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { MinusCircle, PlusCircle, Save } from "lucide-react";
+import { MinusCircle, PlusCircle, Save } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

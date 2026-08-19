@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2, GraduationCap, ArrowUpCircle } from "lucide-react";
+import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2, GraduationCap, ArrowUpCircle } from "@/components/icons";
 import { useDebounce } from "@/hooks/use-debounce";
 
 import { supabase } from "@/integrations/supabase/client";

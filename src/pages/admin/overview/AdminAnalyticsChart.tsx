@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, TrendingUp } from "lucide-react";
+import { BarChart3, TrendingUp } from "@/components/icons";
 
 function useLast7DaysAttendance() {
   return useQuery({

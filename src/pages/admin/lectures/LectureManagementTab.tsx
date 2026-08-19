@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, CalendarDays, List, Trash2, Radio, Clock, MapPin,
   Pencil, Play, StopCircle, ChevronDown, Search, Filter,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

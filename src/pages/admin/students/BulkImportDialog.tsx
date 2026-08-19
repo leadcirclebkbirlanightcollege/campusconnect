@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, X, Download } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, X, Download } from "@/components/icons";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";

@@ -7,7 +7,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useLogout } from "@/hooks/useLogout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, RefreshCw, LogOut, AlertCircle, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, RefreshCw, LogOut, AlertCircle, Sparkles } from "@/components/icons";
 import { toast } from "sonner";
 
 export default function PendingApproval() {

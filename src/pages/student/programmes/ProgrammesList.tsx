@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyStateCard } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
-import { BookOpen, ChevronRight, Tag } from "lucide-react";
+import { BookOpen, ChevronRight, Tag } from "@/components/icons";
 
 type Programme = {
   id: string;

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Users, BookOpen, GraduationCap, MessageSquare, CalendarDays,
   Search, ArrowRight,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import {

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Building2, Plus, Pencil, Search, Users,
   GraduationCap, RefreshCw, CheckCircle2, XCircle,
-} from "lucide-react";
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 type CollegeRow = {

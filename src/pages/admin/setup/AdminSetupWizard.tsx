@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Building2, Users, GraduationCap, BookOpen, CheckCircle2, ChevronRight, Plus, X } from "lucide-react";
+import { Building2, Users, GraduationCap, BookOpen, CheckCircle2, ChevronRight, Plus, X } from "@/components/icons";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";

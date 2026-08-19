@@ -1,5 +1,5 @@
 import { Component, ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { AlertTriangle, RefreshCw, Home } from "@/components/icons";
 
 interface Props  { children: ReactNode; context?: string; }
 interface State  { hasError: boolean; error: Error | null; errorId: string | null; }

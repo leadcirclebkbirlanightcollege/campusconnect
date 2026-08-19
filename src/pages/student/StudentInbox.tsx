@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   CheckCheck,
   ChevronRight,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";

@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, TrendingUp, Flame, Zap, ChevronRight } from "lucide-react";
+import { Sparkles, TrendingUp, Flame, Zap, ChevronRight } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";

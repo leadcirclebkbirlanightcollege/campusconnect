@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Flame, CheckCircle2, Trophy, Zap, Star } from "lucide-react";
+import { Flame, CheckCircle2, Trophy, Zap, Star } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ── helpers ─────────────────────────────────────────────────── */

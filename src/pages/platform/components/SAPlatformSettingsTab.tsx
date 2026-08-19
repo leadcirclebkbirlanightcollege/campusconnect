@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { SlideUp, FadeIn } from "@/components/ui/motion";
 import { toast } from "sonner";
-import { Settings2, Save, RotateCcw, Clock, Key, AlertCircle } from "lucide-react";
+import { Settings2, Save, RotateCcw, Clock, Key, AlertCircle } from "@/components/icons";
 import { formatDistanceToNow } from "date-fns";
 
 type Setting = { key: string; value: unknown; updated_at: string };

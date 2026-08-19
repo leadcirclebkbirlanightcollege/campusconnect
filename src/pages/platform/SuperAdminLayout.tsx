@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, UserRound } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useLogout";
 import { useMemo } from "react";

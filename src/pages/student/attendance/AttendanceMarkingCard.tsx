@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle } from "lucide-react";
+import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRateLimit } from "@/hooks/use-rate-limit";

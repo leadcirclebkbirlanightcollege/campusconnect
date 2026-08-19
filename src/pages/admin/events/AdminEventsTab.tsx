@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store, Rocket } from "lucide-react";
+import { Plus, CalendarDays, MapPin, Clock, Trash2, Star, Store, Rocket } from "@/components/icons";
 import { format, isPast, isToday } from "date-fns";
 
 type EventFilter = "all" | "general" | "ecell";

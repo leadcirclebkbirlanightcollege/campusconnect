@@ -7,7 +7,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { SeasonalHeroAtmosphere, SeasonalLightLine } from "@/components/seasonal/SeasonalKit";
 

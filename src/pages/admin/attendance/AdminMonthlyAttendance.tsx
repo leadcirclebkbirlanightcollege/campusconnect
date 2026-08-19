@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Download, FileText, Users, TrendingUp, AlertTriangle, Trophy } from "lucide-react";
+import { Download, FileText, Users, TrendingUp, AlertTriangle, Trophy } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

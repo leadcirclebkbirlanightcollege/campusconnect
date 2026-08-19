@@ -26,7 +26,7 @@ import {
   Users,
   Zap,
   Brain,
-} from "lucide-react";
+} from "@/components/icons";
 import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import {
   IndependenceDayBadge,

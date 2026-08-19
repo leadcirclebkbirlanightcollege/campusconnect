@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTenant } from "@/providers/TenantProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

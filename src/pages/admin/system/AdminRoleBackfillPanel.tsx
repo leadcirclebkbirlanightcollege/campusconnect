@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ShieldCheck, Wand2 } from "lucide-react";
+import { ShieldCheck, Wand2 } from "@/components/icons";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";

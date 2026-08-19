@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, Minus, TrendingUpIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, TrendingUpIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 

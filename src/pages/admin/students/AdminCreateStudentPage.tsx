@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { UserPlus, ArrowLeft } from "lucide-react";
+import { UserPlus, ArrowLeft } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

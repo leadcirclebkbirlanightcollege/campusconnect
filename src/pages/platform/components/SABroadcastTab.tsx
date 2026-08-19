@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlideUp } from "@/components/ui/motion";
 import { toast } from "sonner";
-import { Radio, Send, Megaphone, Clock, AlertTriangle, Info } from "lucide-react";
+import { Radio, Send, Megaphone, Clock, AlertTriangle, Info } from "@/components/icons";
 import { useCollegeContext } from "@/contexts/CollegeContext";
 import { formatDistanceToNow } from "date-fns";
 

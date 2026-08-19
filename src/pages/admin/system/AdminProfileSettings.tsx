@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { KeyRound, Save, Shield } from "lucide-react";
+import { KeyRound, Save, Shield } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

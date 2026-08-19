@@ -11,7 +11,7 @@ import {
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
   ChevronDown, ShieldCheck, LifeBuoy,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";

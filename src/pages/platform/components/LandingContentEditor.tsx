@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, Plus, Trash2, RotateCcw, Upload, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { Loader2, Save, Plus, Trash2, RotateCcw, Upload, Image as ImageIcon, ExternalLink } from "@/components/icons";
 import { DEFAULT_LANDING_CONTENT, LANDING_ICONS, LandingContent, LandingIconName, mergeLandingContent } from "@/config/landing-content";
 
 type Json = LandingContent | Record<string, unknown>;

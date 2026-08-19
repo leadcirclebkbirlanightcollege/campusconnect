@@ -5,7 +5,7 @@ import {
   AreaChart, Area, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, TrendingUp, Users, BookOpen, Coins, Activity } from "lucide-react";
+import { BarChart3, TrendingUp, Users, BookOpen, Coins, Activity } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 type CollegeStats = {

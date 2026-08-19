@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { Building2, Plus, Pencil, UserPlus, Trash2, Mail, ShieldCheck, AlertCircle, Sparkles, CheckCircle2 } from "@/components/icons";
 import { useCollegeContext } from "@/contexts/CollegeContext";
 import { ALL_FEATURES, FEATURE_LABELS, FEATURE_DESCRIPTIONS, type FeatureKey } from "@/hooks/use-feature-gate";
 

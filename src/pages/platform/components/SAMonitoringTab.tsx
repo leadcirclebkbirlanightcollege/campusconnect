@@ -11,7 +11,7 @@ import {
   Users, Radio, CheckSquare, MessageSquare,
   TrendingUp, Activity, RefreshCw, Clock,
   BarChart3, ShieldAlert,
-} from "lucide-react";
+} from "@/components/icons";
 import { motion } from "framer-motion";
 import { useMetricCountUp } from "@/components/ui/motion";
 import SystemHealthPanel from "@/pages/admin/system/SystemHealthPanel";

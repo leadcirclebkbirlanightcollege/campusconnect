@@ -3,7 +3,7 @@
  * Shows retry button, error ref ID, and optional details.
  */
 
-import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
+import { AlertTriangle, RefreshCw, WifiOff } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

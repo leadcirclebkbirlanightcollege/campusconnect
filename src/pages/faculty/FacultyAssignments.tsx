@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Plus, FileText, Calendar, Users, Paperclip, ChevronRight } from "lucide-react";
+import { Plus, FileText, Calendar, Users, Paperclip, ChevronRight } from "@/components/icons";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 

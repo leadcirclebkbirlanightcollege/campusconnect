@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import AppShell from "@/components/layout/AppShell";

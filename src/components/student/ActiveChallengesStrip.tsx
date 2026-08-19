@@ -4,7 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, Star, TrendingUp, CheckSquare, Zap, ChevronRight } from "lucide-react";
+import { Flame, Star, TrendingUp, CheckSquare, Zap, ChevronRight } from "@/components/icons";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

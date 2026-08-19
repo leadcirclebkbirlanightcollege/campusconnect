@@ -1,4 +1,4 @@
-import { BookOpen, Users, ShieldCheck, BarChart3, Bell, Megaphone, ScanLine, FileEdit } from "lucide-react";
+import { BookOpen, Users, ShieldCheck, BarChart3, Bell, Megaphone, ScanLine, FileEdit } from "@/components/icons";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 

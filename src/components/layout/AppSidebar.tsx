@@ -26,8 +26,7 @@ import {
   ChevronDown,
   LayoutGrid,
   LifeBuoy,
-
-} from "lucide-react";
+} from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";

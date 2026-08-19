@@ -1,4 +1,4 @@
-import { Clock3, Loader2, MapPin } from "lucide-react";
+import { Clock3, Loader2, MapPin } from "@/components/icons";
 import { Link } from "react-router-dom";
 
 import { GlassCard } from "@/components/ui/GlassCard";

@@ -12,7 +12,7 @@ import {
   Shield,
   UserCog,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/layout";
 import { Button } from "@/components/ui/button";

@@ -1,4 +1,4 @@
-import { CalendarDays } from "lucide-react";
+import { CalendarDays } from "@/components/icons";
 
 import { GlassCard } from "@/components/ui/GlassCard";
 

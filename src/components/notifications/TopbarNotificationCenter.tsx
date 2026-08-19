@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, BookOpen, Megaphone, Settings, Trophy, X, AlertTriangle, ArrowRight } from "lucide-react";
+import { Bell, BellOff, BookOpen, Megaphone, Settings, Trophy, X, AlertTriangle, ArrowRight } from "@/components/icons";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";

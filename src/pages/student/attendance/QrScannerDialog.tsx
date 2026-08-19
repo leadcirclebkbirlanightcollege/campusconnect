@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import type { IScannerControls } from "@zxing/browser";
 import { toast } from "sonner";
-import { CameraOff, Loader2, CheckCircle2 } from "lucide-react";
+import { CameraOff, Loader2, CheckCircle2 } from "@/components/icons";
 
 import {
   Dialog,

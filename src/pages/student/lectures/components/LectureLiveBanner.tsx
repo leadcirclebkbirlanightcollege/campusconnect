@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3, MapPin, Radio } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Radio } from "@/components/icons";
 import { Link } from "react-router-dom";
 
 import LiveBadge from "@/components/lectures/LiveBadge";

@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

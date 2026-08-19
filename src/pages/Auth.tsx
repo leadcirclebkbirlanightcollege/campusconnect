@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Loader2, Eye, EyeOff,
   ArrowRight, CheckCircle2, BookOpen, Trophy, Zap,
-} from "lucide-react";
+} from "@/components/icons";
 import { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";

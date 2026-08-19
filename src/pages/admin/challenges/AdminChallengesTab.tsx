@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 import {
   Trophy, Plus, Pencil, Trash2, Calendar, Zap, Flame,
   CheckSquare, Star, TrendingUp, X, Save,
-} from "lucide-react";
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

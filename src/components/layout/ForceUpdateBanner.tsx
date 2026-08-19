@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Zap } from "lucide-react";
+import { RefreshCw, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";

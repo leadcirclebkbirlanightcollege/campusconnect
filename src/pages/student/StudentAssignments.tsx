@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { FileText, Calendar, CheckCircle, Upload, Star, Paperclip, X } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Upload, Star, Paperclip, X } from "@/components/icons";
 import { format, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 

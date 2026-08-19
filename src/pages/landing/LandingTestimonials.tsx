@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Star } from "lucide-react";
+import { Star } from "@/components/icons";
 
 const TESTIMONIALS = [
   {

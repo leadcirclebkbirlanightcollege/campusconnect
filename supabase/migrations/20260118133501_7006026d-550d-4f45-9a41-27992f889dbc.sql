@@ -6,7 +6,7 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'student');
 
 -- Create profiles table (extends auth.users with additional fields)
 CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE public.profiles (
 
 -- Create user_roles table
 CREATE TABLE public.user_roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   role app_role NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -30,7 +30,7 @@ CREATE TABLE public.user_roles (
 
 -- Create lectures table
 CREATE TABLE public.lectures (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   topic TEXT NOT NULL,
   lecture_date DATE NOT NULL,
   start_time TIME NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE public.lectures (
 
 -- Create attendance_tokens table
 CREATE TABLE public.attendance_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lecture_id UUID REFERENCES public.lectures(id) ON DELETE CASCADE NOT NULL UNIQUE,
   token TEXT NOT NULL UNIQUE,
   otp_hash TEXT NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE public.attendance_tokens (
 
 -- Create attendance table
 CREATE TABLE public.attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lecture_id UUID REFERENCES public.lectures(id) ON DELETE CASCADE NOT NULL,
   student_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   status TEXT DEFAULT 'present' CHECK (status IN ('present', 'absent')) NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE public.attendance (
 
 -- Create points_ledger table
 CREATE TABLE public.points_ledger (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   points INTEGER NOT NULL,
   source TEXT CHECK (source IN ('attendance', 'manual', 'event')) NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE public.points_ledger (
 
 -- Create notifications table
 CREATE TABLE public.notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   target_role app_role,
@@ -92,7 +92,7 @@ CREATE TABLE public.notifications (
 
 -- Create notification_recipients table
 CREATE TABLE public.notification_recipients (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   notification_id UUID REFERENCES public.notifications(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   read_at TIMESTAMPTZ,

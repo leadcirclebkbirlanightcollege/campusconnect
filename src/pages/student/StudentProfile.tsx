@@ -26,7 +26,7 @@ import {
   Sparkles,
   Trophy,
   UserRound,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";

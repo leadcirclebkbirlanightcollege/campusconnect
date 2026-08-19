@@ -3,7 +3,7 @@
  * Data is CMS-managed via the `institution_partners` table.
  */
 import { useQuery } from "@tanstack/react-query";
-import { Landmark, Sparkles } from "lucide-react";
+import { Landmark, Sparkles } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";

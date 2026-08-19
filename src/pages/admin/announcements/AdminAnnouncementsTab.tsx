@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Megaphone, Pin, Trash2 } from "lucide-react";
+import { Plus, Megaphone, Pin, Trash2 } from "@/components/icons";
 import { format } from "date-fns";
 
 export default function AdminAnnouncementsTab() {

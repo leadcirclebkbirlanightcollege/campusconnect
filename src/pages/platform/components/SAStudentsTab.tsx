@@ -14,7 +14,7 @@ import { useCollegeContext } from "@/contexts/CollegeContext";
 import {
   Search, Users, AlertTriangle, CheckCircle2,
   ChevronLeft, ChevronRight as ChevronRightIcon, RefreshCw,
-} from "lucide-react";
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 

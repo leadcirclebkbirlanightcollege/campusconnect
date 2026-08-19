@@ -8,7 +8,7 @@ import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, isYesterday, formatDistanceToNow } from "date-fns";
-import { Pin, Clock, AlertCircle, Search, ArrowUpDown, Megaphone, Building2, Check } from "lucide-react";
+import { Pin, Clock, AlertCircle, Search, ArrowUpDown, Megaphone, Building2, Check } from "@/components/icons";
 
 type Filter = "all" | "pinned" | "critical";
 

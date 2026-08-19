@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/components/icons";
 import { useMetricCountUp } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 

@@ -12,7 +12,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { SeasonalAccent } from "@/components/seasonal/SeasonalKit";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 
 interface PageHeaderProps {
   title:       string;

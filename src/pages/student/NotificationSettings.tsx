@@ -1,6 +1,6 @@
 import { useEffect, useState, type ElementType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookOpen, Megaphone, Trophy, AlertTriangle, Settings2, CheckCircle2 } from "lucide-react";
+import { Bell, BookOpen, Megaphone, Trophy, AlertTriangle, Settings2, CheckCircle2 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";

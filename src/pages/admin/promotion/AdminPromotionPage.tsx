@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertTriangle, ArrowRight, CheckCircle2, GraduationCap, Loader2, Plus,
   RotateCcw, Sparkles, Trash2, Undo2,
-} from "lucide-react";
+} from "@/components/icons";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 

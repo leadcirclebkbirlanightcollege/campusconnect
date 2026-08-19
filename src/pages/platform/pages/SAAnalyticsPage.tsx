@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar
 } from "recharts";
-import { Building2, Users, BookOpen, Activity, TrendingUp, CheckCircle } from "lucide-react";
+import { Building2, Users, BookOpen, Activity, TrendingUp, CheckCircle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 function MetricCard({ label, value, icon: Icon, color, sub }: {

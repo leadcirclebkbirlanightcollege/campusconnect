@@ -5,7 +5,7 @@ import {
   AlarmClock, ArrowRight, Bell, BookOpen, CheckSquare, Clock, Coins,
   GraduationCap, Megaphone, PlayCircle, Radio, ScanLine, Sparkles, Store,
   TriangleAlert, TrendingUp, Users, Zap, FileEdit, BarChart3,
-} from "lucide-react";
+} from "@/components/icons";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 

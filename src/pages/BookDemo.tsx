@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Building2, GraduationCap, Mail, MapPin, Phone, Send, User, Users } from "lucide-react";
+import { ArrowLeft, Building2, GraduationCap, Mail, MapPin, Phone, Send, User, Users } from "@/components/icons";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

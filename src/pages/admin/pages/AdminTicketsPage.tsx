@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { MessageCircle, Send, CheckCircle2, Search, Filter } from "lucide-react";
+import { MessageCircle, Send, CheckCircle2, Search, Filter } from "@/components/icons";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 

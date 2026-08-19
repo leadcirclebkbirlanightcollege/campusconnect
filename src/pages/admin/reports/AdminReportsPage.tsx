@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from "recharts";
-import { Users, BookOpen, AlertTriangle, TrendingUp, Award, Download } from "lucide-react";
+import { Users, BookOpen, AlertTriangle, TrendingUp, Award, Download } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

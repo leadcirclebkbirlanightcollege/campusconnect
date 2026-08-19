@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2, ShieldCheck, User, Camera, FileCheck2, Eye, EyeOff, Lock,
   CheckCircle2, AlertCircle,
-} from "lucide-react";
+} from "@/components/icons";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

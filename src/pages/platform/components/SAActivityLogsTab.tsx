@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SlideUp, FadeIn } from "@/components/ui/motion";
-import { Shield, Search, Clock, User, ArrowRight, RefreshCw, Filter } from "lucide-react";
+import { Shield, Search, Clock, User, ArrowRight, RefreshCw, Filter } from "@/components/icons";
 import { formatDistanceToNow, format } from "date-fns";
 
 type AuditEntry = {

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { BookOpen, Calendar, Clock, MapPin, ChevronRight, Sparkles } from "lucide-react";
+import { BookOpen, Calendar, Clock, MapPin, ChevronRight, Sparkles } from "@/components/icons";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 

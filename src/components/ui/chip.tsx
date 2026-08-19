@@ -6,7 +6,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 
 interface ChipProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onSelect"> {
   active?: boolean;

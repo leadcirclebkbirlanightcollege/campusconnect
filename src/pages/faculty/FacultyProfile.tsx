@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
-import { UserCircle, Mail, Phone, Building2 } from "lucide-react";
+import { UserCircle, Mail, Phone, Building2 } from "@/components/icons";
 
 export default function FacultyProfile() {
   const { user } = useAuth();

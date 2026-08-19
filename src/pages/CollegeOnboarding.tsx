@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, CheckCircle2, GraduationCap, Settings2, Shield, Users } from "lucide-react";
+import { Building2, CheckCircle2, GraduationCap, Settings2, Shield, Users } from "@/components/icons";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";

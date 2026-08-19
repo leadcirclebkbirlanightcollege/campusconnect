@@ -9,7 +9,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import {
   CalendarDays, ClipboardCheck, BookOpenCheck, FileText,
   GraduationCap, QrCode, Award,
-} from "lucide-react";
+} from "@/components/icons";
 
 const TILES: HubTile[] = [
   { label: "Lectures",    description: "Live & upcoming sessions", href: "/app/lectures",    icon: GraduationCap, tone: "primary" },

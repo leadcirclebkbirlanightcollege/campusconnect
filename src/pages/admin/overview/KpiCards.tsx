@@ -1,4 +1,4 @@
-import { Users, GraduationCap, TrendingUp, ShieldCheck, AlertTriangle, Flame, BookOpen, Zap } from "lucide-react";
+import { Users, GraduationCap, TrendingUp, ShieldCheck, AlertTriangle, Flame, BookOpen, Zap } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";

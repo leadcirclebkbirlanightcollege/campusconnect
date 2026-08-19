@@ -16,7 +16,7 @@ import {
   BookOpenCheck,
   Bell,
   Rocket,
-} from "lucide-react";
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 

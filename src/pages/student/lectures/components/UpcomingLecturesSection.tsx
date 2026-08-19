@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3, MapPin } from "lucide-react";
+import { CalendarDays, Clock3, MapPin } from "@/components/icons";
 import { Link } from "react-router-dom";
 
 import { GlassCard } from "@/components/ui/GlassCard";

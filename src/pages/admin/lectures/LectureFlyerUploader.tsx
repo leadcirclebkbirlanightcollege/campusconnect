@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UploadCloud, ExternalLink, Image as ImageIcon, X } from "lucide-react";
+import { UploadCloud, ExternalLink, Image as ImageIcon, X } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

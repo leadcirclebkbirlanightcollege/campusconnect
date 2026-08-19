@@ -7,7 +7,7 @@ import {
   CalendarClock, CheckCircle2, QrCode, RefreshCw, ShieldCheck,
   Timer, Printer, Users, UserCheck, Radio, Clock, BarChart3,
   AlertTriangle, TrendingUp, Zap, ArrowRight,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

@@ -3,7 +3,7 @@ import { useLiveLecture } from "@/hooks/use-live-lecture";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Radio, ArrowRight, Clock, Users, CheckCircle2 } from "lucide-react";
+import { Radio, ArrowRight, Clock, Users, CheckCircle2 } from "@/components/icons";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 

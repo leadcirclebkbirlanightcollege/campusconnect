@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Users, Filter, CheckCircle2, UserCheck, Clock, BarChart3 } from "lucide-react";
+import { Download, Users, Filter, CheckCircle2, UserCheck, Clock, BarChart3 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

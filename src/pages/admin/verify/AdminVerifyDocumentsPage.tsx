@@ -16,7 +16,7 @@ import {
   ExternalLink,
   FileText,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

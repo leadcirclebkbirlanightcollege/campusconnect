@@ -4,7 +4,7 @@ import {
   LayoutDashboard, BookOpen, Users, CheckSquare,
   Megaphone, Calendar, UserCircle, LogOut, Menu,
   GraduationCap, ChevronRight, BarChart2, FileText,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

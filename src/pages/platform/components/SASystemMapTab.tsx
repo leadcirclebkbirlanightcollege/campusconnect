@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2, BookOpen, CheckSquare, ChevronDown, ChevronRight,
   GraduationCap, LayoutGrid, Users, Radio, Activity,
-} from "lucide-react";
+} from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";

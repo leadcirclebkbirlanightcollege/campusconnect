@@ -6,7 +6,7 @@ import {
   UserRoundCheck, Star, Zap, BookOpen, Award, Bell, Users, Megaphone, IdCard,
   MessageSquare, Lightbulb, BarChart3, ShieldCheck, Layers, Briefcase,
   CalendarDays, Network, Check, type LucideIcon,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";

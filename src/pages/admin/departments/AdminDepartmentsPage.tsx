@@ -19,7 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Loader2 } from "@/components/icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

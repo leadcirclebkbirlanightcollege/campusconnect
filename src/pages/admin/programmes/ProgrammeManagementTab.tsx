@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, Pencil, Users, BookOpen, Trash2 } from "lucide-react";
+import { Plus, Pencil, Users, BookOpen, Trash2 } from "@/components/icons";
 
 type Programme = {
   id: string;

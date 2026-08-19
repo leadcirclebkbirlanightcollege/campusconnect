@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Radar as RadarIcon } from "lucide-react";
+import { Radar as RadarIcon } from "@/components/icons";
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;

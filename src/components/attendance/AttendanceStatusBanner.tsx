@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, Clock, Radio, Timer } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Radio, Timer } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 type AttendanceState = "not_started" | "live" | "closed" | "marked";

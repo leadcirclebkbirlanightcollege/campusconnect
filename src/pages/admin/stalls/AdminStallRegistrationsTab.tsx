@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QueryErrorState } from "@/components/feedback/QueryErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Store, Filter, Mail, Phone } from "lucide-react";
+import { CheckCircle2, XCircle, Store, Filter, Mail, Phone } from "@/components/icons";
 import { format } from "date-fns";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

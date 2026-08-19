@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Download, Smartphone, Share2, MoreVertical, Plus, CheckCircle2, Wifi, Bell, Zap } from "lucide-react";
+import { Download, Smartphone, Share2, MoreVertical, Plus, CheckCircle2, Wifi, Bell, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";

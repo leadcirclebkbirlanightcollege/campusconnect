@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Share2, ShieldCheck } from "lucide-react";
+import { Download, Share2, ShieldCheck } from "@/components/icons";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";

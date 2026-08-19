@@ -13,7 +13,7 @@
 
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/icons";
 import type { ReactNode } from "react";
 
 /** Routes that must NEVER be blocked by auth loading */

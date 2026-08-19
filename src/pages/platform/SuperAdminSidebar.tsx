@@ -6,7 +6,7 @@ import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard, Building2, UserCog, Users, BookOpen,
   CheckSquare, Trophy, Award, Bell, BarChart3, Shield, Settings, LogOut, Moon, Sun, Network, Activity, LayoutTemplate, Target,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTheme } from "@/hooks/use-theme";
 import { BRANDING } from "@/config/branding";
 import { cn } from "@/lib/utils";

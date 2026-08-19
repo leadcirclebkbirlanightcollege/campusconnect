@@ -8,7 +8,7 @@ import {
   Video,
   Wifi,
   FileText,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 

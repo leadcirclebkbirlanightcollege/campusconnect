@@ -10,7 +10,7 @@ import {
   CreditCard,
   BadgeCheck,
   CheckCircle,
-} from "lucide-react";
+} from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";

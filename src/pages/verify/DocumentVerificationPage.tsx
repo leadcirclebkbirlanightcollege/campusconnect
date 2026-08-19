@@ -16,7 +16,7 @@ import {
   Building2,
   UserCircle2,
   Fingerprint,
-} from "lucide-react";
+} from "@/components/icons";
 import { format } from "date-fns";
 
 type VerifyResult = {

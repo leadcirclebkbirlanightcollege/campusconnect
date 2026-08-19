@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, ArrowRight, AlertCircle } from "lucide-react";
+import { BookOpen, ArrowRight, AlertCircle } from "@/components/icons";
 
 type Programme = {
   id: string;
