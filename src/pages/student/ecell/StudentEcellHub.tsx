@@ -255,11 +255,11 @@ export default function StudentEcellHub() {
         className="relative overflow-hidden rounded-2xl border p-5"
         style={{
           background: `
-            radial-gradient(80% 120% at 100% 0%, hsl(${ECELL_ACCENT} / 0.32), transparent 60%),
+            radial-gradient(80% 120% at 100% 0%, hsl(${ECELL_ACCENT} / 0.25), transparent 60%),
             linear-gradient(135deg, hsl(265 65% 16%), hsl(245 70% 12%))
           `,
           borderColor: `hsl(${ECELL} / 0.32)`,
-          boxShadow: `0 12px 40px -16px hsl(${ECELL} / 0.55)`,
+          boxShadow: `0 4px 20px -8px hsl(${ECELL} / 0.40)`,
         }}
       >
         {/* Glow particles */}

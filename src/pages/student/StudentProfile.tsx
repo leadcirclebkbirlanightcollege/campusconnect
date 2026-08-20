@@ -542,7 +542,7 @@ export default function StudentProfile() {
           className="space-y-5"
         >
           {/* Profile completion */}
-          <div className="rounded-[20px] border border-border-subtle bg-surface-1 p-4 shadow-[0_10px_30px_-22px_hsl(var(--foreground)/0.5)]">
+          <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs">
             <div className="flex items-center justify-between">
               <p className="text-[13px] font-bold text-foreground">Profile completion</p>
               <p className="text-[13px] font-bold text-primary">{completion}%</p>

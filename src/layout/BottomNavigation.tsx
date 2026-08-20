@@ -39,9 +39,9 @@ export function BottomNavigation() {
     <nav
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50 md:hidden",
-        "bg-background/90 dark:bg-surface-1/90 backdrop-blur-2xl",
-        "border-t border-border-subtle/80",
-        "shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.35)]",
+        "bg-surface-1/95 backdrop-blur-lg",
+        "border-t border-border-subtle",
+        "shadow-[0_-2px_10px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.35)]",
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -50,8 +50,7 @@ export function BottomNavigation() {
       }}
       aria-label="Main navigation"
     >
-      <SeasonalAccent className="h-[2px]" />
-      <div className="relative flex h-[64px] items-center justify-between px-3">
+      <div className="relative flex h-[60px] items-center justify-between px-2.5">
         {STUDENT_TABS.map((tab) => {
           const cfg = TAB_ICON_MAP[tab.id];
           const active = tab.id === activeId;

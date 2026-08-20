@@ -154,8 +154,8 @@ function GroupCard({ g, index }: { g: Group; index: number }) {
 
       <div
         className={cn(
-          "overflow-hidden rounded-[20px] border border-border-subtle bg-surface-1",
-          "shadow-[0_14px_36px_-28px_hsl(var(--foreground)/0.55)]",
+          "overflow-hidden rounded-2xl border border-border-subtle bg-surface-1",
+          "shadow-xs",
         )}
       >
         {g.items.map((f, i) => (

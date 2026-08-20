@@ -1,25 +1,16 @@
 /**
- * ModuleHero — premium curved gradient hero with per-module colour identity.
+ * ModuleHero — premium Deep Navy hero card per design specification.
  *
- * Each module gets its own accent so navigating the app feels like moving
- * between rooms of the same building, not between different websites.
+ * Provides a rich, commanding header with deep navy background,
+ * crisp white typography, and optional stat rail.
  */
 
 import * as React from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "@/components/icons";
 import { cn } from "@/lib/utils";
-import { SeasonalHeroAtmosphere, SeasonalLightLine } from "@/components/seasonal/SeasonalKit";
 
 export type ModuleTone = "academics" | "community" | "ecell" | "profile" | "brand";
-
-const TONE_VAR: Record<ModuleTone, string> = {
-  academics: "var(--module-academics)",
-  community: "var(--module-community)",
-  ecell: "var(--module-ecell)",
-  profile: "var(--module-profile)",
-  brand: "var(--module-brand)",
-};
 
 export interface HeroStat {
   label: string;
@@ -43,7 +34,6 @@ interface ModuleHeroProps {
 }
 
 export function ModuleHero({
-  tone = "brand",
   eyebrow,
   title,
   subtitle,
@@ -55,95 +45,83 @@ export function ModuleHero({
   children,
   className,
 }: ModuleHeroProps) {
-  const accent = TONE_VAR[tone];
-
   return (
     <motion.header
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: [0, 0, 0.2, 1] }}
-      style={
-        {
-          "--hero": accent,
-          backgroundImage: `linear-gradient(145deg, hsl(${accent}) 0%, hsl(${accent} / 0.92) 45%, hsl(${accent} / 0.72) 100%)`,
-        } as React.CSSProperties
-      }
+      transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
       className={cn(
-        "relative overflow-hidden rounded-b-[28px] px-5 pt-5 text-white",
-        stats?.length ? "pb-14" : "pb-8",
+        "relative overflow-hidden rounded-2xl md:rounded-3xl",
+        "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light text-white p-5 md:p-6 shadow-md",
+        stats?.length ? "pb-6" : "pb-5",
         className,
       )}
     >
-      {/* light bloom + grain */}
+      {/* Subtle abstract geometric glow circles */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(120%_90%_at_15%_0%,rgba(255,255,255,0.32),transparent_58%)]"
+        className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/20 blur-2xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-2xl"
+        className="pointer-events-none absolute right-1/3 -bottom-10 h-32 w-32 rounded-full bg-white/5 blur-xl"
       />
 
-      {/* Seasonal layer (auto-disabled outside the campaign window) */}
-      <SeasonalHeroAtmosphere chakraSize={220} particles={8} />
-      <SeasonalLightLine position="top" />
-
-
-      <div className="relative">
+      <div className="relative z-10">
         <div className="flex items-start gap-3">
           {back && (
             <button
               type="button"
               onClick={onBack}
               aria-label="Go back"
-              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm transition active:scale-95"
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm transition active:scale-95 hover:bg-white/20"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 text-white" />
             </button>
           )}
 
           <div className="min-w-0 flex-1">
             {eyebrow && (
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-white/75">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/70">
                 {eyebrow}
               </p>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-0.5">
               {Icon && (
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/20 bg-white/12">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/20 bg-white/10">
                   <Icon className="h-4 w-4" />
                 </span>
               )}
-              <h1 className="font-heading text-[25px] font-black leading-tight tracking-[-0.03em]">
+              <h1 className="font-heading text-xl sm:text-2xl font-black leading-tight tracking-tight text-white">
                 {title}
               </h1>
             </div>
             {subtitle && (
-              <p className="mt-1 text-[12.5px] leading-snug text-white/80">{subtitle}</p>
+              <p className="mt-1 text-xs sm:text-sm leading-snug text-white/80">{subtitle}</p>
             )}
           </div>
 
           {action && <div className="shrink-0">{action}</div>}
         </div>
 
-        {children && <div className="mt-4">{children}</div>}
+        {children && <div className="mt-3.5">{children}</div>}
       </div>
 
       {/* Inline stat rail */}
       {!!stats?.length && (
-        <div className="relative mt-5 grid grid-flow-col auto-cols-fr gap-2">
+        <div className="relative z-10 mt-4 grid grid-flow-col auto-cols-fr gap-2 sm:gap-3">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 + i * 0.05, duration: 0.22 }}
-              className="rounded-2xl border border-white/15 bg-white/12 px-2.5 py-2 backdrop-blur-sm"
+              transition={{ delay: 0.04 + i * 0.04, duration: 0.2 }}
+              className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm"
             >
-              <p className="font-heading text-[17px] font-bold leading-none tabular-nums">
+              <p className="font-heading text-base sm:text-lg font-black leading-none tabular-nums text-white">
                 {s.value}
               </p>
-              <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-wide text-white/70">
+              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wider text-white/70">
                 {s.label}
               </p>
             </motion.div>
@@ -154,7 +132,7 @@ export function ModuleHero({
   );
 }
 
-/** Content that visually tucks under a ModuleHero's curve. */
+/** Content that visually tucks under a ModuleHero */
 export function HeroOverlap({
   children,
   className,
@@ -162,5 +140,5 @@ export function HeroOverlap({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("relative -mt-8 px-4", className)}>{children}</div>;
+  return <div className={cn("relative -mt-4 px-1", className)}>{children}</div>;
 }

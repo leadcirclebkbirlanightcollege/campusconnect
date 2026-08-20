@@ -208,8 +208,8 @@ export default function AppLayout() {
             <header
               className={cn(
                 "sticky top-0 z-40 app-header-safe",
-                "glass-surface border-b border-border-subtle/70",
-                "shadow-[0_1px_0_hsl(var(--border-subtle)/0.8)]",
+                "bg-surface-1/95 backdrop-blur-md border-b border-border-subtle",
+                "shadow-[0_1px_2px_hsl(var(--navy-deep)/0.03)]",
               )}
             >
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">

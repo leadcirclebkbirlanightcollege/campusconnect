@@ -90,8 +90,7 @@ function Panel({
   return (
     <div
       className={cn(
-        "rounded-[20px] border border-border-subtle bg-surface-1 p-4",
-        "shadow-[0_16px_38px_-30px_hsl(var(--foreground)/0.55)]",
+        "rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs",
         className,
       )}
     >

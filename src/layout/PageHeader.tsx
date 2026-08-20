@@ -11,7 +11,6 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { SeasonalAccent } from "@/components/seasonal/SeasonalKit";
 import { ChevronLeft } from "@/components/icons";
 
 interface PageHeaderProps {
@@ -61,14 +60,13 @@ export function PageHeader({
         sticky
           ? [
               "sticky z-30 top-[calc(52px+env(safe-area-inset-top,0px))]",
-              "-mx-4 border-b border-border-subtle/70 bg-background/85 px-4 py-2.5",
-              "backdrop-blur-md shadow-[0_4px_16px_-8px_hsl(var(--foreground)/0.15)]",
+              "-mx-4 border-b border-border-subtle bg-surface-1/95 px-4 py-2.5",
+              "backdrop-blur-md shadow-sm",
             ]
           : variant === "compact" ? "mb-3" : "mb-5",
         className,
       )}
     >
-      <SeasonalAccent position="bottom" className="h-[2px]" />
       {/* Left: back + title */}
       <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {back && (

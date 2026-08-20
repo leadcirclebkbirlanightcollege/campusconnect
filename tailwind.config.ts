@@ -80,7 +80,18 @@ export default {
           foreground: "hsl(var(--gold-foreground))",
         },
 
+        /* Navy tokens (hero cards, deep emphasis per design spec) */
+        navy: {
+          deep:  "hsl(var(--navy-deep))",
+          card:  "hsl(var(--navy-card))",
+          light: "hsl(var(--navy-light))",
+        },
+
         /* Semantic */
+        info: {
+          DEFAULT:    "hsl(var(--info, 210 60% 50%))",
+          soft:       "hsl(var(--info-soft, 210 55% 95%))",
+        },
         danger: {
           DEFAULT:    "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",

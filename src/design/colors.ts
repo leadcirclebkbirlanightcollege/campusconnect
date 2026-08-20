@@ -17,16 +17,21 @@ export const COLORS = {
   surface4:  "hsl(var(--surface-4))",
 
   /* ── Glass surface ── */
-  glassBg:     "hsl(var(--surface-1) / 0.72)",
-  glassBorder: "hsl(var(--border-subtle) / 0.60)",
+  glassBg:     "hsl(var(--surface-1) / 0.85)",
+  glassBorder: "hsl(var(--border-subtle) / 0.80)",
 
-  /* ── Primary brand ── */
+  /* ── Primary brand (Royal Blue #3157C7) ── */
   primary:     "hsl(var(--primary))",
   primaryFg:   "hsl(var(--primary-foreground))",
   primaryDim:  "hsl(var(--primary-dim))",
   primaryGlow: "hsl(var(--primary-glow))",
 
-  /* ── Accent glow (electric highlight) ── */
+  /* ── Deep Navy (Hero Cards & Key Emphasis) ── */
+  navyDeep:  "hsl(var(--navy-deep))",
+  navyCard:  "hsl(var(--navy-card))",
+  navyLight: "hsl(var(--navy-light))",
+
+  /* ── Accent glow ── */
   accentGlow: "hsl(var(--accent-glow))",
 
   /* ── Gold / premium tier ── */
@@ -37,6 +42,7 @@ export const COLORS = {
   success: "hsl(var(--success))",
   warning: "hsl(var(--warning))",
   danger:  "hsl(var(--danger))",
+  info:    "hsl(var(--info, 210 60% 50%))",
 
   /* ── Text hierarchy ── */
   textPrimary:   "hsl(var(--text-primary))",
@@ -56,6 +62,8 @@ export const COLOR_CLASSES = {
   surface2: "bg-surface-2",
   surface3: "bg-surface-3",
   card:     "bg-card",
+  navyDeep: "bg-navy-deep",
+  navyCard: "bg-navy-card",
 
   /* Text */
   textPrimary:   "text-foreground",
@@ -66,6 +74,7 @@ export const COLOR_CLASSES = {
   textSuccess:   "text-success",
   textWarning:   "text-warning",
   textDanger:    "text-danger",
+  textNavy:      "text-navy-deep",
 
   /* Borders */
   borderSubtle: "border-border-subtle",

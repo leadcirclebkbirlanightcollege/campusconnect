@@ -28,14 +28,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   QrCode,
+  MapPin,
 } from "@/components/icons";
 import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
-import {
-  IndependenceDayBadge,
-  IndependenceDayGreeting,
-  IndependenceDayHeroAccent,
-} from "@/components/seasonal/IndependenceDayHeroAccent";
-import { SeasonalCardAccent } from "@/components/seasonal/SeasonalKit";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -50,10 +45,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { PageSkeleton } from "@/components/skeleton/PageSkeleton";
 import { DailyCheckinCard } from "@/components/student/DailyCheckinCard";
-import { ProgressRing } from "@/components/ui/ProgressRing";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMetricCountUp } from "@/components/ui/motion";
 import {
   SECTION_REVEAL_ITEM,
   SECTION_REVEAL_PARENT,
@@ -106,6 +98,7 @@ async function fetchDashboardCore() {
   return {
     userId: user.id,
     name: profile?.name?.split(" ")[0] ?? "Student",
+    fullName: profile?.name ?? "Student",
     totalPoints: Number(pointsTotal ?? 0),
     currentStreak: streak?.current_streak ?? 0,
     longestStreak: streak?.longest_streak ?? 0,
@@ -190,6 +183,13 @@ export default function StudentDashboard() {
   const growth = useGrowthInsights();
 
   const greeting = useMemo(() => getGreeting(), []);
+  const todayFormatted = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    }).toUpperCase();
+  }, []);
 
   const coreQuery = useQuery({
     queryKey: ["dashboard", "core"],
@@ -282,41 +282,25 @@ export default function StudentDashboard() {
   const liveLecture = coreQuery.data.liveNow;
   const nextLecture = secondaryQuery.data?.nextLecture;
   const pendingAssignments = secondaryQuery.data?.pendingAssignments ?? [];
-  const riskLevel = growth.data?.risk_probability ?? "low";
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
       <PageContainer className="space-y-5 md:space-y-6 pb-6 md:pb-12" size="wide">
-        {/* ═══ DESKTOP COCKPIT HEADER ═══ */}
-        <div className="hidden md:flex items-center justify-between border-b border-border-subtle/80 pb-4">
+        
+        {/* ═══ CLEAN HEADER GREETING ═══ */}
+        <div className="flex items-center justify-between pt-1">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary/80">Campus OS</span>
-            <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight mt-0.5">
-              {greeting}, {coreQuery.data.name} 👋
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              {todayFormatted}
+            </p>
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5">
+              Hi, {coreQuery.data.name} 👋
             </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/app/scan")}
-              className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-2 shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all"
-            >
-              <QrCode className="h-4 w-4" />
-              Scan Attendance
-            </button>
-          </div>
-        </div>
-
-        {/* ═══ MOBILE GREETING STRIP ═══ */}
-        <div className="md:hidden flex items-center justify-between pt-1">
-          <div>
-            <p className="text-[11px] font-semibold text-muted-foreground leading-none">{greeting}</p>
-            <h1 className="text-xl font-black text-foreground tracking-tight mt-1">{coreQuery.data.name} 👋</h1>
           </div>
           <button
             type="button"
             onClick={() => navigate("/app/scan")}
-            className="h-9 px-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-primary/25 active:scale-95 transition-transform"
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm shadow-primary/25 hover:brightness-105 active:scale-95 transition-all"
           >
             <QrCode className="h-4 w-4" />
             <span>Scan QR</span>
@@ -325,81 +309,121 @@ export default function StudentDashboard() {
 
         <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-5 md:space-y-6">
 
-          {/* ═══ 1. WHAT IS HAPPENING NOW? (Live Lecture or Next Up) ═══ */}
+          {/* ═══ 1. DEEP NAVY HERO CARD (Next Class or Live Now) ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             {liveLecture ? (
-              <div className="relative overflow-hidden rounded-2xl border border-danger/40 bg-gradient-to-br from-danger/10 via-surface-1 to-surface-1 p-4 sm:p-5 shadow-md shadow-danger/10">
-                <div className="flex items-center justify-between gap-2 mb-2.5">
-                  <div className="flex items-center gap-2 bg-danger/15 border border-danger/30 px-2.5 py-1 rounded-full text-danger text-[11px] font-black uppercase tracking-widest">
-                    <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
-                    Live Class Right Now
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+                {/* Decorative glow circles */}
+                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-danger/25 blur-2xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute right-1/4 -bottom-10 h-32 w-32 rounded-full bg-primary/20 blur-xl" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 bg-danger/20 border border-danger/40 px-2.5 py-1 rounded-full text-white text-[11px] font-black uppercase tracking-wider">
+                      <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
+                      Live Class Now
+                    </div>
+                    <span className="text-xs font-mono font-semibold text-white/80">{liveLecture.start_time}</span>
                   </div>
-                  <span className="text-xs font-mono font-bold text-muted-foreground">{liveLecture.start_time}</span>
-                </div>
-                <h2 className="text-base sm:text-lg font-black text-foreground leading-snug">{liveLecture.topic}</h2>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <span>📍 {liveLecture.venue}</span>
-                  <span>·</span>
-                  <span className="text-danger font-semibold">Attendance is open</span>
-                </p>
-                <div className="mt-3.5 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/app/scan")}
-                    className="flex-1 h-10 sm:h-11 rounded-xl bg-danger text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-danger/25 active:scale-[0.98] transition-transform"
-                  >
-                    <QrCode className="h-4 w-4" />
-                    Mark Live Attendance
-                  </button>
+
+                  <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{liveLecture.topic}</h2>
+                  <p className="text-xs sm:text-sm text-white/80 mt-1.5 flex items-center gap-2">
+                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {liveLecture.venue}</span>
+                    <span>·</span>
+                    <span className="text-emerald-300 font-semibold">Attendance is open</span>
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/app/scan")}
+                      className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-primary/30 hover:brightness-105 active:scale-[0.98] transition-all"
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Mark Live Attendance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/app/timetable")}
+                      className="h-11 px-4 rounded-xl border border-white/20 bg-white/10 text-white font-semibold text-xs hover:bg-white/15 active:scale-95 transition-all"
+                    >
+                      Schedule
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : nextLecture ? (
-              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm hover:border-primary/30 transition-colors">
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-primary">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Next Lecture Ahead
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+                {/* Decorative glow circles */}
+                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute right-1/3 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-xl" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 bg-white/15 border border-white/20 px-2.5 py-1 rounded-full text-white text-[11px] font-bold uppercase tracking-wider">
+                      <Clock3 className="h-3 w-3 text-primary-glow" />
+                      Next Class
+                    </div>
+                    <span className="text-xs font-mono font-semibold text-white/80">{nextLecture.start_time}</span>
                   </div>
-                  <p className="text-sm sm:text-base font-bold text-foreground truncate">{nextLecture.topic}</p>
-                  <p className="text-xs text-muted-foreground truncate">{nextLecture.venue} · {nextLecture.start_time} ({nextLecture.lecture_date})</p>
+
+                  <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{nextLecture.topic}</h2>
+                  <p className="text-xs sm:text-sm text-white/80 mt-1.5 flex items-center gap-2">
+                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {nextLecture.venue}</span>
+                    <span>·</span>
+                    <span>{nextLecture.lecture_date}</span>
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/app/scan")}
+                      className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-primary/30 hover:brightness-105 active:scale-[0.98] transition-all"
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Mark Attendance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/app/timetable")}
+                      className="h-11 px-4 rounded-xl border border-white/20 bg-white/10 text-white font-semibold text-xs hover:bg-white/15 active:scale-95 transition-all"
+                    >
+                      Full Schedule
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/timetable")}
-                  className="shrink-0 h-9 px-3 rounded-xl border border-border-subtle bg-surface-2 text-foreground font-semibold text-xs hover:bg-surface-3 transition-colors"
-                >
-                  Schedule →
-                </button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm">
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-success">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Schedule Status
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      All Caught Up
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-black text-white">No classes scheduled right now</h2>
+                    <p className="text-xs text-white/70">Check your timetable or review study materials</p>
                   </div>
-                  <p className="text-sm font-bold text-foreground truncate">No active lectures right now</p>
-                  <p className="text-xs text-muted-foreground">Check your weekly schedule or review notes</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/app/timetable")}
+                    className="h-10 px-4 rounded-xl border border-white/20 bg-white/10 text-white font-semibold text-xs hover:bg-white/15 active:scale-95 transition-all"
+                  >
+                    View Timetable →
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/timetable")}
-                  className="shrink-0 h-9 px-3 rounded-xl border border-border-subtle bg-surface-2 text-foreground font-semibold text-xs hover:bg-surface-3 transition-colors"
-                >
-                  Timetable →
-                </button>
               </div>
             )}
           </motion.section>
 
-          {/* ═══ 2. KEY METRICS TRIO (Attendance Health + Points + Streak) ═══ */}
+          {/* ═══ 2. KEY METRICS TRIO (Attendance + Streak + Points) ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {/* Attendance Metric */}
             <div
               onClick={() => navigate("/app/attendance")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-xs hover:shadow-sm"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Attendance</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground truncate">Attendance</p>
               <p className={cn("text-xl sm:text-2xl font-black tabular-nums mt-1", isAttendanceSafe ? "text-foreground" : "text-danger")}>
                 {attendancePct}%
               </p>
@@ -418,21 +442,21 @@ export default function StudentDashboard() {
                 const el = document.getElementById("daily-checkin");
                 el?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-warning/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-warning/40 transition-all active:scale-[0.98] shadow-xs hover:shadow-sm"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Streak</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground truncate">Streak</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.currentStreak}d 🔥
               </p>
               <p className="mt-1 text-[10px] font-semibold text-warning truncate">Daily Check-In</p>
             </div>
 
-            {/* Points & Tier Metric */}
+            {/* Points Metric */}
             <div
               onClick={() => navigate("/app/points")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-accent/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-xs hover:shadow-sm"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Points</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground truncate">Points</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.totalPoints.toLocaleString()}
               </p>
@@ -442,12 +466,42 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
-          {/* ═══ 3. QUICK ACTIONS GRID ═══ */}
+          {/* ═══ 3. NEEDS YOUR ATTENTION (Action Required) ═══ */}
+          {pendingAssignments.length > 0 && (
+            <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Needs Your Attention</h2>
+                <span className="text-[11px] font-semibold text-warning">{pendingAssignments.length} pending</span>
+              </div>
+              <div className="space-y-2">
+                {pendingAssignments.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => navigate("/app/assignments")}
+                    className="cursor-pointer flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-4 py-3 hover:border-primary/40 transition-all active:scale-[0.99] shadow-xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
+                        <BookOpen className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-foreground truncate">{a.title}</p>
+                        <p className="text-[11px] text-muted-foreground">Due: {a.due_date}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-primary shrink-0">Submit →</span>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* ═══ 4. QUICK ACCESS GRID ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Quick Access</h2>
               <button onClick={() => navigate("/app/more")} className="text-[11px] font-semibold text-primary hover:underline">
-                All Features →
+                All Modules →
               </button>
             </div>
             <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
@@ -462,47 +516,17 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
-          {/* ═══ 4. ATTENTION ITEMS (Pending Assignments) ═══ */}
-          {pendingAssignments.length > 0 && (
-            <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Action Required</h2>
-                <span className="text-[11px] font-semibold text-warning">{pendingAssignments.length} pending</span>
-              </div>
-              <div className="space-y-2">
-                {pendingAssignments.map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => navigate("/app/assignments")}
-                    className="cursor-pointer flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-4 py-3 hover:border-warning/40 transition-colors shadow-sm"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-8 rounded-lg bg-warning/10 text-warning flex items-center justify-center shrink-0">
-                        <BookOpen className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-foreground truncate">{a.title}</p>
-                        <p className="text-[11px] text-muted-foreground">Due: {a.due_date}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-semibold text-primary shrink-0">Submit →</span>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {/* ═══ 5. DAILY CHECK-IN REWARD CARD ═══ */}
+          {/* ═══ 5. DAILY CHECK-IN CARD ═══ */}
           <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM}>
             <DailyCheckinCard />
           </motion.section>
 
-          {/* ═══ 6. UPCOMING EVENTS MARQUEE / STRIP ═══ */}
+          {/* ═══ 6. UPCOMING EVENTS STRIP ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             <UpcomingEventsStrip />
           </motion.section>
 
-          {/* ═══ 7. ACTIVITY FEED ═══ */}
+          {/* ═══ 7. RECENT POINTS ACTIVITY FEED ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Recent Points Activity</h2>
@@ -510,7 +534,7 @@ export default function StudentDashboard() {
                 History →
               </button>
             </div>
-            <div className="rounded-2xl border border-border-subtle bg-surface-1 divide-y divide-border-subtle overflow-hidden shadow-sm">
+            <div className="rounded-2xl border border-border-subtle bg-surface-1 divide-y divide-border-subtle overflow-hidden shadow-xs">
               {secondaryQuery.isLoading ? (
                 <div className="space-y-3 p-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -547,13 +571,13 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03 }}
-      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2/50 transition-colors"
+      transition={{ delay: index * 0.02 }}
+      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2/60 transition-colors"
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-primary">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-primary border border-border-subtle">
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
@@ -572,14 +596,14 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
 type Tint = "indigo" | "rose" | "amber" | "purple" | "emerald" | "sky" | "orange" | "slate";
 
 const TINT_CLASSES: Record<Tint, string> = {
-  indigo:  "bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-400 border-indigo-500/20",
-  rose:    "bg-rose-500/10 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400 border-rose-500/20",
-  amber:   "bg-amber-500/10 text-amber-500 dark:bg-amber-500/15 dark:text-amber-400 border-amber-500/20",
-  purple:  "bg-purple-500/10 text-purple-500 dark:bg-purple-500/15 dark:text-purple-400 border-purple-500/20",
-  emerald: "bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400 border-emerald-500/20",
-  sky:     "bg-sky-500/10 text-sky-500 dark:bg-sky-500/15 dark:text-sky-400 border-sky-500/20",
-  orange:  "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 dark:text-orange-400 border-orange-500/20",
-  slate:   "bg-slate-500/10 text-slate-500 dark:bg-slate-500/15 dark:text-slate-400 border-slate-500/20",
+  indigo:  "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+  rose:    "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  amber:   "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  purple:  "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  sky:     "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+  orange:  "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+  slate:   "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
 };
 
 const QuickTile = memo(function QuickTile({
