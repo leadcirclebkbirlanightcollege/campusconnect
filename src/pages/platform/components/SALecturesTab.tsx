@@ -53,7 +53,7 @@ export default function SALecturesTab() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("lectures")
-        .update({ status: "ended", ended_at: new Date().toISOString() } as any)
+        .update({ status: "ended" } as any)
         .eq("id", id);
       if (error) throw error;
     },

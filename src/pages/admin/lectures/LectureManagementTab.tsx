@@ -214,11 +214,7 @@ export default function LectureManagementTab() {
 
   const setLectureStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: LectureRow["status"] }) => {
-      const nowIso = new Date().toISOString();
-      const patch: Record<string, unknown> = { status };
-      if (status === "live") { patch.live_started_at = nowIso; patch.ended_at = null; }
-      if (status === "ended") patch.ended_at = nowIso;
-      const { error } = await supabase.from("lectures").update(patch as any).eq("id", id);
+      const { error } = await supabase.from("lectures").update({ status } as any).eq("id", id);
       if (error) throw error;
       if (status === "live" || status === "ended") {
         const { error: ne } = await supabase.functions.invoke("lecture-status-notify", { body: { lecture_id: id, status } });

@@ -1455,14 +1455,10 @@ export type Database = {
           college_id: string | null
           created_at: string
           created_by: string
-          end_at: string
           end_time: string
-          ended_at: string | null
           flyer_object_path: string | null
           id: string
           lecture_date: string
-          live_started_at: string | null
-          start_at: string
           start_time: string
           status: Database["public"]["Enums"]["lecture_status"]
           topic: string
@@ -1473,14 +1469,10 @@ export type Database = {
           college_id?: string | null
           created_at?: string
           created_by: string
-          end_at: string
           end_time: string
-          ended_at?: string | null
           flyer_object_path?: string | null
           id?: string
           lecture_date: string
-          live_started_at?: string | null
-          start_at: string
           start_time: string
           status?: Database["public"]["Enums"]["lecture_status"]
           topic: string
@@ -1491,14 +1483,10 @@ export type Database = {
           college_id?: string | null
           created_at?: string
           created_by?: string
-          end_at?: string
           end_time?: string
-          ended_at?: string | null
           flyer_object_path?: string | null
           id?: string
           lecture_date?: string
-          live_started_at?: string | null
-          start_at?: string
           start_time?: string
           status?: Database["public"]["Enums"]["lecture_status"]
           topic?: string

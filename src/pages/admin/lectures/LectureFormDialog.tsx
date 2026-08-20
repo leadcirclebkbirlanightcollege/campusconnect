@@ -155,19 +155,6 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
         if (roleRow?.college_id) resolvedCollegeId = roleRow.college_id;
       }
 
-      const formatTimeForISO = (timeStr: string) => {
-        const parts = timeStr.trim().split(":");
-        const h = (parts[0] || "00").padStart(2, "0");
-        const m = (parts[1] || "00").padStart(2, "0");
-        return `${h}:${m}:00`;
-      };
-
-      const startTimeFormatted = formatTimeForISO(values.start_time);
-      const endTimeFormatted = formatTimeForISO(values.end_time);
-
-      const start_at = new Date(`${values.lecture_date}T${startTimeFormatted}Z`).toISOString();
-      const end_at = new Date(`${values.lecture_date}T${endTimeFormatted}Z`).toISOString();
-
       let lectureId: string;
 
       if (lecture) {
@@ -176,8 +163,6 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
           lecture_date: values.lecture_date,
           start_time: values.start_time.slice(0, 5),
           end_time: values.end_time.slice(0, 5),
-          start_at,
-          end_at,
           venue: values.venue.trim(),
         };
         if (resolvedCollegeId) {
@@ -196,8 +181,6 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
           lecture_date: values.lecture_date,
           start_time: values.start_time.slice(0, 5),
           end_time: values.end_time.slice(0, 5),
-          start_at,
-          end_at,
           venue: values.venue.trim(),
           created_by: userData.user.id,
         };

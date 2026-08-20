@@ -85,9 +85,9 @@ function useLiveLectures() {
     queryFn: async () => {
       const { data } = await supabase
         .from("lectures")
-        .select("id, topic, venue, college_id, start_at, end_at, colleges:college_id(college_name)")
+        .select("id, topic, venue, college_id, lecture_date, start_time, end_time, colleges:college_id(college_name)")
         .eq("status", "live")
-        .order("live_started_at", { ascending: false })
+        .order("start_time", { ascending: true })
         .limit(6);
       return data ?? [];
     },
@@ -223,7 +223,11 @@ function CollegeNode({ college, idx, onClick }: {
 }
 
 function LiveLectureCard({ lecture, idx }: { lecture: any; idx: number }) {
-  const remaining = Math.max(0, Math.round((new Date(lecture.end_at).getTime() - Date.now()) / 60_000));
+  const remaining = (() => {
+    if (!lecture.lecture_date || !lecture.end_time) return 0;
+    const end = new Date(`${lecture.lecture_date}T${lecture.end_time}`).getTime();
+    return Number.isNaN(end) ? 0 : Math.max(0, Math.round((end - Date.now()) / 60_000));
+  })();
   return (
     <motion.div
       initial={{ opacity: 0, x: -8 }}

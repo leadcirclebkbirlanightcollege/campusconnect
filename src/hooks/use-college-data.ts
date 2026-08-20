@@ -102,7 +102,7 @@ export function useCollegeLectures(
     queryFn: async () => {
       let query = supabase
         .from("lectures")
-        .select("id, college_id, topic, venue, lecture_date, start_time, end_time, status, created_at, start_at, end_at")
+        .select("id, college_id, topic, venue, lecture_date, start_time, end_time, status, created_at")
         .eq("college_id", cid!)
         .order("lecture_date", { ascending: false })
         .limit(limit);
