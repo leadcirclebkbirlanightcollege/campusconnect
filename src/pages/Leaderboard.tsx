@@ -445,11 +445,11 @@ export default function Leaderboard() {
           <motion.section variants={SECTION_REVEAL_ITEM}>
             <GlassCard className="flex items-center justify-between gap-3" hover>
               <div>
-                <p className="text-sm font-semibold text-foreground">Achievements & Rewards</p>
-                <p className="text-xs text-muted-foreground">Earn more points and climb the leaderboard faster.</p>
+                <p className="text-sm font-semibold text-foreground">Points & Rewards</p>
+                <p className="text-xs text-muted-foreground">Earn points, claim rewards, and climb the leaderboard.</p>
               </div>
-              <Link to="/app/achievements" className="tap-ripple inline-flex h-12 items-center rounded-lg border border-primary/30 px-3 text-xs font-semibold text-primary">
-                View
+              <Link to="/app/points" className="tap-ripple inline-flex h-10 items-center rounded-xl border border-primary/30 bg-primary/10 px-3.5 text-xs font-bold text-primary hover:bg-primary/15 transition-colors">
+                View Points
               </Link>
             </GlassCard>
           </motion.section>

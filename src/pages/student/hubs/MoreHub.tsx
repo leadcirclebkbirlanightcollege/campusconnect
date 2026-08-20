@@ -246,17 +246,19 @@ export default function MoreHub() {
               <p className="text-[13px] text-muted-foreground">No feature matches “{query}”.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[20px] border border-border-subtle bg-surface-1 shadow-[0_14px_36px_-28px_hsl(var(--foreground)/0.55)]">
+            <div className="overflow-hidden rounded-[20px] border border-border-subtle bg-surface-1 shadow-sm">
               {results.map((f, i) => (
                 <FeatureRow key={f.href + f.label} f={f} last={i === results.length - 1} />
               ))}
             </div>
           )
         ) : (
-          GROUPS.map((g, i) => <GroupCard key={g.title} g={g} index={i} />)
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {GROUPS.map((g, i) => <GroupCard key={g.title} g={g} index={i} />)}
+          </div>
         )}
 
-        <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-muted-foreground/70">
+        <div className="flex items-center justify-center gap-1.5 pt-2 text-[11px] text-muted-foreground/70">
           <Sparkles className="h-3 w-3 text-primary" />
           Everything in one place — nothing hidden in menus.
         </div>

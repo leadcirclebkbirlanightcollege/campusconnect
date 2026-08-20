@@ -280,7 +280,7 @@ export default function AppLayout() {
             </header>
 
             {/* ── Workspace ──────────────────────────────────────── */}
-            <main className="flex-1 min-w-0 py-5 md:px-6 md:pb-6 pb-[calc(80px+env(safe-area-inset-bottom,0px))]">
+            <main className="flex-1 min-w-0 p-3 sm:p-5 md:p-6 pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:pb-8">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}

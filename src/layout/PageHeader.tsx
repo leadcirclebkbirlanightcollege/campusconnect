@@ -52,25 +52,25 @@ export function PageHeader({
   className,
   variant  = "default",
   gradient = false,
-  sticky   = true,
+  sticky   = false,
 }: PageHeaderProps) {
   return (
     <header
       className={cn(
-        "relative flex items-start justify-between gap-3 pt-1",
+        "relative flex items-start justify-between gap-3 pt-1 mb-4",
         sticky
           ? [
               "sticky z-30 top-[calc(52px+env(safe-area-inset-top,0px))]",
-              "-mx-4 mb-4 border-b border-border-subtle/70 bg-background/80 px-4 py-2",
-              "backdrop-blur-md shadow-[0_8px_24px_-18px_hsl(var(--foreground)/0.35)]",
+              "-mx-4 border-b border-border-subtle/70 bg-background/85 px-4 py-2.5",
+              "backdrop-blur-md shadow-[0_4px_16px_-8px_hsl(var(--foreground)/0.15)]",
             ]
-          : ["mb-6", variant === "compact" && "mb-4"],
+          : variant === "compact" ? "mb-3" : "mb-5",
         className,
       )}
     >
       <SeasonalAccent position="bottom" className="h-[2px]" />
       {/* Left: back + title */}
-      <div className="flex items-start gap-2 min-w-0 flex-1">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {back && (
           <button
             type="button"
@@ -78,11 +78,11 @@ export function PageHeader({
             aria-label="Go back"
             className={cn(
               "tap-ripple shrink-0 flex items-center justify-center",
-              "h-10 w-10 rounded-xl",
+              "h-9 w-9 rounded-xl",
               "bg-surface-2 border border-border-subtle",
               "text-muted-foreground hover:text-foreground hover:bg-surface-3",
               "transition-all duration-[120ms] active:scale-95",
-              "mt-0.5", // align with title baseline
+              "mt-0.5",
             )}
           >
             <ChevronLeft className="h-4 w-4" />

@@ -151,7 +151,7 @@ async function fetchDashboardSecondary(userId: string) {
     total: total ?? 0,
     nextLecture: ((upcoming ?? [])[0] as UpcomingLecture | undefined) ?? null,
     activities: (points ?? []) as RecentPoint[],
-    pendingAssignments: (assignments ?? []) as Array<{ id: string; title: string; due_date: string }>,
+    pendingAssignments: ((assignments ?? []) as unknown) as Array<{ id: string; title: string; due_date: string }>,
   };
 }
 
@@ -286,11 +286,11 @@ export default function StudentDashboard() {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <PageContainer className="space-y-6 pb-24 md:pb-12 !px-4 md:!px-6" withBottomNav>
+      <PageContainer className="space-y-5 md:space-y-6 pb-6 md:pb-12" size="wide">
         {/* ═══ DESKTOP COCKPIT HEADER ═══ */}
-        <div className="hidden md:flex items-center justify-between border-b border-border-subtle pb-5">
+        <div className="hidden md:flex items-center justify-between border-b border-border-subtle/80 pb-4">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Personal Campus OS</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary/80">Campus OS</span>
             <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight mt-0.5">
               {greeting}, {coreQuery.data.name} 👋
             </h1>
@@ -299,7 +299,7 @@ export default function StudentDashboard() {
             <button
               type="button"
               onClick={() => navigate("/app/scan")}
-              className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-2 shadow-md shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-2 shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all"
             >
               <QrCode className="h-4 w-4" />
               Scan Attendance
@@ -307,65 +307,46 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* ═══ MOBILE HEADER (App Bar) ═══ */}
+        {/* ═══ MOBILE GREETING STRIP ═══ */}
         <div className="md:hidden flex items-center justify-between pt-1">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/app/profile")}
-              className="h-10 w-10 rounded-full border-2 border-primary/30 bg-primary/10 flex items-center justify-center text-primary font-black text-sm active:scale-95 transition-transform"
-            >
-              {coreQuery.data.name?.[0]?.toUpperCase() ?? "S"}
-            </button>
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground leading-none">{greeting}</p>
-              <p className="text-base font-black text-foreground leading-tight mt-0.5">{coreQuery.data.name}</p>
-            </div>
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground leading-none">{greeting}</p>
+            <h1 className="text-xl font-black text-foreground tracking-tight mt-1">{coreQuery.data.name} 👋</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate("/app/inbox")}
-              aria-label="Notifications"
-              className="h-10 w-10 rounded-xl border border-border-subtle bg-surface-1 flex items-center justify-center text-foreground active:scale-95 transition-transform"
-            >
-              <Bell className="h-4.5 w-4.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/app/scan")}
-              aria-label="Scan Attendance"
-              className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/25 active:scale-95 transition-transform"
-            >
-              <QrCode className="h-4.5 w-4.5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/app/scan")}
+            className="h-9 px-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-primary/25 active:scale-95 transition-transform"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>Scan QR</span>
+          </button>
         </div>
 
-        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-6">
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-5 md:space-y-6">
 
           {/* ═══ 1. WHAT IS HAPPENING NOW? (Live Lecture or Next Up) ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             {liveLecture ? (
-              <div className="relative overflow-hidden rounded-2xl border border-danger/40 bg-gradient-to-br from-danger/12 via-surface-1 to-surface-1 p-5 shadow-lg shadow-danger/10">
-                <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="relative overflow-hidden rounded-2xl border border-danger/40 bg-gradient-to-br from-danger/10 via-surface-1 to-surface-1 p-4 sm:p-5 shadow-md shadow-danger/10">
+                <div className="flex items-center justify-between gap-2 mb-2.5">
                   <div className="flex items-center gap-2 bg-danger/15 border border-danger/30 px-2.5 py-1 rounded-full text-danger text-[11px] font-black uppercase tracking-widest">
                     <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
                     Live Class Right Now
                   </div>
                   <span className="text-xs font-mono font-bold text-muted-foreground">{liveLecture.start_time}</span>
                 </div>
-                <h2 className="text-lg font-black text-foreground">{liveLecture.topic}</h2>
+                <h2 className="text-base sm:text-lg font-black text-foreground leading-snug">{liveLecture.topic}</h2>
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
                   <span>📍 {liveLecture.venue}</span>
                   <span>·</span>
-                  <span>Attendance open</span>
+                  <span className="text-danger font-semibold">Attendance is open</span>
                 </p>
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-3.5 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => navigate("/app/scan")}
-                    className="flex-1 h-11 rounded-xl bg-danger text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-danger/30 active:scale-[0.98] transition-transform"
+                    className="flex-1 h-10 sm:h-11 rounded-xl bg-danger text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-danger/25 active:scale-[0.98] transition-transform"
                   >
                     <QrCode className="h-4 w-4" />
                     Mark Live Attendance
@@ -373,14 +354,14 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : nextLecture ? (
-              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4">
+              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm hover:border-primary/30 transition-colors">
                 <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider text-primary">
+                  <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-primary">
                     <Clock3 className="h-3.5 w-3.5" />
                     Next Lecture Ahead
                   </div>
                   <p className="text-sm sm:text-base font-bold text-foreground truncate">{nextLecture.topic}</p>
-                  <p className="text-xs text-muted-foreground">{nextLecture.venue} · {nextLecture.start_time} ({nextLecture.lecture_date})</p>
+                  <p className="text-xs text-muted-foreground truncate">{nextLecture.venue} · {nextLecture.start_time} ({nextLecture.lecture_date})</p>
                 </div>
                 <button
                   type="button"
@@ -390,7 +371,25 @@ export default function StudentDashboard() {
                   Schedule →
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <div className="rounded-2xl border border-border-subtle bg-surface-1 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-success">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Schedule Status
+                  </div>
+                  <p className="text-sm font-bold text-foreground truncate">No active lectures right now</p>
+                  <p className="text-xs text-muted-foreground">Check your weekly schedule or review notes</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/app/timetable")}
+                  className="shrink-0 h-9 px-3 rounded-xl border border-border-subtle bg-surface-2 text-foreground font-semibold text-xs hover:bg-surface-3 transition-colors"
+                >
+                  Timetable →
+                </button>
+              </div>
+            )}
           </motion.section>
 
           {/* ═══ 2. KEY METRICS TRIO (Attendance Health + Points + Streak) ═══ */}
@@ -398,57 +397,60 @@ export default function StudentDashboard() {
             {/* Attendance Metric */}
             <div
               onClick={() => navigate("/app/attendance")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98]"
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Attendance</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Attendance</p>
               <p className={cn("text-xl sm:text-2xl font-black tabular-nums mt-1", isAttendanceSafe ? "text-foreground" : "text-danger")}>
                 {attendancePct}%
               </p>
-              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold">
+              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold truncate">
                 {isAttendanceSafe ? (
                   <span className="text-success flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> Safe ≥75%</span>
                 ) : (
-                  <span className="text-danger flex items-center gap-0.5"><AlertTriangle className="h-3 w-3" /> Warning &lt;75%</span>
+                  <span className="text-danger flex items-center gap-0.5"><AlertTriangle className="h-3 w-3" /> Risk &lt;75%</span>
                 )}
               </div>
             </div>
 
             {/* Streak Metric */}
             <div
-              onClick={() => navigate("#daily-checkin")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-warning/40 transition-all active:scale-[0.98]"
+              onClick={() => {
+                const el = document.getElementById("daily-checkin");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-warning/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Streak</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Streak</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.currentStreak}d 🔥
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-warning">Daily Check-In</p>
+              <p className="mt-1 text-[10px] font-semibold text-warning truncate">Daily Check-In</p>
             </div>
 
             {/* Points & Tier Metric */}
             <div
               onClick={() => navigate("/app/points")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-accent/40 transition-all active:scale-[0.98]"
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-accent/40 transition-all active:scale-[0.98] shadow-sm hover:shadow"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Points</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">Points</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.totalPoints.toLocaleString()}
               </p>
-              <p className="mt-1 text-[10px] font-bold uppercase text-primary tracking-wide">
+              <p className="mt-1 text-[10px] font-bold uppercase text-primary tracking-wide truncate">
                 {tierConfig.label} Tier
               </p>
             </div>
           </motion.section>
 
           {/* ═══ 3. QUICK ACTIONS GRID ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Quick Navigation</h2>
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Quick Access</h2>
               <button onClick={() => navigate("/app/more")} className="text-[11px] font-semibold text-primary hover:underline">
-                View All →
+                All Features →
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
               <QuickTile icon={CalendarCheck} label="Attendance" tint="indigo" onClick={() => navigate("/app/attendance")} />
               <QuickTile icon={Clock3}        label="Timetable"  tint="rose"   onClick={() => navigate("/app/timetable")} />
               <QuickTile icon={BookOpen}      label="Tasks"      tint="amber"  onClick={() => navigate("/app/assignments")} />
@@ -460,9 +462,9 @@ export default function StudentDashboard() {
             </div>
           </motion.section>
 
-          {/* ═══ 4. ATTENTION ITEMS (Pending Assignments & Check-in) ═══ */}
+          {/* ═══ 4. ATTENTION ITEMS (Pending Assignments) ═══ */}
           {pendingAssignments.length > 0 && (
-            <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+            <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Action Required</h2>
                 <span className="text-[11px] font-semibold text-warning">{pendingAssignments.length} pending</span>
@@ -472,7 +474,7 @@ export default function StudentDashboard() {
                   <div
                     key={a.id}
                     onClick={() => navigate("/app/assignments")}
-                    className="cursor-pointer flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-4 py-3 hover:border-warning/40 transition-colors"
+                    className="cursor-pointer flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface-1 px-4 py-3 hover:border-warning/40 transition-colors shadow-sm"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-8 w-8 rounded-lg bg-warning/10 text-warning flex items-center justify-center shrink-0">
@@ -501,14 +503,14 @@ export default function StudentDashboard() {
           </motion.section>
 
           {/* ═══ 7. ACTIVITY FEED ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-3">
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Recent Points Activity</h2>
               <button onClick={() => navigate("/app/points")} className="text-[11px] font-semibold text-primary hover:underline">
                 History →
               </button>
             </div>
-            <div className="rounded-2xl border border-border-subtle bg-surface-1 divide-y divide-border-subtle overflow-hidden">
+            <div className="rounded-2xl border border-border-subtle bg-surface-1 divide-y divide-border-subtle overflow-hidden shadow-sm">
               {secondaryQuery.isLoading ? (
                 <div className="space-y-3 p-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -595,12 +597,12 @@ const QuickTile = memo(function QuickTile({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 p-2 rounded-2xl border border-border-subtle bg-surface-1 hover:border-primary/30 active:scale-95 transition-all"
+      className="flex flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl border border-border-subtle bg-surface-1 hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all"
     >
-      <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center border", TINT_CLASSES[tint])}>
+      <div className={cn("w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border", TINT_CLASSES[tint])}>
         <Icon className="w-5 h-5" />
       </div>
-      <span className="text-[11px] font-bold text-foreground leading-none">{label}</span>
+      <span className="text-[11px] sm:text-[12px] font-bold text-foreground leading-tight truncate w-full text-center">{label}</span>
     </button>
   );
 });

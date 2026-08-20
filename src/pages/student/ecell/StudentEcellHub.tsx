@@ -246,7 +246,7 @@ export default function StudentEcellHub() {
 
 
   return (
-    <div className="min-h-full px-4 py-4 space-y-4 max-w-3xl mx-auto pb-24">
+    <div className="min-h-full px-3.5 sm:px-5 py-3 sm:py-5 space-y-4 max-w-3xl mx-auto pb-8">
       {/* ── Hero Banner ─────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: -8 }}

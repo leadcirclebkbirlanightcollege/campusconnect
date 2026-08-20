@@ -176,7 +176,7 @@ export default function StudentPointsPage() {
     : 100;
 
   return (
-    <div className="mx-auto w-full max-w-[420px] space-y-4 px-4 pt-2 pb-[calc(96px+env(safe-area-inset-bottom,0px))]">
+    <div className="mx-auto w-full max-w-xl md:max-w-3xl lg:max-w-4xl space-y-5 px-3.5 sm:px-5 pb-8">
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <motion.section
@@ -289,7 +289,7 @@ export default function StudentPointsPage() {
       {/* ── Quick CTAs ───────────────────────────────────── */}
       <section className="grid grid-cols-2 gap-2">
         <QuickCta to="/app/leaderboard" icon={Trophy} title="Leaderboard" subtitle="Your ranking" tint="warning" />
-        <QuickCta to="/app/achievements" icon={Award} title="Achievements" subtitle="Badges & XP" tint="primary" />
+        <QuickCta to="/app/id-card" icon={Award} title="Digital ID" subtitle="Your student card" tint="primary" />
       </section>
 
       {/* ── Activity feed ────────────────────────────────── */}

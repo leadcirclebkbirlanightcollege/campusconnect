@@ -29,21 +29,28 @@ const MotionLink = motion(Link);
 
 export function HubGrid({ tiles, columns = 2 }: { tiles: HubTile[]; columns?: 1 | 2 }) {
   return (
-    <div className={cn("grid gap-3", columns === 2 ? "grid-cols-2" : "grid-cols-1")}>
+    <div
+      className={cn(
+        "grid gap-3 sm:gap-4",
+        columns === 2
+          ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      )}
+    >
       {tiles.map(({ label, description, href, icon: Icon, tone = "primary", badge }) => (
         <MotionLink
           key={href + label}
           to={href}
           whileTap={{ scale: 0.97 }}
           className={cn(
-            "tap-ripple group relative flex flex-col gap-2.5 overflow-hidden",
-            "rounded-[20px] border border-border-subtle bg-surface-1 p-4",
-            "shadow-[0_10px_30px_-22px_hsl(var(--foreground)/0.45)]",
-            "transition-colors duration-150 hover:border-primary/35",
+            "tap-ripple group relative flex flex-col justify-between gap-3 overflow-hidden",
+            "rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4.5",
+            "shadow-sm hover:shadow-md",
+            "transition-all duration-150 hover:border-primary/40 hover:-translate-y-0.5",
           )}
         >
           <div className="flex items-start justify-between">
-            <span className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", TONE[tone])}>
+            <span className={cn("flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl border border-border-subtle/50", TONE[tone])}>
               <Icon className="h-5 w-5" />
             </span>
             {badge !== undefined ? (
@@ -51,13 +58,13 @@ export function HubGrid({ tiles, columns = 2 }: { tiles: HubTile[]; columns?: 1 
                 {badge}
               </span>
             ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="font-heading text-[14px] font-bold leading-tight text-foreground truncate">{label}</p>
+            <p className="font-heading text-[13.5px] sm:text-[14.5px] font-bold leading-tight text-foreground truncate">{label}</p>
             {description && (
-              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground line-clamp-2">{description}</p>
+              <p className="mt-1 text-[11px] sm:text-[12px] leading-snug text-muted-foreground line-clamp-2">{description}</p>
             )}
           </div>
         </MotionLink>
