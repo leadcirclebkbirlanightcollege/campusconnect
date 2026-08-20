@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/providers/TenantProvider";
 import { toast } from "sonner";
 
 import {
@@ -35,13 +36,13 @@ import {
 import type { LectureRow } from "./LectureManagementTab";
 
 const schema = z.object({
-  topic: z.string().trim().min(3).max(200),
+  topic: z.string().trim().min(3, "Topic must be at least 3 characters").max(200),
   lecture_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
   start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
   end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
-  venue: z.string().trim().min(2).max(200),
+  venue: z.string().trim().min(2, "Venue must be at least 2 characters").max(200),
   programme_id: z.string().optional(),
 });
 
@@ -55,15 +56,22 @@ type Props = {
 };
 
 export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved }: Props) {
+  const { collegeId } = useTenant();
+
   // Fetch active programmes for the dropdown
   const programmesQuery = useQuery({
-    queryKey: ["admin", "programmes-list"],
+    queryKey: ["admin", "programmes-list", collegeId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("programmes")
         .select("id, name, color")
-        .eq("is_active", true)
-        .order("name");
+        .eq("is_active", true);
+
+      if (collegeId) {
+        q = q.eq("college_id", collegeId);
+      }
+
+      const { data, error } = await q.order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -104,8 +112,8 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       form.reset({
         topic: lecture.topic,
         lecture_date: lecture.lecture_date,
-        start_time: lecture.start_time,
-        end_time: lecture.end_time,
+        start_time: lecture.start_time.slice(0, 5),
+        end_time: lecture.end_time.slice(0, 5),
         venue: lecture.venue,
         programme_id: existingTagQuery.data ?? undefined,
       });
@@ -127,41 +135,79 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       if (userError) throw userError;
       if (!userData.user) throw new Error("Not authenticated");
 
-      const start_at = new Date(`${values.lecture_date}T${values.start_time}:00Z`).toISOString();
-      const end_at = new Date(`${values.lecture_date}T${values.end_time}:00Z`).toISOString();
+      let resolvedCollegeId = collegeId;
+      if (!resolvedCollegeId) {
+        try {
+          const { data: rpcCid } = await supabase.rpc("get_my_college_id");
+          if (rpcCid) resolvedCollegeId = rpcCid;
+        } catch {
+          // ignore error
+        }
+      }
+
+      if (!resolvedCollegeId) {
+        const { data: roleRow } = await supabase
+          .from("user_roles")
+          .select("college_id")
+          .eq("user_id", userData.user.id)
+          .not("college_id", "is", null)
+          .maybeSingle();
+        if (roleRow?.college_id) resolvedCollegeId = roleRow.college_id;
+      }
+
+      const formatTimeForISO = (timeStr: string) => {
+        const parts = timeStr.trim().split(":");
+        const h = (parts[0] || "00").padStart(2, "0");
+        const m = (parts[1] || "00").padStart(2, "0");
+        return `${h}:${m}:00`;
+      };
+
+      const startTimeFormatted = formatTimeForISO(values.start_time);
+      const endTimeFormatted = formatTimeForISO(values.end_time);
+
+      const start_at = new Date(`${values.lecture_date}T${startTimeFormatted}Z`).toISOString();
+      const end_at = new Date(`${values.lecture_date}T${endTimeFormatted}Z`).toISOString();
 
       let lectureId: string;
 
       if (lecture) {
+        const updatePayload: Record<string, unknown> = {
+          topic: values.topic.trim(),
+          lecture_date: values.lecture_date,
+          start_time: values.start_time.slice(0, 5),
+          end_time: values.end_time.slice(0, 5),
+          start_at,
+          end_at,
+          venue: values.venue.trim(),
+        };
+        if (resolvedCollegeId) {
+          updatePayload.college_id = resolvedCollegeId;
+        }
+
         const { error } = await supabase
           .from("lectures")
-          .update({
-            topic: values.topic.trim(),
-            lecture_date: values.lecture_date,
-            start_time: values.start_time,
-            end_time: values.end_time,
-            start_at,
-            end_at,
-            venue: values.venue.trim(),
-          })
+          .update(updatePayload as any)
           .eq("id", lecture.id);
         if (error) throw error;
         lectureId = lecture.id;
       } else {
+        const insertPayload: Record<string, unknown> = {
+          topic: values.topic.trim(),
+          lecture_date: values.lecture_date,
+          start_time: values.start_time.slice(0, 5),
+          end_time: values.end_time.slice(0, 5),
+          start_at,
+          end_at,
+          venue: values.venue.trim(),
+          created_by: userData.user.id,
+        };
+        if (resolvedCollegeId) {
+          insertPayload.college_id = resolvedCollegeId;
+        }
+
         const { data: inserted, error } = await supabase
           .from("lectures")
-          .insert([
-            {
-              topic: values.topic.trim(),
-              lecture_date: values.lecture_date,
-              start_time: values.start_time,
-              end_time: values.end_time,
-              start_at,
-              end_at,
-              venue: values.venue.trim(),
-              created_by: userData.user.id,
-            },
-          ])
+          .insert([insertPayload as any])
           .select("id")
           .single();
         if (error) throw error;
@@ -192,7 +238,11 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       await onSaved();
       onOpenChange(false);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save lecture"),
+    onError: (e: any) => {
+      console.error("Save lecture error:", e);
+      const msg = e?.message || e?.error_description || (typeof e === "string" ? e : "Failed to save lecture");
+      toast.error(msg);
+    },
   });
 
   return (

@@ -7,6 +7,7 @@ import {
 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/providers/TenantProvider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export type LectureRow = {
   venue: string;
   flyer_object_path: string | null;
   status: "scheduled" | "live" | "ended";
+  college_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -178,6 +180,7 @@ function LectureCard({
 
 /* ═══════════════════════════════════════════════════════ */
 export default function LectureManagementTab() {
+  const { collegeId } = useTenant();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editLecture, setEditLecture] = useState<LectureRow | null>(null);
@@ -189,14 +192,21 @@ export default function LectureManagementTab() {
   const [statusFilter, setStatusFilter] = useState<"all" | "scheduled" | "live" | "ended">("all");
 
   const lecturesQuery = useQuery({
-    queryKey: ["admin", "lectures"],
+    queryKey: ["admin", "lectures", collegeId],
     queryFn: async (): Promise<LectureRow[]> => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status,created_at,updated_at")
+        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status,college_id,created_at,updated_at");
+
+      if (collegeId) {
+        q = q.eq("college_id", collegeId);
+      }
+
+      const { data, error } = await q
         .order("lecture_date", { ascending: false })
         .order("start_time", { ascending: true })
         .limit(500);
+
       if (error) throw error;
       return (data ?? []) as LectureRow[];
     },
@@ -216,7 +226,7 @@ export default function LectureManagementTab() {
       }
     },
     onSuccess: async () => { toast.success("Lecture updated"); await qc.invalidateQueries({ queryKey: ["admin", "lectures"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update lecture"),
+    onError: (e: any) => toast.error(e?.message || "Failed to update lecture"),
   });
 
   const deleteLecture = useMutation({
@@ -225,7 +235,7 @@ export default function LectureManagementTab() {
       if (error) throw error;
     },
     onSuccess: async () => { toast.success("Lecture deleted"); await qc.invalidateQueries({ queryKey: ["admin", "lectures"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete"),
+    onError: (e: any) => toast.error(e?.message || "Failed to delete"),
   });
 
   /* ── Derived data ── */
