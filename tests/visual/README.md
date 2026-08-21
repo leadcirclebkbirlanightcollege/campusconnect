@@ -57,7 +57,7 @@ bun run test:visual:report
 To point at a deployed preview instead of building locally:
 
 ```bash
-VR_BASE_URL=https://id-preview--<id>.lovable.app bun run test:visual
+VR_BASE_URL=https://campusconnect.indevs.in bun run test:visual
 ```
 
 ## CI

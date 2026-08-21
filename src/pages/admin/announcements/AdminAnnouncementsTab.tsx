@@ -56,16 +56,19 @@ export default function AdminAnnouncementsTab() {
       });
       if (error) throw error;
 
-      const { error: pushError } = await supabase.functions.invoke("send-notification", {
-        body: {
-          title: trimmedTitle,
-          message: trimmedDescription,
-          kind: "announcement",
-          target_type: target === "class" ? "class" : "college_students",
-          target_value: target === "class" ? trimmedClass : null,
-        },
-      });
-      if (pushError) throw pushError;
+      try {
+        await supabase.functions.invoke("send-notification", {
+          body: {
+            title: trimmedTitle,
+            message: trimmedDescription,
+            kind: "announcement",
+            target_type: target === "class" ? "class" : "college_students",
+            target_value: target === "class" ? trimmedClass : null,
+          },
+        });
+      } catch (pushErr) {
+        console.warn("Push notification dispatch skipped:", pushErr);
+      }
     },
     onSuccess: () => {
       toast.success("Announcement created");

@@ -1,11 +1,12 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useParams, useLocation } from "react-router-dom";
 
 /** Resolves a shareable deep link to its canonical in-app route. */
 function DeepLink({ to }: { to: string }) {
   const params = useParams();
+  const location = useLocation();
   const target = to.replace(/:([A-Za-z0-9_]+)/g, (_m, key: string) => params[key] ?? "");
-  return <Navigate to={target} replace />;
+  return <Navigate to={target + location.search} replace />;
 }
 
 import ProtectedRoute from "@/router/ProtectedRoute";
@@ -344,7 +345,9 @@ export default function AppRouter() {
           {/* Other legacy routes */}
           {/* Shareable deep links → canonical in-app routes */}
           <Route path="/lecture/:id"      element={<DeepLink to="/app/lectures/:id" />} />
+          <Route path="/lectures/:id"     element={<DeepLink to="/app/lectures/:id" />} />
           <Route path="/programme/:id"    element={<DeepLink to="/app/programmes/:id" />} />
+          <Route path="/programmes/:id"   element={<DeepLink to="/app/programmes/:id" />} />
           <Route path="/event/:id"        element={<DeepLink to="/app/events" />} />
           <Route path="/announcement/:id" element={<DeepLink to="/app/announcements" />} />
           <Route path="/assignment/:id"   element={<DeepLink to="/app/assignments" />} />

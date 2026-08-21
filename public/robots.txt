@@ -19,4 +19,4 @@ Disallow: /faculty/
 Disallow: /auth
 Disallow: /onboarding
 
-Sitemap: https://bkbnc-campus-connect.lovable.app/sitemap.xml
+Sitemap: https://campusconnect.indevs.in/sitemap.xml

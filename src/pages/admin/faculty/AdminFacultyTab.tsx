@@ -63,30 +63,18 @@ const AddFacultyDialog = memo(function AddFacultyDialog({
     setLoading(true);
     try {
       // 1. Create auth user via admin-create-student function (repurposed with role=faculty)
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-create-student`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            password: form.password,
-            department: form.department.trim() || null,
-            college_id: collegeId,
-            role: "faculty",
-          }),
-        }
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to create faculty");
+      const { data, error: fnError } = await supabase.functions.invoke("admin-create-student", {
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+          department: form.department.trim() || null,
+          college_id: collegeId,
+          role: "faculty",
+        },
+      });
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
 
       toast.success(`Faculty "${form.name}" created successfully`);
       setForm({ name: "", email: "", password: "", department: "" });

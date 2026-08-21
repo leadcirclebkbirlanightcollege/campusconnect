@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: "in.edu.bkbnc.campusconnect",
   appName: "Campus Connect",
   webDir: "dist",
-  server: {
-    url: "https://853dc205-49ab-4f86-bd92-cff90b27ccd7.lovableproject.com?forceHideBadge=true",
-    cleartext: true,
-  },
   android: {
     allowMixedContent: true,
   },

@@ -116,7 +116,7 @@ export default function AdminAttendanceCorrections() {
       const { data, error } = await supabase
         .from("lectures")
         .select("id, topic, lecture_date, start_time, status")
-        .lt("lecture_date", today)
+        .lte("lecture_date", today)
         .order("lecture_date", { ascending: false })
         .order("start_time", { ascending: false })
         .limit(300);

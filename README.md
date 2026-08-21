@@ -1,40 +1,26 @@
-Here is a **clean, Vercel-ready `README.md`** you can directly replace with. It is concise, formal, and deployment-focused.
-
----
-
-# Lovable Project (Vercel Deployment)
+# Campus Connect
 
 ## Project Overview
 
-This repository contains a Lovable-generated web application built using modern frontend technologies and deployed via Vercel.
+Campus Connect is an enterprise multi-tenant higher education campus operating system combining academic ERP, dynamic QR attendance with geofence validation, student gamification with ledger-backed rewards, digital identity cards, tamper-proof document verification, entrepreneurship cell management, and real-time push notifications.
 
 ## Tech Stack
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* shadcn/ui
+* React 18 & TypeScript
+* Vite PWA
+* Tailwind CSS & shadcn/ui
+* Independent Supabase PostgreSQL Backend & Edge Functions
+* Vercel Production Hosting
 
 ## Local Development
 
 ```sh
-git clone <YOUR_GIT_URL>
-cd <PROJECT_NAME>
 npm install
 npm run dev
 ```
 
-## Deployment on Vercel
+## Production Deployment (Vercel)
 
-1. Push the repository to GitHub.
-2. Import the repository into Vercel.
-3. Set Build Command: `npm run build`
-4. Set Output Directory: `dist`
-5. Deploy.
+1. Push to GitHub (`main` branch).
+2. Deployed automatically to Vercel at `https://campusconnect.indevs.in`.
 
-## Notes
-
-All changes pushed to GitHub will automatically trigger a new Vercel deployment.
-
----

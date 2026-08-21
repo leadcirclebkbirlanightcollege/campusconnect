@@ -8,13 +8,14 @@ This document audits all historical Lovable Cloud dependencies in the repository
 
 | Item / File | Description | Status | Classification | Action Taken |
 |---|---|---|---|---|
-| `src/integrations/lovable/index.ts` | Historical Lovable Cloud OAuth adapter calling `@lovable.dev/cloud-auth-js` | Replaced | **MUST REPLACE** | Replaced with native `supabase.auth.signInWithOAuth` adapter. 0 external Lovable cloud dependency. |
-| `@lovable.dev/cloud-auth-js` | NPM dependency for Lovable OAuth redirect proxy | Optional | **SAFE TO REMOVE** | Removed from direct runtime call path in `src/integrations/lovable/index.ts`. |
-| `supabase/config.toml` (`project_id`) | Historical Lovable temporary project reference ID | Updated | **MUST REPLACE** | Standardized to placeholder `your-project-ref` and added explicit `verify_jwt = false` declarations for webhooks. |
-| `.lovable/plan.md` | Architecture scratchpad from initial design phase | Documentation | **OPTIONAL** | Preserved as reference; not loaded at runtime. |
-| `src/integrations/supabase/client.ts` | Auto-generated Supabase client singleton | Verified | **STANDALONE** | Updated with safe environment variable fallbacks for `.env` loading. |
-| SQL Migrations | 79 standard PostgreSQL migration files | Verified | **STANDALONE** | 100% pure PostgreSQL & PL/pgSQL; no proprietary Lovable functions or extensions. |
-| Edge Functions (23) | Deno edge functions in `supabase/functions/` | Verified | **STANDALONE** | All use standard Supabase JS client and Deno HTTP server; no Lovable backend hooks. |
+| `src/integrations/lovable/` | Historical Lovable OAuth adapter | **REMOVED** | Obsolete | Completely deleted from repository. |
+| `lovable-tagger` | NPM devDependency and Vite plugin | **REMOVED** | Obsolete | Removed from `package.json` and `vite.config.ts`. |
+| `.lovable/` directory | Legacy architecture scratchpad | **REMOVED** | Obsolete | Completely deleted from repository. |
+| Canonical & OG URLs | Legacy `lovable.app` domain references | **REPLACED** | Obsolete | Updated to `https://campusconnect.indevs.in/` across `index.html`, `sitemap.xml`, `robots.txt`. |
+| `supabase/config.toml` (`project_id`) | Supabase project configuration | Verified | **STANDALONE** | Configured for independent Supabase production gateway. |
+| `src/integrations/supabase/client.ts` | Supabase client singleton | Verified | **STANDALONE** | Configured for production Supabase environment. |
+| SQL Migrations | 79 standard PostgreSQL migration files | Verified | **STANDALONE** | 100% pure PostgreSQL & PL/pgSQL; no proprietary functions or extensions. |
+| Edge Functions (23) | Deno edge functions in `supabase/functions/` | Verified | **STANDALONE** | All use standard Supabase JS client and Deno HTTP server. |
 
 ---
 

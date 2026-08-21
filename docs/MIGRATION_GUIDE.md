@@ -1,6 +1,6 @@
 # Campus Connect — Independent Supabase Migration Guide
 
-This step-by-step guide walks you through migrating the Campus Connect backend from Lovable Cloud to an independently managed Supabase project.
+This step-by-step guide walks you through deploying the Campus Connect backend to an independently managed Supabase project.
 
 ---
 

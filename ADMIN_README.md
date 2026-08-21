@@ -114,15 +114,15 @@ An admin account has been configured using the credentials you provided:
 
 ## 🌐 Deployment URLs
 
-**Preview**: https://id-preview--853dc205-49ab-4f86-bd92-cff90b27ccd7.lovable.app
+**Production Web App**: https://campusconnect.indevs.in
 
 ---
 
-## 📞 Support
+## 📞 Support & Diagnostics
 
 For technical issues:
-1. Check Lovable Cloud dashboard
-2. Review edge function logs
+1. Check Supabase Dashboard / Edge Function logs
+2. Review Vercel deployment logs
 3. Verify RLS policies
 4. Check attendance token expiry
 
@@ -140,7 +140,3 @@ For technical issues:
    - Generate attendance token
    - Mark attendance
    - Finalize attendance
-
----
-
-**Built with ❤️ using Lovable Cloud**
