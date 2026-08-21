@@ -71,10 +71,8 @@ The platform operates on a multi-tenant PostgreSQL model with role-based access 
 | [`NOTIFICATIONS.md`](./docs/NOTIFICATIONS.md) | In-app notification center and Web Push crypto signing pipeline |
 | [`SCHEDULED_JOBS.md`](./docs/SCHEDULED_JOBS.md) | Background automation schedules and `pg_cron` setup guidelines |
 | [`ENVIRONMENT_VARIABLES.md`](./docs/ENVIRONMENT_VARIABLES.md) | Public frontend parameters vs server-only secret specification |
-| [`FRONTEND_BACKEND_CONTRACT.md`](./docs/FRONTEND_BACKEND_CONTRACT.md) | Comprehensive audit proving zero missing backend dependencies |
-| [`LOVABLE_DEPENDENCIES.md`](./docs/LOVABLE_DEPENDENCIES.md) | Decoupling verification and removal of obsolete dependencies |
 | [`SUPABASE_SETUP.md`](./docs/SUPABASE_SETUP.md) | Step-by-step procedure for provisioning an independent Supabase project |
-| [`MIGRATION_GUIDE.md`](./docs/MIGRATION_GUIDE.md) | Practical guide to executing database migrations and Edge Function deployments |
+| [`SUPABASE_DEPLOYMENT_GUIDE.md`](./docs/SUPABASE_DEPLOYMENT_GUIDE.md) | Practical guide to executing database migrations and Edge Function deployments |
 | [`DEPLOYMENT_GUIDE.md`](./docs/DEPLOYMENT_GUIDE.md) | Production frontend hosting, Docker containerization, and DNS routing |
 | [`TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md) | Common migration, authentication, storage, and push notification remedies |
 | [`FEATURE_INVENTORY.md`](./docs/FEATURE_INVENTORY.md) | Comprehensive functional mapping across all college operational modules |
