@@ -99,7 +99,7 @@ export default function IndependenceDayLaunch() {
               />
               <img
                 src={BRANDING.logo}
-                alt="Campus Connect"
+                alt="Campus Connect Official Logo"
                 className="h-14 w-14 object-contain"
                 loading="eager"
               />

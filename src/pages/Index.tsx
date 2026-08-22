@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, CalendarCheck, GraduationCap, Rocket, Sparkles, Target, Trophy,
   UserRoundCheck, Star, Zap, BookOpen, Award, Bell, Users, Megaphone, IdCard,
@@ -64,6 +64,15 @@ export default function Index() {
   }, [user, authLoading, navigate]);
 
   const year = useMemo(() => new Date().getFullYear(), []);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 380);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground selection:bg-primary/20 selection:text-primary">
@@ -497,6 +506,37 @@ export default function Index() {
       </footer>
 
       <WhatsAppButton />
+
+      {/* Mobile Sticky CTA */}
+      <AnimatePresence>
+        {scrolled && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border-subtle bg-surface-1/95 backdrop-blur-xl px-4 py-3 safe-area-bottom shadow-2xl"
+          >
+            <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">{branding.brand_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">Campus Operating System</p>
+                </div>
+              </div>
+              <Link to="/auth" className="shrink-0">
+                <Button size="sm" className="h-9 rounded-xl px-4 text-xs font-bold shadow-md shadow-primary/20">
+                  {content.header.ctaLabel}
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

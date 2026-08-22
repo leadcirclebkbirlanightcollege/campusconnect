@@ -27,7 +27,7 @@ export default function FacultyProfile() {
         <div className="relative flex flex-col items-center gap-3">
           <div className="h-24 w-24 rounded-full bg-white/15 ring-4 ring-white/30 flex items-center justify-center overflow-hidden">
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} className="h-24 w-24 rounded-full object-cover" alt="avatar" />
+              ? <img src={profile.avatar_url} className="h-24 w-24 rounded-full object-cover" alt={profile?.name ? `${profile.name}'s profile photo` : "Faculty profile photo"} />
               : <UserCircle className="h-12 w-12 text-white" />
             }
           </div>

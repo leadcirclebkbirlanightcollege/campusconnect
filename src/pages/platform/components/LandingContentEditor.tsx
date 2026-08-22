@@ -136,7 +136,7 @@ export default function LandingContentEditor() {
           <div className="space-y-2 rounded-lg border border-dashed border-border-subtle p-3">
             <Label className="text-xs flex items-center gap-1"><ImageIcon className="h-3 w-3" /> Hero image</Label>
             {draft.hero.imageUrl ? (
-              <img src={draft.hero.imageUrl} alt="hero preview" className="h-40 w-full rounded-md object-cover" />
+              <img src={draft.hero.imageUrl} alt="Hero banner preview" className="h-40 w-full rounded-md object-cover" />
             ) : (
               <p className="text-xs text-muted-foreground">Using bundled default image.</p>
             )}

@@ -19,6 +19,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import NoInternet from "@/components/system/NoInternet";
 import AppFooter from "@/components/layout/AppFooter";
+import PageMeta from "@/components/seo/PageMeta";
 import { AnimatePresence } from "framer-motion";
 
 /** Overlays that must only appear for logged-in users on protected routes */
@@ -60,7 +61,8 @@ function AppInner() {
       {/* Offline overlay — never blocks rendering */}
       <OfflineAutoRecovery />
 
-      {/* Always-on: branding, connectivity, SW update, install prompt */}
+      {/* Always-on: branding, connectivity, SW update, install prompt, dynamic SEO */}
+      <PageMeta />
       <SeasonalProvider />
       <TenantBrandingApplicator />
       <OfflineBanner />

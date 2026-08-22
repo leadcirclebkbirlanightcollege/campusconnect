@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Building2, GraduationCap, Mail, MapPin, Phone, Send, User, Users } from "@/components/icons";
+import { ArrowLeft, Building2, GraduationCap, Mail, MapPin, Phone, Send, User, Users, Loader2 } from "@/components/icons";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ export default function BookDemo() {
     city: "",
     studentCount: "",
   });
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -51,6 +52,7 @@ export default function BookDemo() {
       return;
     }
 
+    setLoading(true);
     // Save lead to database
     try {
       await supabase.from("leads" as any).insert({
@@ -71,6 +73,7 @@ export default function BookDemo() {
 
     toast.success("Redirecting to WhatsApp...");
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    setLoading(false);
   };
 
   const fields: { key: keyof FormData; label: string; icon: React.ElementType; type?: string; placeholder: string }[] = [
@@ -128,9 +131,9 @@ export default function BookDemo() {
                 </div>
               ))}
 
-              <Button type="submit" className="w-full h-12 gap-2 text-sm font-semibold">
-                <Send className="h-4 w-4" />
-                Book Demo via WhatsApp
+              <Button type="submit" disabled={loading} className="w-full h-12 gap-2 text-sm font-semibold">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {loading ? "Redirecting..." : "Book Demo via WhatsApp"}
               </Button>
             </form>
 

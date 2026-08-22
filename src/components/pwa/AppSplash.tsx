@@ -79,7 +79,7 @@ export default function AppSplash() {
               src={logoSrc}
               width={88}
               height={88}
-              alt={name}
+              alt={`${name} splash logo`}
               className="rounded-[22px] shadow-xl"
               loading="eager"
               decoding="sync"

@@ -2,13 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/pwa-512.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>Campus Connect — Your Complete College Life, One App</title>
-    <meta name="description" content="Campus Connect is the all-in-one student platform for academics, attendance, events, communication, rewards, entrepreneurship and campus life.">
+    <meta name="description" content="Campus Connect is the unified campus operating system for intelligent attendance, academics, student engagement, digital IDs, and college administration." />
     <meta name="author" content="Campus Connect" />
     <link rel="canonical" href="https://campusconnect.indevs.in/" />
+
+    <!-- Favicon Suite -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
     <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -21,10 +28,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Campus Connect" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
+    <!-- Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -34,21 +39,24 @@
       html.light body { background-color: #F6F8FC; }
     </style>
 
-    <!-- Open Graph -->
+    <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Campus Connect" />
-    
-    
     <meta property="og:url" content="https://campusconnect.indevs.in/" />
-    <meta property="og:image" content="https://campusconnect.indevs.in/icons/icon-512.png">
+    <meta property="og:title" content="Campus Connect — Your Complete College Life, One App" />
+    <meta property="og:description" content="Campus Connect is the unified campus operating system for intelligent attendance, academics, student engagement, digital IDs, and college administration." />
+    <meta property="og:image" content="https://campusconnect.indevs.in/icons/icon-512.png" />
+    <meta property="og:image:alt" content="Campus Connect Platform Preview" />
 
-    <!-- Twitter -->
+    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@CampusConnect" />
-    
-    
-    <meta name="twitter:image" content="https://campusconnect.indevs.in/icons/icon-512.png">
+    <meta name="twitter:title" content="Campus Connect — Your Complete College Life, One App" />
+    <meta name="twitter:description" content="Campus Connect is the unified campus operating system for intelligent attendance, academics, student engagement, digital IDs, and college administration." />
+    <meta name="twitter:image" content="https://campusconnect.indevs.in/icons/icon-512.png" />
+    <meta name="twitter:image:alt" content="Campus Connect Platform Preview" />
 
+    <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -56,16 +64,17 @@
         "name": "Campus Connect",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Web, Android, iOS",
-        "description": "Unified college ERP, student engagement and collaboration platform.",
+        "description": "Unified college ERP, student engagement, real-time GPS QR attendance, and campus operating system.",
         "url": "https://campusconnect.indevs.in/",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+        "author": {
+          "@type": "Organization",
+          "name": "Campus Connect",
+          "url": "https://campusconnect.indevs.in/"
+        }
       }
     </script>
-    <meta property="og:title" content="Campus Connect — Your Complete College Life, One App">
-  <meta name="twitter:title" content="Campus Connect — Your Complete College Life, One App">
-  <meta property="og:description" content="Campus Connect is the all-in-one student platform for academics, attendance, events, communication, rewards, entrepreneurship and campus life.">
-  <meta name="twitter:description" content="Campus Connect is the all-in-one student platform for academics, attendance, events, communication, rewards, entrepreneurship and campus life.">
-</head>
+  </head>
 
   <body>
     <div id="root"></div>

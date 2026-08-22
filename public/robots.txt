@@ -16,7 +16,7 @@ Disallow: /app/
 Disallow: /admin/
 Disallow: /platform/
 Disallow: /faculty/
-Disallow: /auth
-Disallow: /onboarding
+Disallow: /onboarding-wizard
+Disallow: /pending-approval
 
 Sitemap: https://campusconnect.indevs.in/sitemap.xml

@@ -54,7 +54,7 @@ export default function PwaInstallPage() {
           <div className="relative">
             <img
               src={logoSrc}
-              alt={name}
+              alt={`${name} app icon`}
               className="h-20 w-20 rounded-[22px] shadow-xl"
             />
             {isInstalled && (
