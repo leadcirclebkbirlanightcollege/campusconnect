@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       manifestFilename: "manifest.webmanifest",
-      includeAssets: ["favicon.ico", "pwa-512.png", "noise.png", "icons/*.png"],
+      includeAssets: ["favicon.ico", "favicon-*.png", "apple-touch-icon.png", "apple-touch-icon-precomposed.png", "pwa-512.png", "noise.png", "icons/*.png"],
       devOptions: { enabled: false },
       // Use custom SW that includes Web Push handlers
       strategies: "injectManifest",
