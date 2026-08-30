@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/providers/TenantProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ type Programme = {
 };
 
 export default function ProgrammeManagementTab() {
+  const { collegeId } = useTenant();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editProgramme, setEditProgramme] = useState<Programme | null>(null);
@@ -33,11 +35,13 @@ export default function ProgrammeManagementTab() {
   const [formActive, setFormActive] = useState(true);
 
   const programmesQuery = useQuery({
-    queryKey: ["admin", "programmes"],
+    queryKey: ["admin", "programmes", collegeId],
+    enabled: !!collegeId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("programmes")
         .select("id,name,description,color,is_active,created_at,updated_at")
+        .eq("college_id", collegeId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Programme[];
@@ -63,6 +67,7 @@ export default function ProgrammeManagementTab() {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      if (!collegeId) throw new Error("No college context");
 
       const { error } = await supabase.from("programmes").insert({
         name: formName.trim(),
@@ -70,6 +75,7 @@ export default function ProgrammeManagementTab() {
         color: formColor,
         is_active: formActive,
         created_by: user.id,
+        college_id: collegeId,
       });
       if (error) throw error;
     },
