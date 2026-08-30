@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, Trash2, RotateCcw, UserRound, Building2, GraduationCap, ArrowUpCircle } from "@/components/icons";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useTenantId } from "@/providers/TenantProvider";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -100,6 +101,7 @@ function matchesFilters(s: StudentRow, f: StudentFilters) {
 
 export default function StudentManagementTab() {
   const qc = useQueryClient();
+  const collegeId = useTenantId();
 
   const [filters, setFilters] = useState<StudentFilters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -123,13 +125,28 @@ export default function StudentManagementTab() {
   });
 
   const studentsQuery = useQuery({
-    queryKey: ["admin", "students"],
+    queryKey: ["admin", "students", collegeId],
+    enabled: !!collegeId,
     queryFn: async (): Promise<StudentRow[]> => {
+      // Step 1: fetch user_ids that have role='student' in this college.
+      // This mirrors the Faculty tab pattern and ensures only real students appear.
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "student")
+        .eq("college_id", collegeId!);
+      if (rolesErr) throw rolesErr;
+      if (!roles || roles.length === 0) return [];
+
+      const studentUserIds = roles.map((r) => r.user_id);
+
+      // Step 2: fetch profiles only for those student user_ids.
       const { data, error } = await supabase
         .from("profiles")
         .select(
           "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,created_at,updated_at",
         )
+        .in("user_id", studentUserIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
