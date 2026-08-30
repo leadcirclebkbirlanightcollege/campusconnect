@@ -98,7 +98,11 @@ function LectureCard({
   const isLive = lecture.status === "live";
   const isEnded = lecture.status === "ended";
   const canGoLive = lecture.status === "scheduled" && (() => {
-    const start = new Date(`${lecture.lecture_date}T${lecture.start_time}:00Z`);
+    // Parse as LOCAL time (no Z suffix) so the check works correctly for
+    // all timezones. Lecture dates/times are stored in local time without
+    // timezone info — the Z suffix was incorrectly forcing UTC interpretation,
+    // making Go Live locked until 5h30m late for IST (UTC+5:30) users.
+    const start = new Date(`${lecture.lecture_date}T${lecture.start_time}:00`);
     return !Number.isNaN(start.getTime()) && start.getTime() <= Date.now();
   })();
 
