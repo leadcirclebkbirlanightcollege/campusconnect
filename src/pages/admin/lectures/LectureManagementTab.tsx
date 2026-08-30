@@ -40,6 +40,22 @@ function toDateOnlyIso(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Single source of truth for whether a scheduled lecture is eligible to go live.
+ *
+ * Business rule: a lecture can go live at or after its scheduled start time.
+ * Lecture date/time is stored as local time (no timezone info), so we must NOT
+ * append a Z suffix — doing so would force UTC interpretation, which would make
+ * the button unavailable until 5h30m too late for IST (UTC+5:30) users.
+ *
+ * Both the Cards view and Calendar view must use this function.
+ */
+export function lectureCanGoLive(lecture: Pick<LectureRow, "status" | "lecture_date" | "start_time">) {
+  if (lecture.status !== "scheduled") return false;
+  const start = new Date(`${lecture.lecture_date}T${lecture.start_time}:00`);
+  return !Number.isNaN(start.getTime()) && start.getTime() <= Date.now();
+}
+
 /* ─── Countdown hook ──────────────────────────────────── */
 function useCountdown(lecture: LectureRow | null) {
   const [label, setLabel] = useState("");
@@ -97,14 +113,7 @@ function LectureCard({
   const countdown = useCountdown(lecture.status === "live" ? lecture : null);
   const isLive = lecture.status === "live";
   const isEnded = lecture.status === "ended";
-  const canGoLive = lecture.status === "scheduled" && (() => {
-    // Parse as LOCAL time (no Z suffix) so the check works correctly for
-    // all timezones. Lecture dates/times are stored in local time without
-    // timezone info — the Z suffix was incorrectly forcing UTC interpretation,
-    // making Go Live locked until 5h30m late for IST (UTC+5:30) users.
-    const start = new Date(`${lecture.lecture_date}T${lecture.start_time}:00`);
-    return !Number.isNaN(start.getTime()) && start.getTime() <= Date.now();
-  })();
+  const canGoLive = lectureCanGoLive(lecture);
 
   return (
     <motion.div
@@ -428,7 +437,13 @@ export default function LectureManagementTab() {
                     </div>
                     <div className="flex gap-2 mt-3">
                       {l.status === "scheduled" && (
-                        <Button size="sm" className="h-7 text-xs gap-1" onClick={() => setLectureStatus.mutate({ id: l.id, status: "live" })} disabled={setLectureStatus.isPending}>
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => setLectureStatus.mutate({ id: l.id, status: "live" })}
+                          disabled={setLectureStatus.isPending || !lectureCanGoLive(l)}
+                          title={!lectureCanGoLive(l) ? "Lecture start time not reached" : undefined}
+                        >
                           <Play className="h-3 w-3" /> Go Live
                         </Button>
                       )}
