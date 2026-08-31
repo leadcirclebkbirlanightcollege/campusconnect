@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { BRANDING } from "@/config/branding";
 import { toast } from "sonner";
+import PageBreadcrumb from "@/components/seo/Breadcrumb";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required").max(100),
@@ -103,6 +104,9 @@ export default function BookDemo() {
       </header>
 
       <main className="mx-auto w-full max-w-[420px] space-y-6 px-4 py-8 md:max-w-3xl md:px-6">
+        {/* Breadcrumb */}
+        <PageBreadcrumb items={[{ label: "Book a Demo" }]} />
+
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="text-center space-y-2">
           <h1 className="text-2xl font-black tracking-tight md:text-4xl">Book a Demo</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">

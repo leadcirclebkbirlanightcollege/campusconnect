@@ -1,18 +1,29 @@
 # Campus Connect
 
-> A unified college ERP, student engagement, and collaboration platform — attendance, lectures, gamified points, leaderboards, announcements and real-time notifications for institutions.
+> A unified college ERP, student engagement, and collaboration platform — GPS QR attendance, lectures, gamified points, leaderboards, digital ID cards, announcements, and real-time notifications for higher education institutions.
 
-Campus Connect helps colleges run daily operations (lectures, attendance, results, documents) while keeping students engaged through points, streaks, achievements, leaderboards, and a digital ID. It ships as an installable PWA with offline-friendly caching and native web push.
+Campus Connect helps colleges run daily operations (lectures, attendance, results, documents, timetables) while keeping students engaged through points, streaks, achievements, leaderboards, and a digital campus ID. It ships as an installable PWA with offline-friendly caching and native web push notifications.
 
 ## Pages
 
-- [Home](/): Overview, features, and how Campus Connect modernizes campus operations.
-- [Book a Demo](/book-demo): Schedule a guided walkthrough for your institution.
-- [Live Demo](/demo): Explore a sandbox view of the platform.
-- [Contact](/contact): Reach the Campus Connect team.
+- [Home](/): Platform overview, features, and how Campus Connect modernises campus operations.
+- [Book a Demo](/book-demo): Schedule a guided walkthrough for your institution. Fill in details and connect via WhatsApp.
+- [Get Started / Onboarding](/onboarding): Onboard your college and configure campus modules.
+- [Start](/start): Alternate entry point for institution onboarding.
+- [Live Demo](/demo): Explore a sandbox view of the platform across student, faculty, and admin roles.
+- [Contact](/contact): Reach the Campus Connect team for partnerships, demos, or support.
 - [Help & Support](/help): Common questions and getting-started guidance.
 
-## Optional
+## Legal
 
-- [Privacy](/privacy): Data handling and privacy policy.
-- [Terms](/terms): Terms of service.
+- [Privacy Policy](/privacy): Data handling, protection, and privacy policy for institutions and students.
+- [Terms of Service](/terms): Terms governing use of the Campus Connect platform.
+
+## Authentication (no-index)
+
+- [Sign In](/auth): Student, faculty, and admin login.
+- [Create Account](/auth/signup): New user registration.
+
+## Verification
+
+- [Document Verification](/verify/:reference): Cryptographic verification of institutional documents. Each URL is unique per document.

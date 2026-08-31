@@ -20,8 +20,10 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Helpful client-side debugging log
-    console.warn(`[Campus Connect 404] No route matched path: ${location.pathname}`);
+    // Debug log only in development — stripped from production builds
+    if (import.meta.env.DEV) {
+      console.warn(`[Campus Connect 404] No route matched path: ${location.pathname}`);
+    }
   }, [location.pathname]);
 
   return (

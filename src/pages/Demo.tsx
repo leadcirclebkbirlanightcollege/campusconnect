@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Shield, Users, BookOpen, ChevronRight, Sparkles } from "@/components/icons";
+import PageBreadcrumb from "@/components/seo/Breadcrumb";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ export default function DemoPage() {
       <header className="border-b border-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={BRANDING.logo} alt={BRANDING.name} className="h-7 w-7 object-contain" />
+            <img src={BRANDING.logo} alt={`${BRANDING.name} logo`} className="h-7 w-7 object-contain" />
             <span className="font-bold text-lg">{BRANDING.name}</span>
             <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">DEMO</span>
           </div>
@@ -96,6 +97,9 @@ export default function DemoPage() {
       {/* Main */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="max-w-2xl w-full space-y-8">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: "Live Demo" }]} className="mb-2" />
+
           <div className="text-center space-y-3">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="h-8 w-8 text-primary" />

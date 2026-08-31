@@ -3,6 +3,7 @@ import { ArrowLeft, GraduationCap, ShieldCheck } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { BRANDING } from "@/config/branding";
+import PageBreadcrumb from "@/components/seo/Breadcrumb";
 
 export default function Terms() {
   return (
@@ -29,6 +30,9 @@ export default function Terms() {
 
       {/* Main Content */}
       <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14 space-y-8">
+        {/* Breadcrumb */}
+        <PageBreadcrumb items={[{ label: "Terms of Service" }]} />
+
         <div className="space-y-3">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/8 px-3 py-1 text-[11px] font-semibold text-primary">
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -127,8 +131,13 @@ export default function Terms() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border-subtle/60 py-6 px-4 text-center text-xs text-muted-foreground safe-area-bottom">
-        <p>© {new Date().getFullYear()} {BRANDING.name}. All rights reserved.</p>
+      <footer className="border-t border-border-subtle/60 py-6 px-4 text-center safe-area-bottom space-y-2">
+        <nav aria-label="Related pages" className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+          <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
+          <Link to="/help" className="hover:text-foreground transition-colors">Help & Support</Link>
+        </nav>
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {BRANDING.name}. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import PageBreadcrumb from "@/components/seo/Breadcrumb";
 
 const CONTACT_INFO = [
   { icon: Mail, label: "Email", value: "atharv@bkbirlanightcollege.qzz.io", href: "mailto:atharv@bkbirlanightcollege.qzz.io" },
@@ -52,17 +53,20 @@ export default function Contact() {
       <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
           <Link to="/">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Back to home">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-sm font-semibold">Contact Us</h1>
+          <span className="text-sm font-semibold text-muted-foreground">Contact Us</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl space-y-8 px-4 py-8">
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-black tracking-tight">Get In Touch</h2>
+        {/* Breadcrumb */}
+        <PageBreadcrumb items={[{ label: "Contact Us" }]} />
+
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black tracking-tight">Get In Touch</h1>
           <p className="text-sm text-muted-foreground">We'd love to hear from you. Reach out for demos, support, or partnerships.</p>
         </div>
 
@@ -71,7 +75,7 @@ export default function Contact() {
             const card = (
               <GlassCard key={label} padding="lg" className="text-center space-y-2 h-full">
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
-                  <Icon className="h-4 w-4 text-primary" />
+                  <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                 </div>
                 <p className="text-xs font-semibold">{label}</p>
                 <p className="text-xs text-muted-foreground break-all">{value}</p>
@@ -84,6 +88,7 @@ export default function Contact() {
                 href={href}
                 {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className="block hover:opacity-90 transition-opacity"
+                aria-label={`${label}: ${value}`}
               >
                 {card}
               </a>
@@ -94,18 +99,26 @@ export default function Contact() {
         </div>
 
         <GlassCard padding="lg">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-label="Contact form">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input name="name" placeholder="Your Name" required maxLength={100} />
-              <Input name="email" type="email" placeholder="Email Address" required maxLength={255} />
+              <Input name="name" placeholder="Your Name" required maxLength={100} aria-label="Full name" />
+              <Input name="email" type="email" placeholder="Email Address" required maxLength={255} aria-label="Email address" />
             </div>
-            <Textarea name="message" placeholder="How can we help?" required maxLength={1000} rows={5} />
+            <Textarea name="message" placeholder="How can we help?" required maxLength={1000} rows={5} aria-label="Message" />
             <Button type="submit" disabled={loading} className="w-full gap-2">
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4" aria-hidden="true" />
               {loading ? "Sending…" : "Send Message"}
             </Button>
           </form>
         </GlassCard>
+
+        {/* Internal navigation links */}
+        <nav aria-label="Related pages" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground border-t border-border-subtle/60 pt-4">
+          <Link to="/help" className="hover:text-foreground transition-colors">Help & Support</Link>
+          <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+          <Link to="/book-demo" className="hover:text-foreground transition-colors">Book a Demo</Link>
+        </nav>
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import { Heart } from "@/components/icons";
 
 /**
  * Global app footer.
@@ -25,9 +26,12 @@ const AppFooter = () => {
     >
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
         <p>© {new Date().getFullYear()} Campus Connect. All rights reserved.</p>
-        <p>
+        <p className="flex items-center gap-1">
           Designed &amp; developed by the Department of Computer Science with{" "}
-          <span aria-label="love" className="text-red-500">❤️</span>
+          <Heart
+            className="h-3.5 w-3.5 text-red-500 inline-block"
+            aria-label="love"
+          />
         </p>
       </div>
     </footer>

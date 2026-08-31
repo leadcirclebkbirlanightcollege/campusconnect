@@ -121,8 +121,8 @@ export default function CollegeOnboarding() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/90 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center justify-center gap-2 px-4 md:max-w-3xl">
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <p className="text-sm font-semibold">Campus Connect — College Onboarding</p>
+          <GraduationCap className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h1 className="text-sm font-semibold">Campus Connect — College Onboarding</h1>
         </div>
       </header>
 

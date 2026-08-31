@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { HelpCircle, MessageSquare, Bug, ChevronDown, ChevronRight, Send, Mail, BookOpen, Shield } from "@/components/icons";
+import PageBreadcrumb from "@/components/seo/Breadcrumb";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -71,9 +73,12 @@ export default function HelpSupport() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+      {/* Breadcrumb */}
+      <PageBreadcrumb items={[{ label: "Help & Support" }]} />
+
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <HelpCircle className="h-6 w-6 text-primary" />
+          <HelpCircle className="h-6 w-6 text-primary" aria-hidden="true" />
           Help & Support
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Find answers to common questions or reach out for support.</p>
@@ -171,6 +176,14 @@ export default function HelpSupport() {
           </CardContent>
         </Card>
       )}
+
+      {/* Internal navigation links */}
+      <nav aria-label="Related pages" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground border-t border-border-subtle/60 pt-4">
+        <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
+        <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+        <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+        <Link to="/book-demo" className="hover:text-foreground transition-colors">Book a Demo</Link>
+      </nav>
     </div>
   );
 }

@@ -12,11 +12,17 @@ Allow: /
 
 User-agent: *
 Allow: /
+# Private app routes — require authentication
 Disallow: /app/
-Disallow: /admin/
 Disallow: /platform/
 Disallow: /faculty/
+# Auth flows — no value for crawlers
+Disallow: /auth
+Disallow: /auth/
+# Post-login onboarding flows
 Disallow: /onboarding-wizard
 Disallow: /pending-approval
+# Dynamic document verification links (no static content to index)
+Disallow: /verify/
 
 Sitemap: https://campusconnect.indevs.in/sitemap.xml

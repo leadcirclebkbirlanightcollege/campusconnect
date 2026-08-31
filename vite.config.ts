@@ -89,8 +89,8 @@ export default defineConfig(({ mode }) => ({
           },
         ],
         icons: [
-          { src: "/icons/icon-72.png",  sizes: "72x72",   type: "image/png", purpose: "any" },
-          { src: "/icons/icon-96.png",  sizes: "96x96",   type: "image/png", purpose: "any" },
+          { src: "/icons/icon-72.png", sizes: "72x72", type: "image/png", purpose: "any" },
+          { src: "/icons/icon-96.png", sizes: "96x96", type: "image/png", purpose: "any" },
           { src: "/icons/icon-128.png", sizes: "128x128", type: "image/png", purpose: "any" },
           { src: "/icons/icon-144.png", sizes: "144x144", type: "image/png", purpose: "any" },
           { src: "/icons/icon-152.png", sizes: "152x152", type: "image/png", purpose: "any" },
@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          "vendor-react":    ["react", "react-dom", "react-router-dom"],
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-ui": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",
@@ -125,13 +125,13 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-scroll-area",
             "@radix-ui/react-separator",
           ],
-          "vendor-query":    ["@tanstack/react-query"],
-          "vendor-charts":   ["recharts"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-charts": ["recharts"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-forms":    ["react-hook-form", "@hookform/resolvers", "zod"],
-          "vendor-motion":   ["framer-motion"],
-          "vendor-scanner":  ["@zxing/browser", "@zxing/library"],
-          "vendor-qr":       ["qrcode.react"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-scanner": ["@zxing/browser", "@zxing/library"],
+          "vendor-qr": ["qrcode.react"],
         },
       },
     },

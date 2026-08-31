@@ -218,3 +218,8 @@ export const History = createHugeIcon(LUCIDE_TO_HUGEICON_MAP.History, "History")
 export const Loader2 = createHugeIcon(LUCIDE_TO_HUGEICON_MAP.Loader2, "Loader2");
 export const Radio = createHugeIcon(LUCIDE_TO_HUGEICON_MAP.Radio, "Radio");
 export const Send = createHugeIcon(LUCIDE_TO_HUGEICON_MAP.Send, "Send");
+
+// ── Affinity / sentiment ─────────────────────────────────────────────
+// FavouriteIcon is the Hugeicons equivalent of a heart (outline stroke variant)
+import { FavouriteIcon } from "@hugeicons/core-free-icons";
+export const Heart = createHugeIcon(FavouriteIcon, "Heart");
