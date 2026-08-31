@@ -32,7 +32,6 @@ export interface FacultyFilters {
 export interface LectureItem {
   id: string;
   topic: string;
-  subject?: string | null;
   venue: string | null;
   lecture_date: string;
   start_time: string;

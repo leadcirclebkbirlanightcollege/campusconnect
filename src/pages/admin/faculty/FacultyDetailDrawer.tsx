@@ -50,7 +50,7 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
       if (!faculty?.user_id) return [];
       const { data, error } = await supabase
         .from("lectures")
-        .select("id, topic, subject, venue, lecture_date, start_time, end_time, status, created_at")
+        .select("id, topic, venue, lecture_date, start_time, end_time, status, created_at")
         .eq("created_by", faculty.user_id)
         .order("lecture_date", { ascending: false })
         .limit(50);
@@ -275,9 +275,6 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
                       <div className="min-w-0 space-y-0.5">
                         <p className="font-semibold text-foreground truncate">{lec.topic}</p>
                         <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap">
-                          {lec.subject && (
-                            <span className="font-medium text-foreground/80">{lec.subject}</span>
-                          )}
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {lec.lecture_date}
