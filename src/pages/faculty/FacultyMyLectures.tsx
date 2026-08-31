@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useState, useMemo } from "react";
-import { BookOpen } from "@/components/icons";
+import { BookOpen, Plus } from "@/components/icons";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import {
   WorkspacePage,
@@ -17,6 +18,7 @@ import {
   WorkspaceStatus,
   type WorkspaceStatusTone,
 } from "@/components/workspace/WorkspaceKit";
+import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
 
 const STATUS_TONE: Record<string, WorkspaceStatusTone> = {
   live: "success",
@@ -37,6 +39,7 @@ export default function FacultyMyLectures() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   const { data: lectures = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["faculty", "all-lectures", user?.id],
@@ -80,6 +83,15 @@ export default function FacultyMyLectures() {
           { label: "Live now", value: liveCount },
           { label: "Showing", value: filtered.length },
         ]}
+        action={
+          <Button
+            size="sm"
+            onClick={() => setShowScheduleDialog(true)}
+            className="gap-1.5 rounded-2xl bg-background text-primary text-[13px] hover:bg-background/90"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden /> Schedule Lecture
+          </Button>
+        }
       />
 
       <WorkspaceToolbar
@@ -112,6 +124,13 @@ export default function FacultyMyLectures() {
               ? "Lectures you schedule will show up here."
               : "Try clearing the search or switching the status filter."
           }
+          action={
+            lectures.length === 0 ? (
+              <Button size="sm" onClick={() => setShowScheduleDialog(true)}>
+                Schedule First Lecture
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <WorkspaceList label="Lectures">
@@ -129,6 +148,11 @@ export default function FacultyMyLectures() {
           ))}
         </WorkspaceList>
       )}
+
+      <ScheduleLectureDialog
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+      />
     </WorkspacePage>
   );
 }
