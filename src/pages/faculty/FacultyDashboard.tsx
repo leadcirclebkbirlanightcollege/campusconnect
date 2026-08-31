@@ -148,7 +148,7 @@ export default function FacultyDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("lectures")
-        .select("id,topic,venue,lecture_date,start_time,end_time,status,class_name")
+        .select("id,topic,venue,lecture_date,start_time,end_time,status")
         .eq("created_by", user!.id)
         .order("lecture_date", { ascending: false })
         .limit(100);
@@ -401,7 +401,7 @@ export default function FacultyDashboard() {
                           {l.topic}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {[l.class_name, l.venue].filter(Boolean).join(" · ") || "No venue"}
+                          {l.venue || "No venue"}
                         </p>
                       </div>
                     </div>
