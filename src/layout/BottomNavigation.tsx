@@ -13,7 +13,6 @@ import { Rocket01Icon, Rocket02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { STUDENT_TABS, resolveActiveTab, type StudentTab } from "@/ui-engine/navigation-engine";
-import { SeasonalAccent, seasonalGradient, useSeasonal } from "@/components/seasonal/SeasonalKit";
 
 const TAB_ICON_MAP: Record<string, { semantic?: SemanticIconName; iconInactive?: any; iconActive?: any }> = {
   home: { semantic: "home" },
@@ -27,7 +26,6 @@ export function BottomNavigation() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const activeId = resolveActiveTab(pathname)?.id;
-  const { active: seasonal } = useSeasonal();
 
   const go = (tab: StudentTab) => {
     // Re-tapping the active tab pops back to the tab root (native behaviour)
@@ -78,11 +76,7 @@ export function BottomNavigation() {
               {active && (
                 <motion.div
                   layoutId="bottom-nav-indicator-pill"
-                  className={cn(
-                    "absolute inset-x-1.5 inset-y-1 rounded-xl -z-10",
-                    !seasonal && "bg-primary/10 dark:bg-primary/15 border border-primary/20",
-                  )}
-                  style={seasonal ? { background: seasonalGradient, opacity: 0.15 } : undefined}
+                  className="absolute inset-x-1.5 inset-y-1 rounded-xl -z-10 bg-primary/10 dark:bg-primary/15 border border-primary/20"
                   transition={{ type: "spring", stiffness: 450, damping: 35 }}
                 />
               )}

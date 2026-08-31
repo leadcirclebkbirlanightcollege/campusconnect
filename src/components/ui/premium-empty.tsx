@@ -9,7 +9,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { SeasonalEmptyAccent } from "@/components/seasonal/SeasonalKit";
 
 export type EmptyArt =
   | "events"
@@ -194,7 +193,6 @@ export function PremiumEmpty({
           </svg>
         </div>
 
-        <SeasonalEmptyAccent className="mb-3" />
         <h3 className="font-heading text-[16px] font-bold tracking-tight text-foreground">{title}</h3>
         {description && (
           <p className="mt-1.5 max-w-[280px] text-[12.5px] leading-relaxed text-muted-foreground">

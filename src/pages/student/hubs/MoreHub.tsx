@@ -17,7 +17,6 @@ import {
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";
-import { useSeasonal } from "@/components/seasonal/SeasonalKit";
 
 type Tone = "primary" | "success" | "warning" | "info" | "danger" | "ecell";
 
@@ -168,7 +167,6 @@ function GroupCard({ g, index }: { g: Group; index: number }) {
 
 export default function MoreHub() {
   const [query, setQuery] = useState("");
-  const { active: seasonal } = useSeasonal();
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -185,13 +183,9 @@ export default function MoreHub() {
     <PageContainer noPadding className="pb-24">
       <ModuleHero
         tone="brand"
-        eyebrow={seasonal ? "Independence Day Edition 🇮🇳" : "Explore"}
-        title={seasonal ? "Campus Connect" : "All Features"}
-        subtitle={
-          seasonal
-            ? "Everything you need. One connected campus."
-            : "Everything Campus Connect can do, in one place"
-        }
+        eyebrow="Explore"
+        title="All Features"
+        subtitle="Everything Campus Connect can do, in one place"
         icon={LayoutGrid}
       >
         {/* Quick access */}
