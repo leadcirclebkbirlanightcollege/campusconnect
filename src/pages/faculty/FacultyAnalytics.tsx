@@ -1,147 +1,453 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  format,
+  subDays,
+  isAfter,
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+} from "date-fns";
+import {
+  BarChart, Bar, AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { BookOpen, Users, TrendingUp, Activity, Award, AlertTriangle } from "@/components/icons";
+import { useAuth } from "@/providers/AuthProvider";
+import {
+  BarChart2, BookOpen, Users, TrendingUp, Activity,
+  Award, AlertTriangle, Calendar, Plus, CheckCircle2,
+  Clock, FileText, ChevronRight
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
-function KpiCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: any; color: string }) {
-  return (
-    <div className="rounded-xl border border-border-subtle bg-surface-1 p-4 flex items-center gap-3">
-      <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center shrink-0", color)}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-xl font-bold text-foreground">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
+import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
+
+type TimeRange = "7d" | "30d" | "90d" | "all";
 
 export default function FacultyAnalytics() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["faculty", "analytics"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_faculty_lecture_analytics" as any);
-      if (error) throw error;
-      return data as any;
-    },
-    staleTime: 60_000,
-  });
+  const { user } = useAuth();
+  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
-  const { data: topStudents } = useQuery({
-    queryKey: ["faculty", "top-students"],
+  // 1. Fetch all lectures created by this faculty
+  const { data: rawLectures = [], isLoading: isLoadingLectures } = useQuery({
+    queryKey: ["faculty", "analytics-lectures", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-      // Get lectures by this faculty
-      const { data: lecs } = await supabase
+      const { data, error } = await supabase
         .from("lectures")
-        .select("id")
-        .eq("created_by", session.user.id);
-      if (!lecs?.length) return [];
-      const lecIds = lecs.map(l => l.id);
-      // Get top attenders
-      const { data: att } = await supabase
-        .from("attendance")
-        .select("student_user_id")
-        .in("lecture_id", lecIds)
-        .eq("status", "present");
-      if (!att?.length) return [];
-      const counts: Record<string, number> = {};
-      att.forEach(a => { counts[a.student_user_id] = (counts[a.student_user_id] ?? 0) + 1; });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      const userIds = sorted.map(([uid]) => uid);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, name, student_id")
-        .in("user_id", userIds);
-      return sorted.map(([uid, cnt]) => {
-        const p = profiles?.find(x => x.user_id === uid);
-        return { name: p?.name ?? "Unknown", student_id: p?.student_id ?? "—", count: cnt };
-      });
+        .select("*")
+        .eq("created_by", user!.id)
+        .order("lecture_date", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
     },
-    staleTime: 60_000,
   });
 
-  const recentChartData = (data?.recent_lectures ?? []).slice(0, 8).reverse().map((l: any) => ({
-    name: l.topic.length > 14 ? l.topic.slice(0, 14) + "…" : l.topic,
-    attendance: l.present_count,
-  }));
+  const lectureIds = useMemo(() => rawLectures.map((l) => l.id), [rawLectures]);
+
+  // 2. Fetch all attendance records for these lectures
+  const { data: rawAttendance = [], isLoading: isLoadingAttendance } = useQuery({
+    queryKey: ["faculty", "analytics-attendance", user?.id, lectureIds],
+    enabled: !!user && lectureIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("id,student_user_id,status,marked_at,lecture_id,profiles:student_user_id(name,student_id,department,avatar_url)")
+        .in("lecture_id", lectureIds);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Filter data based on time range
+  const filteredLectures = useMemo(() => {
+    if (timeRange === "all") return rawLectures;
+    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    const cutoff = subDays(new Date(), days);
+    return rawLectures.filter((l) => isAfter(parseISO(l.lecture_date), cutoff));
+  }, [rawLectures, timeRange]);
+
+  const filteredLectureIds = useMemo(() => new Set(filteredLectures.map((l) => l.id)), [filteredLectures]);
+
+  const filteredAttendance = useMemo(() => {
+    return rawAttendance.filter((a) => filteredLectureIds.has(a.lecture_id));
+  }, [rawAttendance, filteredLectureIds]);
+
+  // Summary KPI Calculations
+  const stats = useMemo(() => {
+    const totalLectures = filteredLectures.length;
+    const completedLectures = filteredLectures.filter((l) => l.status === "ended" || l.status === "completed").length;
+    const liveLectures = filteredLectures.filter((l) => l.status === "live").length;
+    const upcomingLectures = filteredLectures.filter((l) => l.status === "scheduled").length;
+
+    const totalAttendanceMarks = filteredAttendance.filter((a) => a.status === "present").length;
+    const avgAttendancePerLecture = totalLectures > 0 ? Math.round(totalAttendanceMarks / Math.max(completedLectures || 1, 1)) : 0;
+
+    // Unique students taught
+    const uniqueStudents = new Set(filteredAttendance.map((a) => a.student_user_id)).size;
+
+    return {
+      totalLectures,
+      completedLectures,
+      liveLectures,
+      upcomingLectures,
+      totalAttendanceMarks,
+      avgAttendancePerLecture,
+      uniqueStudents,
+    };
+  }, [filteredLectures, filteredAttendance]);
+
+  // Attendance Trend Chart Data (by lecture date)
+  const attendanceTrendData = useMemo(() => {
+    const countsByDate: Record<string, number> = {};
+    filteredAttendance.forEach((a) => {
+      if (a.status === "present" && a.marked_at) {
+        const dateKey = format(parseISO(a.marked_at), "MMM d");
+        countsByDate[dateKey] = (countsByDate[dateKey] ?? 0) + 1;
+      }
+    });
+
+    return Object.entries(countsByDate).map(([date, count]) => ({
+      date,
+      attendees: count,
+    }));
+  }, [filteredAttendance]);
+
+  // Lecture Attendance Comparison (per lecture topic)
+  const lectureComparisonData = useMemo(() => {
+    const countsByLecture: Record<string, { topic: string; count: number }> = {};
+    filteredLectures.forEach((l) => {
+      countsByLecture[l.id] = {
+        topic: l.topic.length > 16 ? l.topic.slice(0, 16) + "…" : l.topic,
+        count: 0,
+      };
+    });
+
+    filteredAttendance.forEach((a) => {
+      if (a.status === "present" && countsByLecture[a.lecture_id]) {
+        countsByLecture[a.lecture_id].count += 1;
+      }
+    });
+
+    return Object.values(countsByLecture).slice(-8);
+  }, [filteredLectures, filteredAttendance]);
+
+  // Top Attenders Leaderboard
+  const studentRankings = useMemo(() => {
+    const map = new Map<string, { profile: any; count: number }>();
+    filteredAttendance.forEach((a) => {
+      if (a.status === "present" && a.profiles) {
+        const uid = a.student_user_id;
+        if (!map.has(uid)) {
+          map.set(uid, { profile: a.profiles, count: 0 });
+        }
+        map.get(uid)!.count += 1;
+      }
+    });
+
+    const sorted = Array.from(map.values()).sort((a, b) => b.count - a.count);
+    const topAttenders = sorted.slice(0, 5);
+
+    // At risk students (attended less than 60% of completed sessions)
+    const atRisk = sorted
+      .filter((s) => stats.completedLectures >= 3 && (s.count / stats.completedLectures) < 0.75)
+      .slice(0, 5);
+
+    return { topAttenders, atRisk };
+  }, [filteredAttendance, stats.completedLectures]);
+
+  const isLoading = isLoadingLectures || (lectureIds.length > 0 && isLoadingAttendance);
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl">
-      <div className="rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-lg">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] opacity-80">Insights</p>
-        <h1 className="font-heading text-[24px] font-black tracking-tight">Faculty Analytics</h1>
-        <p className="text-[13px] opacity-85 mt-0.5">Lecture performance &amp; student insights</p>
+    <div className="space-y-6 pb-12">
+      {/* Page Header & Range Controls */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-[20px] font-bold text-foreground tracking-tight">Faculty Analytics</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
+            Evaluate teaching performance, student engagement, and attendance patterns.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+          <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
+            <SelectTrigger className="h-9 text-[12.5px] w-[140px] rounded-xl bg-card border-border/50">
+              <SelectValue placeholder="Timeframe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 Days</SelectItem>
+              <SelectItem value="30d">Last 30 Days</SelectItem>
+              <SelectItem value="90d">This Semester</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-2xs">
+          <p className="text-[11.5px] font-medium text-muted-foreground">Total Sessions</p>
+          <p className="text-[22px] font-bold text-foreground mt-1 tabular-nums">
+            {stats.totalLectures}
+          </p>
+          <p className="text-[10.5px] text-muted-foreground mt-0.5">
+            {stats.completedLectures} completed · {stats.upcomingLectures} upcoming
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-2xs">
+          <p className="text-[11.5px] font-medium text-muted-foreground">Total Attendees</p>
+          <p className="text-[22px] font-bold text-foreground mt-1 tabular-nums">
+            {stats.totalAttendanceMarks}
+          </p>
+          <p className="text-[10.5px] text-muted-foreground mt-0.5">
+            Verified check-ins
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-2xs">
+          <p className="text-[11.5px] font-medium text-muted-foreground">Avg. per Lecture</p>
+          <p className="text-[22px] font-bold text-success mt-1 tabular-nums">
+            {stats.avgAttendancePerLecture}
+          </p>
+          <p className="text-[10.5px] text-muted-foreground mt-0.5">
+            Students per session
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-2xs">
+          <p className="text-[11.5px] font-medium text-muted-foreground">Unique Students</p>
+          <p className="text-[22px] font-bold text-foreground mt-1 tabular-nums">
+            {stats.uniqueStudents}
+          </p>
+          <p className="text-[10.5px] text-muted-foreground mt-0.5">
+            Across enrolled courses
+          </p>
+        </div>
+      </div>
+
+      {/* Main Charts & Visualizations */}
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
+      ) : rawLectures.length === 0 ? (
+        <div className="rounded-2xl border border-border/50 bg-card p-12 text-center shadow-2xs">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+            <BarChart2 className="h-6 w-6" />
+          </div>
+          <h3 className="text-[15px] font-bold text-foreground">No lecture data yet</h3>
+          <p className="text-[12.5px] text-muted-foreground max-w-sm mx-auto mt-1">
+            Create your first lecture to start building attendance analytics and student insights.
+          </p>
+          <Button
+            onClick={() => setShowScheduleDialog(true)}
+            size="sm"
+            className="mt-4 rounded-xl text-[12.5px] gap-1.5"
+          >
+            <Plus className="h-4 w-4" /> Schedule Lecture
+          </Button>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <KpiCard label="Total Lectures"     value={data?.total_lectures ?? 0}       icon={BookOpen} color="bg-primary/10 text-primary" />
-            <KpiCard label="Avg Attendance"     value={`${data?.avg_attendance ?? 0}`}  icon={Users}    color="bg-success/10 text-success" />
-            <KpiCard label="Completed"          value={data?.completed_lectures ?? 0}   icon={Activity} color="bg-info/10 text-info" />
-            <KpiCard label="Total Marks Given"  value={data?.total_attendance_marks ?? 0} icon={TrendingUp} color="bg-premium/10 text-premium" />
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Chart 1: Attendance Volume per Lecture */}
+            <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-2xs">
+              <div className="mb-4">
+                <h3 className="text-[13.5px] font-bold text-foreground">Attendance per Lecture</h3>
+                <p className="text-[11.5px] text-muted-foreground">Number of verified present students</p>
+              </div>
+
+              {lectureComparisonData.length === 0 ? (
+                <div className="h-52 flex items-center justify-center text-[12px] text-muted-foreground">
+                  No attendance records in this period
+                </div>
+              ) : (
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={lectureComparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.6} />
+                      <XAxis
+                        dataKey="topic"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        angle={-25}
+                        textAnchor="end"
+                        tickLine={false}
+                      />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                        }}
+                        formatter={(value) => [value, "Students Present"]}
+                      />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Chart 2: Daily Attendance Trend Area */}
+            <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-2xs">
+              <div className="mb-4">
+                <h3 className="text-[13.5px] font-bold text-foreground">Attendance Timeline</h3>
+                <p className="text-[11.5px] text-muted-foreground">Daily attendance check-ins over time</p>
+              </div>
+
+              {attendanceTrendData.length === 0 ? (
+                <div className="h-52 flex items-center justify-center text-[12px] text-muted-foreground">
+                  No trend data available for this range
+                </div>
+              ) : (
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={attendanceTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                      <defs>
+                        <linearGradient id="attGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.6} />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                      />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                        }}
+                        formatter={(val) => [val, "Check-ins"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="attendees"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#attGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
           </div>
 
-          {recentChartData.length > 0 && (
-            <div className="rounded-xl border border-border-subtle bg-surface-1 p-4">
-              <p className="text-sm font-semibold text-foreground mb-3">Attendance per Lecture</p>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={recentChartData} margin={{ top: 0, right: 0, left: -20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} angle={-30} textAnchor="end" tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--surface-1))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                    formatter={(v: any) => [v, "Students Present"]}
-                  />
-                  <Bar dataKey="attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {(topStudents?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-border-subtle bg-surface-1 p-4">
+          {/* Student Engagement & Leaderboard Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Top Consistent Students */}
+            <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-2xs">
               <div className="flex items-center gap-2 mb-3">
-                <Award className="h-4 w-4 text-premium" />
-                <p className="text-sm font-semibold text-foreground">Top Attending Students</p>
+                <Award className="h-4 w-4 text-warning" />
+                <h3 className="text-[13.5px] font-bold text-foreground">Top Attending Students</h3>
               </div>
-              <div className="space-y-2">
-                {topStudents!.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                        {i + 1}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{s.name}</p>
-                        <p className="text-xs text-muted-foreground">{s.student_id}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-bold text-success">{s.count} present</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {recentChartData.length === 0 && (
-            <div className="rounded-xl border border-border-subtle bg-surface-1 py-12 text-center">
-              <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-              <p className="text-sm text-muted-foreground">No lecture data yet. Create lectures to see analytics.</p>
+              {studentRankings.topAttenders.length === 0 ? (
+                <p className="text-[12px] text-muted-foreground py-6 text-center">
+                  No attendance records recorded yet
+                </p>
+              ) : (
+                <div className="divide-y divide-border/30">
+                  {studentRankings.topAttenders.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-semibold text-foreground truncate">
+                            {item.profile?.name || "Student"}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            ID: {item.profile?.student_id || "—"} · {item.profile?.department || "General"}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[12px] font-bold text-success tabular-nums shrink-0">
+                        {item.count} {item.count === 1 ? "session" : "sessions"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Students Requiring Attention */}
+            <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-2xs">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <h3 className="text-[13.5px] font-bold text-foreground">Students Requiring Attention</h3>
+              </div>
+
+              {studentRankings.atRisk.length === 0 ? (
+                <div className="py-6 text-center">
+                  <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5 opacity-80" />
+                  <p className="text-[12.5px] font-medium text-foreground">Good Engagement</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    No students currently below the attendance threshold.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/30">
+                  {studentRankings.atRisk.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-destructive/10 text-destructive text-[11px] font-bold flex items-center justify-center shrink-0">
+                          !
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-semibold text-foreground truncate">
+                            {item.profile?.name || "Student"}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            ID: {item.profile?.student_id || "—"}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[11.5px] font-bold text-destructive tabular-nums shrink-0">
+                        {item.count} / {stats.completedLectures} sessions
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
+
+      {/* Schedule Lecture Dialog */}
+      <ScheduleLectureDialog
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+      />
     </div>
   );
 }
