@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import {
   CheckSquare, Search, Filter, Download, Plus,
   BookOpen, Users, Calendar, Clock, AlertTriangle,
-  CheckCircle2, XCircle, ArrowUpRight, Eye, RefreshCw
+  CheckCircle2, XCircle, Eye, RefreshCw
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

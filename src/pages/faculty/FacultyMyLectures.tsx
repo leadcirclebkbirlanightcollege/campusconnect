@@ -51,9 +51,8 @@ export default function FacultyMyLectures() {
         .from("lectures")
         .update({
           status: "live",
-          actual_start_time: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -71,9 +70,8 @@ export default function FacultyMyLectures() {
         .from("lectures")
         .update({
           status: "ended",
-          actual_end_time: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -88,7 +86,7 @@ export default function FacultyMyLectures() {
   const totalCount = lectures.length;
   const liveCount = useMemo(() => lectures.filter((l) => l.status === "live").length, [lectures]);
   const scheduledCount = useMemo(() => lectures.filter((l) => l.status === "scheduled").length, [lectures]);
-  const endedCount = useMemo(() => lectures.filter((l) => l.status === "ended" || l.status === "completed").length, [lectures]);
+  const endedCount = useMemo(() => lectures.filter((l) => (l.status as string) === "ended" || (l.status as string) === "completed").length, [lectures]);
 
   // Filtered lectures
   const filteredLectures = useMemo(() => {
@@ -102,7 +100,7 @@ export default function FacultyMyLectures() {
       let matchesTab = true;
       if (activeTab === "live") matchesTab = l.status === "live";
       else if (activeTab === "scheduled") matchesTab = l.status === "scheduled";
-      else if (activeTab === "ended") matchesTab = l.status === "ended" || l.status === "completed";
+      else if (activeTab === "ended") matchesTab = (l.status as string) === "ended" || (l.status as string) === "completed";
 
       return matchesSearch && matchesTab;
     });
@@ -240,9 +238,9 @@ export default function FacultyMyLectures() {
       ) : (
         <div className="space-y-3">
           {filteredLectures.map((lec) => {
-            const isLecLive = lec.status === "live";
-            const isLecScheduled = lec.status === "scheduled";
-            const isLecEnded = lec.status === "ended" || lec.status === "completed";
+            const isLecLive = (lec.status as string) === "live";
+            const isLecScheduled = (lec.status as string) === "scheduled";
+            const isLecEnded = (lec.status as string) === "ended" || (lec.status as string) === "completed";
             const dateStr = format(new Date(lec.lecture_date), "MMM d, yyyy");
             const isLecToday = isToday(parseISO(lec.lecture_date));
 

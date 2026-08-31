@@ -38,7 +38,7 @@ export default function FacultyLayout() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("name,email,phone,department,designation,college_id,avatar_url,colleges(college_name)")
+        .select("name,email,phone,department,college_id,avatar_url,colleges(college_name)")
         .eq("user_id", user!.id)
         .maybeSingle();
       return data;

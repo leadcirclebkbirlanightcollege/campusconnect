@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import {
   Users, Search, Filter, AlertTriangle, CheckCircle2,
-  ChevronRight, ArrowUpRight, BookOpen, GraduationCap,
+  ChevronRight, BookOpen, GraduationCap,
   Building2, Eye, UserX
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";

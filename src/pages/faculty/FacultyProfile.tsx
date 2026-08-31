@@ -32,7 +32,6 @@ const profileSchema = z.object({
   email: z.string().trim().email("Invalid email address"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   department: z.string().trim().max(100).optional().or(z.literal("")),
-  designation: z.string().trim().max(100).optional().or(z.literal("")),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -63,7 +62,7 @@ export default function FacultyProfile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,email,phone,department,designation,college_id,avatar_url,created_at,colleges(college_name)")
+        .select("name,email,phone,department,college_id,avatar_url,created_at,colleges(college_name)")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -78,7 +77,6 @@ export default function FacultyProfile() {
       email: "",
       phone: "",
       department: "",
-      designation: "",
     },
   });
 
@@ -98,7 +96,6 @@ export default function FacultyProfile() {
         email: profile.email || user?.email || "",
         phone: profile.phone || "",
         department: profile.department || "",
-        designation: (profile as any).designation || "",
       });
       setAvatarPreview(profile.avatar_url || null);
     }
@@ -122,9 +119,8 @@ export default function FacultyProfile() {
           email: values.email.trim(),
           phone: values.phone?.trim() || null,
           department: values.department?.trim() || null,
-          designation: values.designation?.trim() || null,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -236,7 +232,7 @@ export default function FacultyProfile() {
   const displayName = profile?.name || "Faculty Member";
   const collegeName = (profile as any)?.colleges?.college_name || "Campus Connect Institution";
   const departmentName = profile?.department || "Department not specified";
-  const designationTitle = (profile as any)?.designation || "Assistant Professor / Faculty";
+  const designationTitle = "Faculty Member";
 
   if (isLoading) {
     return (
@@ -451,33 +447,13 @@ export default function FacultyProfile() {
                     control={form.control}
                     name="department"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="sm:col-span-2">
                         <FormLabel className="text-[12px] font-medium text-foreground">Department</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={!isEditing}
                             placeholder="Computer Science / IT"
-                            className="rounded-xl text-[13px] bg-background border-border/50 disabled:bg-muted/40 disabled:text-foreground"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-[11px]" />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Designation */}
-                  <FormField
-                    control={form.control}
-                    name="designation"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="text-[12px] font-medium text-foreground">Academic Designation</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            placeholder="Associate Professor / HOD / Lecturer"
                             className="rounded-xl text-[13px] bg-background border-border/50 disabled:bg-muted/40 disabled:text-foreground"
                           />
                         </FormControl>

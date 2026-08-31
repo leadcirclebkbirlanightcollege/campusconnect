@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import {
   Megaphone, Plus, Search, Trash2, Calendar, Users,
   Clock, AlertTriangle, Eye, Sparkles, CheckCircle2,
-  Bell, Pin, ArrowUpRight
+  Bell, Pin
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

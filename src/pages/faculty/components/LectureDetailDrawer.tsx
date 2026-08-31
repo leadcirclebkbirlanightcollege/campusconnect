@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen, Clock, Calendar, MapPin, Users, CheckCircle2,
-  Play, StopCircle, Trash2, Pencil, X, User, ArrowUpRight,
+  Play, StopCircle, Trash2, Pencil, X, User,
   Loader2, AlertTriangle, ChevronRight
 } from "@/components/icons";
 import { toast } from "sonner";
@@ -93,9 +93,8 @@ export default function LectureDetailDrawer({
         .from("lectures")
         .update({
           status: "live",
-          actual_start_time: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", lectureId!);
       if (error) throw error;
     },
@@ -114,9 +113,8 @@ export default function LectureDetailDrawer({
         .from("lectures")
         .update({
           status: "ended",
-          actual_end_time: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", lectureId!);
       if (error) throw error;
     },
@@ -174,9 +172,9 @@ export default function LectureDetailDrawer({
 
   if (!open) return null;
 
-  const isLive = lecture?.status === "live";
-  const isScheduled = lecture?.status === "scheduled";
-  const isEnded = lecture?.status === "ended" || lecture?.status === "completed";
+  const isLive = (lecture?.status as string) === "live";
+  const isScheduled = (lecture?.status as string) === "scheduled";
+  const isEnded = (lecture?.status as string) === "ended" || (lecture?.status as string) === "completed";
 
   return (
     <>

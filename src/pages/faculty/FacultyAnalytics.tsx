@@ -90,7 +90,7 @@ export default function FacultyAnalytics() {
   // Summary KPI Calculations
   const stats = useMemo(() => {
     const totalLectures = filteredLectures.length;
-    const completedLectures = filteredLectures.filter((l) => l.status === "ended" || l.status === "completed").length;
+    const completedLectures = filteredLectures.filter((l) => (l.status as string) === "ended" || (l.status as string) === "completed").length;
     const liveLectures = filteredLectures.filter((l) => l.status === "live").length;
     const upcomingLectures = filteredLectures.filter((l) => l.status === "scheduled").length;
 
