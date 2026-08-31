@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, ArrowRight, ArrowLeft, Upload, CheckCircle2, User as UserIcon, GraduationCap } from "@/components/icons";
 import { COURSES, ACADEMIC_YEARS } from "@/lib/courses";
+import { ImageCropper } from "@/components/image/ImageCropper";
 
 type Gender = "male" | "female" | "other";
 
@@ -50,13 +51,8 @@ export default function OnboardingWizard() {
     [canNextStep1, enrollment, courseCode, year]
   );
 
-  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handleCroppedPhoto(file: File) {
     if (!file || !user) return;
-    if (file.size > 4 * 1024 * 1024) {
-      toast.error("Image must be under 4 MB");
-      return;
-    }
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -67,7 +63,7 @@ export default function OnboardingWizard() {
       if (error) throw error;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       setAvatarUrl(`${data.publicUrl}?v=${Date.now()}`);
-      toast.success("Photo uploaded");
+      toast.success("Profile photo updated");
     } catch (err: any) {
       toast.error(err.message ?? "Upload failed");
     } finally {
@@ -166,20 +162,35 @@ export default function OnboardingWizard() {
                 </div>
 
                 {/* Photo */}
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="h-16 w-16 rounded-full overflow-hidden bg-surface-2 border border-border-subtle flex items-center justify-center">
-                    {avatarUrl
-                      ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                      : <UserIcon className="h-7 w-7 text-muted-foreground" />}
-                  </div>
-                  <label className="cursor-pointer">
-                    <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} disabled={uploading} />
-                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border-subtle bg-surface-2 hover:bg-surface-3 text-[13px] font-medium transition-colors">
-                      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                      {avatarUrl ? "Change photo" : "Upload photo"}
-                    </span>
-                  </label>
-                </div>
+                <ImageCropper
+                  aspectRatio={1}
+                  cropShape="round"
+                  title="Crop Profile Photo"
+                  description="Adjust and center your photo inside the circle."
+                  isSaving={uploading}
+                  onCropComplete={async ({ file }) => {
+                    await handleCroppedPhoto(file);
+                  }}
+                >
+                  {({ triggerFileInput }) => (
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className="h-16 w-16 rounded-full overflow-hidden bg-surface-2 border border-border-subtle flex items-center justify-center">
+                        {avatarUrl
+                          ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                          : <UserIcon className="h-7 w-7 text-muted-foreground" />}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={triggerFileInput}
+                        disabled={uploading}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border-subtle bg-surface-2 hover:bg-surface-3 text-[13px] font-medium transition-colors cursor-pointer"
+                      >
+                        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        {avatarUrl ? "Change photo" : "Upload photo"}
+                      </button>
+                    </div>
+                  )}
+                </ImageCropper>
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="First Name" required>

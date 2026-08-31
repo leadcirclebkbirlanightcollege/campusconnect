@@ -36,9 +36,11 @@ import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageCropper } from "@/components/image/ImageCropper";
 import {
   Sheet,
   SheetContent,
@@ -479,59 +481,60 @@ export default function StudentProfile() {
           </button>
         }
       >
-        <div className="mt-4 flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="h-[72px] w-[72px] ring-2 ring-white/45 shadow-[0_12px_28px_-12px_rgba(0,0,0,0.5)]">
-              <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
-              <AvatarFallback className="bg-white/20 text-lg font-bold text-white">
-                {(profile?.name ?? "U").slice(0, 1).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              aria-label="Change avatar"
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-foreground shadow-md ring-2 ring-white/70 transition active:scale-95"
-            >
-              <Camera className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center rounded-full bg-white/22 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ring-1 ring-white/25">
-                {roleLabel}
-              </span>
-              {profile?.is_verified && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
-                  <Shield className="h-3 w-3" /> Verified
-                </span>
-              )}
-              {collegeQuery.data && (
-                <span className="inline-flex max-w-[190px] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
-                  <Building2 className="h-3 w-3" />
-                  <span className="truncate">{collegeQuery.data}</span>
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-[11.5px] text-white/80">
-              {[profile?.student_id, profile?.class_name, profile?.department].filter(Boolean).join(" • ") ||
-                "Complete your profile to unlock everything"}
-            </p>
-          </div>
-        </div>
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) uploadAvatarMutation.mutate(file);
-            event.currentTarget.value = "";
+        <ImageCropper
+          aspectRatio={1}
+          cropShape="round"
+          title="Crop Profile Photo"
+          description="Adjust and center your photo inside the circle."
+          isSaving={uploadAvatarMutation.isPending}
+          onCropComplete={async ({ file }) => {
+            await uploadAvatarMutation.mutateAsync(file);
           }}
-        />
+        >
+          {({ triggerFileInput }) => (
+            <div className="mt-4 flex items-center gap-4">
+              <div className="relative">
+                <Avatar className="h-[72px] w-[72px] ring-2 ring-white/45 shadow-[0_12px_28px_-12px_rgba(0,0,0,0.5)]">
+                  <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
+                  <AvatarFallback className="bg-white/20 text-lg font-bold text-white">
+                    {(profile?.name ?? "U").slice(0, 1).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={triggerFileInput}
+                  aria-label="Change avatar"
+                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-foreground shadow-md ring-2 ring-white/70 transition active:scale-95"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-white/22 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ring-1 ring-white/25">
+                    {roleLabel}
+                  </span>
+                  {profile?.is_verified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
+                      <Shield className="h-3 w-3" /> Verified
+                    </span>
+                  )}
+                  {collegeQuery.data && (
+                    <span className="inline-flex max-w-[190px] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
+                      <Building2 className="h-3 w-3" />
+                      <span className="truncate">{collegeQuery.data}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-[11.5px] text-white/80">
+                  {[profile?.student_id, profile?.class_name, profile?.department].filter(Boolean).join(" • ") ||
+                    "Complete your profile to unlock everything"}
+                </p>
+              </div>
+            </div>
+          )}
+        </ImageCropper>
       </ModuleHero>
 
       <HeroOverlap>
@@ -628,18 +631,37 @@ export default function StudentProfile() {
           </SheetHeader>
 
           <div className="mt-4 space-y-3">
-            <div className="flex items-center gap-3 rounded-[18px] border border-border-subtle bg-surface-2 p-3">
-              <Avatar className="h-14 w-14">
-                <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
-                <AvatarFallback className="bg-primary/10 font-bold text-primary">
-                  {(form.name || "U").slice(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Button type="button" variant="outline" className="h-10" onClick={() => fileRef.current?.click()}>
-                <Camera className="h-4 w-4" />
-                {uploadAvatarMutation.isPending ? "Uploading…" : "Change photo"}
-              </Button>
-            </div>
+            <ImageCropper
+              aspectRatio={1}
+              cropShape="round"
+              title="Crop Profile Photo"
+              description="Adjust and center your photo inside the circle."
+              isSaving={uploadAvatarMutation.isPending}
+              onCropComplete={async ({ file }) => {
+                await uploadAvatarMutation.mutateAsync(file);
+              }}
+            >
+              {({ triggerFileInput }) => (
+                <div className="flex items-center gap-3 rounded-[18px] border border-border-subtle bg-surface-2 p-3">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.name ?? "Profile"} />
+                    <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                      {(form.name || "U").slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10"
+                    onClick={triggerFileInput}
+                    disabled={uploadAvatarMutation.isPending}
+                  >
+                    <Camera className="h-4 w-4" />
+                    {uploadAvatarMutation.isPending ? "Uploading…" : "Change photo"}
+                  </Button>
+                </div>
+              )}
+            </ImageCropper>
 
             <div className="space-y-1.5">
               <Label htmlFor="settings-name">Full name</Label>

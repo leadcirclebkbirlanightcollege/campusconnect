@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ImageCropper } from "@/components/image/ImageCropper";
 
 type Step = 0 | 1 | 2 | 3;
 
@@ -436,14 +437,6 @@ function UploadAvatarStep({
 
   const upload = async (file: File) => {
     setError(null);
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file (jpg, png, webp).");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be under 5 MB.");
-      return;
-    }
     setUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -468,30 +461,42 @@ function UploadAvatarStep({
     <Card className="p-5 space-y-4 text-center">
       <h2 className="font-semibold">Upload a profile photo</h2>
       <p className="text-xs text-muted-foreground">Optional, but recommended.</p>
-      <Avatar className="h-24 w-24 mx-auto">
-        <AvatarImage src={url ?? undefined} />
-        <AvatarFallback>{(profile.name as string)?.[0] ?? "?"}</AvatarFallback>
-      </Avatar>
-      <input
-        type="file" accept="image/*" id="avatar-upload" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }}
-      />
-      {error && (
-        <div className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs text-left">
-          <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-      <div className="flex gap-2 justify-center">
-        <Button asChild variant="outline" disabled={uploading}>
-          <label htmlFor="avatar-upload">
-            <Camera className="h-4 w-4" /> {uploading ? "Uploading..." : url ? "Change" : "Choose photo"}
-          </label>
-        </Button>
-        <Button onClick={onNext} variant={url ? "default" : "ghost"} disabled={uploading}>
-          {url ? "Continue" : "Skip"}
-        </Button>
-      </div>
+
+      <ImageCropper
+        aspectRatio={1}
+        cropShape="round"
+        title="Crop Profile Photo"
+        description="Adjust and center your photo inside the circle."
+        isSaving={uploading}
+        onCropComplete={async ({ file }) => {
+          await upload(file);
+        }}
+      >
+        {({ triggerFileInput }) => (
+          <>
+            <Avatar className="h-24 w-24 mx-auto">
+              <AvatarImage src={url ?? undefined} />
+              <AvatarFallback>{(profile.name as string)?.[0] ?? "?"}</AvatarFallback>
+            </Avatar>
+
+            {error && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs text-left">
+                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-center pt-2">
+              <Button type="button" variant="outline" disabled={uploading} onClick={triggerFileInput}>
+                <Camera className="h-4 w-4" /> {uploading ? "Saving..." : url ? "Change photo" : "Choose photo"}
+              </Button>
+              <Button onClick={onNext} variant={url ? "default" : "ghost"} disabled={uploading}>
+                {url ? "Continue" : "Skip"}
+              </Button>
+            </div>
+          </>
+        )}
+      </ImageCropper>
     </Card>
   );
 }

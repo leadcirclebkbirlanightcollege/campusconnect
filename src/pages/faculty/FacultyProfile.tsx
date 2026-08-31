@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageCropper } from "@/components/image/ImageCropper";
 
 // Validation schema for profile details
 const profileSchema = z.object({
@@ -222,13 +223,6 @@ export default function FacultyProfile() {
     },
   });
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadAvatarMutation.mutate(file);
-    }
-  };
-
   const displayName = profile?.name || "Faculty Member";
   const collegeName = (profile as any)?.colleges?.college_name || "Campus Connect Institution";
   const departmentName = profile?.department || "Department not specified";
@@ -258,87 +252,93 @@ export default function FacultyProfile() {
 
       {/* Main Profile Header Card */}
       <div className="rounded-2xl border border-border/50 bg-card p-6 shadow-2xs">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            {/* Avatar with Overlay Upload Button */}
-            <div className="relative group shrink-0">
-              <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden text-primary font-bold text-2xl shadow-xs">
-                {avatarPreview ? (
-                  <img src={avatarPreview} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  displayName.charAt(0).toUpperCase()
+        <ImageCropper
+          aspectRatio={1}
+          cropShape="rect"
+          title="Crop Faculty Profile Photo"
+          description="Drag to reposition and zoom your profile photo inside the square."
+          isSaving={uploadAvatarMutation.isPending}
+          onCropComplete={async ({ file }) => {
+            await uploadAvatarMutation.mutateAsync(file);
+          }}
+        >
+          {({ triggerFileInput }) => (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                {/* Avatar with Overlay Upload Button */}
+                <div className="relative group shrink-0">
+                  <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden text-primary font-bold text-2xl shadow-xs">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt={displayName} className="h-full w-full object-cover" />
+                    ) : (
+                      displayName.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={triggerFileInput}
+                    disabled={uploadAvatarMutation.isPending}
+                    aria-label="Upload profile photo"
+                    className="absolute inset-0 rounded-2xl bg-foreground/60 text-background opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer"
+                  >
+                    {uploadAvatarMutation.isPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="h-5 w-5" />
+                        <span className="text-[9.5px] font-medium">Change</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Identity Text */}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-[18px] font-bold text-foreground tracking-tight truncate">{displayName}</h2>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                      <BadgeCheck className="h-3 w-3" /> Faculty
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                    <span>{designationTitle} · {departmentName}</span>
+                  </p>
+                  <p className="text-[11.5px] text-muted-foreground/80 mt-1 truncate">
+                    {collegeName}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Avatar Actions */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={triggerFileInput}
+                  disabled={uploadAvatarMutation.isPending}
+                  className="rounded-xl text-[12px] h-9 gap-1.5 flex-1 sm:flex-initial"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  Change Photo
+                </Button>
+                {avatarPreview && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAvatarMutation.mutate()}
+                    disabled={removeAvatarMutation.isPending}
+                    className="rounded-xl text-[12px] h-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadAvatarMutation.isPending}
-                aria-label="Upload profile photo"
-                className="absolute inset-0 rounded-2xl bg-foreground/60 text-background opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer"
-              >
-                {uploadAvatarMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <Camera className="h-5 w-5" />
-                    <span className="text-[9.5px] font-medium">Change</span>
-                  </>
-                )}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
             </div>
-
-            {/* Identity Text */}
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-[18px] font-bold text-foreground tracking-tight truncate">{displayName}</h2>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">
-                  <BadgeCheck className="h-3 w-3" /> Faculty
-                </span>
-              </div>
-              <p className="text-[13px] text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate">
-                <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
-                <span>{designationTitle} · {departmentName}</span>
-              </p>
-              <p className="text-[11.5px] text-muted-foreground/80 mt-1 truncate">
-                {collegeName}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Avatar Actions */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadAvatarMutation.isPending}
-              className="rounded-xl text-[12px] h-9 gap-1.5 flex-1 sm:flex-initial"
-            >
-              <Camera className="h-3.5 w-3.5" />
-              Change Photo
-            </Button>
-            {avatarPreview && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeAvatarMutation.mutate()}
-                disabled={removeAvatarMutation.isPending}
-                className="rounded-xl text-[12px] h-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            )}
-          </div>
-        </div>
+          )}
+        </ImageCropper>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
