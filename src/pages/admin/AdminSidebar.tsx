@@ -75,24 +75,37 @@ export default function AdminSidebar() {
     <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border bg-sidebar">
       {/* Brand */}
       <div className={cn(
-        "flex h-[52px] items-center gap-2.5 border-b border-sidebar-border shrink-0",
+        "flex h-[56px] items-center border-b border-sidebar-border shrink-0 transition-colors",
         collapsed ? "justify-center px-2" : "px-3.5",
       )}>
-        <img
-          src={branding.logo_url ?? BRANDING.logo}
-          alt={branding.brand_name}
-          className="h-7 w-7 object-contain rounded shrink-0"
-        />
-        {!collapsed && (
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight truncate">
-              {branding.brand_name}
-            </span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-warning/70 leading-none">
-              Admin Panel
-            </span>
-          </div>
-        )}
+        <Link
+          to="/platform/admin/dashboard"
+          onClick={handleNav}
+          className={cn(
+            "flex items-center gap-2.5 min-w-0 group/brand focus:outline-none",
+            collapsed && "justify-center",
+          )}
+          title="Campus Connect — Admin Panel"
+        >
+          <img
+            src={branding.logo_url || BRANDING.logo}
+            alt="Campus Connect"
+            onError={(e) => {
+              e.currentTarget.src = BRANDING.logo;
+            }}
+            className="h-7 w-7 object-contain rounded-md shrink-0 shadow-xs group-hover/brand:scale-105 transition-transform duration-fast"
+          />
+          {!collapsed && (
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <span className="text-[13px] font-bold text-sidebar-foreground block leading-tight tracking-tight truncate group-hover/brand:text-primary transition-colors">
+                {branding.brand_name || "Campus Connect"}
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-primary/85 leading-none block mt-0.5">
+                Admin Panel
+              </span>
+            </div>
+          )}
+        </Link>
       </div>
 
       {/* Nav */}

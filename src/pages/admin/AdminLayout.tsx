@@ -20,6 +20,7 @@ import {
 import { ChevronDown, LogOut, UserRound } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useLogout";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransitions";
@@ -77,12 +78,16 @@ function AdminProfileMenu({ userId }: { userId: string }) {
 
 export default function AdminLayout() {
   const location = useLocation();
+  const { branding } = usePlatformBranding();
   const { title, description } = getAdminPageMeta(location.pathname);
   const { data: user } = useQuery({
     queryKey: ["admin_topbar", "user"],
     queryFn: async () => { const { data } = await supabase.auth.getUser(); return data.user ?? null; },
     staleTime: 120_000,
   });
+
+  const logoSrc = branding.logo_url || BRANDING.logo;
+  const brandName = branding.brand_name || BRANDING.name;
 
   return (
     <>
@@ -97,7 +102,28 @@ export default function AdminLayout() {
             )}>
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
                 <SidebarTrigger className="h-8 w-8 shrink-0" />
-                <div className="hidden md:block h-4 w-px bg-border-subtle shrink-0" />
+
+                {/* Mobile Brand Link */}
+                <Link
+                  to="/platform/admin/dashboard"
+                  className="flex md:hidden items-center gap-1.5 shrink-0 pl-1 pr-1.5 py-0.5 rounded-lg hover:bg-surface-2 transition-colors mr-0.5"
+                  title={`${brandName} — Admin Panel`}
+                >
+                  <img
+                    src={logoSrc}
+                    alt={brandName}
+                    onError={(e) => {
+                      e.currentTarget.src = BRANDING.logo;
+                    }}
+                    className="h-6 w-6 object-contain rounded-md shrink-0 shadow-xs"
+                  />
+                  <span className="text-[12px] font-bold text-foreground truncate max-w-[95px] xs:max-w-[120px]">
+                    {brandName}
+                  </span>
+                </Link>
+
+                <div className="h-4 w-px bg-border-subtle shrink-0" />
+
                 <div className="min-w-0 flex-1">
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.div
@@ -131,8 +157,15 @@ export default function AdminLayout() {
             <footer className="border-t border-border-subtle/60 bg-surface-1/50 shrink-0 hidden md:block">
               <div className="px-5 py-2.5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-1.5">
-                  <img src={BRANDING.logo} alt={BRANDING.name} className="h-4 w-4 object-contain opacity-50" />
-                  <span className="text-[11px] text-muted-foreground/50 font-medium">{BRANDING.name} Admin</span>
+                  <img
+                    src={logoSrc}
+                    alt={brandName}
+                    onError={(e) => {
+                      e.currentTarget.src = BRANDING.logo;
+                    }}
+                    className="h-4 w-4 object-contain opacity-60 rounded-xs"
+                  />
+                  <span className="text-[11px] text-muted-foreground/60 font-medium">{brandName} Admin</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground/35 text-right">Developed by Atharv Jadhav · CS Dept.</p>
               </div>
