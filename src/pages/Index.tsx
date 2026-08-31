@@ -292,11 +292,8 @@ export default function Index() {
           </div>
         </section>
 
-        {/* ————— INSTITUTION PARTNERS MARQUEE ————— */}
-        <section id="partners" className="py-10 md:py-14 border-b border-border-subtle">
-          <div className="text-center mb-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Trusted by Leading Institutions & Departments</p>
-          </div>
+        {/* ————— INSTITUTION PARTNERS SHOWCASE ————— */}
+        <section id="partners" className="border-b border-border-subtle">
           <InstitutionPartnersMarquee />
         </section>
 
