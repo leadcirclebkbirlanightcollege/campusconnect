@@ -2,7 +2,7 @@
  * AdminSidebar — left nav for /platform/admin/* routes.
  * Supports collapsible sections to reduce scroll fatigue.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import {
@@ -10,7 +10,7 @@ import {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
-  ChevronDown, ShieldCheck, LifeBuoy,
+  ChevronDown, ShieldCheck, LifeBuoy, ArrowUpCircle,
 } from "@/components/icons";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -28,6 +28,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, Building2, School,
   Hash, BarChart2, FileText, Download, ClipboardList, Store, ShieldCheck, LifeBuoy,
+  ArrowUpCircle,
 };
 
 export default function AdminSidebar() {
@@ -50,9 +51,20 @@ export default function AdminSidebar() {
       map[s.label] = hasActive || s.defaultOpen !== false;
     }
     return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPath]);
+  }, []);
+
   const [openMap, setOpenMap] = useState<Record<string, boolean>>(initialOpen);
+
+  // Auto-expand parent section whenever active route changes
+  useEffect(() => {
+    for (const s of ADMIN_NAV_SECTIONS) {
+      const hasActive = s.items.some((i) => isActive(i.url.split("?")[0].split("#")[0]));
+      if (hasActive) {
+        setOpenMap((m) => ({ ...m, [s.label]: true }));
+      }
+    }
+  }, [currentPath]);
+
   const toggleSection = (label: string) =>
     setOpenMap((m) => ({ ...m, [label]: !m[label] }));
 
