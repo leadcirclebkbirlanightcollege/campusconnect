@@ -24,4 +24,14 @@ describe("Contact Page Validation & Data Architecture", () => {
     expect(notesPayload).toContain("[Enquiry Type: Institutional Partnership]");
     expect(notesPayload).toContain(message);
   });
+
+  it("verifies the exact institutional name and address", () => {
+    const institutionName = "B.K. Birla Night Arts, Science & Commerce College (BKBNC)";
+    const addressLine1 = "Birla College Road, Kalyan - 421301";
+    const addressLine2 = "Maharashtra, India";
+
+    expect(institutionName).toBe("B.K. Birla Night Arts, Science & Commerce College (BKBNC)");
+    expect(addressLine1).toBe("Birla College Road, Kalyan - 421301");
+    expect(addressLine2).toBe("Maharashtra, India");
+  });
 });

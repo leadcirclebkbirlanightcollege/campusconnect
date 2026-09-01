@@ -253,15 +253,16 @@ export default function Contact() {
               <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
+              <div className="space-y-1">
                 <h3 className="text-sm font-bold text-foreground">Institutional Office</h3>
-                <p className="text-xs font-medium text-foreground/90 mt-0.5">
-                  B.K. Birla College of Arts, Science & Commerce (Autonomous)
+                <p className="text-xs font-semibold text-foreground/95 leading-snug">
+                  B.K. Birla Night Arts, Science & Commerce College (BKBNC)
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Department of Computer Science & Campus Connect Center · Kalyan, Maharashtra, India.
-              </p>
+              <div className="text-xs text-muted-foreground leading-relaxed space-y-0.5">
+                <p>Birla College Road, Kalyan - 421301</p>
+                <p>Maharashtra, India</p>
+              </div>
             </div>
             <div className="pt-4 mt-2 border-t border-border/40">
               <a
