@@ -6,8 +6,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTenant } from "@/providers/TenantProvider";
-import { toast } from "sonner";
 import { format } from "date-fns";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 
 import {
   Dialog,
@@ -122,7 +122,7 @@ export default function ScheduleLectureDialog({ open, onOpenChange, onSuccess }:
       return data;
     },
     onSuccess: () => {
-      toast.success("Lecture scheduled successfully!");
+      showSuccessToast("Lecture scheduled successfully!");
       qc.invalidateQueries({ queryKey: ["faculty"] });
       qc.invalidateQueries({ queryKey: ["student"] });
       form.reset({
@@ -136,9 +136,7 @@ export default function ScheduleLectureDialog({ open, onOpenChange, onSuccess }:
       onSuccess?.();
     },
     onError: (err: any) => {
-      console.error("Lecture creation error:", err);
-      const msg = err?.message || err?.error_description || (typeof err === "string" ? err : "Failed to schedule lecture");
-      toast.error(msg);
+      showErrorToast(err, { context: "schedule-lecture" });
     },
   });
 

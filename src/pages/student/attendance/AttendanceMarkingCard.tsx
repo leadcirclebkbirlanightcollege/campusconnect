@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle, Sparkles, ArrowRight } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -128,7 +129,7 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
       }
       const points = data?.points_awarded ? 10 : 0;
       setSuccess({ at: Date.now(), points });
-      toast.success("Attendance marked successfully!", { description: "+10 points awarded to your profile." });
+      showSuccessToast("Attendance marked successfully!", "+10 points awarded to your profile.");
     },
     onError: (e: any) => {
       const msg = safeErrorMessage(e);
@@ -146,12 +147,8 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
         toast.error("Lecture not live", { description: "Attendance can only be marked during an active session." });
       } else if (code === "NO_ACTIVE_TOKEN") {
         toast.error("No active session", { description: "No attendance session is active for this lecture." });
-      } else if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
-        toast.error("Network issue", { description: "Could not connect. Please try again in a few seconds." });
       } else {
-        toast.error("Unable to mark attendance", {
-          description: msg || "Please check your network and try again.",
-        });
+        showErrorToast(e, { context: "mark-attendance" });
       }
     },
     onSettled: () => {

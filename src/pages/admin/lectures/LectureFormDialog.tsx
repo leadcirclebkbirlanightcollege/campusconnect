@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/providers/TenantProvider";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 
 import {
   Dialog,
@@ -35,16 +35,29 @@ import {
 
 import type { LectureRow } from "./LectureManagementTab";
 
-const schema = z.object({
-  topic: z.string().trim().min(3, "Topic must be at least 3 characters").max(200),
-  lecture_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
-  start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
-  end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
-  venue: z.string().trim().min(2, "Venue must be at least 2 characters").max(200),
-  programme_id: z.string().optional(),
-});
+const schema = z
+  .object({
+    topic: z.string().trim().min(3, "Topic must be at least 3 characters").max(200),
+    lecture_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+    start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
+    end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM"),
+    venue: z.string().trim().min(2, "Venue must be at least 2 characters").max(200),
+    programme_id: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_time && data.end_time) {
+        return data.end_time > data.start_time;
+      }
+      return true;
+    },
+    {
+      message: "End time must be after start time",
+      path: ["end_time"],
+    }
+  );
 
 type Values = z.infer<typeof schema>;
 
@@ -217,14 +230,12 @@ export default function LectureFormDialog({ open, onOpenChange, lecture, onSaved
       }
     },
     onSuccess: async () => {
-      toast.success(lecture ? "Lecture updated" : "Lecture created");
+      showSuccessToast(lecture ? "Lecture updated successfully" : "Lecture created successfully");
       await onSaved();
       onOpenChange(false);
     },
     onError: (e: any) => {
-      console.error("Save lecture error:", e);
-      const msg = e?.message || e?.error_description || (typeof e === "string" ? e : "Failed to save lecture");
-      toast.error(msg);
+      showErrorToast(e, { context: lecture ? "update-lecture" : "schedule-lecture" });
     },
   });
 

@@ -23,7 +23,7 @@ import {
   Play, StopCircle, Trash2, Pencil, X, User,
   Loader2, AlertTriangle, ChevronRight
 } from "@/components/icons";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { cn } from "@/lib/utils";
 
 interface LectureDetailDrawerProps {
@@ -99,11 +99,11 @@ export default function LectureDetailDrawer({
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Class started! Lecture is now LIVE.");
+      showSuccessToast("Class started! Lecture is now LIVE.");
       qc.invalidateQueries({ queryKey: ["faculty"] });
       onLectureUpdated?.();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to start class"),
+    onError: (err: any) => showErrorToast(err, { context: "go-live" }),
   });
 
   // End Class Mutation
@@ -119,16 +119,19 @@ export default function LectureDetailDrawer({
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Class ended successfully.");
+      showSuccessToast("Class ended successfully.");
       qc.invalidateQueries({ queryKey: ["faculty"] });
       onLectureUpdated?.();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to end class"),
+    onError: (err: any) => showErrorToast(err, { context: "end-lecture" }),
   });
 
   // Edit Lecture Mutation
   const updateLectureMutation = useMutation({
     mutationFn: async () => {
+      if (editStart && editEnd && editEnd <= editStart) {
+        throw new Error("End time must be after start time");
+      }
       const { error } = await supabase
         .from("lectures")
         .update({
@@ -143,12 +146,12 @@ export default function LectureDetailDrawer({
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Lecture updated!");
+      showSuccessToast("Lecture updated successfully!");
       setIsEditing(false);
       qc.invalidateQueries({ queryKey: ["faculty"] });
       onLectureUpdated?.();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update lecture"),
+    onError: (err: any) => showErrorToast(err, { context: "update-lecture" }),
   });
 
   // Cancel/Delete Lecture Mutation
@@ -161,13 +164,13 @@ export default function LectureDetailDrawer({
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Lecture cancelled");
+      showSuccessToast("Lecture cancelled successfully");
       setShowCancelConfirm(false);
       onOpenChange(false);
       qc.invalidateQueries({ queryKey: ["faculty"] });
       onLectureUpdated?.();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to cancel lecture"),
+    onError: (err: any) => showErrorToast(err, { context: "delete-lecture" }),
   });
 
   if (!open) return null;

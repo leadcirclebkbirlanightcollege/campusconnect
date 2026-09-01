@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import {
   Loader2, Eye, EyeOff,
   ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, GraduationCap, ShieldCheck, QrCode
@@ -142,23 +142,10 @@ const Auth = () => {
         loginTimeout,
       ]);
       if (error) throw error;
-      toast.success("Welcome back! 👋");
+      showSuccessToast("Welcome back! 👋");
       if (data.user) redirectToDashboard(data.user.id);
     } catch (error: any) {
-      const msg: string = error?.message || "";
-      const lower = msg.toLowerCase();
-      if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
-        toast.error("Network error. Please check your connection.");
-      } else if (lower.includes("email not confirmed")) {
-        toast.error("Email not verified", {
-          description: "We've sent a fresh verification link to your inbox.",
-        });
-        void supabase.auth.resend({ type: "signup", email: loginIdentifier.trim().toLowerCase() });
-      } else if (lower.includes("invalid login credentials")) {
-        toast.error("Invalid credentials", { description: "Check your email/Student ID and password." });
-      } else {
-        toast.error(msg || "Login failed");
-      }
+      showErrorToast(error, { context: "login" });
     } finally {
       setLoading(false);
     }
@@ -193,9 +180,7 @@ const Auth = () => {
       if (!session) {
         const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
-          toast.success("Account created", {
-            description: "Check your inbox to verify your email, then sign in.",
-          });
+          showSuccessToast("Account created", "Check your inbox to verify your email, then sign in.");
           return;
         }
         session = signIn.session;
@@ -210,10 +195,10 @@ const Auth = () => {
         { onConflict: "user_id,role" }
       );
 
-      toast.success("Account created — let's set up your profile");
+      showSuccessToast("Account created — let's set up your profile");
       navigate("/onboarding-wizard", { replace: true });
     } catch (error: any) {
-      toast.error(error.message || "Signup failed");
+      showErrorToast(error, { context: "signup" });
     } finally {
       setLoading(false);
     }

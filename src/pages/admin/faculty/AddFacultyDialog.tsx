@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import type { DepartmentOption } from "./types";
 
 interface AddFacultyDialogProps {
@@ -82,7 +82,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`Faculty member "${trimmedName}" created successfully!`);
+      showSuccessToast(`Faculty member "${trimmedName}" added successfully!`);
       setForm({
         name: "",
         email: "",
@@ -94,8 +94,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create faculty account";
-      toast.error(message);
+      showErrorToast(err, { context: "add-faculty" });
     } finally {
       setLoading(false);
     }

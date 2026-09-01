@@ -1,10 +1,11 @@
 /**
- * useGlobalQueryErrors — Shows toast on any React Query error globally.
+ * useGlobalQueryErrors — Shows safe, normalized notification on any React Query error globally.
  * Mount once in AppProviders or App.tsx.
  */
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { normalizeError, logTechnicalError } from "@/lib/error-handling";
 
 export function useGlobalQueryErrors() {
   const queryClient = useQueryClient();
@@ -26,27 +27,37 @@ export function useGlobalQueryErrors() {
         name === "aborterror" ||
         msg.includes("aborted") ||
         msg.includes("signal is aborted")
-      ) return;
-
-      // Suppress auth-related errors (handled by AuthProvider)
-      if (msg.includes("401") || msg.includes("unauthorized") || msg.includes("jwt")) return;
-
-      // Network errors — single toast
-      if (msg.includes("fetch") || msg.includes("network")) {
-        toast.error("Network error — check your connection", { id: "network-error" });
+      ) {
         return;
       }
 
-      // RLS / permission errors
-      if (msg.includes("row-level security") || msg.includes("403") || msg.includes("permission")) {
-        toast.error("Access denied — you may not have permission", { id: "rls-error" });
+      // Normalize error through central classification
+      const appError = normalizeError(error, "global-query");
+      logTechnicalError(appError);
+
+      // Suppress auth-related errors from global toast spam (handled by AuthProvider / SessionGuard)
+      if (appError.category === "authentication") return;
+
+      if (appError.category === "network") {
+        toast.error(appError.userMessage, {
+          id: "network-error-global",
+          description: appError.userDescription,
+        });
         return;
       }
 
-      // Generic fallback (deduplicated per error message)
-      toast.error("Something went wrong loading data", {
-        id: `query-error-${msg.slice(0, 40)}`,
-        description: import.meta.env.DEV ? error.message : undefined,
+      if (appError.category === "authorization") {
+        toast.error(appError.userMessage, {
+          id: "auth-error-global",
+          description: appError.userDescription,
+        });
+        return;
+      }
+
+      // Deduplicated fallback toast for queries that don't render an inline DataErrorState
+      toast.error(appError.userMessage, {
+        id: `query-error-${appError.category}-${appError.userMessage.slice(0, 30)}`,
+        description: appError.userDescription,
       });
     });
 

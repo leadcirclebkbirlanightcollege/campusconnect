@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CheckSquare, Search, User, Loader2, Plus } from "@/components/icons";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { format } from "date-fns";
 
 interface Props {
@@ -77,7 +77,6 @@ export default function ManualAttendanceDialog({
       if (!selectedLectureId) throw new Error("Please select a lecture");
       if (!selectedStudentId) throw new Error("Please select a student");
 
-      const targetLecture = lectures.find((l) => l.id === selectedLectureId);
       const { error } = await supabase.from("attendance").insert({
         lecture_id: selectedLectureId,
         student_user_id: selectedStudentId,
@@ -85,15 +84,10 @@ export default function ManualAttendanceDialog({
         marked_at: new Date().toISOString(),
       } as any);
 
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error("Attendance already recorded for this student in this lecture.");
-        }
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Attendance marked successfully!");
+      showSuccessToast("Attendance marked successfully!");
       onOpenChange(false);
       setSelectedStudentId(null);
       setStudentSearch("");
@@ -101,7 +95,7 @@ export default function ManualAttendanceDialog({
       onSuccess?.();
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to record attendance");
+      showErrorToast(err, { context: "mark-attendance" });
     },
   });
 

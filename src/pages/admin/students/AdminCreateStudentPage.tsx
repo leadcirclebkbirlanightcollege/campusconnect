@@ -5,7 +5,7 @@ import { z } from "zod";
 import { UserPlus, ArrowLeft } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Enter a valid email"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  email: z.string().trim().email("Enter a valid email address"),
   phone: z.string().optional(),
   student_id: z.string().optional(),
   department: z.string().optional(),
@@ -49,7 +49,7 @@ export default function AdminCreateStudentPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const parsed = schema.safeParse(form);
-      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid form");
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid form details");
 
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) throw new Error("Session expired. Please log in again.");
@@ -58,16 +58,16 @@ export default function AdminCreateStudentPage() {
         body: payload,
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data as { email: string; defaultPassword: string };
     },
     onSuccess: async () => {
-      toast.success("Student created", { description: "Default password: student" });
-      toast.message("Ask the student to login and change their password immediately.");
+      showSuccessToast("Student account created successfully!", "Default password: student");
       setForm(EMPTY);
       await qc.invalidateQueries({ queryKey: ["admin", "students"] });
     },
     onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Failed to create student");
+      showErrorToast(e, { context: "create-student" });
     },
   });
 
@@ -102,6 +102,7 @@ export default function AdminCreateStudentPage() {
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="Jane Doe"
+              disabled={createMutation.isPending}
             />
           </div>
 
@@ -113,6 +114,7 @@ export default function AdminCreateStudentPage() {
               value={form.email}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
               placeholder="student@college.edu"
+              disabled={createMutation.isPending}
             />
           </div>
 
@@ -124,6 +126,7 @@ export default function AdminCreateStudentPage() {
                 value={form.student_id}
                 onChange={(e) => setForm((p) => ({ ...p, student_id: e.target.value }))}
                 placeholder="CS-2026-001"
+                disabled={createMutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -133,6 +136,7 @@ export default function AdminCreateStudentPage() {
                 value={form.phone}
                 onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                 placeholder="0801..."
+                disabled={createMutation.isPending}
               />
             </div>
           </div>
@@ -145,6 +149,7 @@ export default function AdminCreateStudentPage() {
                 value={form.department}
                 onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
                 placeholder="Computer Science"
+                disabled={createMutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -154,6 +159,7 @@ export default function AdminCreateStudentPage() {
                 value={form.class_name}
                 onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))}
                 placeholder="2026-A"
+                disabled={createMutation.isPending}
               />
             </div>
           </div>

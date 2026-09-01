@@ -473,6 +473,8 @@ All Edge Functions reside in `supabase/functions/` and execute in the Deno runti
 | **Admin Layout** | [`src/pages/admin/AdminLayout.tsx`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/pages/admin/AdminLayout.tsx) |
 | **Faculty Layout & Pages** | [`src/pages/faculty/`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/pages/faculty) |
 | **Student Hubs & Pages** | [`src/pages/student/`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/pages/student) |
+| **Error Handling Engine** | [`src/lib/error-handling.ts`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/lib/error-handling.ts) |
+| **Query Error State** | [`src/components/ui/DataErrorState.tsx`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/components/ui/DataErrorState.tsx) |
 | **Database Schema Types** | [`src/integrations/supabase/types.ts`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/integrations/supabase/types.ts) |
 | **Supabase Client** | [`src/integrations/supabase/client.ts`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/integrations/supabase/client.ts) |
 | **Edge Functions** | [`supabase/functions/`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/supabase/functions) |
@@ -480,3 +482,22 @@ All Edge Functions reside in `supabase/functions/` and execute in the Deno runti
 | **Design System & CSS** | [`src/index.css`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/index.css) |
 | **Unified Icon System** | [`src/components/icons/index.ts`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/components/icons/index.ts) |
 | **Image Cropping Engine** | [`src/components/image/ImageCropDialog.tsx`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/components/image/ImageCropDialog.tsx) |
+
+---
+
+## 21. Centralized Error Handling & UX Architecture
+
+1. **Golden Rule**: Users must NEVER see raw PostgreSQL error strings, PostgREST codes, SQL column names, table names, RLS policy texts, or stack traces in UI toasts or dialogs.
+2. **Central Normalizer** ([`src/lib/error-handling.ts`](file:///c:/Users/athar/OneDrive/Documents/CAMPUS-X/campusconnect/src/lib/error-handling.ts)):
+   - `normalizeError(err, context, fallbackMessage)` classifies all failures into `ErrorCategory` (`validation`, `authentication`, `authorization`, `conflict`, `not_found`, `network`, `timeout`, `rate_limit`, `server`, `client`, `unknown`).
+   - Maps PostgreSQL codes (`42501` → permission failure, `23505` → duplicate record, `23503` → relational conflict, `23502` → missing required fields, `57014` → timeout).
+   - Generates domain-aware copy for contexts (`schedule-lecture`, `create-student`, `add-faculty`, `save-timetable`, `promote-students`, `login`, `signup`, `mark-attendance`).
+3. **Developer Diagnostics**:
+   - `logTechnicalError(appError)` retains full technical error strings, codes, and stack traces in developer devtools without exposing passwords, tokens, or personal identifiers.
+4. **Standard UI Methods**:
+   - **`showErrorToast(err, { context, fallback, onRetry })`**: Dispatches a sanitized, high-contrast toast with an optional `[Retry]` action for recoverable network/server errors.
+   - **`showSuccessToast(title, description)`**: Emits consistent confirmation toasts.
+   - **`<DataErrorState title="..." onRetry={refetch} />`**: Use inside query loading views when data fails to fetch, preventing blank pages or broken layouts.
+5. **Form & Mutation Standards**:
+   - All forms must validate required fields, time ordering (`end_time > start_time`), and unique values before dispatching mutations.
+   - Action buttons must immediately enter pending state (`isPending`), update label (e.g., "Creating...", "Scheduling..."), and disable double-submission.

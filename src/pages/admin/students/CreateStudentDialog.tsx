@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Enter a valid email"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  email: z.string().trim().email("Enter a valid email address"),
   phone: z.string().optional(),
   student_id: z.string().optional(),
   department: z.string().optional(),
@@ -53,7 +53,7 @@ export default function CreateStudentDialog() {
     mutationFn: async () => {
       const parsed = schema.safeParse(form);
       if (!parsed.success) {
-        throw new Error(parsed.error.issues[0]?.message ?? "Invalid form");
+        throw new Error(parsed.error.issues[0]?.message ?? "Invalid form details");
       }
 
       const { data: sessionData } = await supabase.auth.getSession();
@@ -66,19 +66,17 @@ export default function CreateStudentDialog() {
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data as { email: string; defaultPassword: string };
     },
-    onSuccess: async (data) => {
-      toast.success("Student created. Default password is: student");
-      // Helpful hint without leaking anything beyond what's requested.
-      toast.message("Ask the student to login and change their password immediately.");
+    onSuccess: async () => {
+      showSuccessToast("Student account created successfully!", "Default password: student");
       setOpen(false);
       setForm({ name: "", email: "", phone: "", student_id: "", department: "", class_name: "" });
       await qc.invalidateQueries({ queryKey: ["admin", "students"] });
     },
     onError: (e) => {
-      const msg = e instanceof Error ? e.message : "Failed to create student";
-      toast.error(msg);
+      showErrorToast(e, { context: "create-student" });
     },
   });
 
@@ -98,23 +96,25 @@ export default function CreateStudentDialog() {
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="cs-name">Full name</Label>
+            <Label htmlFor="cs-name">Full name *</Label>
             <Input
               id="cs-name"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="Jane Doe"
+              disabled={createMutation.isPending}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="cs-email">Email</Label>
+            <Label htmlFor="cs-email">Email *</Label>
             <Input
               id="cs-email"
               type="email"
               value={form.email}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
               placeholder="student@college.edu"
+              disabled={createMutation.isPending}
             />
           </div>
 
@@ -126,6 +126,7 @@ export default function CreateStudentDialog() {
                 value={form.student_id}
                 onChange={(e) => setForm((p) => ({ ...p, student_id: e.target.value }))}
                 placeholder="CS-2026-001"
+                disabled={createMutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -135,6 +136,7 @@ export default function CreateStudentDialog() {
                 value={form.phone}
                 onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                 placeholder="0801..."
+                disabled={createMutation.isPending}
               />
             </div>
           </div>
@@ -147,6 +149,7 @@ export default function CreateStudentDialog() {
                 value={form.department}
                 onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
                 placeholder="Computer Science"
+                disabled={createMutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -156,17 +159,18 @@ export default function CreateStudentDialog() {
                 value={form.class_name}
                 onChange={(e) => setForm((p) => ({ ...p, class_name: e.target.value }))}
                 placeholder="2026-A"
+                disabled={createMutation.isPending}
               />
             </div>
           </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={createMutation.isPending}>
             Cancel
           </Button>
           <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
-            {createMutation.isPending ? "Creating…" : "Create"}
+            {createMutation.isPending ? "Creating…" : "Create Student"}
           </Button>
         </DialogFooter>
       </DialogContent>

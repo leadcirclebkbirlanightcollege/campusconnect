@@ -1,13 +1,15 @@
 /**
  * RouteErrorBoundary — Lightweight error boundary for individual routes.
- * Shows a compact error card instead of a full-page crash screen.
+ * Shows a compact, graceful recovery card instead of a raw crash.
  */
 import { Component, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "@/components/icons";
+import { normalizeError, logTechnicalError } from "@/lib/error-handling";
 
 interface Props {
   children: ReactNode;
   fallbackMessage?: string;
+  context?: string;
 }
 
 interface State {
@@ -23,7 +25,8 @@ export default class RouteErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error) {
-    console.error("[RouteError]", error.message);
+    const appError = normalizeError(error, this.props.context || "route-error");
+    logTechnicalError(appError);
   }
 
   handleRetry = () => {
@@ -33,25 +36,30 @@ export default class RouteErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    const appError = this.state.error
+      ? normalizeError(this.state.error, this.props.context, this.props.fallbackMessage)
+      : null;
+
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 px-6 text-center">
-        <div className="h-12 w-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center">
-          <AlertTriangle className="h-6 w-6 text-warning" />
+        <div className="h-12 w-12 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive">
+          <AlertTriangle className="h-6 w-6" />
         </div>
-        <div className="space-y-1 max-w-xs">
-          <p className="text-[15px] font-semibold text-foreground">
-            {this.props.fallbackMessage ?? "Failed to load this page"}
+        <div className="space-y-1 max-w-sm">
+          <p className="text-[15px] font-bold text-foreground tracking-tight">
+            {this.props.fallbackMessage ?? "Failed to load this section"}
           </p>
-          <p className="text-[13px] text-muted-foreground">
-            {this.state.error?.message ?? "An unexpected error occurred"}
+          <p className="text-[12.5px] text-muted-foreground leading-relaxed">
+            {appError?.userMessage ?? "An unexpected error occurred while loading this view."}
           </p>
         </div>
         <button
+          type="button"
           onClick={this.handleRetry}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-semibold shadow-sm hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-semibold shadow-xs hover:opacity-90 transition-opacity cursor-pointer mt-1"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          Retry
+          Try Again
         </button>
       </div>
     );

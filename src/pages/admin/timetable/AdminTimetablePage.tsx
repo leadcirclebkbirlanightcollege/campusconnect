@@ -17,7 +17,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import DataErrorState from "@/components/ui/DataErrorState";
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -108,14 +109,18 @@ export default function AdminTimetablePage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!user || !collegeId) throw new Error("Not authenticated");
-      if (!form.subject.trim()) throw new Error("Subject is required");
+      const subject = form.subject.trim();
+      if (!subject) throw new Error("Subject is required");
+      if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+        throw new Error("End time must be after start time");
+      }
       const { error } = await supabase.from("timetable_slots").insert({
         college_id: collegeId,
         created_by: user.id,
         day_of_week: parseInt(form.day_of_week),
         start_time: form.start_time,
         end_time: form.end_time,
-        subject: form.subject.trim(),
+        subject,
         venue: form.venue.trim() || null,
         faculty_name: form.faculty_name.trim() || null,
         class_id: form.class_id !== "all" ? form.class_id : null,
@@ -123,12 +128,12 @@ export default function AdminTimetablePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Timetable slot added");
+      showSuccessToast("Timetable slot added successfully");
       qc.invalidateQueries({ queryKey: ["admin", "timetable"] });
       setOpen(false);
       setForm(EMPTY_FORM);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => showErrorToast(e, { context: "save-timetable" }),
   });
 
   const deleteMutation = useMutation({
@@ -137,10 +142,10 @@ export default function AdminTimetablePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Slot removed");
+      showSuccessToast("Slot removed successfully");
       qc.invalidateQueries({ queryKey: ["admin", "timetable"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => showErrorToast(e, { context: "save-timetable" }),
   });
 
   // Group slots by day
