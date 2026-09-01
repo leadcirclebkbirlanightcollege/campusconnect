@@ -447,8 +447,9 @@ All Edge Functions reside in `supabase/functions/` and execute in the Deno runti
 
 ---
 
-## 19. Common Bugs & Historical Lessons
-
+- **Issue**: RLS error `new row violates row-level security policy for table 'lectures'`.
+  - **Cause**: The `lectures` table initially only granted INSERT/UPDATE/DELETE permissions to `is_admin(auth.uid())`. Faculty members (`is_faculty(auth.uid())`) were blocked from scheduling, updating ("Go Live"/"End"), and deleting their own lectures.
+  - **Fix**: Updated RLS policies on `public.lectures`, `public.lecture_programme_tags`, and `public.attendance` to allow `is_faculty(auth.uid())` when `created_by = auth.uid()` and scoped to their tenant `college_id = get_my_college_id()`.
 - **Issue**: TypeScript error `SelectQueryError<"column 'subject' does not exist on 'lectures'.">`.
   - **Cause**: Trying to query `subject` on `lectures`.
   - **Fix**: Query `topic` instead.

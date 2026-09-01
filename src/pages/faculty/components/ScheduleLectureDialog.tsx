@@ -28,13 +28,26 @@ import {
 } from "@/components/ui/form";
 import { Plus, BookOpen, Clock, MapPin, Calendar } from "@/components/icons";
 
-const schema = z.object({
-  topic: z.string().trim().min(3, "Subject / topic must be at least 3 characters").max(200),
-  lecture_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-  start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM format"),
-  end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM format"),
-  venue: z.string().trim().min(2, "Venue must be at least 2 characters").max(200),
-});
+const schema = z
+  .object({
+    topic: z.string().trim().min(3, "Subject / topic must be at least 3 characters").max(200),
+    lecture_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+    start_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM format"),
+    end_time: z.string().regex(/^\d{2}:\d{2}/, "Use HH:MM format"),
+    venue: z.string().trim().min(2, "Venue must be at least 2 characters").max(200),
+  })
+  .refine(
+    (data) => {
+      if (data.start_time && data.end_time) {
+        return data.end_time > data.start_time;
+      }
+      return true;
+    },
+    {
+      message: "End time must be after start time",
+      path: ["end_time"],
+    }
+  );
 
 type Values = z.infer<typeof schema>;
 
@@ -64,13 +77,23 @@ export default function ScheduleLectureDialog({ open, onOpenChange, onSuccess }:
     mutationFn: async (values: Values) => {
       if (!user) throw new Error("You must be logged in to schedule a lecture");
 
-      // Resolve college_id if not present in tenant
+      // Resolve college_id from tenant, RPC, or user_roles fallback
       let resolvedCollegeId = collegeId;
+      if (!resolvedCollegeId) {
+        try {
+          const { data: rpcCid } = await supabase.rpc("get_my_college_id");
+          if (rpcCid) resolvedCollegeId = rpcCid;
+        } catch {
+          // fallback to direct table query
+        }
+      }
+
       if (!resolvedCollegeId) {
         const { data: role } = await supabase
           .from("user_roles")
           .select("college_id")
           .eq("user_id", user.id)
+          .not("college_id", "is", null)
           .maybeSingle();
         resolvedCollegeId = role?.college_id ?? null;
       }
@@ -113,7 +136,9 @@ export default function ScheduleLectureDialog({ open, onOpenChange, onSuccess }:
       onSuccess?.();
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to schedule lecture");
+      console.error("Lecture creation error:", err);
+      const msg = err?.message || err?.error_description || (typeof err === "string" ? err : "Failed to schedule lecture");
+      toast.error(msg);
     },
   });
 
