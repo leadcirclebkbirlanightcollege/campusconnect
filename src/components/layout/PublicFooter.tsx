@@ -147,9 +147,8 @@ export default function PublicFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-6 pt-5 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <div className="mt-6 pt-5 border-t border-border/40 text-[11px] text-muted-foreground">
           <p>© {year} {BRANDING.name}. All rights reserved.</p>
-          <p>Designed & developed by the Department of Computer Science</p>
         </div>
       </div>
     </footer>

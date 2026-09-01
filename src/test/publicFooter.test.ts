@@ -42,4 +42,15 @@ describe("PublicFooter Standardization & Integrity", () => {
       expect(route.startsWith("/") || route.startsWith("http")).toBe(true);
     });
   });
+
+  it("verifies copyright format is single notice without developer credit", () => {
+    const year = new Date().getFullYear();
+    const brandName = "Campus Connect";
+    const copyrightText = `© ${year} ${brandName}. All rights reserved.`;
+
+    expect(copyrightText).toBe(`© 2026 Campus Connect. All rights reserved.`);
+    expect(copyrightText).not.toContain("Designed & developed");
+    expect(copyrightText).not.toContain("Department of Computer Science");
+  });
 });
+
