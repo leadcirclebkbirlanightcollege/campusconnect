@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const ALL_FEATURES = [
   "attendance", "lectures", "messages", "analytics", "leaderboard",
@@ -236,6 +237,7 @@ export default function CollegeOnboarding() {
           </motion.div>
         </AnimatePresence>
       </main>
+      <PublicFooter />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { BRANDING } from "@/config/branding";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const DEMO_ROLES = [
   {
@@ -145,6 +146,7 @@ export default function DemoPage() {
           </p>
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

@@ -16,7 +16,6 @@ import TenantBrandingApplicator from "@/components/tenant/TenantBrandingApplicat
 import { useAuth } from "@/providers/AuthProvider";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import NoInternet from "@/components/system/NoInternet";
-import AppFooter from "@/components/layout/AppFooter";
 import PageMeta from "@/components/seo/PageMeta";
 import { AnimatePresence } from "framer-motion";
 
@@ -71,7 +70,6 @@ function AppInner() {
           <div className="flex-1">
             <AppRouter />
           </div>
-          <AppFooter />
         </div>
       </AppGuard>
     </>

@@ -11,6 +11,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { BRANDING } from "@/config/branding";
 import { toast } from "sonner";
 import PageBreadcrumb from "@/components/seo/Breadcrumb";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required").max(100),
@@ -87,7 +88,7 @@ export default function BookDemo() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border-subtle/70 bg-background/90 backdrop-blur-xl safe-area-top">
         <div className="mx-auto flex h-16 w-full max-w-[420px] items-center gap-3 px-4 md:max-w-3xl md:px-6">
           <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -147,6 +148,7 @@ export default function BookDemo() {
           </GlassCard>
         </motion.div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

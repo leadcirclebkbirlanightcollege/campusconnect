@@ -17,6 +17,7 @@ import InstitutionPartnersMarquee from "@/components/landing/InstitutionPartners
 import studentHero from "@/assets/landing-student-hero.jpg";
 import type { LandingIconName } from "@/config/landing-content";
 import { cn } from "@/lib/utils";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const ICON_MAP: Record<LandingIconName, LucideIcon> = {
   CalendarCheck, Trophy, UserRoundCheck, Sparkles, Target, Rocket,
@@ -437,70 +438,7 @@ export default function Index() {
         </section>
       </main>
 
-      {/* ————— FOOTER ————— */}
-      <footer className="border-t border-border-subtle bg-surface-1 safe-area-bottom">
-        <div className="mx-auto w-full max-w-7xl px-4 py-12 md:px-8 md:py-16">
-          <div className="grid gap-10 md:grid-cols-12">
-            <div className="md:col-span-5 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-base font-extrabold tracking-tight text-foreground">
-                  {branding.brand_name}
-                </span>
-              </div>
-              <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">
-                Next-generation unified campus operating system — intelligent attendance, academics, student engagement, and administration.
-              </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
-                  <ShieldCheck className="h-3 w-3 text-primary" /> Enterprise Grade
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
-                  <Sparkles className="h-3 w-3 text-primary" /> Made in India
-                </span>
-              </div>
-            </div>
-
-            <div className="md:col-span-7 grid grid-cols-2 gap-8 sm:grid-cols-3">
-              <div className="space-y-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">Platform</p>
-                <ul className="space-y-2 text-[13px] text-muted-foreground">
-                  <li><Link to="/auth" className="hover:text-foreground transition-colors">Sign In</Link></li>
-                  <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                  <li><a href="#benefits" className="hover:text-foreground transition-colors">Architecture</a></li>
-                </ul>
-              </div>
-              <div className="space-y-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">Institution</p>
-                <ul className="space-y-2 text-[13px] text-muted-foreground">
-                  <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
-                  <li><Link to="/help" className="hover:text-foreground transition-colors">Help & FAQ</Link></li>
-                  <li><a href="#partners" className="hover:text-foreground transition-colors">Partners</a></li>
-                </ul>
-              </div>
-              <div className="col-span-2 space-y-3 sm:col-span-1">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">Legal</p>
-                <ul className="space-y-2 text-[13px] text-muted-foreground">
-                  {content.footerLinks.map((l, i) =>
-                    l.href.startsWith("/") ? (
-                      <li key={i}><Link to={l.href} className="hover:text-foreground transition-colors">{l.label}</Link></li>
-                    ) : (
-                      <li key={i}><a href={l.href} className="hover:text-foreground transition-colors">{l.label}</a></li>
-                    )
-                  )}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border-subtle pt-6 text-[11px] text-muted-foreground">
-            <p>© {year} {branding.brand_name}. All rights reserved.</p>
-            <p>Developed by Atharv Jadhav · Department of Computer Science</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
 
       <WhatsAppButton />
 

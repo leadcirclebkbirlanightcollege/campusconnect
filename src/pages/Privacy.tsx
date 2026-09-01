@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { BRANDING } from "@/config/branding";
 import PageBreadcrumb from "@/components/seo/Breadcrumb";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 export default function Privacy() {
   return (
@@ -150,15 +151,7 @@ export default function Privacy() {
         </GlassCard>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border-subtle/60 py-6 px-4 text-center safe-area-bottom space-y-2">
-        <nav aria-label="Related pages" className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
-          <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
-          <Link to="/help" className="hover:text-foreground transition-colors">Help & Support</Link>
-        </nav>
-        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {BRANDING.name}. All rights reserved.</p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

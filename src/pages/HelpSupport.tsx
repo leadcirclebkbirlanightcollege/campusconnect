@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const FAQ_ITEMS = [
   { q: "How do I mark attendance?", a: "Go to the Attendance section in your dashboard. If a lecture is live, you can scan the QR code or enter the OTP provided by your admin/faculty to mark your presence." },
@@ -72,7 +73,8 @@ export default function HelpSupport() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen flex flex-col bg-background">
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8 flex-1 w-full">
       {/* Breadcrumb */}
       <PageBreadcrumb items={[{ label: "Help & Support" }]} />
 
@@ -177,13 +179,8 @@ export default function HelpSupport() {
         </Card>
       )}
 
-      {/* Internal navigation links */}
-      <nav aria-label="Related pages" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground border-t border-border-subtle/60 pt-4">
-        <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
-        <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-        <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
-        <Link to="/book-demo" className="hover:text-foreground transition-colors">Book a Demo</Link>
-      </nav>
+    </div>
+    <PublicFooter />
     </div>
   );
 }

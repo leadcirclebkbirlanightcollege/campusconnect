@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { BRANDING } from "@/config/branding";
 import { useAuth } from "@/providers/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 export default function NotFound() {
   const location = useLocation();
@@ -303,10 +304,7 @@ export default function NotFound() {
         </motion.div>
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="border-t border-border/40 py-4 px-4 text-center text-xs text-muted-foreground/80 safe-area-bottom">
-        <p>© {new Date().getFullYear()} {BRANDING.name} — Campus Operating System. All rights reserved.</p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

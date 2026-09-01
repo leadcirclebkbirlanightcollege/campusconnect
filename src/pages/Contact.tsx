@@ -31,6 +31,7 @@ import { BRANDING } from "@/config/branding";
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import PageBreadcrumb from "@/components/seo/Breadcrumb";
+import PublicFooter from "@/components/layout/PublicFooter";
 
 const OFFICIAL_EMAIL = "atharv@campusconnect.indevs.in";
 const MAPS_URL = "https://share.google/wxegMHTOp8DoULe0Z";
@@ -517,13 +518,7 @@ export default function Contact() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-5 px-4 text-center text-xs text-muted-foreground safe-area-bottom space-y-1">
-        <p>© {new Date().getFullYear()} {BRANDING.name} — Campus Operating System. All rights reserved.</p>
-        <p className="text-[11px] text-muted-foreground/60">
-          Developed in partnership with Department of Computer Science · Lead Circle
-        </p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
