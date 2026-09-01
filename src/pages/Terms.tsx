@@ -120,11 +120,10 @@ export default function Terms() {
               <p>Department of Computer Science · B.K. Birla College, Kalyan, Maharashtra, India</p>
               <p>
                 Email:{" "}
-                <a href="mailto:atharv@bkbirlanightcollege.qzz.io" className="text-primary font-semibold hover:underline">
-                  atharv@bkbirlanightcollege.qzz.io
+                <a href="mailto:atharv@campusconnect.indevs.in" className="text-primary font-semibold hover:underline">
+                  atharv@campusconnect.indevs.in
                 </a>
               </p>
-              <p>Phone: +91 91727 82265</p>
             </div>
           </section>
         </GlassCard>
