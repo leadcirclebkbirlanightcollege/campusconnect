@@ -42,6 +42,7 @@ import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
 import CreateAssignmentDialog from "./components/CreateAssignmentDialog";
 import CreateAnnouncementDialog from "./components/CreateAnnouncementDialog";
 import FacultyAttendanceModal from "./components/FacultyAttendanceModal";
+import { formatFacultyName } from "@/lib/faculty";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -146,7 +147,7 @@ export default function FacultyDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("name, department")
+        .select("name, title, department")
         .eq("user_id", user!.id)
         .maybeSingle();
       return data;
@@ -505,7 +506,7 @@ export default function FacultyDashboard() {
     ).length;
   }, [liveLecture, attendanceRaw]);
 
-  const firstName = profile?.name ? profile.name.split(" ")[0] : "Faculty";
+  const facultyDisplayName = formatFacultyName(profile?.name, (profile as any)?.title) || "Faculty";
   const todayFormatted = format(new Date(), "EEEE, d MMMM yyyy");
 
   return (
@@ -515,7 +516,7 @@ export default function FacultyDashboard() {
         <div>
           <p className="text-[12px] font-medium text-muted-foreground">{todayFormatted}</p>
           <h1 className="text-[22px] font-bold text-foreground tracking-tight">
-            {getGreeting()}, {firstName}
+            {getGreeting()}, {facultyDisplayName}
           </h1>
           {profile?.department && (
             <p className="text-[12px] text-muted-foreground">{profile.department}</p>

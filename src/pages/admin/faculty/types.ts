@@ -1,6 +1,7 @@
 export interface FacultyMember {
   user_id: string;
   name: string;
+  title?: "Dr." | "Mr." | "Ms." | "Mrs." | null;
   email: string;
   phone: string | null;
   department: string | null;

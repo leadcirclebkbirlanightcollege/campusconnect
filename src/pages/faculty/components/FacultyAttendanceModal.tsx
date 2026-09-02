@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
+import { formatFacultyName } from "@/lib/faculty";
 
 interface FacultyAttendanceModalProps {
   lectureId: string | null;
@@ -81,7 +82,7 @@ export default function FacultyAttendanceModal({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("*")
+        .select("*, profiles:created_by(name, title)")
         .eq("id", lectureId!)
         .single();
       if (error) throw error;
@@ -324,6 +325,7 @@ export default function FacultyAttendanceModal({
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {lecture?.lecture_date} · {lecture?.venue}
+                  {(lecture as any)?.profiles?.name ? ` · ${formatFacultyName((lecture as any).profiles.name, (lecture as any).profiles.title)}` : ""}
                 </span>
               </div>
               <DialogTitle className="text-lg font-bold text-foreground truncate">

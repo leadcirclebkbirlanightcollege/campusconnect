@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon } from "@/components/icons";
+import { ArrowLeft, CalendarDays, Clock, MapPin, ExternalLink, Image as ImageIcon, GraduationCap } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { formatFacultyName } from "@/lib/faculty";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,10 @@ type LectureRow = {
   venue: string;
   flyer_object_path: string | null;
   status?: "scheduled" | "live" | "ended";
+  profiles?: {
+    name: string | null;
+    title: string | null;
+  } | null;
 };
 
 function publicFlyerUrl(path: string) {
@@ -42,7 +47,7 @@ export default function LectureDetail() {
       if (!id) return null;
       const { data, error } = await supabase
         .from("lectures")
-        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status")
+        .select("id,topic,lecture_date,start_time,end_time,venue,flyer_object_path,status,created_by,profiles:created_by(name,title)")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -125,7 +130,7 @@ export default function LectureDetail() {
               </AspectRatio>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               <div className="rounded-lg border border-border/60 p-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" /> Date
@@ -145,6 +150,17 @@ export default function LectureDetail() {
                   <MapPin className="h-4 w-4" /> Venue
                 </div>
                 <div className="font-medium">{lectureQuery.data.venue}</div>
+              </div>
+              <div className="rounded-lg border border-border/60 p-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <GraduationCap className="h-4 w-4" /> Faculty
+                </div>
+                <div className="font-medium truncate">
+                  {formatFacultyName(
+                    lectureQuery.data.profiles?.name,
+                    lectureQuery.data.profiles?.title
+                  ) || "Faculty"}
+                </div>
               </div>
             </div>
 

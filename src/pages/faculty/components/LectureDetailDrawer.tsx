@@ -27,6 +27,7 @@ import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { cn } from "@/lib/utils";
 import DeleteLectureDialog from "./DeleteLectureDialog";
 import FacultyAttendanceModal from "./FacultyAttendanceModal";
+import { formatFacultyName } from "@/lib/faculty";
 
 interface LectureDetailDrawerProps {
   lectureId: string | null;
@@ -58,7 +59,7 @@ export default function LectureDetailDrawer({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lectures")
-        .select("*")
+        .select("*, profiles:created_by(name, title)")
         .eq("id", lectureId!)
         .single();
       if (error) throw error;
@@ -454,6 +455,10 @@ export default function LectureDetailDrawer({
                 end_time: lecture.end_time,
                 venue: lecture.venue,
                 status: lecture.status,
+                faculty_name: formatFacultyName(
+                  (lecture as any)?.profiles?.name,
+                  (lecture as any)?.profiles?.title
+                ),
               }
             : null
         }

@@ -2076,6 +2076,7 @@ export type Database = {
           validity_start: string | null
           verified_at: string | null
           verified_by: string | null
+          title: string | null
         }
         Insert: {
           academic_session?: string | null
@@ -2143,6 +2144,7 @@ export type Database = {
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          title?: string | null
         }
         Update: {
           academic_session?: string | null
@@ -2210,6 +2212,7 @@ export type Database = {
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          title?: string | null
         }
         Relationships: [
           {

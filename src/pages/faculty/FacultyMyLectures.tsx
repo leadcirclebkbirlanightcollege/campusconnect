@@ -18,6 +18,7 @@ import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
 import LectureDetailDrawer from "./components/LectureDetailDrawer";
 import DeleteLectureDialog, { LectureToDelete } from "./components/DeleteLectureDialog";
 import FacultyAttendanceModal from "./components/FacultyAttendanceModal";
+import { formatFacultyName } from "@/lib/faculty";
 
 type StatusTab = "all" | "live" | "scheduled" | "ended";
 
@@ -45,6 +46,21 @@ export default function FacultyMyLectures() {
         .order("start_time", { ascending: false });
       if (error) throw error;
       return data ?? [];
+    },
+  });
+
+  // Fetch faculty profile for title and name
+  const { data: facultyProfile } = useQuery({
+    queryKey: ["faculty", "profile", user?.id],
+    enabled: !!user,
+    staleTime: 120_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("name, title")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
     },
   });
 
@@ -368,7 +384,7 @@ export default function FacultyMyLectures() {
                         end_time: lec.end_time,
                         venue: lec.venue,
                         status: lec.status,
-                        faculty_name: user?.user_metadata?.full_name || user?.email,
+                        faculty_name: formatFacultyName(facultyProfile?.name, (facultyProfile as any)?.title) || user?.user_metadata?.full_name || user?.email,
                       })
                     }
                     className="rounded-xl text-[12px] h-8.5 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors gap-1"

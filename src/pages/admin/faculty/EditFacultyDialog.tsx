@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { FACULTY_TITLES, type FacultyTitle } from "@/lib/faculty";
 import type { FacultyMember, DepartmentOption } from "./types";
 
 interface EditFacultyDialogProps {
@@ -32,7 +33,16 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
   onSuccess,
   departments,
 }: EditFacultyDialogProps) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: FacultyTitle | "";
+    name: string;
+    phone: string;
+    employeeId: string;
+    department: string;
+    isVerified: boolean;
+    isActive: boolean;
+  }>({
+    title: "",
     name: "",
     phone: "",
     employeeId: "",
@@ -45,6 +55,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
   useEffect(() => {
     if (faculty) {
       setForm({
+        title: (faculty.title as FacultyTitle) || "",
         name: faculty.name || "",
         phone: faculty.phone || "",
         employeeId: faculty.student_id || "",
@@ -70,6 +81,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
       const { error } = await supabase
         .from("profiles")
         .update({
+          title: form.title || null,
           name: trimmedName,
           phone: form.phone.trim() || null,
           student_id: form.employeeId.trim() || null,
@@ -111,18 +123,50 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3.5 mt-1">
-          {/* Full Name */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-              Full Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              required
-              disabled={loading}
-              className="h-9"
-            />
+          {/* Title & Full Name */}
+          <div className="grid grid-cols-12 gap-2.5">
+            <div className="col-span-4 space-y-1.5">
+              <Label className="text-xs font-medium text-foreground">
+                Title / Prefix
+              </Label>
+              <Select
+                value={form.title || "none"}
+                onValueChange={(val) =>
+                  setForm((p) => ({
+                    ...p,
+                    title: (val === "none" ? "" : val) as FacultyTitle | "",
+                  }))
+                }
+                disabled={loading}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border shadow-md">
+                  <SelectItem value="none" className="text-xs text-muted-foreground">
+                    (None)
+                  </SelectItem>
+                  {FACULTY_TITLES.map((t) => (
+                    <SelectItem key={t} value={t} className="text-xs">
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-8 space-y-1.5">
+              <Label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                required
+                disabled={loading}
+                placeholder="e.g. Rahul Sharma"
+                className="h-9"
+              />
+            </div>
           </div>
 
           {/* Email (Read Only) */}

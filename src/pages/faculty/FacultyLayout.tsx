@@ -10,9 +10,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { APP_VERSION } from "@/config/version";
+import { formatFacultyName } from "@/lib/faculty";
 
 const NAV = [
   { to: "/faculty/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
@@ -39,7 +39,7 @@ export default function FacultyLayout() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("name,email,phone,department,college_id,avatar_url,colleges(college_name)")
+        .select("name,title,email,phone,department,college_id,avatar_url,colleges(college_name)")
         .eq("user_id", user!.id)
         .maybeSingle();
       return data;
@@ -60,7 +60,7 @@ export default function FacultyLayout() {
     navigate("/auth", { replace: true });
   };
 
-  const displayName = profile?.name || "Faculty Member";
+  const displayName = formatFacultyName(profile?.name, (profile as any)?.title) || "Faculty Member";
   const displayDept = profile?.department ? `${profile.department}` : (profile as any)?.colleges?.college_name || "Academic Workspace";
 
   const SidebarContent = () => (

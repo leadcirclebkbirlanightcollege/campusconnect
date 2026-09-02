@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import { FACULTY_TITLES, type FacultyTitle, formatFacultyName } from "@/lib/faculty";
 import type { DepartmentOption } from "./types";
 
 interface AddFacultyDialogProps {
@@ -31,7 +32,16 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
   departments,
 }: AddFacultyDialogProps) {
   const collegeId = useTenantId();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: FacultyTitle | "";
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    employeeId: string;
+    department: string;
+  }>({
+    title: "",
     name: "",
     email: "",
     password: "faculty123",
@@ -69,6 +79,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
       const { data, error: fnError } = await supabase.functions.invoke("admin-create-student", {
         body: {
           name: trimmedName,
+          title: form.title || null,
           email: trimmedEmail,
           password: trimmedPassword,
           phone: form.phone.trim() || null,
@@ -82,8 +93,20 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
 
-      showSuccessToast(`Faculty member "${trimmedName}" added successfully!`);
+      // Persist title to profiles if specified
+      if (form.title) {
+        const createdUserId = data?.user_id || data?.user?.id;
+        if (createdUserId) {
+          await supabase.from("profiles").update({ title: form.title }).eq("user_id", createdUserId);
+        } else {
+          await supabase.from("profiles").update({ title: form.title }).eq("email", trimmedEmail);
+        }
+      }
+
+      const formattedName = formatFacultyName(trimmedName, form.title);
+      showSuccessToast(`Faculty member "${formattedName}" added successfully!`);
       setForm({
+        title: "",
         name: "",
         email: "",
         password: "faculty123",
@@ -116,19 +139,50 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3.5 mt-1">
-          {/* Full Name */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-              Full Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="e.g. Prof. Rajesh Sharma"
-              value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              required
-              disabled={loading}
-              className="h-9"
-            />
+          {/* Title & Full Name */}
+          <div className="grid grid-cols-12 gap-2.5">
+            <div className="col-span-4 space-y-1.5">
+              <Label className="text-xs font-medium text-foreground">
+                Title / Prefix
+              </Label>
+              <Select
+                value={form.title || "none"}
+                onValueChange={(val) =>
+                  setForm((p) => ({
+                    ...p,
+                    title: (val === "none" ? "" : val) as FacultyTitle | "",
+                  }))
+                }
+                disabled={loading}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border shadow-md">
+                  <SelectItem value="none" className="text-xs text-muted-foreground">
+                    (None)
+                  </SelectItem>
+                  {FACULTY_TITLES.map((t) => (
+                    <SelectItem key={t} value={t} className="text-xs">
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-8 space-y-1.5">
+              <Label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="e.g. Rajesh Sharma"
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                required
+                disabled={loading}
+                className="h-9"
+              />
+            </div>
           </div>
 
           {/* Email */}

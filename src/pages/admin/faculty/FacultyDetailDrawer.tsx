@@ -16,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { formatFacultyName } from "@/lib/faculty";
 import type { FacultyMember, LectureItem, TimetableItem } from "./types";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -98,7 +99,7 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base font-bold text-foreground truncate">
-                    {faculty.name}
+                    {formatFacultyName(faculty.name, faculty.title)}
                   </h2>
                   {faculty.is_verified && (
                     <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[11px] gap-1 py-0 h-5">

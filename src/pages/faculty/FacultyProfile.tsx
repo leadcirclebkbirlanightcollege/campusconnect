@@ -27,9 +27,18 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageCropper } from "@/components/image/ImageCropper";
 import { APP_VERSION, ENVIRONMENT } from "@/config/version";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FACULTY_TITLES, formatFacultyName } from "@/lib/faculty";
 
 // Validation schema for profile details
 const profileSchema = z.object({
+  title: z.enum(FACULTY_TITLES).optional().nullable(),
   name: z.string().trim().min(2, "Full name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
@@ -64,7 +73,7 @@ export default function FacultyProfile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name,email,phone,department,college_id,avatar_url,created_at,colleges(college_name)")
+        .select("name,title,email,phone,department,college_id,avatar_url,created_at,colleges(college_name)")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -75,6 +84,7 @@ export default function FacultyProfile() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      title: null,
       name: "",
       email: "",
       phone: "",
@@ -94,6 +104,7 @@ export default function FacultyProfile() {
   useEffect(() => {
     if (profile) {
       form.reset({
+        title: (profile.title as any) || null,
         name: profile.name || "",
         email: profile.email || user?.email || "",
         phone: profile.phone || "",
@@ -117,6 +128,7 @@ export default function FacultyProfile() {
       const { error } = await supabase
         .from("profiles")
         .update({
+          title: values.title || null,
           name: values.name.trim(),
           email: values.email.trim(),
           phone: values.phone?.trim() || null,
@@ -224,7 +236,7 @@ export default function FacultyProfile() {
     },
   });
 
-  const displayName = profile?.name || "Faculty Member";
+  const displayName = formatFacultyName(profile?.name, profile?.title) || "Faculty Member";
   const collegeName = (profile as any)?.colleges?.college_name || "Campus Connect Institution";
   const departmentName = profile?.department || "Department not specified";
   const designationTitle = "Faculty Member";
@@ -381,19 +393,51 @@ export default function FacultyProfile() {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit((v) => updateProfileMutation.mutate(v))} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                  {/* Title / Prefix */}
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-4">
+                        <FormLabel className="text-[12px] font-medium text-foreground">
+                          Title / Prefix
+                        </FormLabel>
+                        <Select
+                          disabled={!isEditing}
+                          value={field.value ?? ""}
+                          onValueChange={(val) => field.onChange(val || null)}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="rounded-xl text-[13px] bg-background border-border/50 disabled:bg-muted/40 disabled:text-foreground">
+                              <SelectValue placeholder="Select title" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-card border-border shadow-md">
+                            {FACULTY_TITLES.map((t) => (
+                              <SelectItem key={t} value={t} className="text-xs">
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[11px]" />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Full Name */}
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="sm:col-span-8">
                         <FormLabel className="text-[12px] font-medium text-foreground">Full Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={!isEditing}
-                            placeholder="Dr. Full Name"
+                            placeholder="Full Name (e.g. Rahul Sharma)"
                             className="rounded-xl text-[13px] bg-background border-border/50 disabled:bg-muted/40 disabled:text-foreground"
                           />
                         </FormControl>
@@ -407,7 +451,7 @@ export default function FacultyProfile() {
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="sm:col-span-6">
                         <FormLabel className="text-[12px] font-medium text-foreground">Email Address</FormLabel>
                         <FormControl>
                           <Input
@@ -428,7 +472,7 @@ export default function FacultyProfile() {
                     control={form.control}
                     name="phone"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="sm:col-span-6">
                         <FormLabel className="text-[12px] font-medium text-foreground">Phone Number</FormLabel>
                         <FormControl>
                           <Input
@@ -448,7 +492,7 @@ export default function FacultyProfile() {
                     control={form.control}
                     name="department"
                     render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
+                      <FormItem className="sm:col-span-12">
                         <FormLabel className="text-[12px] font-medium text-foreground">Department</FormLabel>
                         <FormControl>
                           <Input

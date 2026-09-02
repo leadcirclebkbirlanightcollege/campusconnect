@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { formatFacultyName } from "@/lib/faculty";
 import { cn } from "@/lib/utils";
 
 import type { FacultyMember, DepartmentOption, FacultyFilters } from "./types";
@@ -96,7 +97,7 @@ export default function AdminFacultyTab() {
       // Fetch profiles
       const { data: profiles, error: profErr } = await supabase
         .from("profiles")
-        .select("user_id, name, email, phone, department, student_id, college_id, avatar_url, is_verified, is_deleted, created_at, updated_at")
+        .select("user_id, name, title, email, phone, department, student_id, college_id, avatar_url, is_verified, is_deleted, created_at, updated_at")
         .in("user_id", userIds);
       if (profErr) throw profErr;
 
@@ -107,6 +108,7 @@ export default function AdminFacultyTab() {
         return {
           user_id: r.user_id,
           name: p?.name || "Unknown Faculty",
+          title: (p as any)?.title || null,
           email: p?.email || "—",
           phone: p?.phone || null,
           department: p?.department || null,
@@ -475,7 +477,7 @@ export default function AdminFacultyTab() {
                                 setViewTab("overview");
                               }}
                             >
-                              {member.name}
+                              {formatFacultyName(member.name, member.title)}
                             </span>
                             {member.is_verified && (
                               <span title="Verified Faculty Member" className="text-emerald-600 dark:text-emerald-400">
@@ -697,8 +699,8 @@ export default function AdminFacultyTab() {
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               {deactivateTarget?.is_deleted
-                ? `Reactivating ${deactivateTarget.name}'s account will restore their access to the faculty workspace.`
-                : `Deactivating ${deactivateTarget?.name}'s account will suspend their faculty portal login. All past lectures, attendance logs, and student records remain preserved.`}
+                ? `Reactivating ${formatFacultyName(deactivateTarget.name, deactivateTarget.title)}'s account will restore their access to the faculty workspace.`
+                : `Deactivating ${formatFacultyName(deactivateTarget?.name, deactivateTarget?.title)}'s account will suspend their faculty portal login. All past lectures, attendance logs, and student records remain preserved.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
@@ -741,7 +743,7 @@ export default function AdminFacultyTab() {
               Revoke Faculty Role
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              This will remove the faculty role assignment from <strong className="text-foreground">{removeTarget?.name}</strong>. Their user profile will remain in the database, but they will no longer be listed as faculty.
+              This will remove the faculty role assignment from <strong className="text-foreground">{formatFacultyName(removeTarget?.name, removeTarget?.title)}</strong>. Their user profile will remain in the database, but they will no longer be listed as faculty.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
