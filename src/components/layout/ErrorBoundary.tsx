@@ -1,16 +1,20 @@
 import { Component, ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home } from "@/components/icons";
+import { AlertTriangle, RefreshCw, Home, RotateCcw } from "@/components/icons";
 import { normalizeError, logTechnicalError } from "@/lib/error-handling";
 
 interface Props {
   children: ReactNode;
   context?: string;
+  onReset?: () => void;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
   errorId: string | null;
+  isRetrying: boolean;
+  retryCount: number;
+  remountKey: number;
 }
 
 function generateErrorId() {
@@ -18,12 +22,20 @@ function generateErrorId() {
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null, errorId: null };
+  state: State = {
+    hasError: false,
+    error: null,
+    errorId: null,
+    isRetrying: false,
+    retryCount: 0,
+    remountKey: 0,
+  };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
       error,
+      // Retain existing errorId during the same error session so it does not cycle unnecessarily
       errorId: generateErrorId(),
     };
   }
@@ -31,15 +43,73 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: unknown) {
     const appError = normalizeError(error, this.props.context || "react-error-boundary");
     logTechnicalError(appError);
-    void info;
+    if (import.meta.env.DEV) {
+      console.error("[ErrorBoundary caught component error]:", error, info);
+    }
   }
 
-  handleRetry = () => {
-    this.setState({ hasError: false, error: null, errorId: null });
+  handleRetry = async () => {
+    this.setState({ isRetrying: true });
+
+    try {
+      // 1. Revalidate active Supabase auth session
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.auth.getSession();
+      } catch (authErr) {
+        console.warn("[ErrorBoundary] Auth session revalidation notice:", authErr);
+      }
+
+      // 2. Reset and refetch React Query cache
+      try {
+        const { queryClient } = await import("@/providers/QueryProvider");
+        queryClient.invalidateQueries();
+        await queryClient.refetchQueries({ type: "active" });
+      } catch (queryErr) {
+        console.warn("[ErrorBoundary] Query cache invalidation notice:", queryErr);
+      }
+
+      // 3. Trigger custom onReset callback if provided
+      if (this.props.onReset) {
+        this.props.onReset();
+      }
+    } finally {
+      // 4. Increment remountKey to force React to mount fresh component tree
+      this.setState((prev) => ({
+        hasError: false,
+        error: null,
+        isRetrying: false,
+        retryCount: prev.retryCount + 1,
+        remountKey: prev.remountKey + 1,
+      }));
+    }
+  };
+
+  handleNavigateDashboard = () => {
+    const path = window.location.pathname;
+    let target = "/";
+    if (path.startsWith("/faculty")) {
+      target = "/faculty/dashboard";
+    } else if (path.startsWith("/platform/admin-control")) {
+      target = "/platform/admin-control/dashboard";
+    } else if (path.startsWith("/platform/admin")) {
+      target = "/platform/admin/dashboard";
+    } else if (path.startsWith("/app")) {
+      target = "/app/dashboard";
+    }
+    window.location.href = target;
   };
 
   render() {
-    if (!this.state.hasError) return this.props.children;
+    if (!this.state.hasError) {
+      return (
+        <div key={this.state.remountKey} className="contents">
+          {this.props.children}
+        </div>
+      );
+    }
+
+    const isFrequentRetry = this.state.retryCount >= 2;
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 bg-background text-center">
@@ -66,21 +136,32 @@ export default class ErrorBoundary extends Component<Props, State> {
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <button
             type="button"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-semibold shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+            disabled={this.state.isRetrying}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-semibold shadow-xs hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
             onClick={this.handleRetry}
           >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
+            <RefreshCw className={`h-4 w-4 ${this.state.isRetrying ? "animate-spin" : ""}`} />
+            {this.state.isRetrying ? "Retrying..." : "Try Again"}
           </button>
+
+          {isFrequentRetry && (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-[13px] font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
+              onClick={() => window.location.reload()}
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reload Page
+            </button>
+          )}
+
           <button
             type="button"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-foreground text-[13px] font-medium hover:bg-muted transition-colors cursor-pointer"
-            onClick={() => {
-              window.location.href = "/";
-            }}
+            onClick={this.handleNavigateDashboard}
           >
             <Home className="h-4 w-4" />
             Go to Dashboard

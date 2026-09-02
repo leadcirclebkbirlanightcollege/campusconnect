@@ -9,10 +9,12 @@ import {
 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { APP_VERSION } from "@/config/version";
 import { formatFacultyName } from "@/lib/faculty";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
 
 const NAV = [
   { to: "/faculty/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
@@ -219,7 +221,9 @@ export default function FacultyLayout() {
 
         <main id="faculty-main" className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 bg-background">
           <div className="max-w-7xl mx-auto w-full">
-            <Outlet />
+            <ErrorBoundary context="faculty-workspace">
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

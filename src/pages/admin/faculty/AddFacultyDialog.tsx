@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import { toast } from "sonner";
 import { FACULTY_TITLES, type FacultyTitle, formatFacultyName } from "@/lib/faculty";
 import type { DepartmentOption } from "./types";
 

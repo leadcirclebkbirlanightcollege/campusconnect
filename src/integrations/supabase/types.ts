@@ -2219,6 +2219,7 @@ export type Database = {
             foreignKeyName: "profiles_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
+            
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },

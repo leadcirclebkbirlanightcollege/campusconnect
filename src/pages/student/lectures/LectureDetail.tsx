@@ -51,7 +51,7 @@ export default function LectureDetail() {
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? null) as LectureRow | null;
+      return (data ?? null) as unknown as LectureRow | null;
     },
   });
 

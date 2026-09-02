@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +15,12 @@ import {
   Megaphone,
   Users,
   AlertCircle,
+  AlertTriangle,
   QrCode,
   Calendar,
   Radio,
+  RefreshCw,
+  RotateCcw,
   Play,
   StopCircle,
   Sparkles,
@@ -52,6 +55,32 @@ function getGreeting() {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function safeParseDate(dateStr?: string | null): Date | null {
+  if (!dateStr) return null;
+  try {
+    const d = parseISO(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
+}
+
+function safeIsToday(dateStr?: string | null): boolean {
+  const d = safeParseDate(dateStr);
+  return d ? isToday(d) : false;
+}
+
+function safeFormatDate(dateStr?: string | null | Date, fmt = "MMM d"): string {
+  if (!dateStr) return "—";
+  try {
+    const d = typeof dateStr === "string" ? safeParseDate(dateStr) : dateStr;
+    if (!d || isNaN(d.getTime())) return "—";
+    return format(d, fmt);
+  } catch {
+    return "—";
+  }
 }
 
 function SectionHeader({
@@ -140,22 +169,33 @@ export default function FacultyDashboard() {
   const [attendanceModalLectureId, setAttendanceModalLectureId] = useState<string | null>(null);
 
   // ── Profile ──────────────────────────────────────────────────────────────
-  const { data: profile } = useQuery({
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError: profileError,
+    refetch: refetchProfile,
+  } = useQuery({
     queryKey: ["faculty", "profile", user?.id],
     enabled: !!user,
     staleTime: 120_000,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("name, title, department")
         .eq("user_id", user!.id)
         .maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
 
   // ── Lectures ─────────────────────────────────────────────────────────────
-  const { data: lectures = [], isLoading: lecturesLoading } = useQuery({
+  const {
+    data: lectures = [],
+    isLoading: lecturesLoading,
+    isError: lecturesError,
+    refetch: refetchLectures,
+  } = useQuery({
     queryKey: ["faculty", "lectures", user?.id],
     enabled: !!user,
     staleTime: 30_000,
@@ -172,7 +212,12 @@ export default function FacultyDashboard() {
 
   // ── Attendance Records ───────────────────────────────────────────────────
   const lectureIds = useMemo(() => lectures.map((l) => l.id), [lectures]);
-  const { data: attendanceRaw = [], isLoading: attendanceLoading } = useQuery({
+  const {
+    data: attendanceRaw = [],
+    isLoading: attendanceLoading,
+    isError: attendanceError,
+    refetch: refetchAttendance,
+  } = useQuery({
     queryKey: ["faculty", "attendance-snapshot", lectureIds],
     enabled: lectureIds.length > 0,
     staleTime: 30_000,
@@ -189,7 +234,12 @@ export default function FacultyDashboard() {
   });
 
   // ── Assignments ──────────────────────────────────────────────────────────
-  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
+  const {
+    data: assignments = [],
+    isLoading: assignmentsLoading,
+    isError: assignmentsError,
+    refetch: refetchAssignments,
+  } = useQuery({
     queryKey: ["faculty", "assignments", user?.id],
     enabled: !!user,
     staleTime: 30_000,
@@ -221,7 +271,12 @@ export default function FacultyDashboard() {
   });
 
   // ── Announcements ────────────────────────────────────────────────────────
-  const { data: announcements = [], isLoading: announcementsLoading } = useQuery({
+  const {
+    data: announcements = [],
+    isLoading: announcementsLoading,
+    isError: announcementsError,
+    refetch: refetchAnnouncements,
+  } = useQuery({
     queryKey: ["faculty", "announcements", user?.id],
     enabled: !!user,
     staleTime: 60_000,
@@ -236,6 +291,27 @@ export default function FacultyDashboard() {
       return data ?? [];
     },
   });
+
+  const [isRetryingDashboard, setIsRetryingDashboard] = useState(false);
+
+  const handleDashboardRetry = useCallback(async () => {
+    setIsRetryingDashboard(true);
+    try {
+      await qc.invalidateQueries({ queryKey: ["faculty"] });
+      await Promise.allSettled([
+        refetchProfile(),
+        refetchLectures(),
+        refetchAttendance(),
+        refetchAssignments(),
+        refetchAnnouncements(),
+      ]);
+      toast.success("Dashboard data refreshed");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to refresh dashboard");
+    } finally {
+      setIsRetryingDashboard(false);
+    }
+  }, [qc, refetchProfile, refetchLectures, refetchAttendance, refetchAssignments, refetchAnnouncements]);
 
   // ── Mutations for Lecture Status Control ──────────────────────────────────
   const startLectureMutation = useMutation({
@@ -283,7 +359,7 @@ export default function FacultyDashboard() {
   const todayLectures = useMemo(
     () =>
       lectures
-        .filter((l) => isToday(parseISO(l.lecture_date)))
+        .filter((l) => safeIsToday(l.lecture_date))
         .sort((a, b) => (a.start_time || "").localeCompare(b.start_time || "")),
     [lectures]
   );
@@ -291,8 +367,8 @@ export default function FacultyDashboard() {
   const upcomingLectures = useMemo(
     () =>
       lectures
-        .filter((l) => l.status === "scheduled" && !isToday(parseISO(l.lecture_date)))
-        .sort((a, b) => a.lecture_date.localeCompare(b.lecture_date))
+        .filter((l) => l.status === "scheduled" && !safeIsToday(l.lecture_date))
+        .sort((a, b) => (a.lecture_date || "").localeCompare(b.lecture_date || ""))
         .slice(0, 5),
     [lectures]
   );
@@ -311,8 +387,8 @@ export default function FacultyDashboard() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const pastWeekLectures = lectures.filter((l) => {
-      const d = parseISO(l.lecture_date);
-      return isPast(d) && isAfter(d, sevenDaysAgo);
+      const d = safeParseDate(l.lecture_date);
+      return d ? isPast(d) && isAfter(d, sevenDaysAgo) : false;
     });
 
     if (pastWeekLectures.length === 0) return { pct: null, total: 0, present: 0 };
@@ -382,8 +458,8 @@ export default function FacultyDashboard() {
     sevenDaysAhead.setDate(sevenDaysAhead.getDate() + 7);
 
     return assignments.filter((a: any) => {
-      const d = parseISO(a.due_date);
-      return isFuture(d) && d <= sevenDaysAhead;
+      const d = safeParseDate(a.due_date);
+      return d ? isFuture(d) && d <= sevenDaysAhead : false;
     });
   }, [assignments]);
 
@@ -423,7 +499,7 @@ export default function FacultyDashboard() {
     });
 
     return items
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
       .slice(0, 6);
   }, [upcomingLectures, upcomingAssignmentDeadlines]);
 
@@ -449,8 +525,8 @@ export default function FacultyDashboard() {
             : l.status === "ended"
             ? `Completed lecture "${l.topic}"`
             : `Scheduled lecture "${l.topic}"`,
-        subtitle: `${format(parseISO(l.lecture_date), "MMM d")} · ${l.venue || "Venue TBD"}`,
-        timestamp: new Date(l.created_at || `${l.lecture_date}T${l.start_time || "10:00"}`),
+        subtitle: `${safeFormatDate(l.lecture_date, "MMM d")} · ${l.venue || "Venue TBD"}`,
+        timestamp: safeParseDate(l.created_at) || safeParseDate(l.lecture_date) || new Date(),
         tone: l.status === "live" ? "text-red-500" : "text-primary",
       });
     });
@@ -464,7 +540,7 @@ export default function FacultyDashboard() {
         icon: CheckSquare,
         title: `Attendance marked for "${matchLec?.topic || "lecture"}"`,
         subtitle: `Latest verified check-in recorded`,
-        timestamp: new Date(recentAtt.marked_at),
+        timestamp: safeParseDate(recentAtt.marked_at) || new Date(),
         tone: "text-green-600",
       });
     }
@@ -475,8 +551,8 @@ export default function FacultyDashboard() {
         id: `act-ass-${a.id}`,
         icon: FileText,
         title: `Created assignment "${a.title}"`,
-        subtitle: `Due ${format(parseISO(a.due_date), "MMM d, yyyy")}`,
-        timestamp: new Date(a.created_at || a.due_date),
+        subtitle: `Due ${safeFormatDate(a.due_date, "MMM d, yyyy")}`,
+        timestamp: safeParseDate(a.created_at) || safeParseDate(a.due_date) || new Date(),
         tone: "text-amber-600",
       });
     });
@@ -488,13 +564,13 @@ export default function FacultyDashboard() {
         icon: Megaphone,
         title: `Published announcement "${ann.title}"`,
         subtitle: `Broadcast to students`,
-        timestamp: new Date(ann.created_at),
+        timestamp: safeParseDate(ann.created_at) || new Date(),
         tone: "text-blue-600",
       });
     });
 
     return act
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0))
       .slice(0, 6);
   }, [lectures, attendanceRaw, assignments, announcements]);
 
@@ -572,6 +648,30 @@ export default function FacultyDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* ── Recovery Alert if primary dashboard data fails to load ────── */}
+      {(profileError || lecturesError || attendanceError) && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-foreground">Couldn't load complete dashboard data</p>
+              <p className="text-[11.5px] text-muted-foreground">Some faculty data requests failed to respond. Click Try Again to refetch.</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleDashboardRetry}
+            disabled={isRetryingDashboard}
+            className="gap-1.5 shrink-0"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isRetryingDashboard && "animate-spin")} />
+            {isRetryingDashboard ? "Retrying..." : "Try Again"}
+          </Button>
+        </div>
+      )}
 
       {/* ── 2. LIVE NOW Control Banner (When active lecture exists) ───────── */}
       {liveLecture && (
@@ -713,7 +813,7 @@ export default function FacultyDashboard() {
                 {todayLectures.map((l) => {
                   const isLive = l.status === "live";
                   const isScheduled = l.status === "scheduled";
-                  const isCompleted = l.status === "ended" || l.status === "completed";
+                  const isCompleted = l.status === "ended" || (l.status as string) === "completed";
 
                   return (
                     <div
