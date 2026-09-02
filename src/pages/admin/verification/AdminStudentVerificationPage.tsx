@@ -134,7 +134,7 @@ export default function AdminStudentVerificationPage() {
     staleTime: 15_000,
     queryFn: async () => {
       // Opportunistic data minimization: purge expired rejected accounts
-      supabase.rpc("cleanup_expired_rejected_students").catch(() => {});
+      void (supabase.rpc as any)("cleanup_expired_rejected_students");
 
       let q = supabase
         .from("profiles")

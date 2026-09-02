@@ -108,7 +108,7 @@ export default function PendingApproval() {
   async function handlePurgedAccount() {
     setIsPurging(true);
     try {
-      await supabase.rpc("cleanup_expired_rejected_students");
+      await (supabase.rpc as any)("cleanup_expired_rejected_students");
     } catch {
       // Safe to ignore if already cleaned up
     } finally {
@@ -132,7 +132,7 @@ export default function PendingApproval() {
             // Ignored
           }
         }
-        await supabase.rpc("delete_student_account_permanently", { p_user_id: user.id });
+        await (supabase.rpc as any)("delete_student_account_permanently", { p_user_id: user.id });
       }
     } catch {
       // Ignored

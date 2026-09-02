@@ -3044,6 +3044,26 @@ export type Database = {
         Args: { p_reason?: string; p_user_id: string }
         Returns: undefined
       }
+      cleanup_expired_rejected_students: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      delete_student_account_permanently: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      faculty_delete_lecture: {
+        Args: { p_lecture_id: string }
+        Returns: Json
+      }
+      faculty_generate_attendance: {
+        Args: { p_lecture_id: string }
+        Returns: Json
+      }
+      faculty_end_attendance: {
+        Args: { p_lecture_id: string }
+        Returns: Json
+      }
       award_points: {
         Args: {
           p_note?: string
