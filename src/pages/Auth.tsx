@@ -13,6 +13,7 @@ import {
 import { User } from "@supabase/supabase-js";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
+import { APP_VERSION } from "@/config/version";
 import { motion } from "framer-motion";
 
 /* ── Feature chips for left hero panel ── */
@@ -274,7 +275,7 @@ const Auth = () => {
         {/* Bottom Credits */}
         <div className="relative z-10 flex items-center justify-between text-[11px] text-muted-foreground/60 border-t border-border-subtle/60 pt-4">
           <span>Enterprise Campus Security</span>
-          <span>© {new Date().getFullYear()} Campus Connect</span>
+          <span>© {new Date().getFullYear()} Campus Connect · Version {APP_VERSION}</span>
         </div>
       </div>
 
@@ -415,6 +416,9 @@ const Auth = () => {
 
           <p className="text-center text-[12px] text-muted-foreground pt-2">
             By signing in you agree to institutional academic guidelines.
+          </p>
+          <p className="text-center text-[10.5px] text-muted-foreground/50 font-mono pt-1">
+            Version {APP_VERSION}
           </p>
         </motion.div>
       </div>

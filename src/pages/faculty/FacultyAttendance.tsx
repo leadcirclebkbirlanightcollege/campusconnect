@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import {
   CheckSquare, Search, Filter, Download, Plus,
   BookOpen, Users, Calendar, Clock, AlertTriangle,
-  CheckCircle2, XCircle, Eye, RefreshCw
+  CheckCircle2, XCircle, Eye, RefreshCw, QrCode
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import ManualAttendanceDialog from "./components/ManualAttendanceDialog";
 import LectureDetailDrawer from "./components/LectureDetailDrawer";
+import FacultyAttendanceModal from "./components/FacultyAttendanceModal";
 
 export default function FacultyAttendance() {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ export default function FacultyAttendance() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [drawerLectureId, setDrawerLectureId] = useState<string | null>(null);
+  const [liveAttendanceModalLectureId, setLiveAttendanceModalLectureId] = useState<string | null>(null);
 
   // Fetch all lectures by this faculty
   const { data: lectures = [], isLoading: isLoadingLectures } = useQuery({
@@ -168,7 +170,15 @@ export default function FacultyAttendance() {
             Track student attendance logs, monitor at-risk attendance, and export reports.
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          {selectedLecture !== "all" && (
+            <Button
+              onClick={() => setLiveAttendanceModalLectureId(selectedLecture)}
+              className="rounded-xl text-[12.5px] h-9 gap-1.5 bg-success text-success-foreground hover:bg-success/90 font-semibold shadow-xs"
+            >
+              <QrCode className="h-4 w-4" /> Live QR & OTP
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={handleExportCsv}
@@ -401,6 +411,17 @@ export default function FacultyAttendance() {
         lectureId={drawerLectureId}
         open={!!drawerLectureId}
         onOpenChange={(op) => !op && setDrawerLectureId(null)}
+      />
+
+      {/* Live Attendance Session & QR Modal */}
+      <FacultyAttendanceModal
+        lectureId={liveAttendanceModalLectureId}
+        open={!!liveAttendanceModalLectureId}
+        onOpenChange={(op) => !op && setLiveAttendanceModalLectureId(null)}
+        onSessionEnded={() => {
+          refetch();
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+        }}
       />
     </div>
   );

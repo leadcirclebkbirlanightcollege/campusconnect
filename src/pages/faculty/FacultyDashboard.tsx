@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
 import CreateAssignmentDialog from "./components/CreateAssignmentDialog";
 import CreateAnnouncementDialog from "./components/CreateAnnouncementDialog";
+import FacultyAttendanceModal from "./components/FacultyAttendanceModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -135,6 +136,7 @@ export default function FacultyDashboard() {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [showAssignmentDialog, setShowAssignmentDialog] = useState(false);
   const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
+  const [attendanceModalLectureId, setAttendanceModalLectureId] = useState<string | null>(null);
 
   // ── Profile ──────────────────────────────────────────────────────────────
   const { data: profile } = useQuery({
@@ -537,7 +539,7 @@ export default function FacultyDashboard() {
             onClick={() => {
               const firstScheduled = todayLectures.find((l) => l.status === "scheduled");
               if (firstScheduled) {
-                startLectureMutation.mutate(firstScheduled.id);
+                setAttendanceModalLectureId(firstScheduled.id);
               } else {
                 setShowScheduleDialog(true);
               }
@@ -604,11 +606,11 @@ export default function FacultyDashboard() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => navigate("/faculty/attendance")}
+                onClick={() => setAttendanceModalLectureId(liveLecture.id)}
                 className="h-8 rounded-lg text-xs font-semibold border-border/60 gap-1.5"
               >
                 <QrCode className="h-3.5 w-3.5 text-primary" aria-hidden />
-                Live Attendance Monitor
+                Live Attendance QR & OTP
               </Button>
               <Button
                 size="sm"
@@ -1174,6 +1176,14 @@ export default function FacultyDashboard() {
       <CreateAnnouncementDialog
         open={showAnnouncementDialog}
         onOpenChange={setShowAnnouncementDialog}
+      />
+      <FacultyAttendanceModal
+        lectureId={attendanceModalLectureId}
+        open={!!attendanceModalLectureId}
+        onOpenChange={(op) => !op && setAttendanceModalLectureId(null)}
+        onSessionEnded={() => {
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+        }}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import {
   BookOpen, Plus, Search, Filter, Calendar, Clock,
   MapPin, Play, StopCircle, CheckCircle2, ChevronRight,
-  Eye, Radio, Sparkles, Loader2, AlertCircle
+  Eye, Radio, Sparkles, Loader2, AlertCircle, Trash2, QrCode
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import ScheduleLectureDialog from "./components/ScheduleLectureDialog";
 import LectureDetailDrawer from "./components/LectureDetailDrawer";
+import DeleteLectureDialog, { LectureToDelete } from "./components/DeleteLectureDialog";
+import FacultyAttendanceModal from "./components/FacultyAttendanceModal";
 
 type StatusTab = "all" | "live" | "scheduled" | "ended";
 
@@ -26,6 +28,8 @@ export default function FacultyMyLectures() {
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
+  const [deleteLectureTarget, setDeleteLectureTarget] = useState<LectureToDelete | null>(null);
+  const [attendanceModalLectureId, setAttendanceModalLectureId] = useState<string | null>(null);
 
   // Fetch all lectures for this faculty
   const { data: lectures = [], isLoading, isError, refetch } = useQuery({
@@ -314,24 +318,32 @@ export default function FacultyMyLectures() {
                   {isLecScheduled && (
                     <Button
                       size="sm"
-                      onClick={() => startClassMutation.mutate(lec.id)}
-                      disabled={startClassMutation.isPending}
-                      className="rounded-xl text-[12px] h-8.5 gap-1 bg-primary text-primary-foreground font-medium"
+                      onClick={() => setAttendanceModalLectureId(lec.id)}
+                      className="rounded-xl text-[12px] h-8.5 gap-1.5 bg-primary text-primary-foreground font-medium shadow-xs"
                     >
-                      <Play className="h-3.5 w-3.5" /> Start
+                      <QrCode className="h-3.5 w-3.5" /> Start Attendance
                     </Button>
                   )}
 
                   {isLecLive && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => endClassMutation.mutate(lec.id)}
-                      disabled={endClassMutation.isPending}
-                      className="rounded-xl text-[12px] h-8.5 gap-1 font-medium"
-                    >
-                      <StopCircle className="h-3.5 w-3.5" /> End Class
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => setAttendanceModalLectureId(lec.id)}
+                        className="rounded-xl text-[12px] h-8.5 gap-1.5 bg-success text-success-foreground font-medium shadow-xs"
+                      >
+                        <QrCode className="h-3.5 w-3.5" /> Live QR & OTP
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => endClassMutation.mutate(lec.id)}
+                        disabled={endClassMutation.isPending}
+                        className="rounded-xl text-[12px] h-8.5 gap-1 font-medium"
+                      >
+                        <StopCircle className="h-3.5 w-3.5" /> End Class
+                      </Button>
+                    </>
                   )}
 
                   <Button
@@ -341,6 +353,29 @@ export default function FacultyMyLectures() {
                     className="rounded-xl text-[12px] h-8.5 gap-1"
                   >
                     <Eye className="h-3.5 w-3.5" /> Details
+                  </Button>
+
+                  {/* Clearly visible Delete Lecture Action */}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      setDeleteLectureTarget({
+                        id: lec.id,
+                        topic: lec.topic,
+                        lecture_date: lec.lecture_date,
+                        start_time: lec.start_time,
+                        end_time: lec.end_time,
+                        venue: lec.venue,
+                        status: lec.status,
+                        faculty_name: user?.user_metadata?.full_name || user?.email,
+                      })
+                    }
+                    className="rounded-xl text-[12px] h-8.5 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors gap-1"
+                    title="Delete Lecture"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline text-[11.5px]">Delete</span>
                   </Button>
                 </div>
               </div>
@@ -360,6 +395,28 @@ export default function FacultyMyLectures() {
         lectureId={selectedLectureId}
         open={!!selectedLectureId}
         onOpenChange={(op) => !op && setSelectedLectureId(null)}
+      />
+
+      {/* Delete Lecture Confirmation Dialog */}
+      <DeleteLectureDialog
+        lecture={deleteLectureTarget}
+        open={!!deleteLectureTarget}
+        onOpenChange={(op) => !op && setDeleteLectureTarget(null)}
+        onSuccess={() => {
+          refetch();
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+        }}
+      />
+
+      {/* Live Attendance Session & QR Modal */}
+      <FacultyAttendanceModal
+        lectureId={attendanceModalLectureId}
+        open={!!attendanceModalLectureId}
+        onOpenChange={(op) => !op && setAttendanceModalLectureId(null)}
+        onSessionEnded={() => {
+          refetch();
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+        }}
       />
     </div>
   );

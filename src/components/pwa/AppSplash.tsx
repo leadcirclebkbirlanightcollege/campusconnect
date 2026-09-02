@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
+import { APP_VERSION } from "@/config/version";
 
 /**
  * Branded PWA splash screen.
@@ -110,6 +111,10 @@ export default function AppSplash() {
               transition={{ ease: "easeOut", duration: 0.18 }}
             />
           </motion.div>
+
+          <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[10.5px] text-muted-foreground/60 font-mono tracking-wider">
+            Version {APP_VERSION}
+          </p>
         </motion.div>
       )}
     </AnimatePresence>

@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageCropper } from "@/components/image/ImageCropper";
+import { APP_VERSION, ENVIRONMENT } from "@/config/version";
 
 // Validation schema for profile details
 const profileSchema = z.object({
@@ -606,6 +607,21 @@ export default function FacultyProfile() {
                 <p className="text-[11px] text-muted-foreground font-medium">Account ID</p>
                 <p className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate">{user?.id}</p>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-2xs space-y-3">
+            <h3 className="text-[13px] font-bold text-foreground flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              System Information
+            </h3>
+            <div className="flex items-center justify-between text-[12px] p-2.5 rounded-xl bg-muted/20 border border-border/30">
+              <span className="text-muted-foreground">Version</span>
+              <span className="font-mono font-medium text-foreground">Version {APP_VERSION}</span>
+            </div>
+            <div className="flex items-center justify-between text-[12px] p-2.5 rounded-xl bg-muted/20 border border-border/30">
+              <span className="text-muted-foreground">Environment</span>
+              <span className="font-medium text-foreground">{ENVIRONMENT}</span>
             </div>
           </div>
         </div>

@@ -33,6 +33,7 @@ import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
+import { APP_VERSION } from "@/config/version";
 import { cn } from "@/lib/utils";
 
 import {
@@ -323,6 +324,9 @@ export default function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="px-2.5 pt-2 pb-0.5 text-[10.5px] text-muted-foreground/60 font-mono tracking-wider text-center">
+          Version {APP_VERSION}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

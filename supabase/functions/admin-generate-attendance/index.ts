@@ -32,10 +32,12 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const supabase = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    const serviceSupabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -43,15 +45,16 @@ Deno.serve(async (req) => {
       return json(401, { success: false, code: "UNAUTHORIZED", message: "Invalid session" });
     }
 
-    // Verify admin role
-    const { data: roleData, error: roleError } = await supabase
+    // Verify role (admin, super_admin, or faculty)
+    const { data: roleData, error: roleError } = await serviceSupabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .single();
 
-    if (roleError || !roleData || roleData.role !== "admin") {
-      return json(403, { success: false, code: "NOT_ADMIN", message: "Admin access required" });
+    const isAuthorized = roleData?.role === "admin" || roleData?.role === "super_admin" || roleData?.role === "faculty";
+    if (roleError || !roleData || !isAuthorized) {
+      return json(403, { success: false, code: "FORBIDDEN", message: "Admin or Faculty access required" });
     }
 
     const body = await req.json().catch(() => null);
@@ -59,6 +62,19 @@ Deno.serve(async (req) => {
 
     if (!lectureId) {
       return json(400, { success: false, code: "MISSING_LECTURE", message: "lectureId is required" });
+    }
+
+    // If faculty, enforce that they created or manage this lecture
+    if (roleData.role === "faculty") {
+      const { data: lec, error: lecErr } = await serviceSupabase
+        .from("lectures")
+        .select("created_by")
+        .eq("id", lectureId)
+        .single();
+
+      if (lecErr || !lec || lec.created_by !== user.id) {
+        return json(403, { success: false, code: "UNAUTHORIZED_LECTURE", message: "Faculty can only generate attendance for their own lectures" });
+      }
     }
 
     // Generate 6-digit OTP
@@ -77,8 +93,8 @@ Deno.serve(async (req) => {
     // Set expiry to 10 minutes
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    // Upsert token for this lecture
-    const { data: upsertData, error: upsertError } = await supabase
+    // Upsert token for this lecture using service client
+    const { error: upsertError } = await serviceSupabase
       .from("attendance_tokens")
       .upsert(
         {
@@ -92,16 +108,20 @@ Deno.serve(async (req) => {
           created_at: new Date().toISOString(),
         },
         { onConflict: "lecture_id" },
-      )
-      .select("id, lecture_id")
-      .maybeSingle();
+      );
 
     if (upsertError) {
       console.error("admin-generate-attendance: upsert error", upsertError);
       return json(500, { success: false, code: "UPSERT_FAILED", message: "Failed to generate attendance token" });
     }
 
-    console.log("admin-generate-attendance: token generated for lecture", lectureId);
+    // Set lecture status to live
+    await serviceSupabase
+      .from("lectures")
+      .update({ status: "live", updated_at: new Date().toISOString() })
+      .eq("id", lectureId);
+
+    console.log("attendance token generated for lecture", lectureId, "by user", user.id);
 
     return json(200, {
       success: true,

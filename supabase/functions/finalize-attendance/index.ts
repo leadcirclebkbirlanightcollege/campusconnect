@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verify admin role (use service client to avoid RLS on user_roles)
+    // Verify role (admin, super_admin, or faculty)
     const { data: roleData, error: roleError } = await serviceSupabase
       .from('user_roles')
       .select('role')
@@ -49,12 +49,13 @@ Deno.serve(async (req) => {
       .single()
 
     if (roleError) {
-      console.error('Error checking admin role:', roleError)
+      console.error('Error checking role:', roleError)
     }
 
-    if (!roleData || roleData.role !== 'admin') {
+    const isStaff = roleData?.role === 'admin' || roleData?.role === 'super_admin' || roleData?.role === 'faculty';
+    if (!roleData || !isStaff) {
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Admin or Faculty access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -62,121 +63,124 @@ Deno.serve(async (req) => {
     const { lectureId } = await req.json()
     if (!lectureId) {
       return new Response(
-        JSON.stringify({ error: 'lectureId is required' }),
+        JSON.stringify({ error: 'Missing lectureId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Ensure lecture exists (prevents FK failures when inserting attendance rows)
-    const { data: lecture, error: lectureError } = await serviceSupabase
-      .from('lectures')
-      .select('id')
-      .eq('id', lectureId)
-      .maybeSingle()
+    // If faculty, verify ownership of this lecture
+    if (roleData.role === 'faculty') {
+      const { data: lec, error: lecErr } = await serviceSupabase
+        .from('lectures')
+        .select('created_by')
+        .eq('id', lectureId)
+        .single()
 
-    if (lectureError) {
-      console.error('Error verifying lecture:', lectureError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to verify lecture' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      if (lecErr || !lec || lec.created_by !== user.id) {
+        return new Response(
+          JSON.stringify({ error: 'Faculty can only finalize their own lectures' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
-    if (!lecture) {
+    // 1. Verify lecture exists
+    const { data: lecture, error: lectureError } = await serviceSupabase
+      .from('lectures')
+      .select('id, topic, status, college_id')
+      .eq('id', lectureId)
+      .single()
+
+    if (lectureError || !lecture) {
       return new Response(
         JSON.stringify({ error: 'Lecture not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-    // Get all students
-    const { data: allStudents, error: studentsError } = await serviceSupabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'student')
 
-    if (studentsError) {
-      console.error('Error fetching students:', studentsError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch students' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // 2. Fetch all enrolled students for this lecture
+    const { data: tags } = await serviceSupabase
+      .from('lecture_programme_tags')
+      .select('programme_id')
+      .eq('lecture_id', lectureId)
+
+    const programmeIds = (tags || []).map((t: any) => t.programme_id)
+
+    let enrolledUserIds: string[] = []
+    if (programmeIds.length > 0) {
+      const { data: allotments } = await serviceSupabase
+        .from('student_programme_allotments')
+        .select('student_user_id')
+        .in('programme_id', programmeIds)
+
+      enrolledUserIds = [...new Set((allotments || []).map((a: any) => a.student_user_id))]
     }
 
-    // Get students who already marked attendance
-    const { data: presentStudents, error: presentError } = await serviceSupabase
+    // 3. Fetch all students who marked present
+    const { data: presentRecords } = await serviceSupabase
       .from('attendance')
       .select('student_user_id')
       .eq('lecture_id', lectureId)
+      .eq('status', 'present')
 
-    if (presentError) {
-      console.error('Error fetching present students:', presentError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch attendance records' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    const presentUserIds = new Set((presentRecords || []).map((p: any) => p.student_user_id))
 
-    const presentStudentIds = new Set(
-      (presentStudents ?? []).map((s: { student_user_id: string }) => s.student_user_id)
-    )
+    // 4. Determine absent students
+    const absentUserIds = enrolledUserIds.filter(id => !presentUserIds.has(id))
 
-    // Mark absent students
-    const absentStudents = (allStudents ?? [])
-      .filter((s: { user_id: string }) => !presentStudentIds.has(s.user_id))
-      .map((s: { user_id: string }) => ({
+    // 5. Insert absent records
+    if (absentUserIds.length > 0) {
+      const absentRows = absentUserIds.map(student_user_id => ({
         lecture_id: lectureId,
-        student_user_id: s.user_id,
+        student_user_id,
         status: 'absent',
         points_earned: 0,
+        college_id: lecture.college_id,
       }))
 
-    if (absentStudents.length > 0) {
-      const { error: absentError } = await serviceSupabase
+      const { error: insertError } = await serviceSupabase
         .from('attendance')
-        .insert(absentStudents)
+        .upsert(absentRows, { onConflict: 'lecture_id,student_user_id' })
 
-      if (absentError) {
-        console.error('Error marking absent students:', absentError)
-        return new Response(
-          JSON.stringify({ error: 'Failed to mark absent students' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+      if (insertError) {
+        console.error('Error inserting absent records:', insertError)
       }
     }
 
-    // Deactivate the token
+    // 6. Mark token as inactive
     await serviceSupabase
       .from('attendance_tokens')
-      .update({ is_active: false })
+      .update({ is_active: false, expires_at: new Date().toISOString() })
       .eq('lecture_id', lectureId)
 
-    // Trigger intelligence recomputation for all students (best-effort)
-    try {
-      await fetch(`${supabaseUrl}/functions/v1/recompute-intelligence`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceRoleKey}` },
-        body: JSON.stringify({}),
-      });
-    } catch (e) {
-      console.error("finalize-attendance: intelligence recompute failed", e);
-    }
+    // 7. Update lecture status to ended
+    await serviceSupabase
+      .from('lectures')
+      .update({ status: 'ended', updated_at: new Date().toISOString() })
+      .eq('id', lectureId)
 
-    console.log('Attendance finalized for lecture:', lectureId, 'Absent students:', absentStudents.length)
+    const totalEnrolled = enrolledUserIds.length
+    const presentCount = presentUserIds.size
+    const absentCount = absentUserIds.length
+    const percentage = totalEnrolled > 0 ? Math.round((presentCount / totalEnrolled) * 100) : 0
 
     return new Response(
       JSON.stringify({
         message: 'Attendance finalized successfully',
-        absentCount: absentStudents.length,
-        presentCount: presentStudents.length
+        stats: {
+          totalEnrolled,
+          presentCount,
+          absentCount,
+          percentage,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  } catch (err: any) {
+    console.error('Unexpected error in finalize-attendance:', err)
     return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred' }),
+      JSON.stringify({ error: err.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    )
   }
 })

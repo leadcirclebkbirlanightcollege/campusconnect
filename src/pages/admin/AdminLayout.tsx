@@ -21,6 +21,7 @@ import { ChevronDown, LogOut, UserRound } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useLogout";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
+import { APP_VERSION } from "@/config/version";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransitions";
@@ -165,7 +166,9 @@ export default function AdminLayout() {
                     }}
                     className="h-4 w-4 object-contain opacity-60 rounded-xs"
                   />
-                  <span className="text-[11px] text-muted-foreground/60 font-medium">{brandName} Admin</span>
+                  <span className="text-[11px] text-muted-foreground/60 font-medium">
+                    {brandName} Admin · Version {APP_VERSION}
+                  </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground/35 text-right">Developed by Atharv Jadhav · CS Dept.</p>
               </div>

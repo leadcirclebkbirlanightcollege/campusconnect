@@ -21,10 +21,12 @@ import { Input } from "@/components/ui/input";
 import {
   BookOpen, Clock, Calendar, MapPin, Users, CheckCircle2,
   Play, StopCircle, Trash2, Pencil, X, User,
-  Loader2, AlertTriangle, ChevronRight
+  Loader2, AlertTriangle, ChevronRight, QrCode
 } from "@/components/icons";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { cn } from "@/lib/utils";
+import DeleteLectureDialog from "./DeleteLectureDialog";
+import FacultyAttendanceModal from "./FacultyAttendanceModal";
 
 interface LectureDetailDrawerProps {
   lectureId: string | null;
@@ -46,7 +48,8 @@ export default function LectureDetailDrawer({
   const [editDate, setEditDate] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
 
   // Fetch full details of the lecture
   const { data: lecture, isLoading: isLoadingLecture } = useQuery({
@@ -216,12 +219,11 @@ export default function LectureDetailDrawer({
                 <>
                   <Button
                     size="sm"
-                    onClick={() => startClassMutation.mutate()}
-                    disabled={startClassMutation.isPending}
-                    className="rounded-xl text-[12px] h-8.5 gap-1.5 bg-primary text-primary-foreground font-medium"
+                    onClick={() => setShowAttendanceModal(true)}
+                    className="rounded-xl text-[12px] h-8.5 gap-1.5 bg-primary text-primary-foreground font-medium shadow-xs"
                   >
-                    {startClassMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-                    Start Class Now
+                    <QrCode className="h-3.5 w-3.5" />
+                    Start Attendance / QR
                   </Button>
                   {!isEditing ? (
                     <Button
@@ -245,24 +247,53 @@ export default function LectureDetailDrawer({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowCancelConfirm(true)}
-                    className="rounded-xl text-[12px] h-8.5 text-destructive hover:bg-destructive/10 hover:text-destructive ml-auto"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="rounded-xl text-[12px] h-8.5 text-destructive hover:bg-destructive/10 hover:text-destructive ml-auto gap-1"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Cancel Session
+                    <Trash2 className="h-3.5 w-3.5" /> Delete Lecture
                   </Button>
                 </>
               )}
 
               {isLive && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAttendanceModal(true)}
+                    className="rounded-xl text-[12px] h-8.5 gap-1.5 bg-success text-success-foreground font-medium shadow-xs"
+                  >
+                    <QrCode className="h-3.5 w-3.5" />
+                    Live QR & OTP
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => endClassMutation.mutate()}
+                    disabled={endClassMutation.isPending}
+                    className="rounded-xl text-[12px] h-8.5 gap-1.5 font-medium"
+                  >
+                    {endClassMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <StopCircle className="h-3.5 w-3.5" />}
+                    End Live Class
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="rounded-xl text-[12px] h-8.5 text-destructive hover:bg-destructive/10 hover:text-destructive ml-auto gap-1"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete Lecture
+                  </Button>
+                </>
+              )}
+
+              {isEnded && (
                 <Button
                   size="sm"
-                  variant="destructive"
-                  onClick={() => endClassMutation.mutate()}
-                  disabled={endClassMutation.isPending}
-                  className="rounded-xl text-[12px] h-8.5 gap-1.5 font-medium"
+                  variant="ghost"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="rounded-xl text-[12px] h-8.5 text-destructive hover:bg-destructive/10 hover:text-destructive ml-auto gap-1"
                 >
-                  {endClassMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <StopCircle className="h-3.5 w-3.5" />}
-                  End Live Class
+                  <Trash2 className="h-3.5 w-3.5" /> Delete Lecture
                 </Button>
               )}
             </div>
@@ -429,38 +460,40 @@ export default function LectureDetailDrawer({
         </SheetContent>
       </Sheet>
 
-      {/* Cancel Confirmation Dialog */}
-      <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" /> Cancel Scheduled Lecture
-            </DialogTitle>
-            <DialogDescription className="text-[13px] pt-1">
-              Are you sure you want to cancel <strong>{lecture?.topic}</strong>? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 pt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCancelConfirm(false)}
-              className="rounded-xl text-[12px]"
-            >
-              Keep Lecture
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => cancelLectureMutation.mutate()}
-              disabled={cancelLectureMutation.isPending}
-              className="rounded-xl text-[12px]"
-            >
-              {cancelLectureMutation.isPending ? "Cancelling…" : "Yes, Cancel Lecture"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Lecture Dialog */}
+      <DeleteLectureDialog
+        lecture={
+          lecture
+            ? {
+                id: lecture.id,
+                topic: lecture.topic,
+                lecture_date: lecture.lecture_date,
+                start_time: lecture.start_time,
+                end_time: lecture.end_time,
+                venue: lecture.venue,
+                status: lecture.status,
+              }
+            : null
+        }
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onSuccess={() => {
+          onOpenChange(false);
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+          onLectureUpdated?.();
+        }}
+      />
+
+      {/* Live Attendance Session & QR Modal */}
+      <FacultyAttendanceModal
+        lectureId={lectureId}
+        open={showAttendanceModal}
+        onOpenChange={setShowAttendanceModal}
+        onSessionEnded={() => {
+          qc.invalidateQueries({ queryKey: ["faculty"] });
+          onLectureUpdated?.();
+        }}
+      />
     </>
   );
 }

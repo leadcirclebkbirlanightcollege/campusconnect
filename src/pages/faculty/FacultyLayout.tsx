@@ -12,6 +12,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { APP_VERSION } from "@/config/version";
 
 const NAV = [
   { to: "/faculty/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
@@ -151,6 +152,11 @@ export default function FacultyLayout() {
           <LogOut className="h-4 w-4 shrink-0" />
           <span>Sign Out</span>
         </button>
+        <div className="pt-2 text-center">
+          <p className="text-[10.5px] text-muted-foreground/60 font-mono tracking-wider">
+            Version {APP_VERSION}
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, MapPin } from "@/components/icons";
 import { BRANDING } from "@/config/branding";
+import { APP_VERSION } from "@/config/version";
 
 const OFFICIAL_EMAIL = "atharv@campusconnect.indevs.in";
 
@@ -146,9 +147,9 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-6 pt-5 border-t border-border/40 text-[11px] text-muted-foreground">
+        <div className="mt-6 pt-5 border-t border-border/40 text-[11px] text-muted-foreground flex items-center justify-between flex-wrap gap-2">
           <p>© {year} {BRANDING.name}. All rights reserved.</p>
+          <p className="font-mono opacity-80">Version {APP_VERSION}</p>
         </div>
       </div>
     </footer>
