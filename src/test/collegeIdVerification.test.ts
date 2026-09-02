@@ -32,7 +32,6 @@ describe("College ID Card Validation", () => {
   });
 
   it("rejects oversized files exceeding 10MB", () => {
-    // Create dummy buffer of 11MB
     const oversizedBlob = new Blob([new Uint8Array(MAX_ID_FILE_SIZE_BYTES + 1024)], {
       type: "image/jpeg",
     });
@@ -74,51 +73,156 @@ describe("College ID Card Validation", () => {
   });
 });
 
-describe("Verification State Machine Transitions", () => {
-  type VerificationState = "not_submitted" | "pending" | "approved" | "rejected";
+describe("Verification State Machine Transitions & Retention Policy", () => {
+  type VerificationState = "not_submitted" | "pending" | "approved" | "rejected" | "deleted";
 
-  function transitionVerificationState(
-    current: VerificationState,
-    action: "SUBMIT" | "APPROVE" | "REJECT" | "RESUBMIT"
-  ): VerificationState {
-    switch (current) {
-      case "not_submitted":
-        if (action === "SUBMIT") return "pending";
-        break;
-      case "pending":
-        if (action === "APPROVE") return "approved";
-        if (action === "REJECT") return "rejected";
-        break;
-      case "rejected":
-        if (action === "RESUBMIT") return "pending";
-        break;
-      case "approved":
-        // Approved is terminal active state
-        return "approved";
-    }
-    return current;
+  interface StudentRecord {
+    id: string;
+    approval_status: VerificationState;
+    id_card_path: string | null;
+    rejected_at: Date | null;
+    delete_after: Date | null;
   }
 
-  it("follows standard path: not_submitted -> pending -> approved", () => {
-    let state: VerificationState = "not_submitted";
-    state = transitionVerificationState(state, "SUBMIT");
-    expect(state).toBe("pending");
+  function simulateApproval(student: StudentRecord): StudentRecord {
+    if (student.approval_status !== "pending") return student;
+    return {
+      ...student,
+      approval_status: "approved",
+      id_card_path: null, // Data minimization: ID card path cleared upon approval
+      rejected_at: null,
+      delete_after: null,
+    };
+  }
 
-    state = transitionVerificationState(state, "APPROVE");
-    expect(state).toBe("approved");
+  function simulateRejection(student: StudentRecord, rejectedAt: Date): StudentRecord {
+    if (student.approval_status === "approved") return student;
+    const deleteAfter = new Date(rejectedAt.getTime() + 2 * 60 * 1000); // exactly 2 minutes
+    return {
+      ...student,
+      approval_status: "rejected",
+      rejected_at: rejectedAt,
+      delete_after: deleteAfter,
+    };
+  }
+
+  function simulateCleanup(student: StudentRecord, currentTime: Date): StudentRecord | null {
+    // Only rejected accounts with delete_after <= currentTime are purged
+    if (
+      student.approval_status === "rejected" &&
+      student.delete_after &&
+      currentTime >= student.delete_after
+    ) {
+      return null; // Permanently deleted
+    }
+    return student; // Retained
+  }
+
+  it("follows standard path: not_submitted -> pending -> approved with ID card purged", () => {
+    let student: StudentRecord = {
+      id: "student-1",
+      approval_status: "pending",
+      id_card_path: "student-1/college-id-123.jpg",
+      rejected_at: null,
+      delete_after: null,
+    };
+
+    const approved = simulateApproval(student);
+    expect(approved.approval_status).toBe("approved");
+    expect(approved.id_card_path).toBeNull(); // Data minimization check
   });
 
-  it("follows rejection and resubmission loop: pending -> rejected -> resubmit -> pending -> approved", () => {
-    let state: VerificationState = "pending";
-    state = transitionVerificationState(state, "REJECT");
-    expect(state).toBe("rejected");
+  it("calculates exact 2-minute deletion window on rejection", () => {
+    const baseTime = new Date("2026-09-03T12:00:00Z");
+    let student: StudentRecord = {
+      id: "student-2",
+      approval_status: "pending",
+      id_card_path: "student-2/college-id-456.jpg",
+      rejected_at: null,
+      delete_after: null,
+    };
 
-    // Student updates ID card and resubmits
-    state = transitionVerificationState(state, "RESUBMIT");
-    expect(state).toBe("pending");
+    const rejected = simulateRejection(student, baseTime);
+    expect(rejected.approval_status).toBe("rejected");
+    expect(rejected.rejected_at).toEqual(baseTime);
+    expect(rejected.delete_after).toEqual(new Date("2026-09-03T12:02:00Z")); // Exactly +2 minutes
+  });
 
-    // Admin approves second submission
-    state = transitionVerificationState(state, "APPROVE");
-    expect(state).toBe("approved");
+  it("retains rejected student during the 2-minute grace window", () => {
+    const rejectedAt = new Date("2026-09-03T12:00:00Z");
+    const student = simulateRejection(
+      {
+        id: "student-3",
+        approval_status: "pending",
+        id_card_path: "student-3/id.jpg",
+        rejected_at: null,
+        delete_after: null,
+      },
+      rejectedAt
+    );
+
+    // After 1 minute: student must still exist
+    const oneMinLater = new Date("2026-09-03T12:01:00Z");
+    const retained = simulateCleanup(student, oneMinLater);
+    expect(retained).not.toBeNull();
+    expect(retained?.approval_status).toBe("rejected");
+  });
+
+  it("permanently purges rejected student once the 2-minute window has expired", () => {
+    const rejectedAt = new Date("2026-09-03T12:00:00Z");
+    const student = simulateRejection(
+      {
+        id: "student-4",
+        approval_status: "pending",
+        id_card_path: "student-4/id.jpg",
+        rejected_at: null,
+        delete_after: null,
+      },
+      rejectedAt
+    );
+
+    // After 2 minutes and 1 second: account is permanently purged
+    const expiredTime = new Date("2026-09-03T12:02:01Z");
+    const purged = simulateCleanup(student, expiredTime);
+    expect(purged).toBeNull();
+  });
+
+  it("protects approved students from ever being purged by cleanup", () => {
+    const student: StudentRecord = {
+      id: "student-5",
+      approval_status: "approved",
+      id_card_path: null,
+      rejected_at: null,
+      delete_after: new Date("2020-01-01T00:00:00Z"), // Past timestamp simulation
+    };
+
+    const result = simulateCleanup(student, new Date());
+    expect(result).not.toBeNull();
+    expect(result?.approval_status).toBe("approved");
+  });
+
+  it("is idempotent: repeated cleanup passes do not cause errors", () => {
+    const rejectedAt = new Date("2026-09-03T12:00:00Z");
+    let student: StudentRecord | null = simulateRejection(
+      {
+        id: "student-6",
+        approval_status: "pending",
+        id_card_path: "student-6/id.jpg",
+        rejected_at: null,
+        delete_after: null,
+      },
+      rejectedAt
+    );
+
+    const expiredTime = new Date("2026-09-03T12:05:00Z");
+    // Pass 1: purges
+    student = simulateCleanup(student!, expiredTime);
+    expect(student).toBeNull();
+
+    // Pass 2: already null, safe and idempotent
+    if (student) {
+      student = simulateCleanup(student, expiredTime);
+    }
+    expect(student).toBeNull();
   });
 });

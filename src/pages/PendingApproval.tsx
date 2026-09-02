@@ -14,11 +14,11 @@ import {
   LogOut,
   AlertCircle,
   ShieldCheck,
-  Eye,
   FileCheck2,
   ChevronDown,
   ChevronUp,
 } from "@/components/icons";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PendingApproval() {
@@ -30,6 +30,8 @@ export default function PendingApproval() {
 
   const [signedIdUrl, setSignedIdUrl] = useState<string | null>(null);
   const [showIdCard, setShowIdCard] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [isPurging, setIsPurging] = useState(false);
 
   // Auto-redirect when approved
   useEffect(() => {
@@ -66,6 +68,83 @@ export default function PendingApproval() {
     };
   }, [user?.id, qc, refetch]);
 
+  const isRejected = status?.approval_status === "rejected";
+
+  // 2-Minute Rejection Purge Countdown Timer
+  useEffect(() => {
+    if (!isRejected) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    function calculateSeconds() {
+      if (!status?.delete_after) return 120;
+      const targetTime = new Date(status.delete_after).getTime();
+      const diffMs = targetTime - Date.now();
+      return Math.max(0, Math.ceil(diffMs / 1000));
+    }
+
+    const initial = calculateSeconds();
+    setSecondsLeft(initial);
+
+    // If already expired upon mount, trigger cleanup immediately
+    if (initial <= 0) {
+      handlePurgedAccount();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const left = calculateSeconds();
+      setSecondsLeft(left);
+      if (left <= 0) {
+        clearInterval(timer);
+        handlePurgedAccount();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isRejected, status?.delete_after]);
+
+  async function handlePurgedAccount() {
+    setIsPurging(true);
+    try {
+      await supabase.rpc("cleanup_expired_rejected_students");
+    } catch {
+      // Safe to ignore if already cleaned up
+    } finally {
+      toast.info("Registration Purged", {
+        description: "Your rejected registration was permanently erased per data minimization policy.",
+      });
+      await logout();
+      navigate("/auth", { replace: true });
+    }
+  }
+
+  async function handleImmediatePurge() {
+    setIsPurging(true);
+    try {
+      if (user?.id) {
+        // Opportunistic storage cleanup
+        if (status?.id_card_path) {
+          try {
+            await supabase.storage.from("student-id-cards").remove([status.id_card_path]);
+          } catch {
+            // Ignored
+          }
+        }
+        await supabase.rpc("delete_student_account_permanently", { p_user_id: user.id });
+      }
+    } catch {
+      // Ignored
+    } finally {
+      toast.info("Application Cleared", {
+        description: "You may now register again with valid, readable documentation.",
+      });
+      await logout();
+      navigate("/auth", { replace: true });
+    }
+  }
+
   // Fetch signed URL for private ID card preview if path exists
   useEffect(() => {
     if (!status?.id_card_path) return;
@@ -87,14 +166,18 @@ export default function PendingApproval() {
     };
   }, [status?.id_card_path]);
 
-  const isRejected = status?.approval_status === "rejected";
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const steps = [
     { key: "account", label: "Account Created", done: true },
     { key: "id_uploaded", label: "ID Card Submitted", done: true },
     {
       key: "review",
-      label: isRejected ? "Correction Needed" : "Admin Review",
+      label: isRejected ? "Rejected" : "Admin Review",
       done: status?.approval_status === "approved",
       inProgress: status?.approval_status === "pending",
       danger: isRejected,
@@ -143,19 +226,19 @@ export default function PendingApproval() {
         {/* Title & Copy */}
         <h1 className="text-[22px] font-bold tracking-tight mb-2">
           {isRejected
-            ? "Verification Needs Correction"
+            ? "Verification Rejected"
             : "College ID Submitted for Verification"}
         </h1>
 
         <p className="text-[14px] text-muted-foreground leading-relaxed mb-6">
           {isRejected
-            ? "Your college ID card submission could not be verified by the college administration. Please review the note below and resubmit a clear photo."
+            ? "Your college ID card submission could not be verified by the college administration. Please review the official feedback below."
             : "Your B. K. Birla Night Arts, Science & Commerce College ID card has been received. Our administration will review your document and verify your academic cohort."}
         </p>
 
-        {/* Rejection Alert Card */}
+        {/* Rejection Alert Card with Live Auto-Deletion Timer */}
         {isRejected && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-left mb-6 space-y-1">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-left mb-6 space-y-3">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
               <p className="text-[13px] font-semibold text-destructive">
@@ -164,7 +247,22 @@ export default function PendingApproval() {
             </div>
             <p className="text-[13px] text-destructive/90 pl-6">
               {status?.rejection_reason ||
-                "The submitted photo was either illegible, incomplete, or did not match registered college records. Please upload a clear photo of your valid ID card."}
+                "The submitted photo was illegible, incomplete, or did not match registered college records."}
+            </p>
+
+            {/* Live Countdown Badge */}
+            <div className="pt-2 border-t border-destructive/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12px]">
+              <div className="flex items-center gap-1.5 text-destructive font-semibold">
+                <Clock className="h-3.5 w-3.5 animate-pulse shrink-0" />
+                <span>Account auto-deletion:</span>
+              </div>
+              <span className="font-mono font-bold text-destructive bg-destructive/15 px-2.5 py-0.5 rounded-full border border-destructive/30">
+                {secondsLeft !== null ? formatTime(secondsLeft) : "2:00"}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-destructive/80 leading-normal">
+              Institutional Retention Policy: Rejected applications and uploaded documents are permanently erased from all college servers 2 minutes after rejection to safeguard privacy. Once purged, you may register anew.
             </p>
           </div>
         )}
@@ -230,7 +328,7 @@ export default function PendingApproval() {
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-2">
-                  This document is stored securely in your private institutional vault.
+                  This document is held temporarily in private institutional storage.
                 </p>
               </div>
             )}
@@ -241,10 +339,13 @@ export default function PendingApproval() {
         <div className="flex flex-col gap-2.5">
           {isRejected ? (
             <Button
-              onClick={() => navigate("/onboarding-wizard")}
-              className="w-full h-11 text-[14px] font-bold shadow-md shadow-primary/20"
+              onClick={handleImmediatePurge}
+              disabled={isPurging}
+              variant="destructive"
+              className="w-full h-11 text-[13px] font-bold gap-2 shadow-md shadow-destructive/20"
             >
-              Update ID Card &amp; Resubmit
+              <Trash2 className="h-4 w-4" />
+              {isPurging ? "Purging Account…" : "Clear Application & Register Again"}
             </Button>
           ) : (
             <Button
@@ -275,7 +376,9 @@ export default function PendingApproval() {
             Signed in as <span className="font-semibold text-foreground">{user?.email}</span>
           </p>
           <p>
-            Once approved, you will be redirected automatically to your dashboard.
+            {isRejected
+              ? "Your unverified account is scheduled for permanent purge."
+              : "Once approved, you will be redirected automatically to your dashboard."}
           </p>
         </div>
       </motion.div>

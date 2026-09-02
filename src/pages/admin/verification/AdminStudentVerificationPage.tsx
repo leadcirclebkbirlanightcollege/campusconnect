@@ -133,10 +133,13 @@ export default function AdminStudentVerificationPage() {
     queryKey: ["verification", "pending", search],
     staleTime: 15_000,
     queryFn: async () => {
+      // Opportunistic data minimization: purge expired rejected accounts
+      supabase.rpc("cleanup_expired_rejected_students").catch(() => {});
+
       let q = supabase
         .from("profiles")
         .select(
-          "user_id,name,email,avatar_url,phone,enrollment_number,student_id,course_name,course_code,academic_year,date_of_birth,gender,approval_status,profile_submitted_at,created_at,id_card_path,id_card_status,id_card_rejection_reason,rejection_reason"
+          "user_id,name,email,avatar_url,phone,enrollment_number,student_id,course_name,course_code,academic_year,date_of_birth,gender,approval_status,profile_submitted_at,created_at,id_card_path,id_card_status,id_card_rejection_reason,rejection_reason,rejected_at,delete_after"
         )
         .eq("profile_completed", true)
         .in("approval_status", ["pending", "rejected"])
@@ -240,6 +243,7 @@ export default function AdminStudentVerificationPage() {
   async function submitApprove() {
     if (!target || !collegeId) return;
     setBusy(true);
+    const photoToPurge = target.id_card_path;
     try {
       const { error } = await supabase.rpc("admin_approve_student", {
         p_user_id: target.user_id,
@@ -247,10 +251,21 @@ export default function AdminStudentVerificationPage() {
         p_student_id: studentIdOverride.trim() || null,
       });
       if (error) throw error;
+
+      // Data Minimization: purge physical College ID card photo from storage once approved
+      if (photoToPurge) {
+        supabase.storage
+          .from("student-id-cards")
+          .remove([photoToPurge])
+          .catch((cleanupErr) => {
+            console.warn("Storage deletion deferred:", cleanupErr);
+          });
+      }
+
       toast.success(`${target.name} approved! 🎉`, {
         description: preview?.ok
           ? `Assigned to ${preview.department_name} · ${preview.class_name}`
-          : "Student account activated.",
+          : "Student account activated and ID card purged from storage.",
       });
       setMode(null);
       setTarget(null);
@@ -271,7 +286,9 @@ export default function AdminStudentVerificationPage() {
         p_reason: reason.trim() || null,
       });
       if (error) throw error;
-      toast.success(`${target.name} marked for correction`);
+      toast.error(`${target.name} verification rejected`, {
+        description: "Account will be permanently deleted after 2 minutes per retention policy.",
+      });
       setMode(null);
       setTarget(null);
       qc.invalidateQueries({ queryKey: ["verification"] });

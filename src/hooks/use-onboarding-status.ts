@@ -11,6 +11,8 @@ export interface OnboardingStatus {
   id_card_path: string | null;
   id_card_status: string | null;
   id_card_rejection_reason: string | null;
+  rejected_at: string | null;
+  delete_after: string | null;
   role: string | null;
 }
 
@@ -31,7 +33,7 @@ export function useOnboardingStatus() {
         supabase
           .from("profiles")
           .select(
-            "profile_completed, approval_status, college_assigned, college_id, rejection_reason, id_card_path, id_card_status, id_card_rejection_reason"
+            "profile_completed, approval_status, college_assigned, college_id, rejection_reason, id_card_path, id_card_status, id_card_rejection_reason, rejected_at, delete_after"
           )
           .eq("user_id", uid)
           .maybeSingle(),
@@ -54,6 +56,8 @@ export function useOnboardingStatus() {
         id_card_path: profile?.id_card_path ?? null,
         id_card_status: profile?.id_card_status ?? null,
         id_card_rejection_reason: profile?.id_card_rejection_reason ?? null,
+        rejected_at: profile?.rejected_at ?? null,
+        delete_after: profile?.delete_after ?? null,
         role,
       };
     },

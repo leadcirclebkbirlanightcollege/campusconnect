@@ -2044,6 +2044,7 @@ export type Database = {
           graduation_status: string
           graduation_year: number | null
           guardian_name: string | null
+          delete_after: string | null
           id: string
           id_card_path: string | null
           id_card_rejection_reason: string | null
@@ -2063,6 +2064,7 @@ export type Database = {
           profile_completed: boolean
           profile_submitted_at: string | null
           programme_id: string | null
+          rejected_at: string | null
           promoted_at: string | null
           rejection_reason: string | null
           roll_no: string | null
@@ -2109,6 +2111,7 @@ export type Database = {
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
+          delete_after?: string | null
           id?: string
           id_card_path?: string | null
           id_card_rejection_reason?: string | null
@@ -2128,6 +2131,7 @@ export type Database = {
           profile_completed?: boolean
           profile_submitted_at?: string | null
           programme_id?: string | null
+          rejected_at?: string | null
           promoted_at?: string | null
           rejection_reason?: string | null
           roll_no?: string | null
@@ -2174,6 +2178,7 @@ export type Database = {
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
+          delete_after?: string | null
           id?: string
           id_card_path?: string | null
           id_card_rejection_reason?: string | null
@@ -2193,6 +2198,7 @@ export type Database = {
           profile_completed?: boolean
           profile_submitted_at?: string | null
           programme_id?: string | null
+          rejected_at?: string | null
           promoted_at?: string | null
           rejection_reason?: string | null
           roll_no?: string | null
