@@ -209,7 +209,7 @@ export default function StudentProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "name,email,avatar_url,college_id,student_id,class_name,department,academic_year,approval_status,is_verified,created_at",
+          "name,email,avatar_url,college_id,student_id,class_name,department,academic_year,approval_status,is_verified,enrollment_number,id_card_status,created_at",
         )
         .eq("user_id", user!.id)
         .maybeSingle();

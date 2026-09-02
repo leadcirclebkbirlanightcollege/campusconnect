@@ -274,6 +274,7 @@ CREATE TABLE public.user_roles (
 | `point_claims` | Reward verification | `user_id`, `event_id` |
 | `stall_requests` | E-Cell stall registration | `college_id`, `applicant_id` |
 | `support_tickets` | Helpdesk tickets | `user_id`, `college_id` |
+| `student_verifications` | Student College ID verification audit queue | `user_id` -> auth.users, `status` ('pending' \| 'approved' \| 'rejected') |
 | `institution_partners` | Landing page showcase | `name`, `logo_url`, `is_active`, `display_order` |
 
 ---
@@ -323,6 +324,17 @@ All Edge Functions reside in `supabase/functions/` and execute in the Deno runti
 ### E. Document Verification
 - **Files**: `src/pages/admin/verify/AdminVerifyDocumentsPage.tsx`, `src/pages/verify/DocumentVerificationPage.tsx`
 - **Workflow**: Generates cryptographic reference hash for official documents. Public `/verify/:reference` route validates authenticity without requiring login.
+
+### F. Student Onboarding & College ID Card Verification
+- **Files**: `src/pages/onboarding/OnboardingWizard.tsx`, `src/components/onboarding/CollegeIdUploadCard.tsx`, `src/pages/PendingApproval.tsx`, `src/pages/admin/verification/AdminStudentVerificationPage.tsx`, `src/lib/college-id-validation.ts`
+- **Storage Bucket**: `student-id-cards` (strictly private, 10MB limit, JPG/PNG/WEBP, RLS enforced).
+- **Workflow**:
+  1. Student signs up and completes Step 1 (Personal & Academic details; Mumbai University Enrollment number is optional).
+  2. Student completes Step 2 (Uploads College ID Card via mobile camera or file picker).
+  3. Upload stored securely at `{user_id}/college-id-{timestamp}.{ext}` and logged in `student_verifications`.
+  4. Student is gated at `/pending-approval` with live status stepper and secure signed URL card preview.
+  5. Admin views queue in `AdminStudentVerificationPage`, generates temporary signed URL, inspects card with zoom/rotate controls, and either approves (auto-assigning department and class cohort) or rejects with specific feedback.
+  6. If rejected, student sees admin's note on `/pending-approval` and can resubmit a corrected ID card.
 
 ---
 

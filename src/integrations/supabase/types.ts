@@ -2045,6 +2045,12 @@ export type Database = {
           graduation_year: number | null
           guardian_name: string | null
           id: string
+          id_card_path: string | null
+          id_card_rejection_reason: string | null
+          id_card_status: string
+          id_card_submitted_at: string | null
+          id_card_verified_at: string | null
+          id_card_verified_by: string | null
           is_active: boolean
           is_deleted: boolean
           is_verified: boolean
@@ -2104,6 +2110,12 @@ export type Database = {
           graduation_year?: number | null
           guardian_name?: string | null
           id?: string
+          id_card_path?: string | null
+          id_card_rejection_reason?: string | null
+          id_card_status?: string
+          id_card_submitted_at?: string | null
+          id_card_verified_at?: string | null
+          id_card_verified_by?: string | null
           is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
@@ -2163,6 +2175,12 @@ export type Database = {
           graduation_year?: number | null
           guardian_name?: string | null
           id?: string
+          id_card_path?: string | null
+          id_card_rejection_reason?: string | null
+          id_card_status?: string
+          id_card_submitted_at?: string | null
+          id_card_verified_at?: string | null
+          id_card_verified_by?: string | null
           is_active?: boolean
           is_deleted?: boolean
           is_verified?: boolean
@@ -2419,6 +2437,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_verifications: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_name: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       student_achievements: {
         Row: {

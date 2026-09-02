@@ -8,6 +8,9 @@ export interface OnboardingStatus {
   college_assigned: boolean;
   college_id: string | null;
   rejection_reason: string | null;
+  id_card_path: string | null;
+  id_card_status: string | null;
+  id_card_rejection_reason: string | null;
   role: string | null;
 }
 
@@ -28,7 +31,7 @@ export function useOnboardingStatus() {
         supabase
           .from("profiles")
           .select(
-            "profile_completed, approval_status, college_assigned, college_id, rejection_reason"
+            "profile_completed, approval_status, college_assigned, college_id, rejection_reason, id_card_path, id_card_status, id_card_rejection_reason"
           )
           .eq("user_id", uid)
           .maybeSingle(),
@@ -47,7 +50,10 @@ export function useOnboardingStatus() {
         approval_status: (isStaff ? "approved" : (profile?.approval_status as any) ?? "pending"),
         college_assigned: isStaff ? true : Boolean(profile?.college_assigned),
         college_id: profile?.college_id ?? null,
-        rejection_reason: profile?.rejection_reason ?? null,
+        rejection_reason: profile?.rejection_reason ?? profile?.id_card_rejection_reason ?? null,
+        id_card_path: profile?.id_card_path ?? null,
+        id_card_status: profile?.id_card_status ?? null,
+        id_card_rejection_reason: profile?.id_card_rejection_reason ?? null,
         role,
       };
     },
