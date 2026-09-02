@@ -157,24 +157,6 @@ export default function LectureDetailDrawer({
     onError: (err: any) => showErrorToast(err, { context: "update-lecture" }),
   });
 
-  // Cancel/Delete Lecture Mutation
-  const cancelLectureMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("lectures")
-        .delete()
-        .eq("id", lectureId!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      showSuccessToast("Lecture cancelled successfully");
-      setShowCancelConfirm(false);
-      onOpenChange(false);
-      qc.invalidateQueries({ queryKey: ["faculty"] });
-      onLectureUpdated?.();
-    },
-    onError: (err: any) => showErrorToast(err, { context: "delete-lecture" }),
-  });
 
   if (!open) return null;
 
