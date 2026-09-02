@@ -124,10 +124,14 @@ export default function OnboardingWizard() {
     [firstName, lastName, phone, gender, dob, courseCode, year]
   );
 
-  const canSubmit = useMemo(
-    () => canNextStep1 && (idCardFile !== null || Boolean(existingProfile?.id_card_path)),
-    [canNextStep1, idCardFile, existingProfile?.id_card_path]
-  );
+  const canSubmit = useMemo(() => {
+    if (!canNextStep1) return false;
+    if (existingProfile?.approval_status === "rejected") {
+      // Must upload a fresh, valid photo to replace the rejected one
+      return idCardFile !== null;
+    }
+    return idCardFile !== null || Boolean(existingProfile?.id_card_path);
+  }, [canNextStep1, idCardFile, existingProfile?.approval_status, existingProfile?.id_card_path]);
 
   async function handleCroppedPhoto(file: File) {
     if (!file || !user) return;

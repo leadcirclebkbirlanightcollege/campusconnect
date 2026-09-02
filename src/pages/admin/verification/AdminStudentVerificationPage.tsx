@@ -221,12 +221,11 @@ export default function AdminStudentVerificationPage() {
 
   function openApprove(p: Pending) {
     setTarget(p);
-    // Auto-select BKBNC if only 1 college exists
-    if (colleges.length === 1) {
-      setCollegeId(colleges[0].id);
-    } else {
-      setCollegeId("");
-    }
+    const defaultCollege =
+      colleges.find((c: any) => c.college_name?.toLowerCase().includes("birla"))?.id ||
+      colleges[0]?.id ||
+      "";
+    setCollegeId(defaultCollege);
     setPreview(null);
     setStudentIdOverride(p.student_id ?? "");
     setMode("approve");

@@ -275,7 +275,7 @@ export function CollegeIdUploadCard({
               <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                  Encrypting &amp; uploading to secure storage…
+                  Uploading via HTTPS to private storage…
                 </span>
                 <span className="font-mono">{uploadProgress > 0 ? `${uploadProgress}%` : "In progress"}</span>
               </div>
