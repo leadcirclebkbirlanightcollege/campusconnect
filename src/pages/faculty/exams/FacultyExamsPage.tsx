@@ -148,24 +148,37 @@ export default function FacultyExamsPage() {
     });
   }, [exams, searchQuery, statusFilter]);
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Delete Exam
   const handleDeleteExam = async () => {
     if (!examToDelete) return;
+    setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from("exams")
-        .delete()
-        .eq("id", examToDelete.id);
+      const { error: rpcError } = await supabase.rpc("delete_exam", {
+        p_exam_id: examToDelete.id,
+      });
 
-      if (error) throw error;
+      if (rpcError) {
+        const { error } = await supabase
+          .from("exams")
+          .delete()
+          .eq("id", examToDelete.id);
+
+        if (error) throw error;
+      }
 
       toast.success("Examination removed successfully");
       setExamToDelete(null);
       queryClient.invalidateQueries({ queryKey: ["faculty-exams"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "exams"] });
+      queryClient.invalidateQueries({ queryKey: ["student", "results"] });
     } catch (err: unknown) {
       console.error("Failed to delete exam:", err);
       const message = err instanceof Error ? err.message : "Failed to delete examination";
       toast.error(message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -448,18 +461,16 @@ export default function FacultyExamsPage() {
                       </Button>
                     )}
 
-                    {/* Delete action (only enabled for un-locked exams) */}
-                    {(exam.status === "MARKS_ENTRY" || exam.status === "DRAFT") && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-danger hover:bg-danger/10"
-                        title="Delete Exam"
-                        onClick={() => setExamToDelete(exam)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
+                    {/* Delete examination */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-danger hover:bg-danger/10"
+                      title="Delete Examination"
+                      onClick={() => setExamToDelete(exam)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -491,25 +502,42 @@ export default function FacultyExamsPage() {
           setSelectedExamForMarks(updated);
           queryClient.invalidateQueries({ queryKey: ["faculty-exams"] });
         }}
+        onExamDeleted={() => {
+          setSelectedExamForMarks(null);
+          queryClient.invalidateQueries({ queryKey: ["faculty-exams"] });
+        }}
       />
 
       {/* Delete Exam Confirmation Dialog */}
       <AlertDialog open={!!examToDelete} onOpenChange={(open) => !open && setExamToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base text-danger">Delete Examination?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Are you sure you want to delete <strong>{examToDelete?.exam_type || examToDelete?.title}</strong>?
-              This will permanently remove the exam record.
+            <div className="flex items-center gap-2 text-danger mb-1">
+              <Trash2 className="h-5 w-5 text-danger" />
+              <AlertDialogTitle className="text-base text-danger">Delete Examination?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                Are you sure you want to permanently delete{" "}
+                <strong>{examToDelete?.exam_type || examToDelete?.title}</strong> ({examToDelete?.classes?.name || "Class"})?
+              </p>
+              <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-[11px] text-danger space-y-1">
+                <p className="font-semibold">Irreversible Action:</p>
+                <p>• All recorded student marks, absent records, and feedback will be permanently deleted.</p>
+                {examToDelete?.status === "PUBLISHED" && (
+                  <p>• This exam was published. Deleting it will remove the marks from all student portals.</p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteExam}
+              disabled={isDeleting}
               className="bg-danger text-danger-foreground hover:bg-danger/90"
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete Examination"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

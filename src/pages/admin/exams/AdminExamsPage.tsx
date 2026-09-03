@@ -114,6 +114,8 @@ export default function AdminExamsPage() {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [examToPublish, setExamToPublish] = useState<ExamRow | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [examToDelete, setExamToDelete] = useState<ExamRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // College ID query
   const { data: collegeId } = useQuery({
@@ -278,6 +280,40 @@ export default function AdminExamsPage() {
       toast.error(message);
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  // Handle Admin Delete Exam
+  const handleDeleteExam = async () => {
+    if (!examToDelete) return;
+    setIsDeleting(true);
+    try {
+      const { error: rpcError } = await supabase.rpc("delete_exam", {
+        p_exam_id: examToDelete.id,
+      });
+
+      if (rpcError) {
+        const { error } = await supabase
+          .from("exams")
+          .delete()
+          .eq("id", examToDelete.id);
+
+        if (error) throw error;
+      }
+
+      toast.success("Examination and associated records deleted");
+      if (selectedExamForView?.id === examToDelete.id) {
+        setSelectedExamForView(null);
+      }
+      setExamToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "exams"] });
+      queryClient.invalidateQueries({ queryKey: ["faculty-exams"] });
+    } catch (err: unknown) {
+      console.error("Failed to delete exam:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete examination";
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -499,6 +535,17 @@ export default function AdminExamsPage() {
                           Publish
                         </Button>
                       )}
+
+                      {/* Delete Exam Action */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-danger hover:bg-danger/10"
+                        title="Delete Examination"
+                        onClick={() => setExamToDelete(exam)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -626,7 +673,19 @@ export default function AdminExamsPage() {
             )}
           </div>
 
-          <DialogFooter className="p-4 border-t border-border bg-surface-1">
+          <DialogFooter className="p-4 border-t border-border bg-surface-1 flex items-center justify-between">
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="gap-1.5 text-xs mr-auto"
+              onClick={() => {
+                setExamToDelete(selectedExamForView);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Examination
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -699,6 +758,41 @@ export default function AdminExamsPage() {
               className="bg-success text-success-foreground hover:bg-success/90"
             >
               {isPublishing ? "Publishing..." : "Publish to Students"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Admin Delete Confirmation Dialog */}
+      <AlertDialog open={!!examToDelete} onOpenChange={(open) => !open && setExamToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-danger mb-1">
+              <Trash2 className="h-5 w-5 text-danger" />
+              <AlertDialogTitle className="text-base text-danger">Delete Examination?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                Are you sure you want to permanently delete{" "}
+                <strong>{examToDelete?.exam_type || examToDelete?.title}</strong> ({examToDelete?.classes?.name || "Target Class"})?
+              </p>
+              <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-[11px] text-danger space-y-1">
+                <p className="font-semibold">Irreversible Action:</p>
+                <p>• All entered student marks, absent records, and remarks will be permanently erased.</p>
+                {examToDelete?.status === "PUBLISHED" && (
+                  <p>• This exam was published to students. Deleting it will remove the result from student portals.</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteExam}
+              disabled={isDeleting}
+              className="bg-danger text-danger-foreground hover:bg-danger/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Examination"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

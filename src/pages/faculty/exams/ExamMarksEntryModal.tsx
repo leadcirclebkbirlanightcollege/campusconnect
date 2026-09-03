@@ -42,6 +42,7 @@ import {
   Eye,
   Send,
   ShieldAlert,
+  Trash2,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { Exam, StudentRowItem, ResultStatus } from "./types";
@@ -51,6 +52,7 @@ interface ExamMarksEntryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onExamUpdated?: (updatedExam: Exam) => void;
+  onExamDeleted?: (deletedExamId: string) => void;
 }
 
 export function ExamMarksEntryModal({
@@ -69,6 +71,8 @@ export function ExamMarksEntryModal({
   const [isPublishing, setIsPublishing] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isReadOnly = exam?.status === "LOCKED" || exam?.status === "PUBLISHED";
 
@@ -373,6 +377,40 @@ export function ExamMarksEntryModal({
       toast.error(message);
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  // Handle Delete Exam
+  const handleDeleteExam = async () => {
+    if (!exam) return;
+    setIsDeleting(true);
+    try {
+      const { error: rpcError } = await supabase.rpc("delete_exam", {
+        p_exam_id: exam.id,
+      });
+
+      if (rpcError) {
+        const { error } = await supabase
+          .from("exams")
+          .delete()
+          .eq("id", exam.id);
+
+        if (error) throw error;
+      }
+
+      toast.success("Examination removed successfully");
+      setShowDeleteConfirm(false);
+      onOpenChange(false);
+      if (onExamDeleted) onExamDeleted(exam.id);
+      queryClient.invalidateQueries({ queryKey: ["faculty-exams"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "exams"] });
+      queryClient.invalidateQueries({ queryKey: ["student", "results"] });
+    } catch (err: unknown) {
+      console.error("Failed to delete exam:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete examination";
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -702,7 +740,18 @@ export function ExamMarksEntryModal({
               )}
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-xs text-danger hover:text-danger hover:bg-danger/10 gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete Exam
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -816,6 +865,41 @@ export function ExamMarksEntryModal({
               className="bg-success text-success-foreground hover:bg-success/90"
             >
               {isPublishing ? "Publishing..." : "Publish Results"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Exam Confirmation Alert Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-danger mb-1">
+              <Trash2 className="h-5 w-5 text-danger" />
+              <AlertDialogTitle className="text-base text-danger">Delete Examination?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                Are you sure you want to permanently delete{" "}
+                <strong>{exam.exam_type || exam.title}</strong>?
+              </p>
+              <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-[11px] text-danger space-y-1">
+                <p className="font-semibold">Irreversible Action:</p>
+                <p>• All recorded marks, absent states, and student feedback will be erased.</p>
+                {exam.status === "PUBLISHED" && (
+                  <p>• This exam is currently published to students. Deleting it will remove the result from student portals.</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteExam}
+              disabled={isDeleting}
+              className="bg-danger text-danger-foreground hover:bg-danger/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Examination"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
