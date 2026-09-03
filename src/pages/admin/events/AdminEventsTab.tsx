@@ -158,8 +158,8 @@ export default function AdminEventsTab() {
                       {e.title}
                       {e.is_featured && <Star className="h-3.5 w-3.5 text-warning fill-warning" />}
                       {e.is_ecell_event && (
-                        <Badge className="text-[9px] gap-1 bg-[hsl(265_85%_65%)] text-white hover:bg-[hsl(265_85%_65%)]">
-                          <Rocket className="h-2.5 w-2.5" /> E-Cell
+                        <Badge className="text-[9px] gap-1 bg-[#FCE541] text-[#000000] border border-[#C08634]/40 font-bold hover:bg-[#FAD943]">
+                          <Rocket className="h-2.5 w-2.5 text-[#000000]" /> E-Cell
                         </Badge>
                       )}
                     </h3>
@@ -242,13 +242,13 @@ export default function AdminEventsTab() {
                 <Label className="mb-0">Featured</Label>
               </div>
             </div>
-            <div className="rounded-lg border border-[hsl(265_85%_65%/0.3)] bg-[hsl(265_85%_65%/0.05)] p-3 flex items-center justify-between gap-3">
+            <div className="rounded-lg border border-[#E8D98A] bg-[#FCE541]/10 p-3 flex items-center justify-between gap-3">
               <div>
-                <Label className="mb-0 flex items-center gap-1.5">
-                  <Rocket className="h-3.5 w-3.5 text-[hsl(265_85%_65%)]" />
+                <Label className="mb-0 flex items-center gap-1.5 font-semibold text-foreground">
+                  <Rocket className="h-3.5 w-3.5 text-[#C08634]" />
                   E-Cell Event
                 </Label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Show in the E-Cell hub and add an E-Cell badge.</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Show in the E-Cell hub with official brand styling.</p>
               </div>
               <Switch
                 checked={form.is_ecell_event}

@@ -26,7 +26,7 @@ const TONE: Record<Tone, string> = {
   warning: "bg-warning/10 text-warning",
   info: "bg-info/10 text-info",
   danger: "bg-danger/10 text-danger",
-  ecell: "bg-[hsl(265_85%_65%/0.14)] text-[hsl(265_85%_68%)]",
+  ecell: "bg-[#FCE541]/25 text-[#C08634] dark:text-[#FCE541] border border-[#E8D98A]/50",
 };
 
 interface Feature {
@@ -72,12 +72,12 @@ const GROUPS: Group[] = [
   },
   {
     title: "E-Cell",
-    caption: "Startup & entrepreneurship",
+    caption: "Vision to Venture • BKBNC",
     accent: true,
     items: [
-      { label: "E-Cell Hub", description: "Startup ecosystem on campus", href: "/app/ecell", icon: Rocket, tone: "ecell", keywords: "entrepreneurship startup" },
-      { label: "Stall Registration", description: "Apply to host a stall", href: "/app/ecell/stalls", icon: Store, tone: "ecell", keywords: "stall booth apply" },
-      { label: "Points & Rewards", description: "Submit work, earn points", href: "/app/points", icon: Coins, tone: "ecell", keywords: "claim reward credits" },
+      { label: "E-Cell Hub", description: "Startup ecosystem on campus", href: "/app/ecell", icon: Rocket, tone: "ecell", keywords: "entrepreneurship startup vision venture" },
+      { label: "Stall Registration", description: "Apply to host a campus stall", href: "/app/ecell/stalls", icon: Store, tone: "ecell", keywords: "stall booth apply vendor marketplace" },
+      { label: "Points & Rewards", description: "Submit ideas, earn points", href: "/app/points", icon: Coins, tone: "ecell", keywords: "claim reward credits idea submission" },
     ],
   },
   {
@@ -138,12 +138,12 @@ function GroupCard({ g, index }: { g: Group; index: number }) {
     >
       <div className="flex items-baseline gap-2 px-1">
         {g.accent && (
-          <span className="h-1.5 w-1.5 translate-y-[-1px] rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />
+          <span className="h-1.5 w-1.5 translate-y-[-1px] rounded-full bg-[#FCE541] shadow-[0_0_8px_rgba(252,229,65,0.7)]" />
         )}
         <h2
           className={cn(
             "text-[11px] font-bold uppercase tracking-[0.12em]",
-            g.accent ? "text-[hsl(265_85%_68%)]" : "text-muted-foreground/70",
+            g.accent ? "text-[#C08634] dark:text-[#FAD943]" : "text-muted-foreground/70",
           )}
         >
           {g.title}

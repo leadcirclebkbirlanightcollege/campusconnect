@@ -134,13 +134,13 @@ export default function AdminSidebar() {
                     "text-[10px] font-bold uppercase tracking-[0.12em]",
                     "transition-colors duration-fast rounded-md",
                     isEcell
-                      ? "text-[hsl(265_85%_72%)] hover:text-[hsl(265_85%_82%)]"
+                      ? "text-[#C08634] dark:text-[#FAD943] hover:text-[#000000] dark:hover:text-white"
                       : "text-muted-foreground/70 hover:text-foreground",
                   )}
                   aria-expanded={isOpen}
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
+                    {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[#FCE541] shadow-[0_0_8px_rgba(252,229,65,0.7)]" />}
                     {section.label}
                   </span>
                   <ChevronDown className={cn(
@@ -167,7 +167,7 @@ export default function AdminSidebar() {
                             "relative h-8 gap-2.5 rounded-md px-2.5 text-[13px] font-normal group/item transition-all duration-fast",
                             active
                               ? isEcell
-                                ? "bg-[hsl(265_85%_65%/0.10)] text-[hsl(265_85%_78%)] font-medium"
+                                ? "bg-[#FCE541]/15 text-[#000000] dark:text-[#FCE541] font-bold shadow-[inset_0_0_0_1px_rgba(192,134,52,0.4)]"
                                 : "bg-primary/8 text-primary font-medium"
                               : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                           )}
@@ -176,15 +176,15 @@ export default function AdminSidebar() {
                             {active && !collapsed && (
                               <span className={cn(
                                 "absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-full",
-                                isEcell ? "bg-[hsl(265_85%_65%)]" : "bg-primary",
+                                isEcell ? "bg-[#FCE541]" : "bg-primary",
                               )} />
                             )}
                             <Icon className={cn(
                               "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
                               active
-                                ? isEcell ? "text-[hsl(265_85%_75%)]" : "text-primary"
+                                ? isEcell ? "text-[#C08634] dark:text-[#FCE541]" : "text-primary"
                                 : isEcell
-                                  ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_78%)]"
+                                  ? "text-[#C08634]/80 group-hover/item:text-[#C08634]"
                                   : "text-muted-foreground/70 group-hover/item:text-foreground",
                             )} />
                             <span className="flex-1 leading-none">{item.title}</span>

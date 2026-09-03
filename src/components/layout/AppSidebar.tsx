@@ -131,6 +131,14 @@ export default function AppSidebar() {
         ],
       },
       {
+        label: "Entrepreneurship",
+        accent: "ecell",
+        items: [
+          { title: "E-Cell Hub",           url: "/app/ecell",        icon: Rocket },
+          { title: "Stall Registration",   url: "/app/ecell/stalls", icon: Store },
+        ],
+      },
+      {
         label: "Personal",
         items: [
           { title: "Profile",       url: "/app/profile",                icon: UserRound },
@@ -141,7 +149,6 @@ export default function AppSidebar() {
       },
     ],
     [unreadCount],
-
   );
 
   const adminSection: NavSection = useMemo(
@@ -179,11 +186,11 @@ export default function AppSidebar() {
       >
         <SidebarGroupLabel className={cn(
           "text-[10px] font-bold uppercase tracking-[0.10em] px-3 py-2 h-auto",
-          isEcell ? "text-[hsl(265_85%_70%)]" : "text-muted-foreground/50",
+          isEcell ? "text-[#C08634] dark:text-[#FAD943]" : "text-muted-foreground/50",
           collapsed && "opacity-0 pointer-events-none",
         )}>
           <span className="inline-flex items-center gap-1.5">
-            {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(265_85%_65%)] shadow-[0_0_8px_hsl(265_85%_65%/0.7)]" />}
+            {isEcell && <span className="h-1.5 w-1.5 rounded-full bg-[#FCE541] shadow-[0_0_8px_rgba(252,229,65,0.7)]" />}
             {section.label}
           </span>
         </SidebarGroupLabel>
@@ -205,7 +212,7 @@ export default function AppSidebar() {
                       "transition-all duration-fast",
                       active
                         ? isEcell
-                          ? "bg-[hsl(265_85%_65%/0.12)] text-[hsl(265_85%_75%)] font-medium shadow-[inset_0_0_0_1px_hsl(265_85%_65%/0.25)]"
+                          ? "bg-[#FCE541]/20 text-[#000000] dark:text-[#FCE541] font-bold shadow-[inset_0_0_0_1px_rgba(192,134,52,0.45)]"
                           : "bg-primary/10 text-primary font-medium shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     )}
@@ -220,17 +227,17 @@ export default function AppSidebar() {
                       <Icon className={cn(
                         "h-3.5 w-3.5 shrink-0 transition-all duration-fast",
                         active
-                          ? isEcell ? "text-[hsl(265_85%_72%)]" : "text-primary"
+                          ? isEcell ? "text-[#C08634] dark:text-[#FCE541]" : "text-primary"
                           : isEcell
-                            ? "text-[hsl(265_85%_70%)]/70 group-hover/item:text-[hsl(265_85%_75%)]"
+                            ? "text-[#C08634]/70 group-hover/item:text-[#C08634]"
                             : "text-muted-foreground/60 group-hover/item:text-foreground/80",
                       )} />
                       <span className="flex-1 leading-none">{item.title}</span>
                       {badgeCount > 0 && (
                         <span className={cn(
                           "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full",
-                          isEcell ? "bg-[hsl(265_85%_65%)]" : "bg-primary",
-                          "text-primary-foreground px-1 text-[9px] font-bold leading-none animate-scale-in",
+                          isEcell ? "bg-[#FCE541] text-[#000000]" : "bg-primary text-primary-foreground",
+                          "px-1 text-[9px] font-bold leading-none animate-scale-in",
                         )}>
                           {badgeCount > 99 ? "99+" : badgeCount}
                         </span>

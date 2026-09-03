@@ -380,12 +380,12 @@
     );
   }
 
-  /* E-Cell exclusive: Purple → Indigo */
+  /* E-Cell exclusive: Sunflower Yellow → Warm Gold */
   .gradient-ecell {
-    background: linear-gradient(135deg, hsl(265 85% 62%), hsl(245 80% 58%));
+    background: linear-gradient(135deg, #FCE541, #C08634);
   }
   .gradient-ecell-text {
-    background: linear-gradient(135deg, hsl(265 85% 65%), hsl(245 85% 65%));
+    background: linear-gradient(135deg, #FCE541, #C08634);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
