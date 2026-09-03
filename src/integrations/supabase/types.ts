@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -3155,6 +3155,10 @@ export type Database = {
       course_code_to_class_suffix: {
         Args: { p_course_code: string }
         Returns: string
+      }
+      delete_exam: {
+        Args: { p_exam_id: string }
+        Returns: Json
       }
       delete_student_account_permanently: {
         Args: { p_user_id: string }

@@ -60,6 +60,7 @@ export function ExamMarksEntryModal({
   open,
   onOpenChange,
   onExamUpdated,
+  onExamDeleted,
 }: ExamMarksEntryModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
