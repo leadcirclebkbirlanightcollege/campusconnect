@@ -5,7 +5,7 @@ import {
   LayoutDashboard, BookOpen, Users, CheckSquare,
   Megaphone, Calendar, UserCircle, LogOut, Menu,
   GraduationCap, ChevronRight, BarChart2, FileText,
-  Building2, Sparkles,
+  Building2, Sparkles, ClipboardList,
 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
@@ -20,6 +20,7 @@ const NAV = [
   { to: "/faculty/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
   { to: "/faculty/my-lectures",   icon: BookOpen,        label: "My Lectures" },
   { to: "/faculty/attendance",    icon: CheckSquare,     label: "Attendance" },
+  { to: "/faculty/exams",         icon: ClipboardList,   label: "Exams & Marks" },
   { to: "/faculty/students",      icon: Users,           label: "Students" },
   { to: "/faculty/assignments",   icon: FileText,        label: "Assignments" },
   { to: "/faculty/announcements", icon: Megaphone,       label: "Announcements" },

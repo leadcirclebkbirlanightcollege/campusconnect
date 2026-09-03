@@ -15,14 +15,26 @@ import { cn } from "@/lib/utils";
 
 type Result = {
   id: string;
-  marks_obtained: number;
+  marks_obtained: number | null;
+  is_absent: boolean;
+  status: string | null;
   grade: string | null;
   remarks: string | null;
   created_at: string;
-  exams: { title: string; subject: string; max_marks: number; exam_date: string } | null;
+  exams: {
+    title: string;
+    subject: string;
+    exam_type: string | null;
+    topic: string | null;
+    max_marks: number;
+    min_marks: number | null;
+    exam_date: string;
+    status: string;
+  } | null;
 };
 
-function gradeTone(pct: number) {
+function gradeTone(pct: number, isAbsent?: boolean) {
+  if (isAbsent) return { text: "text-amber-600", bg: "bg-amber-500", soft: "bg-amber-500/12 text-amber-600" };
   if (pct >= 85) return { text: "text-success", bg: "bg-success", soft: "bg-success/12 text-success" };
   if (pct >= 60) return { text: "text-warning", bg: "bg-warning", soft: "bg-warning/12 text-warning" };
   return { text: "text-danger", bg: "bg-danger", soft: "bg-danger/12 text-danger" };
@@ -41,7 +53,7 @@ function Panel({ children, className }: { children: React.ReactNode; className?:
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border-subtle bg-surface-1 p-4 shadow-xs",
+        "rounded-[24px] border border-border-subtle bg-surface-1 p-4 shadow-[0_16px_38px_-30px_hsl(var(--foreground)/0.55)]",
         className,
       )}
     >
@@ -69,7 +81,7 @@ export default function StudentResults() {
     queryFn: async () => {
       const { data } = await supabase
         .from("exam_results")
-        .select("id,marks_obtained,grade,remarks,created_at,exams(title,subject,max_marks,exam_date)")
+        .select("id,marks_obtained,is_absent,status,grade,remarks,created_at,exams(title,subject,exam_type,topic,max_marks,min_marks,exam_date,status)")
         .eq("student_user_id", user!.id)
         .order("created_at", { ascending: false });
       return (data ?? []) as unknown as Result[];
@@ -81,16 +93,22 @@ export default function StudentResults() {
     () =>
       results.map((r) => {
         const max = r.exams?.max_marks ?? 100;
-        const pct = Math.round((r.marks_obtained / max) * 100);
-        return { ...r, max, pct };
+        const marks = r.marks_obtained ?? 0;
+        const pct = r.is_absent ? 0 : Math.round((marks / max) * 100);
+        const minMarks = r.exams?.min_marks ?? 40;
+        const isPassed = !r.is_absent && (r.status === "PASSED" || marks >= minMarks);
+        return { ...r, max, pct, isPassed };
       }),
     [results],
   );
 
-  const avgPct = enriched.length ? enriched.reduce((s, r) => s + r.pct, 0) / enriched.length : 0;
-  const passedCount = enriched.filter((r) => r.pct >= 60).length;
+  const presentResults = useMemo(() => enriched.filter((r) => !r.is_absent), [enriched]);
+  const avgPct = presentResults.length
+    ? presentResults.reduce((s, r) => s + r.pct, 0) / presentResults.length
+    : 0;
+  const passedCount = enriched.filter((r) => r.isPassed).length;
   const failedCount = enriched.length - passedCount;
-  const topCount = enriched.filter((r) => r.pct >= 85).length;
+  const topCount = enriched.filter((r) => !r.is_absent && r.pct >= 85).length;
   const cgpa = (avgPct / 9.5).toFixed(2);
 
   /* Chronological trend (oldest → newest) */
@@ -303,7 +321,7 @@ export default function StudentResults() {
                 ) : (
                   <div className="space-y-2.5">
                     {filtered.map((r, i) => {
-                      const tone = gradeTone(r.pct);
+                      const tone = gradeTone(r.pct, r.is_absent);
                       return (
                         <motion.article
                           key={r.id}
@@ -314,13 +332,38 @@ export default function StudentResults() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="truncate font-heading text-[14px] font-bold text-foreground">
-                                {r.exams?.title ?? "Exam"}
-                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="truncate font-heading text-[14px] font-bold text-foreground">
+                                  {r.exams?.exam_type || r.exams?.title || "Exam"}
+                                </p>
+                                {r.is_absent ? (
+                                  <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30 text-[9px] font-bold uppercase">
+                                    Absent
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-[9px] font-bold uppercase",
+                                      r.isPassed
+                                        ? "bg-success/15 text-success border-success/30"
+                                        : "bg-danger/15 text-danger border-danger/30"
+                                    )}
+                                  >
+                                    {r.isPassed ? "Passed" : "Failed"}
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                                 <span className="inline-flex items-center gap-1">
-                                  <BookOpen className="h-3 w-3" /> {r.exams?.subject}
+                                  <BookOpen className="h-3 w-3" /> {r.exams?.topic || r.exams?.subject}
                                 </span>
+                                {r.exams?.min_marks && (
+                                  <>
+                                    <span>·</span>
+                                    <span>Pass mark: {r.exams.min_marks}</span>
+                                  </>
+                                )}
                                 {r.exams?.exam_date && (
                                   <>
                                     <span>·</span>
@@ -330,16 +373,26 @@ export default function StudentResults() {
                               </div>
                             </div>
                             <div className="shrink-0 text-right">
-                              <p className={cn("font-heading text-[20px] font-black tabular-nums leading-none", tone.text)}>
-                                {r.marks_obtained}
-                                <span className="text-sm text-muted-foreground">/{r.max}</span>
-                              </p>
-                              <p className={cn("mt-1 text-[11px] font-semibold", tone.text)}>{r.pct}%</p>
+                              {r.is_absent ? (
+                                <p className="font-heading text-[16px] font-bold tabular-nums text-amber-600">
+                                  ABSENT
+                                </p>
+                              ) : (
+                                <>
+                                  <p className={cn("font-heading text-[20px] font-black tabular-nums leading-none", tone.text)}>
+                                    {r.marks_obtained}
+                                    <span className="text-sm text-muted-foreground">/{r.max}</span>
+                                  </p>
+                                  <p className={cn("mt-1 text-[11px] font-semibold", tone.text)}>{r.pct}%</p>
+                                </>
+                              )}
                             </div>
                           </div>
-                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
-                            <div className={cn("h-full rounded-full transition-[width] duration-500", tone.bg)} style={{ width: `${r.pct}%` }} />
-                          </div>
+                          {!r.is_absent && (
+                            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3">
+                              <div className={cn("h-full rounded-full transition-[width] duration-500", tone.bg)} style={{ width: `${r.pct}%` }} />
+                            </div>
+                          )}
                           {(r.grade || r.remarks) && (
                             <div className="mt-2.5 flex items-center justify-between gap-2">
                               {r.grade && (

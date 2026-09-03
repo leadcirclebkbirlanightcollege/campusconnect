@@ -1,9 +1,26 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
+import { format } from "date-fns";
+import { toast } from "sonner";
 import {
-  Plus, Trash2, ClipboardList, Search, BookOpen, Award,
+  Plus,
+  Trash2,
+  ClipboardList,
+  Search,
+  BookOpen,
+  Award,
+  GraduationCap,
+  Calendar,
+  Lock,
+  CheckCircle2,
+  Eye,
+  RotateCcw,
+  SlidersHorizontal,
+  Send,
+  Users,
+  ShieldCheck,
 } from "@/components/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,65 +28,94 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
-type Exam = {
+type ExamRow = {
   id: string;
   title: string;
   subject: string;
+  exam_type: string | null;
+  topic: string | null;
+  class_id: string | null;
+  college_id: string | null;
   exam_date: string;
   max_marks: number;
+  min_marks: number;
+  status: "DRAFT" | "MARKS_ENTRY" | "LOCKED" | "PUBLISHED";
   is_active: boolean;
   created_at: string;
+  created_by: string;
+  locked_at: string | null;
+  locked_by: string | null;
+  unlocked_at: string | null;
+  unlocked_by: string | null;
+  published_at: string | null;
+  published_by: string | null;
   description: string | null;
+  classes?: { id: string; name: string; section: string | null } | null;
+  creator?: { name: string; email: string } | null;
+  locker?: { name: string } | null;
+  unlocker?: { name: string } | null;
+  publisher?: { name: string } | null;
 };
 
-type ResultEntry = {
+type ExamResultRow = {
+  id: string;
   student_user_id: string;
-  marks_obtained: number;
-  grade: string;
-  remarks: string;
+  marks_obtained: number | null;
+  is_absent: boolean;
+  status: string;
+  grade: string | null;
+  remarks: string | null;
+  student?: {
+    name: string;
+    student_id: string | null;
+    avatar_url: string | null;
+  } | null;
 };
-
-type ExamForm = {
-  title: string;
-  subject: string;
-  exam_date: string;
-  max_marks: string;
-  description: string;
-};
-
-const EMPTY_FORM: ExamForm = {
-  title: "",
-  subject: "",
-  exam_date: format(new Date(), "yyyy-MM-dd"),
-  max_marks: "100",
-  description: "",
-};
-
-function gradeFromPct(pct: number) {
-  if (pct >= 90) return "O";
-  if (pct >= 75) return "A+";
-  if (pct >= 60) return "A";
-  if (pct >= 50) return "B";
-  if (pct >= 40) return "C";
-  return "F";
-}
 
 export default function AdminExamsPage() {
   const { user } = useAuth();
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<ExamForm>(EMPTY_FORM);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
-  const [resultsOpen, setResultsOpen] = useState(false);
-  const [resultsData, setResultsData] = useState<ResultEntry[]>([]);
+  const queryClient = useQueryClient();
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [facultyFilter, setFacultyFilter] = useState("ALL");
+  const [classFilter, setClassFilter] = useState("ALL");
+
+  const [selectedExamForView, setSelectedExamForView] = useState<ExamRow | null>(null);
+  const [examToUnlock, setExamToUnlock] = useState<ExamRow | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [examToPublish, setExamToPublish] = useState<ExamRow | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  // College ID query
   const { data: collegeId } = useQuery({
     queryKey: ["my_college_id"],
     queryFn: async () => {
@@ -79,289 +125,584 @@ export default function AdminExamsPage() {
     staleTime: 120_000,
   });
 
-  const { data: exams = [], isLoading } = useQuery<Exam[]>({
-    queryKey: ["admin", "exams"],
+  // Fetch all exams for this college with class and creator info
+  const { data: exams = [], isLoading } = useQuery<ExamRow[]>({
+    queryKey: ["admin", "exams", collegeId],
+    enabled: !!collegeId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exams")
+        .select(`
+          *,
+          classes(id, name, section),
+          creator:profiles!exams_created_by_fkey(name, email),
+          locker:profiles!exams_locked_by_fkey(name),
+          unlocker:profiles!exams_unlocked_by_fkey(name),
+          publisher:profiles!exams_published_by_fkey(name)
+        `)
+        .eq("college_id", collegeId!)
+        .order("exam_date", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching admin exams:", error);
+        // Fallback without all foreign joins if some keys differ
+        const { data: fallbackData } = await supabase
+          .from("exams")
+          .select("*, classes(id, name, section)")
+          .eq("college_id", collegeId!)
+          .order("exam_date", { ascending: false });
+        return (fallbackData ?? []) as unknown as ExamRow[];
+      }
+      return (data ?? []) as unknown as ExamRow[];
+    },
+    staleTime: 20_000,
+  });
+
+  // Fetch all classes for filter dropdown
+  const { data: classes = [] } = useQuery({
+    queryKey: ["admin", "classes", collegeId],
     enabled: !!collegeId,
     queryFn: async () => {
       const { data } = await supabase
-        .from("exams")
-        .select("id,title,subject,exam_date,max_marks,is_active,created_at,description")
+        .from("classes")
+        .select("id, name, section")
         .eq("college_id", collegeId!)
-        .order("exam_date", { ascending: false });
-      return (data ?? []) as Exam[];
-    },
-    staleTime: 30_000,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      if (!user || !collegeId) throw new Error("Not authenticated");
-      if (!form.title.trim()) throw new Error("Title is required");
-      const { error } = await supabase.from("exams").insert({
-        college_id: collegeId,
-        created_by: user.id,
-        title: form.title.trim(),
-        subject: form.subject.trim(),
-        exam_date: form.exam_date,
-        max_marks: parseInt(form.max_marks) || 100,
-        description: form.description.trim() || null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Exam created");
-      qc.invalidateQueries({ queryKey: ["admin", "exams"] });
-      setOpen(false);
-      setForm(EMPTY_FORM);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("exams").update({ is_active: false }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Exam removed"); qc.invalidateQueries({ queryKey: ["admin", "exams"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  // Load students for result entry
-  const { data: students = [] } = useQuery({
-    queryKey: ["admin", "students_for_results", selectedExam?.id],
-    enabled: !!selectedExam && resultsOpen,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("user_id,name,student_id")
-        .eq("college_id", collegeId!)
-        .eq("is_deleted", false)
         .order("name");
       return data ?? [];
     },
     staleTime: 60_000,
   });
 
-  const openResults = async (exam: Exam) => {
-    setSelectedExam(exam);
-    setResultsOpen(true);
-    // Prefetch existing results
-    const { data } = await supabase
-      .from("exam_results")
-      .select("student_user_id,marks_obtained,grade,remarks")
-      .eq("exam_id", exam.id);
-    if (data) {
-      setResultsData(data.map(r => ({
-        student_user_id: r.student_user_id,
-        marks_obtained: r.marks_obtained as unknown as number,
-        grade: r.grade ?? "",
-        remarks: r.remarks ?? "",
-      })));
+  // Extract unique faculty creators for filter dropdown
+  const facultyList = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const exam of exams) {
+      if (exam.created_by) {
+        const name = exam.creator?.name || "Faculty Member";
+        map.set(exam.created_by, name);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [exams]);
+
+  // Fetch marks for selected exam when viewing results
+  const { data: examResults = [], isLoading: loadingResults } = useQuery<ExamResultRow[]>({
+    queryKey: ["admin", "exam_results", selectedExamForView?.id],
+    enabled: !!selectedExamForView?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exam_results")
+        .select(`
+          id,
+          student_user_id,
+          marks_obtained,
+          is_absent,
+          status,
+          grade,
+          remarks,
+          student:profiles!exam_results_student_user_id_fkey(name, student_id, avatar_url)
+        `)
+        .eq("exam_id", selectedExamForView!.id);
+
+      if (error) {
+        console.error("Error fetching exam results:", error);
+        return [];
+      }
+      return (data ?? []) as unknown as ExamResultRow[];
+    },
+  });
+
+  // Filtered exams
+  const filteredExams = useMemo(() => {
+    return exams.filter((exam) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        (exam.exam_type || exam.title || "").toLowerCase().includes(q) ||
+        (exam.topic || exam.subject || "").toLowerCase().includes(q) ||
+        (exam.classes?.name || "").toLowerCase().includes(q) ||
+        (exam.creator?.name || "").toLowerCase().includes(q);
+
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "MARKS_ENTRY" && (exam.status === "MARKS_ENTRY" || exam.status === "DRAFT")) ||
+        exam.status === statusFilter;
+
+      const matchesFaculty = facultyFilter === "ALL" || exam.created_by === facultyFilter;
+      const matchesClass = classFilter === "ALL" || exam.class_id === classFilter;
+
+      return matchesSearch && matchesStatus && matchesFaculty && matchesClass;
+    });
+  }, [exams, searchQuery, statusFilter, facultyFilter, classFilter]);
+
+  // Handle Admin Unlock
+  const handleUnlockExam = async () => {
+    if (!examToUnlock) return;
+    setIsUnlocking(true);
+    try {
+      const { error } = await supabase.rpc("admin_unlock_exam", {
+        p_exam_id: examToUnlock.id,
+      });
+
+      if (error) throw error;
+
+      toast.success("Exam unlocked! Faculty can now edit marks again.");
+      setExamToUnlock(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "exams"] });
+    } catch (err: unknown) {
+      console.error("Failed to unlock exam:", err);
+      const message = err instanceof Error ? err.message : "Failed to unlock examination";
+      toast.error(message);
+    } finally {
+      setIsUnlocking(false);
     }
   };
 
-  const getResult = (userId: string) =>
-    resultsData.find(r => r.student_user_id === userId) ??
-    { student_user_id: userId, marks_obtained: 0, grade: "", remarks: "" };
+  // Handle Admin Publish
+  const handlePublishExam = async () => {
+    if (!examToPublish) return;
+    setIsPublishing(true);
+    try {
+      const { error } = await supabase.rpc("faculty_publish_exam", {
+        p_exam_id: examToPublish.id,
+      });
 
-  const updateResult = (userId: string, marks: number) => {
-    const max = selectedExam?.max_marks ?? 100;
-    const pct = (marks / max) * 100;
-    const grade = gradeFromPct(pct);
-    setResultsData(prev => {
-      const existing = prev.findIndex(r => r.student_user_id === userId);
-      const entry = { student_user_id: userId, marks_obtained: marks, grade, remarks: "" };
-      if (existing >= 0) {
-        const next = [...prev];
-        next[existing] = entry;
-        return next;
-      }
-      return [...prev, entry];
-    });
+      if (error) throw error;
+
+      toast.success("Exam results published to students!");
+      setExamToPublish(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "exams"] });
+      queryClient.invalidateQueries({ queryKey: ["student", "results"] });
+    } catch (err: unknown) {
+      console.error("Failed to publish exam:", err);
+      const message = err instanceof Error ? err.message : "Failed to publish examination";
+      toast.error(message);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
-  const saveResultsMutation = useMutation({
-    mutationFn: async () => {
-      if (!user || !selectedExam) throw new Error("No exam selected");
-      const rows = resultsData
-        .filter(r => r.marks_obtained > 0 || r.grade)
-        .map(r => ({
-          exam_id: selectedExam.id,
-          student_user_id: r.student_user_id,
-          college_id: collegeId!,
-          marks_obtained: r.marks_obtained,
-          grade: r.grade || gradeFromPct((r.marks_obtained / selectedExam.max_marks) * 100),
-          entered_by: user.id,
-          remarks: r.remarks || null,
-        }));
-      if (!rows.length) throw new Error("No results to save");
-      const { error } = await supabase.from("exam_results").upsert(rows, { onConflict: "exam_id,student_user_id" });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Results saved"); setResultsOpen(false); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-5">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Exams & Results</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Manage exams and publish student results</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Exams & Marks
+            </h1>
+            <Badge variant="secondary" className="text-xs font-semibold">
+              Admin Oversight
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+            Centralized monitoring of examinations, faculty submissions, marks locking, unlocking, and published student results.
+          </p>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Create Exam
-        </Button>
       </div>
 
+      {/* Filter Toolbar */}
+      <div className="p-4 rounded-xl bg-surface-1 border border-border/80 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search title, subject, faculty..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-xs"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Statuses</SelectItem>
+              <SelectItem value="MARKS_ENTRY">Marks Entry (In Progress)</SelectItem>
+              <SelectItem value="LOCKED">Locked</SelectItem>
+              <SelectItem value="PUBLISHED">Published</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Faculty Filter */}
+          <Select value={facultyFilter} onValueChange={setFacultyFilter}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="All Faculty" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Faculty</SelectItem>
+              {facultyList.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Class Filter */}
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="All Classes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Classes</SelectItem>
+              {classes.map((cls) => (
+                <SelectItem key={cls.id} value={cls.id}>
+                  {cls.name} {cls.section ? `(${cls.section})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Examinations Table Area */}
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
         </div>
-      ) : exams.length === 0 ? (
-        <Card className="border-dashed border-border/40">
-          <CardContent className="py-12 text-center">
-            <ClipboardList className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No exams yet</p>
-            <Button size="sm" variant="outline" className="mt-3" onClick={() => setOpen(true)}>
-              Create first exam
-            </Button>
+      ) : filteredExams.length === 0 ? (
+        <Card className="border-dashed border-border/80 bg-surface-1/40 py-16 text-center">
+          <CardContent>
+            <ClipboardList className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-foreground">No examinations match filters</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Adjust search keywords or reset filter dropdowns to see all exams.
+            </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {exams.map((exam) => (
-            <Card key={exam.id} className="border-border/40 hover:border-border/60 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-foreground">{exam.title}</p>
-                      <Badge variant={exam.is_active ? "default" : "secondary"} className="text-[10px] h-4">
-                        {exam.is_active ? "Active" : "Archived"}
-                      </Badge>
+        <div className="border border-border rounded-xl overflow-hidden shadow-xs bg-card">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold">
+                <th className="py-3 px-4">Examination & Topic</th>
+                <th className="py-3 px-4">Class</th>
+                <th className="py-3 px-4">Faculty Creator</th>
+                <th className="py-3 px-4 text-center">Max / Min</th>
+                <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {filteredExams.map((exam) => (
+                <tr key={exam.id} className="hover:bg-muted/20 transition-colors">
+                  {/* Examination & Topic */}
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-bold text-foreground">
+                        {exam.exam_type || exam.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <BookOpen className="h-3 w-3 text-primary" />
+                        {exam.topic || exam.subject}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <BookOpen className="h-3 w-3" />{exam.subject}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(exam.exam_date), "dd MMM yyyy")}
-                      </span>
-                      <span className="text-xs text-muted-foreground">Max: {exam.max_marks}</span>
+                  </td>
+
+                  {/* Class */}
+                  <td className="py-3 px-4">
+                    <span className="font-medium text-foreground">
+                      {exam.classes?.name || "—"}
+                    </span>
+                  </td>
+
+                  {/* Faculty Creator */}
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {exam.creator?.name || "Faculty Member"}
+                      </p>
+                      {exam.creator?.email && (
+                        <p className="text-[10px] text-muted-foreground">
+                          {exam.creator.email}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
+                  </td>
+
+                  {/* Max / Min Marks */}
+                  <td className="py-3 px-4 text-center">
+                    <span className="font-bold text-foreground">{exam.max_marks}</span>
+                    <span className="text-muted-foreground text-[10px] mx-1">/</span>
+                    <span className="text-muted-foreground text-[11px] font-medium">{exam.min_marks}</span>
+                  </td>
+
+                  {/* Date */}
+                  <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                    {format(new Date(exam.exam_date), "dd MMM yyyy")}
+                  </td>
+
+                  {/* Status Badge */}
+                  <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <Badge
                       variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => openResults(exam)}
+                      className={cn(
+                        "text-[10px] uppercase font-bold py-0.5",
+                        exam.status === "PUBLISHED" &&
+                          "bg-success/15 text-success border-success/30",
+                        exam.status === "LOCKED" &&
+                          "bg-primary/15 text-primary border-primary/30",
+                        (exam.status === "MARKS_ENTRY" || exam.status === "DRAFT") &&
+                          "bg-amber-500/15 text-amber-700 border-amber-500/30"
+                      )}
                     >
-                      <Award className="h-3 w-3" /> Results
-                    </Button>
-                    <Button aria-label="Delete"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteMutation.mutate(exam.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      {exam.status === "PUBLISHED" && "✓ Published"}
+                      {exam.status === "LOCKED" && "🔒 Locked"}
+                      {(exam.status === "MARKS_ENTRY" || exam.status === "DRAFT") && "Marks Entry"}
+                    </Badge>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {/* View Marks Action */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-xs gap-1"
+                        onClick={() => setSelectedExamForView(exam)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Marks
+                      </Button>
+
+                      {/* Admin Unlock Action (Requirement 11) */}
+                      {exam.status === "LOCKED" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2.5 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10"
+                          title="Unlock Marks for Faculty Edit"
+                          onClick={() => setExamToUnlock(exam)}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          Unlock
+                        </Button>
+                      )}
+
+                      {/* Admin Publish Action (if locked) */}
+                      {exam.status === "LOCKED" && (
+                        <Button
+                          size="sm"
+                          className="h-8 px-2.5 text-xs gap-1 bg-success text-success-foreground hover:bg-success/90"
+                          title="Publish Results to Students"
+                          onClick={() => setExamToPublish(exam)}
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          Publish
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
-      {/* Create Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-primary" /> Create Exam
-            </DialogTitle>
+      {/* View Marks Breakdown Dialog */}
+      <Dialog
+        open={!!selectedExamForView}
+        onOpenChange={(open) => !open && setSelectedExamForView(null)}
+      >
+        <DialogContent className="sm:max-w-[760px] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-5 border-b border-border bg-surface-1">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <DialogTitle className="text-base font-bold">
+                  {selectedExamForView?.exam_type || selectedExamForView?.title} — Marks
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {selectedExamForView?.topic || selectedExamForView?.subject} •{" "}
+                  {selectedExamForView?.classes?.name || "Class"} • Max:{" "}
+                  {selectedExamForView?.max_marks} • Passing:{" "}
+                  {selectedExamForView?.min_marks}
+                </DialogDescription>
+              </div>
+
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[10px] uppercase font-bold py-0.5",
+                  selectedExamForView?.status === "PUBLISHED" &&
+                    "bg-success/15 text-success border-success/30",
+                  selectedExamForView?.status === "LOCKED" &&
+                    "bg-primary/15 text-primary border-primary/30",
+                  (selectedExamForView?.status === "MARKS_ENTRY" ||
+                    selectedExamForView?.status === "DRAFT") &&
+                    "bg-amber-500/15 text-amber-700 border-amber-500/30"
+                )}
+              >
+                {selectedExamForView?.status}
+              </Badge>
+            </div>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Title *</Label>
-              <Input className="h-9 mt-1 text-sm" value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Semester I Final Exam" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Subject</Label>
-                <Input className="h-9 mt-1 text-sm" value={form.subject} onChange={(e) => setForm(p => ({ ...p, subject: e.target.value }))} placeholder="e.g. Mathematics" />
+
+          <div className="flex-1 overflow-y-auto p-5">
+            {loadingResults ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
               </div>
-              <div>
-                <Label className="text-xs">Max Marks</Label>
-                <Input type="number" className="h-9 mt-1 text-sm" value={form.max_marks} onChange={(e) => setForm(p => ({ ...p, max_marks: e.target.value }))} />
+            ) : examResults.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground text-xs">
+                No marks recorded for this examination yet.
               </div>
-            </div>
-            <div>
-              <Label className="text-xs">Exam Date</Label>
-              <Input type="date" className="h-9 mt-1 text-sm" value={form.exam_date} onChange={(e) => setForm(p => ({ ...p, exam_date: e.target.value }))} />
-            </div>
-            <div>
-              <Label className="text-xs">Description</Label>
-              <Textarea className="mt-1 text-sm resize-none" rows={2} value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional instructions…" />
-            </div>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40 font-semibold text-muted-foreground">
+                      <th className="py-2 px-3">Student</th>
+                      <th className="py-2 px-3 text-center">Absent?</th>
+                      <th className="py-2 px-3">Marks</th>
+                      <th className="py-2 px-3 text-center">Status</th>
+                      <th className="py-2 px-3">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {examResults.map((r) => (
+                      <tr key={r.id}>
+                        <td className="py-2 px-3">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6 text-[9px]">
+                              <AvatarImage src={r.student?.avatar_url || ""} />
+                              <AvatarFallback>
+                                {(r.student?.name || "ST").substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-semibold text-foreground">
+                              {r.student?.name || "Enrolled Student"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          {r.is_absent ? (
+                            <span className="text-[10px] font-bold text-amber-600">YES</span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">No</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 font-semibold">
+                          {r.is_absent ? (
+                            <span className="text-amber-600 font-bold">ABSENT</span>
+                          ) : r.marks_obtained !== null ? (
+                            <span>{r.marks_obtained}</span>
+                          ) : (
+                            <span className="text-muted-foreground italic">Pending</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[9px] uppercase font-bold py-0.5",
+                              r.status === "PASSED" && "bg-success/15 text-success border-success/30",
+                              r.status === "FAILED" && "bg-danger/15 text-danger border-danger/30",
+                              r.status === "ABSENT" && "bg-amber-500/15 text-amber-700 border-amber-500/30",
+                              r.status === "PENDING" && "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {r.status}
+                          </Badge>
+                        </td>
+                        <td className="py-2 px-3 text-muted-foreground text-[11px]">
+                          {r.remarks || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating…" : "Create"}
+
+          <DialogFooter className="p-4 border-t border-border bg-surface-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedExamForView(null)}
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Results Entry Dialog */}
-      <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-primary" />
-              {selectedExam?.title} — Enter Results
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {students.map((s) => {
-              const r = getResult(s.user_id);
-              return (
-                <div key={s.user_id} className="flex items-center gap-3 rounded-lg border border-border/30 px-3 py-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{s.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.student_id ?? "—"}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      className="h-8 w-20 text-sm text-center"
-                      min={0}
-                      max={selectedExam?.max_marks ?? 100}
-                      value={r.marks_obtained || ""}
-                      onChange={(e) => updateResult(s.user_id, parseFloat(e.target.value) || 0)}
-                      placeholder="Marks"
-                    />
-                    <span className="text-xs text-muted-foreground">/{selectedExam?.max_marks ?? 100}</span>
-                    {r.marks_obtained > 0 && (
-                      <Badge variant="secondary" className="text-[10px]">{r.grade}</Badge>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResultsOpen(false)}>Cancel</Button>
-            <Button onClick={() => saveResultsMutation.mutate()} disabled={saveResultsMutation.isPending}>
-              {saveResultsMutation.isPending ? "Saving…" : "Publish Results"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Admin Unlock Confirmation Dialog (Requirement 11) */}
+      <AlertDialog open={!!examToUnlock} onOpenChange={(open) => !open && setExamToUnlock(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <RotateCcw className="h-5 w-5 text-primary" />
+              <AlertDialogTitle className="text-base">Unlock Examination Marks?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                Unlocking will allow the faculty (
+                <strong>{examToUnlock?.creator?.name || "Faculty"}</strong>) to edit the marks for{" "}
+                <strong>{examToUnlock?.exam_type || examToUnlock?.title}</strong> again.
+              </p>
+              <div className="p-3 bg-muted/60 rounded-lg text-[11px] text-foreground space-y-1">
+                <p className="font-semibold text-primary">Audit Log:</p>
+                <p>• Exam status will return to MARKS_ENTRY.</p>
+                <p>• Your administrator user ID and current timestamp will be recorded.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUnlocking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnlockExam}
+              disabled={isUnlocking}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isUnlocking ? "Unlocking..." : "Confirm & Unlock"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Admin Publish Confirmation Dialog */}
+      <AlertDialog open={!!examToPublish} onOpenChange={(open) => !open && setExamToPublish(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-success mb-1">
+              <Send className="h-5 w-5 text-success" />
+              <AlertDialogTitle className="text-base">Publish Examination Results?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                Are you sure you want to publish marks for{" "}
+                <strong>{examToPublish?.exam_type || examToPublish?.title}</strong>?
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                All enrolled students will immediately be notified and can view their results in the Student Portal.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPublishing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePublishExam}
+              disabled={isPublishing}
+              className="bg-success text-success-foreground hover:bg-success/90"
+            >
+              {isPublishing ? "Publishing..." : "Publish to Students"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

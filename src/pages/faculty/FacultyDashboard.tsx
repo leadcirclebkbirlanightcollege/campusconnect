@@ -26,6 +26,7 @@ import {
   Sparkles,
   ChevronRight,
   TrendingUp,
+  ClipboardList,
 } from "@/components/icons";
 import {
   format,
@@ -645,6 +646,16 @@ export default function FacultyDashboard() {
           >
             <Megaphone className="h-3.5 w-3.5" aria-hidden />
             Announcement
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => navigate("/faculty/exams")}
+            className="h-9 rounded-lg text-xs font-semibold gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ClipboardList className="h-3.5 w-3.5 text-primary" aria-hidden />
+            Exams & Marks
           </Button>
         </div>
       </div>

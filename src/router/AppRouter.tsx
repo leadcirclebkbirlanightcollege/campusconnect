@@ -37,6 +37,7 @@ const FacultySchedule      = lazy(() => import("@/pages/faculty/FacultySchedule"
 const FacultyProfile       = lazy(() => import("@/pages/faculty/FacultyProfile"));
 const FacultyAnalytics     = lazy(() => import("@/pages/faculty/FacultyAnalytics"));
 const FacultyAssignments   = lazy(() => import("@/pages/faculty/FacultyAssignments"));
+const FacultyExamsPage     = lazy(() => import("@/pages/faculty/exams/FacultyExamsPage"));
 
 
 // ── Student pages ─────────────────────────────────────────────────────────────
@@ -327,6 +328,7 @@ export default function AppRouter() {
             <Route path="dashboard"     element={<FacultyDashboard />} />
             <Route path="my-lectures"   element={<FacultyMyLectures />} />
             <Route path="attendance"    element={<FacultyAttendance />} />
+            <Route path="exams"         element={<FacultyExamsPage />} />
             <Route path="students"      element={<FacultyStudents />} />
             <Route path="announcements" element={<FacultyAnnouncements />} />
             <Route path="schedule"      element={<FacultySchedule />} />

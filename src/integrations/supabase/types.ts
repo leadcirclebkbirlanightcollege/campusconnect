@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -10,7 +10,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -753,6 +778,13 @@ export type Database = {
             referencedRelation: "colleges"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "core_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       daily_checkins: {
@@ -1199,8 +1231,10 @@ export type Database = {
           exam_id: string
           grade: string | null
           id: string
-          marks_obtained: number
+          is_absent: boolean
+          marks_obtained: number | null
           remarks: string | null
+          status: string
           student_user_id: string
           updated_at: string
         }
@@ -1211,8 +1245,10 @@ export type Database = {
           exam_id: string
           grade?: string | null
           id?: string
-          marks_obtained?: number
+          is_absent?: boolean
+          marks_obtained?: number | null
           remarks?: string | null
+          status?: string
           student_user_id: string
           updated_at?: string
         }
@@ -1223,8 +1259,10 @@ export type Database = {
           exam_id?: string
           grade?: string | null
           id?: string
-          marks_obtained?: number
+          is_absent?: boolean
+          marks_obtained?: number | null
           remarks?: string | null
+          status?: string
           student_user_id?: string
           updated_at?: string
         }
@@ -1247,45 +1285,85 @@ export type Database = {
       }
       exams: {
         Row: {
+          class_id: string | null
           college_id: string | null
           created_at: string
           created_by: string
           description: string | null
           exam_date: string
+          exam_type: string | null
           id: string
           is_active: boolean
+          locked_at: string | null
+          locked_by: string | null
           max_marks: number
+          min_marks: number
+          published_at: string | null
+          published_by: string | null
+          status: string
           subject: string
           title: string
+          topic: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
           updated_at: string
         }
         Insert: {
+          class_id?: string | null
           college_id?: string | null
           created_at?: string
           created_by: string
           description?: string | null
           exam_date: string
+          exam_type?: string | null
           id?: string
           is_active?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           max_marks?: number
+          min_marks?: number
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
           subject: string
           title: string
+          topic?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
           updated_at?: string
         }
         Update: {
+          class_id?: string | null
           college_id?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
           exam_date?: string
+          exam_type?: string | null
           id?: string
           is_active?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           max_marks?: number
+          min_marks?: number
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
           subject?: string
           title?: string
+          topic?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "exams_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "exams_college_id_fkey"
             columns: ["college_id"]
@@ -1475,7 +1553,7 @@ export type Database = {
           id: string
           lecture_date: string
           start_time: string
-          status: Database["public"]["Enums"]["lecture_status"]
+          status: string
           topic: string
           updated_at: string
           venue: string
@@ -1489,7 +1567,7 @@ export type Database = {
           id?: string
           lecture_date: string
           start_time: string
-          status?: Database["public"]["Enums"]["lecture_status"]
+          status?: string
           topic: string
           updated_at?: string
           venue: string
@@ -1503,7 +1581,7 @@ export type Database = {
           id?: string
           lecture_date?: string
           start_time?: string
-          status?: Database["public"]["Enums"]["lecture_status"]
+          status?: string
           topic?: string
           updated_at?: string
           venue?: string
@@ -2045,6 +2123,7 @@ export type Database = {
           created_at: string
           current_year: number | null
           date_of_birth: string | null
+          delete_after: string | null
           deleted_at: string | null
           department: string | null
           department_id: string | null
@@ -2059,7 +2138,6 @@ export type Database = {
           graduation_status: string
           graduation_year: number | null
           guardian_name: string | null
-          delete_after: string | null
           id: string
           id_card_path: string | null
           id_card_rejection_reason: string | null
@@ -2079,19 +2157,19 @@ export type Database = {
           profile_completed: boolean
           profile_submitted_at: string | null
           programme_id: string | null
-          rejected_at: string | null
           promoted_at: string | null
+          rejected_at: string | null
           rejection_reason: string | null
           roll_no: string | null
           status: string
           student_id: string | null
+          title: string | null
           updated_at: string
           user_id: string
           validity_end: string | null
           validity_start: string | null
           verified_at: string | null
           verified_by: string | null
-          title: string | null
         }
         Insert: {
           academic_session?: string | null
@@ -2113,6 +2191,7 @@ export type Database = {
           created_at?: string
           current_year?: number | null
           date_of_birth?: string | null
+          delete_after?: string | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
@@ -2127,7 +2206,6 @@ export type Database = {
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
-          delete_after?: string | null
           id?: string
           id_card_path?: string | null
           id_card_rejection_reason?: string | null
@@ -2147,19 +2225,19 @@ export type Database = {
           profile_completed?: boolean
           profile_submitted_at?: string | null
           programme_id?: string | null
-          rejected_at?: string | null
           promoted_at?: string | null
+          rejected_at?: string | null
           rejection_reason?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
+          title?: string | null
           updated_at?: string
           user_id: string
           validity_end?: string | null
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          title?: string | null
         }
         Update: {
           academic_session?: string | null
@@ -2181,6 +2259,7 @@ export type Database = {
           created_at?: string
           current_year?: number | null
           date_of_birth?: string | null
+          delete_after?: string | null
           deleted_at?: string | null
           department?: string | null
           department_id?: string | null
@@ -2195,7 +2274,6 @@ export type Database = {
           graduation_status?: string
           graduation_year?: number | null
           guardian_name?: string | null
-          delete_after?: string | null
           id?: string
           id_card_path?: string | null
           id_card_rejection_reason?: string | null
@@ -2215,26 +2293,25 @@ export type Database = {
           profile_completed?: boolean
           profile_submitted_at?: string | null
           programme_id?: string | null
-          rejected_at?: string | null
           promoted_at?: string | null
+          rejected_at?: string | null
           rejection_reason?: string | null
           roll_no?: string | null
           status?: string
           student_id?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string
           validity_end?: string | null
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          title?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profiles_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
-            
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },
@@ -2463,57 +2540,6 @@ export type Database = {
           },
         ]
       }
-      student_verifications: {
-        Row: {
-          created_at: string
-          document_type: string
-          file_name: string | null
-          file_size: number | null
-          id: string
-          mime_type: string | null
-          rejection_reason: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          storage_path: string
-          submitted_at: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          document_type?: string
-          file_name?: string | null
-          file_size?: number | null
-          id?: string
-          mime_type?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          storage_path: string
-          submitted_at?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          document_type?: string
-          file_name?: string | null
-          file_size?: number | null
-          id?: string
-          mime_type?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          storage_path?: string
-          submitted_at?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       student_achievements: {
         Row: {
           awarded_at: string
@@ -2685,6 +2711,57 @@ export type Database = {
           current_streak?: number
           last_login_date?: string | null
           longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_verifications: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_name: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          submitted_at?: string
           updated_at?: string
           user_id?: string
         }
@@ -3063,26 +3140,7 @@ export type Database = {
         Args: { p_reason?: string; p_user_id: string }
         Returns: undefined
       }
-      cleanup_expired_rejected_students: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      delete_student_account_permanently: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      faculty_delete_lecture: {
-        Args: { p_lecture_id: string }
-        Returns: Json
-      }
-      faculty_generate_attendance: {
-        Args: { p_lecture_id: string }
-        Returns: Json
-      }
-      faculty_end_attendance: {
-        Args: { p_lecture_id: string }
-        Returns: Json
-      }
+      admin_unlock_exam: { Args: { p_exam_id: string }; Returns: Json }
       award_points: {
         Args: {
           p_note?: string
@@ -3093,9 +3151,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      cleanup_expired_rejected_students: { Args: never; Returns: Json }
       course_code_to_class_suffix: {
         Args: { p_course_code: string }
         Returns: string
+      }
+      delete_student_account_permanently: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       ensure_department_classes: {
         Args: { p_department_id: string }
@@ -3107,6 +3170,18 @@ export type Database = {
           p_programme_id?: string
           p_start_date: string
         }
+        Returns: Json
+      }
+      faculty_delete_lecture: { Args: { p_lecture_id: string }; Returns: Json }
+      faculty_end_attendance: { Args: { p_lecture_id: string }; Returns: Json }
+      faculty_generate_attendance: {
+        Args: { p_lecture_id: string }
+        Returns: Json
+      }
+      faculty_lock_exam: { Args: { p_exam_id: string }; Returns: Json }
+      faculty_publish_exam: { Args: { p_exam_id: string }; Returns: Json }
+      faculty_save_exam_marks: {
+        Args: { p_exam_id: string; p_results: Json }
         Returns: Json
       }
       get_admin_college_analytics: { Args: never; Returns: Json }
@@ -3168,6 +3243,7 @@ export type Database = {
           weekly_points: number
         }[]
       }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_active_user: { Args: { check_user_id: string }; Returns: boolean }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_faculty: { Args: { check_user_id: string }; Returns: boolean }
@@ -3213,7 +3289,6 @@ export type Database = {
         | "idea_submission"
         | "other"
       claim_status: "pending" | "approved" | "rejected"
-      lecture_status: "scheduled" | "live" | "ended"
       notification_status: "draft" | "scheduled" | "sent" | "cancelled"
       stall_status: "pending" | "approved" | "rejected"
       stall_type: "food" | "game" | "startup" | "other"
@@ -3232,12 +3307,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3261,11 +3336,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3286,11 +3361,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3311,11 +3386,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3328,11 +3403,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3342,6 +3417,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       account_deletion_status: [
@@ -3359,7 +3437,6 @@ export const Constants = {
         "other",
       ],
       claim_status: ["pending", "approved", "rejected"],
-      lecture_status: ["scheduled", "live", "ended"],
       notification_status: ["draft", "scheduled", "sent", "cancelled"],
       stall_status: ["pending", "approved", "rejected"],
       stall_type: ["food", "game", "startup", "other"],
