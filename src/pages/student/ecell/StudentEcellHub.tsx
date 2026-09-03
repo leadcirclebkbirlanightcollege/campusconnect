@@ -158,7 +158,7 @@ export default function StudentEcellHub() {
       if (!user?.id) return [];
       const { data, error } = await supabase
         .from("stall_registrations")
-        .select("id,event_id,status,stall_name,product_category,created_at")
+        .select("id,event_id,status,stall_name,type,created_at")
         .eq("user_id", user.id);
 
       if (error) {

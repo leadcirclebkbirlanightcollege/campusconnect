@@ -102,7 +102,7 @@ export default function StallRegistrationDialog({ eventId, eventTitle, trigger }
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stall_registrations")
-        .select("id,status,stall_name,product_category,created_at")
+        .select("id,status,stall_name,type,created_at")
         .eq("event_id", eventId)
         .eq("user_id", user!.id)
         .maybeSingle();
