@@ -698,37 +698,52 @@ export type Database = {
       }
       core_team_members: {
         Row: {
+          bio: string | null
           class: string | null
           college_id: string | null
+          contact_enabled: boolean
           created_at: string
+          department: string | null
           designation: string | null
           id: string
           is_active: boolean
           name: string
           order_index: number
           photo_url: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          bio?: string | null
           class?: string | null
           college_id?: string | null
+          contact_enabled?: boolean
           created_at?: string
+          department?: string | null
           designation?: string | null
           id?: string
           is_active?: boolean
           name: string
           order_index?: number
           photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          bio?: string | null
           class?: string | null
           college_id?: string | null
+          contact_enabled?: boolean
           created_at?: string
+          department?: string | null
           designation?: string | null
           id?: string
           is_active?: boolean
           name?: string
           order_index?: number
           photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {

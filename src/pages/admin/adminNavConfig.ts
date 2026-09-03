@@ -86,7 +86,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     accent: "ecell",
     defaultOpen: true,
     items: [
-      { title: "Core Team & Hub", url: "/platform/admin/ecell", icon: "Users" },
+      { title: "Committee", url: "/platform/admin/ecell?tab=committee", icon: "Users" },
       { title: "Stall Requests", url: "/platform/admin/stalls", icon: "Store" },
       { title: "E-Cell Events", url: "/platform/admin/events?ecell=1", icon: "CalendarDays" },
       { title: "Points Ledger", url: "/platform/admin/points", icon: "Coins" },
@@ -137,7 +137,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/points": { title: "Points Ledger", description: "Points & adjustments" },
   "/platform/admin/point-claims": { title: "E-Cell · Point Claims", description: "Approve student point claims" },
   "/platform/admin/stalls": { title: "E-Cell · Stall Requests", description: "Approve event stall registrations" },
-  "/platform/admin/ecell": { title: "E-Cell Management", description: "Core Team leadership directory and marketplace" },
+  "/platform/admin/ecell": { title: "E-Cell Committee", description: "Manage official committee positions and student contact actions" },
   "/platform/admin/scanner": { title: "ID Scanner", description: "Digital ID verification" },
   "/platform/admin/settings": { title: "Admin Settings", description: "Profile & system settings" },
   "/platform/admin/tickets": { title: "Support Tickets", description: "Triage and resolve student requests" },

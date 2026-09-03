@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
 
 export default function AdminEcellPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "team";
+  const rawTab = searchParams.get("tab") || "committee";
+  const activeTab = rawTab === "team" ? "committee" : rawTab;
 
   const setTab = (tab: string) => {
     setSearchParams({ tab });
@@ -57,16 +58,16 @@ export default function AdminEcellPage() {
       <div className="flex items-center gap-1.5 border-b border-border pb-px overflow-x-auto">
         <button
           type="button"
-          onClick={() => setTab("team")}
+          onClick={() => setTab("committee")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 text-sm font-bold border-b-2 transition-all whitespace-nowrap",
-            activeTab === "team"
+            activeTab === "committee"
               ? "border-[#C08634] text-[#C08634] dark:text-[#FAD943]"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
           <Users className="h-4 w-4" />
-          <span>Core Team Directory</span>
+          <span>Committee</span>
         </button>
 
         <button
@@ -93,7 +94,7 @@ export default function AdminEcellPage() {
       </div>
 
       {/* ── Tab Content ──────────────────────────────────────────── */}
-      {activeTab === "team" && <AdminEcellTeamTab />}
+      {activeTab === "committee" && <AdminEcellTeamTab />}
       {activeTab === "stalls" && <AdminStallRegistrationsTab />}
     </div>
   );

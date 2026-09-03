@@ -145,6 +145,7 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/app/announcements":{ title: "Announcements",    description: "Important updates" },
   "/app/events":       { title: "Events",           description: "Campus events" },
   "/app/ecell":        { title: "E-Cell",           description: "Entrepreneurship Cell • BKBNC" },
+  "/app/ecell/committee": { title: "E-Cell Committee", description: "Connect with the E-Cell team" },
   "/app/ecell/stalls": { title: "Stalls Marketplace", description: "Campus vendor applications" },
   "/app/polls":        { title: "Polls",            description: "Active polls & surveys" },
   "/app/daily":        { title: "Daily",            description: "Daily content" },

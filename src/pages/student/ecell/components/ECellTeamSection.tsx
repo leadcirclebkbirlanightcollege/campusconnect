@@ -33,7 +33,11 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export function ECellTeamSection() {
+interface ECellTeamSectionProps {
+  onOpenCommittee?: () => void;
+}
+
+export function ECellTeamSection({ onOpenCommittee }: ECellTeamSectionProps = {}) {
   const teamQuery = useQuery({
     queryKey: ["ecell", "team", "active-v2"],
     queryFn: async () => {
@@ -60,6 +64,16 @@ export function ECellTeamSection() {
         subtitle="Executive committee driving entrepreneurship initiatives at BKBNC"
         badge={members.length > 0 ? `${members.length} Members` : undefined}
         icon={Users}
+        action={
+          <button
+            type="button"
+            onClick={onOpenCommittee}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#000000] bg-[#FCE541] hover:bg-[#FAD943] border border-[#C08634]/50 shadow-xs transition-all active:scale-95"
+          >
+            <Users className="h-3.5 w-3.5 text-[#593018]" />
+            <span>Contact Volunteer</span>
+          </button>
+        }
       />
 
       {/* ── Loading State ────────────────────────────────────────── */}

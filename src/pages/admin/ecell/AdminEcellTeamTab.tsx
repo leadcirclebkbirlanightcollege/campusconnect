@@ -1,12 +1,13 @@
 /**
- * AdminEcellTeamTab — Dynamic Core Member Management
+ * AdminEcellTeamTab — Dynamic E-Cell Committee Management
  *
- * Provides complete administrative control over E-Cell leadership:
- * - Create Core Member (with option to pick existing Campus Connect user)
- * - Edit Member details (Name, Designation, Department/Class, Photo, Order)
+ * Provides complete administrative control over E-Cell Committee:
+ * - Create Committee Member (with option to pick existing Campus Connect user)
+ * - Edit Member details (Name, Designation, Department/Class, Bio, Photo, Order)
  * - Delete Member (with confirmation dialog)
  * - Reorder Priority (instant Move Up / Move Down buttons)
- * - Visibility Toggle (instant active/inactive switch)
+ * - Visibility Toggle (instant active/hidden switch)
+ * - Student Contact Action Toggle (enable/disable in-app contact button)
  * - Photo upload to `team-photos` storage bucket or avatar linkage
  */
 
@@ -28,10 +29,12 @@ import {
   Sparkles,
   AlertCircle,
   RefreshCw,
+  Mail,
 } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -45,12 +48,15 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface CoreMember {
+interface CommitteeMember {
   id: string;
   name: string;
   designation: string | null;
+  department: string | null;
   class: string | null;
+  bio: string | null;
   photo_url: string | null;
+  contact_enabled: boolean;
   order_index: number;
   is_active: boolean;
   created_at: string;
@@ -72,35 +78,39 @@ export function AdminEcellTeamTab() {
 
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<CoreMember | null>(null);
-  const [deletingMember, setDeletingMember] = useState<CoreMember | null>(null);
+  const [editingMember, setEditingMember] = useState<CommitteeMember | null>(null);
+  const [deletingMember, setDeletingMember] = useState<CommitteeMember | null>(null);
 
   // Form state for add / edit
   const [formData, setFormData] = useState({
     name: "",
     designation: "",
-    class: "",
+    department: "",
+    bio: "",
     photo_url: "",
     order_index: 0,
     is_active: true,
+    contact_enabled: false,
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   // User search picker state
   const [userSearch, setUserSearch] = useState("");
 
-  /* ── 1. Fetch All Core Members ────────────────────────────────── */
-  const teamQuery = useQuery({
-    queryKey: ["admin", "ecell-team"],
+  /* ── 1. Fetch All Committee Members ───────────────────────────── */
+  const committeeQuery = useQuery({
+    queryKey: ["admin", "ecell-committee"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("core_team_members")
-        .select("id,name,designation,class,photo_url,order_index,is_active,created_at")
+        .select(
+          "id,name,designation,department,class,bio,photo_url,contact_enabled,order_index,is_active,created_at"
+        )
         .order("order_index", { ascending: true })
         .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return (data ?? []) as CoreMember[];
+      return (data ?? []) as CommitteeMember[];
     },
   });
 
@@ -125,14 +135,20 @@ export function AdminEcellTeamTab() {
   const saveMutation = useMutation({
     mutationFn: async (memberId?: string) => {
       if (!formData.name.trim()) throw new Error("Member name is required");
+      if (!formData.designation.trim()) throw new Error("Designation is required");
 
+      const dept = formData.department.trim() || null;
       const payload = {
         name: formData.name.trim(),
         designation: formData.designation.trim() || null,
-        class: formData.class.trim() || null,
+        department: dept,
+        class: dept, // Keep class in sync for backward compatibility
+        bio: formData.bio.trim() || null,
         photo_url: formData.photo_url.trim() || null,
         order_index: Number(formData.order_index) || 0,
         is_active: formData.is_active,
+        contact_enabled: formData.contact_enabled,
+        updated_at: new Date().toISOString(),
       };
 
       if (memberId) {
@@ -149,15 +165,14 @@ export function AdminEcellTeamTab() {
       }
     },
     onSuccess: (_, memberId) => {
-      toast.success(memberId ? "Core Member updated" : "Core Member added to E-Cell");
+      toast.success(memberId ? "Committee member updated" : "Committee member added to E-Cell");
       setAddDialogOpen(false);
       setEditingMember(null);
       resetForm();
-      qc.invalidateQueries({ queryKey: ["admin", "ecell-team"] });
-      qc.invalidateQueries({ queryKey: ["ecell", "team"] });
+      invalidateQueries();
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Failed to save core member");
+      toast.error(err instanceof Error ? err.message : "Failed to save committee member");
     },
   });
 
@@ -171,10 +186,9 @@ export function AdminEcellTeamTab() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Core Member removed from E-Cell");
+      toast.success("Committee member removed");
       setDeletingMember(null);
-      qc.invalidateQueries({ queryKey: ["admin", "ecell-team"] });
-      qc.invalidateQueries({ queryKey: ["ecell", "team"] });
+      invalidateQueries();
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete member");
@@ -191,16 +205,33 @@ export function AdminEcellTeamTab() {
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
-      toast.success(vars.is_active ? "Member visible on E-Cell" : "Member hidden from E-Cell");
-      qc.invalidateQueries({ queryKey: ["admin", "ecell-team"] });
-      qc.invalidateQueries({ queryKey: ["ecell", "team"] });
+      toast.success(vars.is_active ? "Member visible on student portal" : "Member hidden from students");
+      invalidateQueries();
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Failed to update status");
+      toast.error(err instanceof Error ? err.message : "Failed to update visibility");
     },
   });
 
-  /* ── 6. Reorder (Swap) Mutation ───────────────────────────────── */
+  /* ── 6. Quick Toggle Contact Enabled ──────────────────────────── */
+  const toggleContactMutation = useMutation({
+    mutationFn: async ({ id, contact_enabled }: { id: string; contact_enabled: boolean }) => {
+      const { error } = await supabase
+        .from("core_team_members")
+        .update({ contact_enabled })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      toast.success(vars.contact_enabled ? "Student contact button enabled" : "Student contact button disabled");
+      invalidateQueries();
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to update contact availability");
+    },
+  });
+
+  /* ── 7. Reorder (Swap) Mutation ───────────────────────────────── */
   const reorderMutation = useMutation({
     mutationFn: async ({
       memberA,
@@ -223,29 +254,37 @@ export function AdminEcellTeamTab() {
     },
     onSuccess: () => {
       toast.success("Display order updated");
-      qc.invalidateQueries({ queryKey: ["admin", "ecell-team"] });
-      qc.invalidateQueries({ queryKey: ["ecell", "team"] });
+      invalidateQueries();
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to reorder");
     },
   });
 
-  /* ── Helper Functions ─────────────────────────────────────────── */
+  function invalidateQueries() {
+    qc.invalidateQueries({ queryKey: ["admin", "ecell-committee"] });
+    qc.invalidateQueries({ queryKey: ["admin", "ecell-team"] });
+    qc.invalidateQueries({ queryKey: ["ecell", "team"] });
+    qc.invalidateQueries({ queryKey: ["ecell", "committee-directory"] });
+    qc.invalidateQueries({ queryKey: ["ecell", "committee-dialog"] });
+  }
+
   function resetForm(nextOrder = 0) {
     setFormData({
       name: "",
       designation: "",
-      class: "",
+      department: "",
+      bio: "",
       photo_url: "",
       order_index: nextOrder,
       is_active: true,
+      contact_enabled: false,
     });
     setUserSearch("");
   }
 
   function handleOpenAdd() {
-    const currentMax = (teamQuery.data ?? []).reduce(
+    const currentMax = (committeeQuery.data ?? []).reduce(
       (max, m) => Math.max(max, m.order_index),
       0
     );
@@ -253,15 +292,17 @@ export function AdminEcellTeamTab() {
     setAddDialogOpen(true);
   }
 
-  function handleOpenEdit(m: CoreMember) {
+  function handleOpenEdit(m: CommitteeMember) {
     setEditingMember(m);
     setFormData({
       name: m.name,
       designation: m.designation || "",
-      class: m.class || "",
+      department: m.department || m.class || "",
+      bio: m.bio || "",
       photo_url: m.photo_url || "",
       order_index: m.order_index,
       is_active: m.is_active,
+      contact_enabled: m.contact_enabled ?? false,
     });
   }
 
@@ -270,7 +311,7 @@ export function AdminEcellTeamTab() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file (PNG/JPG/WEBP)");
+      toast.error("Please upload an image file (PNG/JPG/WEBP)");
       return;
     }
 
@@ -282,7 +323,7 @@ export function AdminEcellTeamTab() {
     setUploadingImage(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `core-team-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const fileName = `committee-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("team-photos")
         .upload(fileName, file, { upsert: true });
@@ -306,7 +347,7 @@ export function AdminEcellTeamTab() {
     setFormData((prev) => ({
       ...prev,
       name: p.name,
-      class: p.department || p.class_name || prev.class,
+      department: p.department || p.class_name || prev.department,
       photo_url: p.avatar_url || prev.photo_url,
     }));
     setUserSearch("");
@@ -315,20 +356,21 @@ export function AdminEcellTeamTab() {
 
   // Filtered members
   const members = useMemo(() => {
-    let list = teamQuery.data ?? [];
+    let list = committeeQuery.data ?? [];
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
           m.designation?.toLowerCase().includes(q) ||
+          m.department?.toLowerCase().includes(q) ||
           m.class?.toLowerCase().includes(q)
       );
     }
     if (statusFilter === "active") list = list.filter((m) => m.is_active);
     if (statusFilter === "inactive") list = list.filter((m) => !m.is_active);
     return list;
-  }, [teamQuery.data, search, statusFilter]);
+  }, [committeeQuery.data, search, statusFilter]);
 
   return (
     <div className="space-y-5">
@@ -337,10 +379,10 @@ export function AdminEcellTeamTab() {
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
             <Users className="h-5 w-5 text-[#C08634]" />
-            E-Cell Leadership & Core Team
+            E-Cell Committee Management
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage the executive members displayed dynamically on the public E-Cell portal.
+            Configure official committee positions, display order, visibility, and student contact actions.
           </p>
         </div>
 
@@ -350,7 +392,7 @@ export function AdminEcellTeamTab() {
             className="gap-1.5 bg-[#FCE541] hover:bg-[#FAD943] text-[#000000] border border-[#C08634]/50 font-bold shadow-xs"
           >
             <Plus className="h-4 w-4" />
-            Add Core Member
+            Add Committee Member
           </Button>
         </div>
       </div>
@@ -360,7 +402,7 @@ export function AdminEcellTeamTab() {
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name or role..."
+            placeholder="Search by name, role, or department..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9 text-sm"
@@ -373,25 +415,25 @@ export function AdminEcellTeamTab() {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="all">All Members ({(teamQuery.data ?? []).length})</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Hidden / Inactive</option>
+            <option value="all">All Members ({(committeeQuery.data ?? []).length})</option>
+            <option value="active">Active / Visible</option>
+            <option value="inactive">Hidden</option>
           </select>
 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => teamQuery.refetch()}
-            disabled={teamQuery.isFetching}
+            onClick={() => committeeQuery.refetch()}
+            disabled={committeeQuery.isFetching}
             className="h-9 px-3"
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", teamQuery.isFetching && "animate-spin")} />
+            <RefreshCw className={cn("h-3.5 w-3.5", committeeQuery.isFetching && "animate-spin")} />
           </Button>
         </div>
       </div>
 
       {/* ── Loading Skeleton ─────────────────────────────────────── */}
-      {teamQuery.isLoading && (
+      {committeeQuery.isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-16 rounded-xl bg-muted/40 animate-pulse" />
@@ -400,30 +442,30 @@ export function AdminEcellTeamTab() {
       )}
 
       {/* ── Error State ─────────────────────────────────────────── */}
-      {teamQuery.isError && (
+      {committeeQuery.isError && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
           <AlertCircle className="h-7 w-7 text-destructive mx-auto" />
           <p className="text-sm font-semibold text-foreground">
-            {teamQuery.error instanceof Error ? teamQuery.error.message : "Failed to load team"}
+            {committeeQuery.error instanceof Error ? committeeQuery.error.message : "Failed to load committee"}
           </p>
-          <Button variant="outline" size="sm" onClick={() => teamQuery.refetch()}>
+          <Button variant="outline" size="sm" onClick={() => committeeQuery.refetch()}>
             Try Again
           </Button>
         </div>
       )}
 
       {/* ── Empty State ─────────────────────────────────────────── */}
-      {!teamQuery.isLoading && !teamQuery.isError && members.length === 0 && (
+      {!committeeQuery.isLoading && !committeeQuery.isError && members.length === 0 && (
         <div className="rounded-2xl border border-border-subtle bg-card p-8 text-center space-y-3">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <Users className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-base font-bold text-foreground">No Core Members Found</h4>
+            <h4 className="text-base font-bold text-foreground">No Committee Members Configured</h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               {search
-                ? "No members matched your search criteria."
-                : "No leadership team members have been added to E-Cell yet. Click below to add the first member."}
+                ? "No committee members matched your search criteria."
+                : "No committee positions have been added yet. Click below to add the first member."}
             </p>
           </div>
           {!search && (
@@ -433,24 +475,25 @@ export function AdminEcellTeamTab() {
               className="bg-[#FCE541] hover:bg-[#FAD943] text-[#000000] font-bold border border-[#C08634]/50"
             >
               <Plus className="h-4 w-4 mr-1.5" />
-              Add Core Member
+              Add Committee Member
             </Button>
           )}
         </div>
       )}
 
-      {/* ── Members Table / List ─────────────────────────────────── */}
-      {!teamQuery.isLoading && !teamQuery.isError && members.length > 0 && (
+      {/* ── Members Table ────────────────────────────────────────── */}
+      {!committeeQuery.isLoading && !committeeQuery.isError && members.length > 0 && (
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="py-3 px-4 w-12 text-center">Order</th>
+                  <th className="py-3 px-4 w-14 text-center">Order</th>
                   <th className="py-3 px-4">Member</th>
                   <th className="py-3 px-4">Designation</th>
-                  <th className="py-3 px-4">Department / Class</th>
-                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3 px-4">Department / Course</th>
+                  <th className="py-3 px-4 text-center">Contact</th>
+                  <th className="py-3 px-4 text-center">Visibility</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -458,10 +501,11 @@ export function AdminEcellTeamTab() {
                 {members.map((m, idx) => {
                   const canMoveUp = idx > 0;
                   const canMoveDown = idx < members.length - 1;
+                  const dept = m.department || m.class;
 
                   return (
                     <tr key={m.id} className="hover:bg-muted/30 transition-colors">
-                      {/* Reorder Buttons & Priority Index */}
+                      {/* Priority Reorder Controls */}
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -498,7 +542,7 @@ export function AdminEcellTeamTab() {
                         </div>
                       </td>
 
-                      {/* Member Photo & Name */}
+                      {/* Photo & Name */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full overflow-hidden border border-[#E8D98A] bg-muted shrink-0 flex items-center justify-center">
@@ -514,9 +558,11 @@ export function AdminEcellTeamTab() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-bold text-foreground truncate">{m.name}</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              Added {new Date(m.created_at).toLocaleDateString()}
-                            </p>
+                            {m.bio && (
+                              <p className="text-[11px] text-muted-foreground truncate max-w-xs">
+                                {m.bio}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -526,12 +572,35 @@ export function AdminEcellTeamTab() {
                         {m.designation || "—"}
                       </td>
 
-                      {/* Department / Class */}
+                      {/* Department / Course */}
                       <td className="py-3 px-4 text-muted-foreground">
-                        {m.class || "—"}
+                        {dept || "—"}
                       </td>
 
-                      {/* Active Status Switch */}
+                      {/* Contact Action Enabled Toggle */}
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleContactMutation.mutate({
+                              id: m.id,
+                              contact_enabled: !m.contact_enabled,
+                            })
+                          }
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-colors",
+                            m.contact_enabled
+                              ? "bg-[#FCE541]/25 text-[#593018] border-[#C08634]/50 dark:text-[#FAD943]"
+                              : "bg-muted text-muted-foreground border-border opacity-70"
+                          )}
+                          title="Toggle student contact action"
+                        >
+                          <Mail className="h-3 w-3" />
+                          <span>{m.contact_enabled ? "Enabled" : "Off"}</span>
+                        </button>
+                      </td>
+
+                      {/* Visibility Switch */}
                       <td className="py-3 px-4 text-center">
                         <div className="inline-flex items-center gap-2">
                           <Switch
@@ -543,17 +612,15 @@ export function AdminEcellTeamTab() {
                           <span
                             className={cn(
                               "text-[11px] font-bold",
-                              m.is_active
-                                ? "text-success"
-                                : "text-muted-foreground"
+                              m.is_active ? "text-success" : "text-muted-foreground"
                             )}
                           >
-                            {m.is_active ? "Active" : "Hidden"}
+                            {m.is_active ? "Visible" : "Hidden"}
                           </span>
                         </div>
                       </td>
 
-                      {/* Edit / Delete Actions */}
+                      {/* Actions */}
                       <td className="py-3 px-4 text-right">
                         <div className="inline-flex items-center gap-1.5">
                           <Button
@@ -561,7 +628,7 @@ export function AdminEcellTeamTab() {
                             size="sm"
                             onClick={() => handleOpenEdit(m)}
                             className="h-8 w-8 p-0"
-                            title="Edit Core Member"
+                            title="Edit Member"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -570,7 +637,7 @@ export function AdminEcellTeamTab() {
                             size="sm"
                             onClick={() => setDeletingMember(m)}
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete Core Member"
+                            title="Delete Member"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -585,7 +652,7 @@ export function AdminEcellTeamTab() {
         </div>
       )}
 
-      {/* ── Dialog: Add / Edit Core Member ───────────────────────── */}
+      {/* ── Dialog: Add / Edit Committee Member ──────────────────── */}
       <Dialog
         open={addDialogOpen || !!editingMember}
         onOpenChange={(open) => {
@@ -596,23 +663,23 @@ export function AdminEcellTeamTab() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingMember ? "Edit Core Member" : "Add E-Cell Core Member"}
+              {editingMember ? "Edit Committee Member" : "Add Committee Member"}
             </DialogTitle>
             <DialogDescription>
-              Provide leadership profile details. Active members appear immediately on the public E-Cell portal.
+              Configure the member's role, department, photo, and student contact availability.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Optional Link with Existing Campus Connect User */}
+            {/* Optional Campus Connect Profile Link */}
             {!editingMember && (
               <div className="rounded-xl border border-[#E8D98A]/70 bg-[#FAF9F7]/80 dark:bg-[#1D1B17] p-3 space-y-2">
                 <Label className="text-xs font-bold text-[#593018] dark:text-[#D8C7A5] flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-[#C08634]" />
-                  Link Existing Campus Connect Profile (Optional)
+                  Select Existing Campus Connect User (Optional)
                 </Label>
                 <Input
                   placeholder="Type student name or email to auto-fill..."
@@ -652,6 +719,7 @@ export function AdminEcellTeamTab() {
                 placeholder="e.g. Rahul Sharma"
                 value={formData.name}
                 onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                required
               />
             </div>
 
@@ -659,19 +727,32 @@ export function AdminEcellTeamTab() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Designation / Role *</Label>
               <Input
-                placeholder="e.g. Student President, Tech Lead, Coordinator"
+                placeholder="e.g. President, Vice President, Tech Lead, Secretary"
                 value={formData.designation}
                 onChange={(e) => setFormData((p) => ({ ...p, designation: e.target.value }))}
+                required
               />
             </div>
 
-            {/* Department / Course / Year */}
+            {/* Department / Course */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Department / Class</Label>
+              <Label className="text-xs font-semibold">Department / Course (Optional)</Label>
               <Input
-                placeholder="e.g. TY BSc IT, SY B.Com"
-                value={formData.class}
-                onChange={(e) => setFormData((p) => ({ ...p, class: e.target.value }))}
+                placeholder="e.g. B.Com, TY BSc IT, Commerce Dept"
+                value={formData.department}
+                onChange={(e) => setFormData((p) => ({ ...p, department: e.target.value }))}
+              />
+            </div>
+
+            {/* Short Bio */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Short Bio (Optional)</Label>
+              <Textarea
+                placeholder="Brief summary of responsibilities, focus areas, or student support scope..."
+                value={formData.bio}
+                onChange={(e) => setFormData((p) => ({ ...p, bio: e.target.value }))}
+                rows={2}
+                className="text-xs resize-none"
               />
             </div>
 
@@ -708,6 +789,25 @@ export function AdminEcellTeamTab() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Contact Action Switch */}
+            <div className="rounded-xl border border-[#E8D98A]/60 bg-[#FAF9F7]/60 dark:bg-[#1C1A16] p-3 flex items-center justify-between gap-3">
+              <div>
+                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-[#C08634]" />
+                  Enable Student Contact Action
+                </Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Displays a "Contact" button on the student committee directory for secure inquiries.
+                </p>
+              </div>
+              <Switch
+                checked={formData.contact_enabled}
+                onCheckedChange={(checked) =>
+                  setFormData((p) => ({ ...p, contact_enabled: checked }))
+                }
+              />
             </div>
 
             {/* Display Order & Active Toggle */}
@@ -753,7 +853,7 @@ export function AdminEcellTeamTab() {
             </Button>
             <Button
               onClick={() => saveMutation.mutate(editingMember?.id)}
-              disabled={saveMutation.isPending || !formData.name.trim()}
+              disabled={saveMutation.isPending || !formData.name.trim() || !formData.designation.trim()}
               className="bg-[#FCE541] hover:bg-[#FAD943] text-[#000000] font-bold border border-[#C08634]/50"
             >
               {saveMutation.isPending
@@ -775,12 +875,12 @@ export function AdminEcellTeamTab() {
           <DialogHeader>
             <DialogTitle className="text-destructive flex items-center gap-2">
               <Trash2 className="h-5 w-5" />
-              Remove Core Member
+              Remove Committee Member
             </DialogTitle>
             <DialogDescription>
               Are you sure you want to remove{" "}
               <strong className="text-foreground">{deletingMember?.name}</strong> from the E-Cell
-              Core Team? This will immediately remove them from the public roster.
+              Committee? This will immediately remove them from the public roster.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">

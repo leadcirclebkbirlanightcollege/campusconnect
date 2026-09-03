@@ -29,6 +29,7 @@ import {
   RefreshCw,
   Clock,
   AlertCircle,
+  Users,
 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ import { ECellEventCard } from "./components/ECellEventCard";
 import { ECellAnnouncementCard } from "./components/ECellAnnouncementCard";
 import { ECellTeamSection } from "./components/ECellTeamSection";
 import { ECellJourneySection } from "./components/ECellJourneySection";
+import { ECellCommitteeDialog } from "./components/ECellCommitteeDialog";
 import { ECellSectionHeader } from "./components/ECellSectionHeader";
 import { ECellEmptyState } from "./components/ECellEmptyState";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,7 @@ export default function StudentEcellHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [eventTab, setEventTab] = useState<"upcoming" | "all" | "past">("upcoming");
+  const [committeeOpen, setCommitteeOpen] = useState(false);
 
   /* ── 1. Fetch E-Cell Events ───────────────────────────────────── */
   const eventsQuery = useQuery({
@@ -189,6 +192,20 @@ export default function StudentEcellHub() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCommitteeOpen(true)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-bold text-[#000000]",
+                "bg-[#FAF9F7] dark:bg-[#1D1B17] hover:bg-[#FCE541] active:bg-[#C08634] active:text-white",
+                "border border-[#E8D98A] hover:border-[#C08634] shadow-xs transition-all active:scale-95"
+              )}
+            >
+              <Users className="h-3.5 w-3.5 text-[#593018]" />
+              <span className="hidden sm:inline">Contact Volunteer</span>
+              <span className="sm:hidden">Volunteer</span>
+            </button>
+
             <Link
               to="/app/ecell/stalls"
               className={cn(
@@ -198,7 +215,7 @@ export default function StudentEcellHub() {
               )}
             >
               <Store className="h-3.5 w-3.5" />
-              <span>Stalls Portal</span>
+              <span>Stalls</span>
             </Link>
 
             <button
@@ -259,7 +276,7 @@ export default function StudentEcellHub() {
         <ECellJourneySection />
 
         {/* ── 4. Leadership & Core Team (Dynamic from core_team_members) */}
-        <ECellTeamSection />
+        <ECellTeamSection onOpenCommittee={() => setCommitteeOpen(true)} />
 
         {/* ── 5. Next Event Countdown Pill (If upcoming) ─────────── */}
         {nextUpcoming && (
@@ -480,6 +497,12 @@ export default function StudentEcellHub() {
           </div>
         </div>
       </div>
+
+      {/* ── Committee Directory Modal / Sheet ──────────────────────── */}
+      <ECellCommitteeDialog
+        open={committeeOpen}
+        onOpenChange={setCommitteeOpen}
+      />
     </div>
   );
 }
