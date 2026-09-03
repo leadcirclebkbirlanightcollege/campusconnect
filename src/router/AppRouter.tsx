@@ -68,6 +68,7 @@ const CommunityHub         = lazy(() => import("@/pages/student/hubs/CommunityHu
 const StudentEcellStalls   = lazy(() => import("@/pages/student/ecell/StudentEcellStalls"));
 const AdminPointClaimsPage = lazy(() => import("@/pages/admin/pages/AdminPointClaimsPage"));
 const AdminStallsPage      = lazy(() => import("@/pages/admin/pages/AdminStallsPage"));
+const AdminEcellPage       = lazy(() => import("@/pages/admin/pages/AdminEcellPage"));
 const AdminTicketsPage     = lazy(() => import("@/pages/admin/pages/AdminTicketsPage"));
 const StudentSupport       = lazy(() => import("@/pages/student/StudentSupport"));
 const NotFound             = lazy(() => import("@/pages/NotFound"));
@@ -236,6 +237,7 @@ export default function AppRouter() {
             <Route path="points"                   element={<AdminPointsPage />} />
             <Route path="point-claims"             element={<AdminPointClaimsPage />} />
             <Route path="stalls"                   element={<AdminStallsPage />} />
+            <Route path="ecell"                    element={<AdminEcellPage />} />
             <Route path="scanner"                  element={<AdminScannerPage />} />
             <Route path="settings"                 element={<AdminSettingsPage />} />
             <Route path="tickets"                  element={<AdminTicketsPage />} />
@@ -250,7 +252,7 @@ export default function AppRouter() {
             <Route path="audit-log"      element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="audit"          element={<Navigate to="/platform/admin-control/security" replace />} />
             <Route path="branding"       element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
-            <Route path="core-team"      element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
+            <Route path="core-team"      element={<Navigate to="/platform/admin/ecell" replace />} />
             <Route path="system-control" element={<Navigate to="/platform/admin-control/platform-settings" replace />} />
           </Route>
 

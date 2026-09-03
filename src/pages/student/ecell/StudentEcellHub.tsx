@@ -1,140 +1,79 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+/**
+ * StudentEcellHub — Official E-Cell Ecosystem Workspace
+ * B. K. Birla Night College, Kalyan
+ *
+ * Visual hierarchy:
+ * 1. AppLayout header handles global sticky title (E-Cell / Entrepreneurship Cell • BKBNC)
+ * 2. E-Cell Top Toolbar (non-sticky, eliminating ghost-text overlaps)
+ * 3. E-Cell Hero & Philosophy Stepper (Ideas → Innovation → Entrepreneurship → Impact)
+ * 4. Key Performance Stats
+ * 5. The Vision to Venture Journey (4 progressive connected stages)
+ * 6. Leadership & Core Team (Dynamic from core_team_members)
+ * 7. Upcoming Activities & Competitions (with live countdown & stall actions)
+ * 8. Announcements & Official Bulletins
+ * 9. Campus Stall Marketplace Banner
+ * 10. Official Brand Footer (Version 1.0.0)
+ */
+
+import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import {
+  Rocket,
   Store,
   CalendarDays,
-  Sparkles,
-  Rocket,
   Coins,
-  ArrowRight,
-  Clock,
-  MapPin,
-  RefreshCw,
-  AlertCircle,
+  Sparkles,
   Megaphone,
-  CheckCircle2,
-  Users,
-  Lightbulb,
-  Award,
-  ChevronRight,
+  ArrowRight,
+  RefreshCw,
+  Clock,
+  AlertCircle,
 } from "@/components/icons";
-import { format, isPast, isToday, differenceInSeconds } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
 import { ECELL_ASSETS } from "./ecell-tokens";
 import { ECellHero } from "./components/ECellHero";
 import { ECellStatCard } from "./components/ECellStatCard";
-import { ECellEventCard, ECellEventItem } from "./components/ECellEventCard";
-import { ECellSectionHeader } from "./components/ECellSectionHeader";
-import { ECellAnnouncementCard, ECellAnnouncementItem } from "./components/ECellAnnouncementCard";
+import { ECellEventCard } from "./components/ECellEventCard";
+import { ECellAnnouncementCard } from "./components/ECellAnnouncementCard";
 import { ECellTeamSection } from "./components/ECellTeamSection";
+import { ECellJourneySection } from "./components/ECellJourneySection";
+import { ECellSectionHeader } from "./components/ECellSectionHeader";
 import { ECellEmptyState } from "./components/ECellEmptyState";
-import StallRegistrationDialog from "@/pages/student/events/StallRegistrationDialog";
 import { cn } from "@/lib/utils";
 
-type EventTab = "upcoming" | "all" | "past";
-
-/* ── Live Countdown Component for Next Event ───────────────────── */
-function NextEventCountdown({ event }: { event: ECellEventItem }) {
-  const targetDate = useMemo(() => {
-    const d = new Date(event.event_date);
-    if (event.event_time) {
-      const [hours, minutes] = event.event_time.split(":");
-      d.setHours(Number(hours) || 0, Number(minutes) || 0, 0, 0);
-    }
-    return d;
-  }, [event]);
-
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-  } | null>(null);
-
-  useEffect(() => {
-    function calculate() {
-      const now = new Date();
-      const diff = differenceInSeconds(targetDate, now);
-      if (diff <= 0) {
-        setTimeLeft(null);
-        return;
-      }
-      const days = Math.floor(diff / 86400);
-      const hours = Math.floor((diff % 86400) / 3600);
-      const minutes = Math.floor((diff % 3600) / 60);
-      const seconds = diff % 60;
-      setTimeLeft({ days, hours, minutes, seconds });
-    }
-
-    calculate();
-    const timer = setInterval(calculate, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  if (!timeLeft) return null;
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#E8D98A] dark:border-[#3D3523] bg-gradient-to-r from-white via-[#FAF9F7] to-[#FCE541]/15 dark:from-[#191713] dark:via-[#1D1B17] dark:to-[#2A2417] p-4 sm:p-5 shadow-sm">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#FCE541] text-[#000000] border border-[#C08634]/40">
-            <Clock className="h-3 w-3" /> Next Official E-Cell Gathering
-          </div>
-          <h3 className="text-[16px] sm:text-[18px] font-bold text-foreground">
-            {event.title}
-          </h3>
-          <p className="text-[12px] text-[#593018] dark:text-[#D8C7A5] flex items-center gap-2">
-            <CalendarDays className="h-3.5 w-3.5 text-[#C08634]" />
-            {format(targetDate, "EEEE, dd MMMM yyyy")}
-            {event.venue && (
-              <>
-                <span>•</span>
-                <MapPin className="h-3.5 w-3.5 text-[#C08634]" />
-                {event.venue}
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* Countdown Digits */}
-        <div className="flex items-center gap-1.5 sm:gap-2 self-stretch md:self-auto justify-center">
-          {[
-            { label: "Days", val: timeLeft.days },
-            { label: "Hours", val: timeLeft.hours },
-            { label: "Mins", val: timeLeft.minutes },
-            { label: "Secs", val: timeLeft.seconds },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex flex-col items-center justify-center min-w-[54px] sm:min-w-[62px] px-2 py-1.5 rounded-xl bg-white dark:bg-[#151410] border border-[#E8D98A]/70 dark:border-[#3D3523] shadow-sm"
-            >
-              <span className="text-[18px] sm:text-[22px] font-black text-[#000000] dark:text-[#FCE541] tabular-nums leading-none">
-                {String(item.val).padStart(2, "0")}
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-[#593018]/80 dark:text-muted-foreground mt-1">
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+interface EcellEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  event_time: string | null;
+  venue: string | null;
+  poster_url: string | null;
+  flyer_url: string | null;
+  is_featured: boolean | null;
+  is_ecell_event: boolean | null;
+  max_stalls: number | null;
 }
 
-/* ── Main Component ────────────────────────────────────────────── */
-export default function StudentEcellHub() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [eventTab, setEventTab] = useState<EventTab>("upcoming");
+interface EcellAnnouncement {
+  id: string;
+  title: string;
+  description: string;
+  priority: string | null;
+  created_at: string;
+}
 
-  /* ── 1. Fetch E-Cell Events from Supabase ─────────────────────── */
+export default function StudentEcellHub() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [eventTab, setEventTab] = useState<"upcoming" | "all" | "past">("upcoming");
+
+  /* ── 1. Fetch E-Cell Events ───────────────────────────────────── */
   const eventsQuery = useQuery({
-    queryKey: ["ecell", "events", "v2"],
+    queryKey: ["ecell", "events", "v4"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
@@ -144,13 +83,14 @@ export default function StudentEcellHub() {
         .or("is_ecell_event.eq.true,max_stalls.not.is.null")
         .order("event_date", { ascending: true });
 
-      if (error) throw error;
-      return (data ?? []) as ECellEventItem[];
+      if (error) throw new Error(error.message);
+      return (data ?? []) as EcellEvent[];
     },
     staleTime: 60_000,
+    retry: 2,
   });
 
-  /* ── 2. Fetch User Stall Registrations ───────────────────────── */
+  /* ── 2. Fetch User's Stall Applications ───────────────────────── */
   const userStallsQuery = useQuery({
     queryKey: ["ecell", "user_stalls", user?.id],
     enabled: Boolean(user?.id),
@@ -162,7 +102,6 @@ export default function StudentEcellHub() {
         .eq("user_id", user.id);
 
       if (error) {
-        // Table might not exist or error; return empty array safely
         return [];
       }
       return data ?? [];
@@ -170,19 +109,18 @@ export default function StudentEcellHub() {
     staleTime: 60_000,
   });
 
-  /* ── 3. Fetch E-Cell Announcements ───────────────────────────── */
+  /* ── 3. Fetch Announcements ───────────────────────────────────── */
   const announcementsQuery = useQuery({
-    queryKey: ["ecell", "announcements", "v1"],
+    queryKey: ["ecell", "announcements", "v2"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("id,title,description,priority,is_pinned,created_at,expires_at")
-        .order("is_pinned", { ascending: false })
+        .select("id,title,description,priority,created_at")
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(6);
 
-      if (error) throw error;
-      return (data ?? []) as ECellAnnouncementItem[];
+      if (error) return [] as EcellAnnouncement[];
+      return (data ?? []) as EcellAnnouncement[];
     },
     staleTime: 60_000,
   });
@@ -191,27 +129,24 @@ export default function StudentEcellHub() {
   const announcements = announcementsQuery.data ?? [];
   const userStalls = userStallsQuery.data ?? [];
 
-  /* ── Computed Metrics & Buckets ──────────────────────────────── */
+  // Metrics computation
   const { upcomingEvents, pastEvents, stallOpportunities, nextUpcoming } =
     useMemo(() => {
-      const now = new Date();
-      const upcoming: ECellEventItem[] = [];
-      const past: ECellEventItem[] = [];
+      const now = new Date().toISOString().slice(0, 10);
+      const upcoming: EcellEvent[] = [];
+      const past: EcellEvent[] = [];
       let stalls = 0;
 
-      events.forEach((ev) => {
-        const evDate = new Date(ev.event_date);
-        const isEvPast = isPast(evDate) && !isToday(evDate);
-
-        if (isEvPast) {
-          past.push(ev);
-        } else {
+      for (const ev of events) {
+        if (ev.event_date >= now) {
           upcoming.push(ev);
-          if (ev.max_stalls && ev.max_stalls > 0) {
-            stalls += 1;
-          }
+        } else {
+          past.push(ev);
         }
-      });
+        if (ev.max_stalls && ev.max_stalls > 0) {
+          stalls += ev.max_stalls;
+        }
+      }
 
       return {
         upcomingEvents: upcoming,
@@ -232,11 +167,11 @@ export default function StudentEcellHub() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F7]/70 dark:bg-background pb-16">
-      {/* ── Top Header Bar with Official E-Cell Brand ─────────────── */}
-      <div className="sticky top-0 z-20 border-b border-[#E8D98A]/60 dark:border-border/60 bg-background/90 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+      {/* ── Top Non-Sticky Action Bar (Eliminating Ghost Text Overlap) ── */}
+      <div className="border-b border-[#E8D98A]/50 dark:border-border/60 bg-white/80 dark:bg-[#181613]/90">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-13 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-8 w-8 rounded-full overflow-hidden border border-[#E8D98A] bg-white p-0.5 shrink-0 shadow-sm">
+            <div className="h-7 w-7 rounded-full overflow-hidden border border-[#E8D98A] bg-white p-0.5 shrink-0 shadow-xs">
               <img
                 src={ECELL_ASSETS.logo}
                 alt="E-Cell Official Logo"
@@ -244,12 +179,12 @@ export default function StudentEcellHub() {
               />
             </div>
             <div className="min-w-0">
-              <h1 className="text-[14px] sm:text-[15px] font-black uppercase tracking-wider text-foreground truncate">
+              <span className="text-[12px] font-black uppercase tracking-wider text-[#000000] dark:text-white truncate">
                 Entrepreneurship Cell
-              </h1>
-              <p className="text-[10.5px] font-medium text-[#C08634] dark:text-[#FAD943] truncate leading-none">
-                BKBNC • Vision to Venture
-              </p>
+              </span>
+              <span className="hidden sm:inline text-[11px] text-[#C08634] dark:text-[#FAD943] ml-2 font-semibold">
+                • BKBNC Vision to Venture
+              </span>
             </div>
           </div>
 
@@ -257,13 +192,13 @@ export default function StudentEcellHub() {
             <Link
               to="/app/ecell/stalls"
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-[#000000]",
-                "bg-[#FCE541] hover:bg-[#FAD943] border border-[#C08634]/40 shadow-xs transition-all active:scale-95"
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-bold text-[#000000]",
+                "bg-[#FCE541] hover:bg-[#FAD943] active:bg-[#C08634] active:text-white",
+                "border border-[#C08634]/40 shadow-xs transition-all active:scale-95"
               )}
             >
               <Store className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Stalls Portal</span>
-              <span className="sm:hidden">Stalls</span>
+              <span>Stalls Portal</span>
             </Link>
 
             <button
@@ -274,7 +209,7 @@ export default function StudentEcellHub() {
                 userStallsQuery.refetch();
               }}
               title="Refresh E-Cell data"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E8D98A] dark:border-border bg-card text-[#593018] dark:text-muted-foreground hover:text-foreground transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#E8D98A] dark:border-border bg-card text-[#593018] dark:text-muted-foreground hover:text-foreground transition-colors"
             >
               <RefreshCw
                 className={cn(
@@ -288,11 +223,11 @@ export default function StudentEcellHub() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-7 sm:space-y-9">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-7 sm:space-y-9">
         {/* ── 1. Official Hero Section ────────────────────────────── */}
         <ECellHero stallCount={stallOpportunities} />
 
-        {/* ── 2. Key Statistics Row ───────────────────────────────── */}
+        {/* ── 2. Key Performance Statistics ───────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <ECellStatCard
             label="Total Initiatives"
@@ -309,55 +244,61 @@ export default function StudentEcellHub() {
           <ECellStatCard
             label="My Stall Bookings"
             value={userStalls.length}
-            subtext={
-              userStalls.length > 0 ? "Registered applications" : "No active stalls"
-            }
-            icon={CheckCircle2}
+            subtext="Applications recorded"
+            icon={Store}
           />
           <ECellStatCard
             label="Innovation Ideas"
-            value="Active"
-            subtext="Earn points on proposal"
+            value="Points"
+            subtext="Submit work & redeem"
             icon={Coins}
           />
         </div>
 
-        {/* ── 3. Next Upcoming Event Countdown (if exists) ───────── */}
-        {nextUpcoming && <NextEventCountdown event={nextUpcoming} />}
+        {/* ── 3. The Vision to Venture Journey ───────────────────── */}
+        <ECellJourneySection />
 
-        {/* ── 4. Dedicated Stall Gateway Banner ───────────────────── */}
-        <div className="relative overflow-hidden rounded-2xl border-2 border-[#E8D98A] dark:border-[#3D3523] bg-white dark:bg-[#191713] p-5 sm:p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#FCE541]/20 text-[#593018] dark:text-[#FCE541] border border-[#FCE541]/40">
-                <Store className="h-3 w-3 text-[#C08634]" /> Student Entrepreneur Marketplace
+        {/* ── 4. Leadership & Core Team (Dynamic from core_team_members) */}
+        <ECellTeamSection />
+
+        {/* ── 5. Next Event Countdown Pill (If upcoming) ─────────── */}
+        {nextUpcoming && (
+          <div className="rounded-2xl border border-[#E8D98A] dark:border-[#3D3523] bg-gradient-to-r from-white via-[#FAF9F7] to-[#FCE541]/20 dark:from-[#191713] dark:via-[#1D1B17] dark:to-[#2A2417] p-4 sm:p-5 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FCE541] text-[#000000] border border-[#C08634]/40 shrink-0">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C08634] dark:text-[#FAD943]">
+                    Next E-Cell Milestone
+                  </span>
+                  <h4 className="text-[14.5px] sm:text-[15.5px] font-bold text-foreground truncate">
+                    {nextUpcoming.title}
+                  </h4>
+                </div>
               </div>
-              <h3 className="text-[17px] sm:text-[19px] font-extrabold text-[#000000] dark:text-white">
-                Launch Your Campus Stall at College Events
-              </h3>
-              <p className="text-[12.5px] text-[#593018]/85 dark:text-muted-foreground leading-relaxed">
-                Book a dedicated vendor table for food, handmade crafts, tech prototypes,
-                or merchandise. Connect directly with the student body.
-              </p>
-            </div>
 
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Link
-                to="/app/ecell/stalls"
-                className={cn(
-                  "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold text-[#000000]",
-                  "bg-[#FCE541] hover:bg-[#FAD943] border border-[#C08634]/50 shadow-sm transition-all active:scale-95"
-                )}
-              >
-                <Store className="h-4 w-4" />
-                View Stall Openings
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <div className="flex items-center gap-3 self-end sm:self-center">
+                <span className="text-[12px] font-bold text-[#593018] dark:text-[#FAD943]">
+                  {new Date(nextUpcoming.event_date).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+                <Link
+                  to="/app/ecell/stalls"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold bg-[#FCE541] hover:bg-[#FAD943] text-[#000000] border border-[#C08634]/50 shadow-xs transition-all"
+                >
+                  <Store className="h-3.5 w-3.5" /> Book Stall
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* ── 5. Events Workspace ─────────────────────────────────── */}
+        {/* ── 6. Events Workspace ─────────────────────────────────── */}
         <section className="space-y-4">
           <ECellSectionHeader
             title="E-Cell Events & Competitions"
@@ -441,7 +382,7 @@ export default function StudentEcellHub() {
           )}
         </section>
 
-        {/* ── 6. Announcements & Official Bulletins ──────────────── */}
+        {/* ── 7. Announcements & Official Bulletins ──────────────── */}
         <section className="space-y-4">
           <ECellSectionHeader
             title="Official Announcements & Notices"
@@ -482,86 +423,38 @@ export default function StudentEcellHub() {
           )}
         </section>
 
-        {/* ── 7. Core E-Cell Pathways (Vision to Venture) ─────────── */}
-        <section className="space-y-4">
-          <ECellSectionHeader
-            title="The Vision to Venture Journey"
-            subtitle="From initial concept to full-scale entrepreneurial impact"
-            icon={Lightbulb}
-          />
+        {/* ── 8. Dedicated Stall Marketplace Banner ──────────────── */}
+        <div className="rounded-2xl sm:rounded-3xl border-2 border-[#E8D98A] dark:border-[#3D3523] bg-gradient-to-r from-white via-[#FAF9F7] to-[#FCE541]/25 dark:from-[#191713] dark:via-[#1D1B17] dark:to-[#2A2417] p-5 sm:p-7 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#FCE541] text-[#000000] border border-[#C08634]/40">
+                <Store className="h-3 w-3" /> Student Vendor Program
+              </div>
+              <h3 className="text-[18px] sm:text-[20px] font-black text-[#000000] dark:text-white">
+                Launch Your Campus Stall at College Events
+              </h3>
+              <p className="text-[12.5px] text-[#593018]/85 dark:text-muted-foreground leading-relaxed">
+                Book a dedicated vendor table for food, handmade crafts, tech prototypes,
+                or merchandise. Connect directly with the student body.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {[
-              {
-                step: "01",
-                name: "Ideas & Ideation",
-                desc: "Pitch concepts, get early validation from faculty mentors, and claim activity points.",
-                actionText: "Submit Idea",
-                link: "/app/points",
-                icon: Lightbulb,
-              },
-              {
-                step: "02",
-                name: "Hands-on Workshops",
-                desc: "Learn finance, business model canvasing, pitching, and IP creation from startup founders.",
-                actionText: "View Schedule",
-                link: "/app/events",
-                icon: Users,
-              },
-              {
-                step: "03",
-                name: "Campus Stalls",
-                desc: "Test products in real-world retail settings with peer validation and footfall.",
-                actionText: "Register Stall",
-                link: "/app/ecell/stalls",
-                icon: Store,
-              },
-              {
-                step: "04",
-                name: "Impact & Awards",
-                desc: "Gain recognition, certificate points, and incubation opportunities for your venture.",
-                actionText: "Leaderboard",
-                link: "/app/points",
-                icon: Award,
-              },
-            ].map((pathway) => {
-              const Icon = pathway.icon;
-              return (
-                <div
-                  key={pathway.step}
-                  className="flex flex-col justify-between rounded-2xl border border-[#E8D98A]/60 dark:border-[#3D3523] bg-card p-4.5 sm:p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-[#C08634] group"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-black tracking-wider text-[#C08634] dark:text-[#FAD943]">
-                        STEP {pathway.step}
-                      </span>
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FCE541]/20 text-[#593018] dark:text-[#FCE541]">
-                        <Icon className="h-3.5 w-3.5" />
-                      </div>
-                    </div>
-                    <h4 className="text-[15px] font-bold text-[#000000] dark:text-white">
-                      {pathway.name}
-                    </h4>
-                    <p className="text-[12px] text-[#593018]/85 dark:text-muted-foreground leading-relaxed">
-                      {pathway.desc}
-                    </p>
-                  </div>
-
-                  <Link
-                    to={pathway.link}
-                    className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#C08634] hover:text-[#593018] dark:hover:text-[#FCE541] mt-4 pt-2 border-t border-[#E8D98A]/30 group-hover:translate-x-0.5 transition-transform"
-                  >
-                    {pathway.actionText} <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              );
-            })}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Link
+                to="/app/ecell/stalls"
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold text-[#000000]",
+                  "bg-[#FCE541] hover:bg-[#FAD943] active:bg-[#C08634] active:text-white",
+                  "border border-[#C08634]/50 shadow-sm transition-all active:scale-95"
+                )}
+              >
+                <Store className="h-4 w-4" />
+                View Stall Openings
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
-        </section>
-
-        {/* ── 8. Team & Leadership (Dynamic from core_team_members) ── */}
-        <ECellTeamSection />
+        </div>
 
         {/* ── 9. Official Brand Footer & Version ─────────────────── */}
         <div className="pt-6 border-t border-[#E8D98A]/60 dark:border-[#3D3523] flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">

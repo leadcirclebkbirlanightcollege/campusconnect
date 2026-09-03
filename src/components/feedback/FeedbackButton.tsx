@@ -4,6 +4,7 @@
  * Submits to the `feedback` table with RLS (user_id = auth.uid()).
  */
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { MessageSquarePlus, X, Send, CheckCircle2 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -36,6 +37,8 @@ const CATEGORY_LABELS: Record<FormData["category"], string> = {
 };
 
 export default function FeedbackButton() {
+  const location = useLocation();
+  const isEcell = location.pathname.startsWith("/app/ecell");
   const [open, setOpen]       = useState(false);
   const [done, setDone]       = useState(false);
   const [loading, setLoading] = useState(false);
@@ -85,9 +88,10 @@ export default function FeedbackButton() {
           whileTap={{ scale: 0.92 }}
           onClick={() => { setOpen((v) => !v); setDone(false); }}
           className={cn(
-            "flex items-center justify-center h-12 w-12 rounded-full shadow-lg",
-            "bg-action-primary text-action-primary-foreground border border-action-primary",
-            "hover:bg-action-primary-hover transition-colors"
+            "flex items-center justify-center h-12 w-12 rounded-full shadow-lg transition-all",
+            isEcell
+              ? "bg-[#FCE541] text-[#000000] border-2 border-[#C08634] shadow-[0_8px_25px_-5px_rgba(192,134,52,0.5)] hover:bg-[#FAD943]"
+              : "bg-action-primary text-action-primary-foreground border border-action-primary hover:bg-action-primary-hover"
           )}
           aria-label="Send feedback"
         >
@@ -156,7 +160,15 @@ export default function FeedbackButton() {
                   )}
                 </div>
 
-                <Button type="submit" size="sm" className="w-full gap-2" disabled={loading}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className={cn(
+                    "w-full gap-2",
+                    isEcell && "bg-[#FCE541] text-[#000000] hover:bg-[#FAD943] border border-[#C08634]/50 font-bold"
+                  )}
+                  disabled={loading}
+                >
                   <Send className="h-3.5 w-3.5" />
                   {loading ? "Sending…" : "Submit Feedback"}
                 </Button>

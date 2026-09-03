@@ -144,12 +144,14 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/app/programmes":   { title: "Learning Circles", description: "Enrolled programmes" },
   "/app/announcements":{ title: "Announcements",    description: "Important updates" },
   "/app/events":       { title: "Events",           description: "Campus events" },
-  "/app/ecell":        { title: "E-Cell",           description: "Entrepreneurship hub" },
+  "/app/ecell":        { title: "E-Cell",           description: "Entrepreneurship Cell • BKBNC" },
+  "/app/ecell/stalls": { title: "Stalls Marketplace", description: "Campus vendor applications" },
   "/app/polls":        { title: "Polls",            description: "Active polls & surveys" },
   "/app/daily":        { title: "Daily",            description: "Daily content" },
   "/app/support":      { title: "Help & Support",   description: "We're here to help" },
   "/app/scan":         { title: "Scan Attendance",  description: "Mark your attendance" },
   "/platform/admin/dashboard":              { title: "Command Center",   description: "Administration" },
+  "/platform/admin/ecell":                  { title: "E-Cell Management", description: "Core Team & Stalls" },
   "/platform/admin-control/dashboard":     { title: "Platform Command", description: "Super Admin" },
 };
 
