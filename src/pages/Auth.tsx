@@ -17,7 +17,7 @@ import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
 import { motion } from "framer-motion";
 import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveBadge, PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
+import { FestiveBadge } from "@/components/festive/FestiveDecorations";
 
 /* ── Feature chips for left hero panel ── */
 const HIGHLIGHTS = [

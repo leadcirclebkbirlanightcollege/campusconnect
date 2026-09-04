@@ -278,10 +278,10 @@ export function FestiveSparklesBackground() {
       {/* Top right ambient glow: cyan for Janmashtami, warm golden-amber for Dahi Handi */}
       <div
         className={cn(
-          "absolute -top-12 -right-12 h-44 w-44 rounded-full blur-xl",
+          "absolute -top-12 -right-12 h-48 w-48 rounded-full blur-2xl",
           isDahiHandi
-            ? "bg-[radial-gradient(circle,hsl(42_95%_50%/0.26)_0%,transparent_70%)]"
-            : "bg-[radial-gradient(circle,hsl(188_85%_46%/0.25)_0%,transparent_70%)]"
+            ? "bg-[radial-gradient(circle,hsl(42_95%_50%/0.30)_0%,transparent_70%)]"
+            : "bg-[radial-gradient(circle,hsl(188_95%_48%/0.30)_0%,transparent_70%)]"
         )}
       />
       {/* Bottom aura */}
@@ -289,17 +289,264 @@ export function FestiveSparklesBackground() {
         className={cn(
           "absolute -bottom-10 right-1/4 h-36 w-36 rounded-full blur-xl",
           isDahiHandi
-            ? "bg-[radial-gradient(circle,hsl(200_85%_50%/0.22)_0%,transparent_75%)]"
-            : "bg-[radial-gradient(circle,hsl(42_90%_52%/0.18)_0%,transparent_75%)]"
+            ? "bg-[radial-gradient(circle,hsl(28_90%_52%/0.25)_0%,transparent_75%)]"
+            : "bg-[radial-gradient(circle,hsl(224_90%_60%/0.25)_0%,transparent_75%)]"
         )}
       />
       {/* Tiny decorative stars */}
-      <div className="absolute top-3 right-6 text-amber-300/40 animate-pulse">
+      <div className="absolute top-3 right-6 text-amber-300/60 animate-pulse">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <div className="absolute bottom-4 right-10 text-cyan-300/30">
+      <div className="absolute bottom-4 right-10 text-cyan-300/40">
         <Sparkles className="h-2.5 w-2.5" />
       </div>
     </div>
+  );
+}
+
+/**
+ * High-fidelity Janmashtami Hero Peacock Feather Illustration
+ * Inspired by the reference design: iridescent eye, cyan plume, gold spine, soft glow.
+ */
+export function JanmashtamiHeroIllustration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 140 180"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("pointer-events-none select-none", className)}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="heroQuillGrad" x1="120" y1="10" x2="10" y2="170" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="40%" stopColor="#0284C7" />
+          <stop offset="75%" stopColor="#0369A1" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+        <radialGradient id="heroEyeGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="35%" stopColor="#1E1B4B" />
+          <stop offset="60%" stopColor="#0284C7" />
+          <stop offset="82%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </radialGradient>
+        <filter id="heroEyeGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      {/* Ambient background glow aura */}
+      <ellipse cx="78" cy="62" rx="44" ry="48" fill="#0284C7" opacity="0.28" filter="url(#heroEyeGlow)" />
+      <ellipse cx="82" cy="64" rx="26" ry="30" fill="#38BDF8" opacity="0.32" filter="url(#heroEyeGlow)" />
+
+      {/* Main central spine / quill */}
+      <path
+        d="M125 15C102 45 68 105 18 168"
+        stroke="url(#heroQuillGrad)"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+
+      {/* Upper outer feather barbs */}
+      <path d="M120 22C108 14 88 18 70 38C56 54 50 72 38 90" stroke="#38BDF8" strokeWidth="1.8" strokeLinecap="round" opacity="0.85" />
+      <path d="M112 32C98 25 80 32 64 52C50 70 42 88 32 108" stroke="#0D9488" strokeWidth="1.8" strokeLinecap="round" opacity="0.80" />
+      <path d="M102 44C88 38 72 48 58 68C46 86 36 104 26 126" stroke="#0284C7" strokeWidth="1.8" strokeLinecap="round" opacity="0.75" />
+
+      {/* Lower outer feather barbs */}
+      <path d="M122 36C128 52 124 74 104 96C86 116 68 128 44 142" stroke="#0284C7" strokeWidth="1.8" strokeLinecap="round" opacity="0.85" />
+      <path d="M108 58C114 74 108 96 90 116C74 134 54 146 32 156" stroke="#059669" strokeWidth="1.8" strokeLinecap="round" opacity="0.80" />
+      <path d="M94 80C98 96 90 114 74 130C58 146 40 156 22 164" stroke="#D97706" strokeWidth="1.6" strokeLinecap="round" opacity="0.75" />
+
+      {/* Fine inner feather fringe */}
+      <path d="M100 28C92 24 82 28 72 40" stroke="#7DD3FC" strokeWidth="1.2" strokeLinecap="round" opacity="0.9" />
+      <path d="M116 48C118 58 112 70 100 84" stroke="#7DD3FC" strokeWidth="1.2" strokeLinecap="round" opacity="0.9" />
+
+      {/* Peacock Eye (Ocellus) */}
+      <ellipse
+        cx="82"
+        cy="58"
+        rx="26"
+        ry="22"
+        transform="rotate(-30 82 58)"
+        fill="url(#heroEyeGrad)"
+        stroke="#FDE047"
+        strokeWidth="1.5"
+      />
+
+      {/* Peacock Eye Inner Turquoise Ring */}
+      <ellipse
+        cx="82"
+        cy="58"
+        rx="17"
+        ry="14"
+        transform="rotate(-30 82 58)"
+        fill="#0284C7"
+        opacity="0.95"
+      />
+
+      {/* Inner Pupil (Deep Midnight Blue) */}
+      <ellipse
+        cx="82"
+        cy="58"
+        rx="10"
+        ry="8"
+        transform="rotate(-30 82 58)"
+        fill="#0A1128"
+      />
+
+      {/* Sacred Tilak / Eye Sparkle Highlight */}
+      <circle cx="85" cy="55" r="2.8" fill="#FDE047" />
+      <circle cx="80" cy="61" r="1.5" fill="#FFFFFF" opacity="0.9" />
+
+      {/* Floating starlight sparkles */}
+      <path d="M124 8L126 14L132 16L126 18L124 24L122 18L116 16L122 14L124 8Z" fill="#FDE047" opacity="0.9" />
+      <circle cx="48" cy="24" r="2" fill="#7DD3FC" opacity="0.8" />
+      <circle cx="120" cy="85" r="1.5" fill="#FDE047" opacity="0.7" />
+    </svg>
+  );
+}
+
+/**
+ * High-fidelity Dahi Handi Hero Illustration
+ * Inspired by the reference design: hanging earthen pot, marigold garlands, ropes, festive aura.
+ */
+export function DahiHandiHeroIllustration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 140 180"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("pointer-events-none select-none", className)}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="potGradHero" x1="25" y1="65" x2="115" y2="155" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#B45309" />
+          <stop offset="45%" stopColor="#92400E" />
+          <stop offset="85%" stopColor="#78350F" />
+          <stop offset="100%" stopColor="#451A03" />
+        </linearGradient>
+        <linearGradient id="potGoldRims" x1="30" y1="65" x2="110" y2="65" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="50%" stopColor="#FDE047" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+        <radialGradient id="handiAura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+      </defs>
+
+      {/* Warm Golden Aura behind pot */}
+      <circle cx="70" cy="98" r="54" fill="url(#handiAura)" opacity="0.25" />
+
+      {/* Hanging ropes from top scaffold */}
+      <line x1="70" y1="0" x2="70" y2="52" stroke="#F59E0B" strokeWidth="2.2" strokeDasharray="3 2" />
+      <line x1="30" y1="0" x2="48" y2="68" stroke="#D97706" strokeWidth="1.8" />
+      <line x1="110" y1="0" x2="92" y2="68" stroke="#D97706" strokeWidth="1.8" />
+
+      {/* Marigold Toran / Garland at top */}
+      <path d="M20 18C45 32 95 32 120 18" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="35" cy="24" r="4.5" fill="#EA580C" />
+      <circle cx="52" cy="28" r="4.5" fill="#FACC15" />
+      <circle cx="70" cy="30" r="5.5" fill="#EA580C" />
+      <circle cx="88" cy="28" r="4.5" fill="#FACC15" />
+      <circle cx="105" cy="24" r="4.5" fill="#EA580C" />
+
+      {/* Handi Neck & Mouth */}
+      <ellipse cx="70" cy="62" rx="28" ry="8" fill="#451A03" stroke="url(#potGoldRims)" strokeWidth="2.2" />
+
+      {/* Pure White Curd / Makkhan Froth flowing over mouth */}
+      <ellipse cx="70" cy="59" rx="22" ry="6" fill="#FFFBEB" />
+      <path d="M56 61C58 68 64 70 66 63C68 72 74 74 76 64C78 71 83 69 85 62" fill="#FFFBEB" />
+
+      {/* Handi Pot Body (Classic earthen matka shape) */}
+      <path
+        d="M44 68C30 84 28 118 46 138C58 150 82 150 94 138C112 118 110 84 96 68"
+        fill="url(#potGradHero)"
+        stroke="url(#potGoldRims)"
+        strokeWidth="2.5"
+      />
+
+      {/* Decorative Golden Ethnic Patterns on Pot Waist */}
+      <path d="M38 100C54 112 86 112 102 100" stroke="url(#potGoldRims)" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M42 112C58 124 82 124 98 112" stroke="#FDE047" strokeWidth="1.6" strokeDasharray="3 3" />
+
+      {/* Hanging tassel / coconut motif under pot */}
+      <line x1="70" y1="145" x2="70" y2="162" stroke="#F59E0B" strokeWidth="2" />
+      <circle cx="70" cy="165" r="4" fill="#EA580C" />
+
+      {/* Celebratory golden bursts & sparkles */}
+      <path d="M18 72L21 78L27 80L21 82L18 88L15 82L9 80L15 78L18 72Z" fill="#FDE047" />
+      <path d="M120 82L122 87L128 89L122 91L120 96L118 91L112 89L118 87L120 82Z" fill="#FDE047" />
+      <circle cx="112" cy="130" r="2" fill="#FDE047" opacity="0.8" />
+    </svg>
+  );
+}
+
+/**
+ * Janmashtami Quote Card Vector Feather Accent
+ */
+export function JanmashtamiQuoteDecoration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 80 80"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("pointer-events-none select-none", className)}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="qFeatherSpine" x1="70" y1="10" x2="10" y2="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="60%" stopColor="#0284C7" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+        <radialGradient id="qEyeGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#0F172A" />
+          <stop offset="40%" stopColor="#0284C7" />
+          <stop offset="75%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </radialGradient>
+      </defs>
+      <path d="M72 8C55 24 35 52 10 72" stroke="url(#qFeatherSpine)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M66 14C56 10 44 14 34 26C26 36 22 46 16 56" stroke="#38BDF8" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
+      <path d="M68 22C72 32 68 44 56 56C44 68 32 72 20 74" stroke="#0D9488" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+      <ellipse cx="48" cy="28" rx="14" ry="11" transform="rotate(-30 48 28)" fill="url(#qEyeGrad)" stroke="#FDE047" strokeWidth="1" />
+      <ellipse cx="48" cy="28" rx="8" ry="6" transform="rotate(-30 48 28)" fill="#0284C7" />
+      <circle cx="48" cy="28" r="3.5" fill="#0B1120" />
+      <circle cx="50" cy="26" r="1.2" fill="#FDE047" />
+    </svg>
+  );
+}
+
+/**
+ * Dahi Handi Quote Card Vector Pot Accent
+ */
+export function DahiHandiQuoteDecoration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 80 80"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("pointer-events-none select-none", className)}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="qPotGrad" x1="15" y1="30" x2="65" y2="75" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#B45309" />
+          <stop offset="60%" stopColor="#92400E" />
+          <stop offset="100%" stopColor="#78350F" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="40" cy="30" rx="16" ry="5" fill="#451A03" stroke="#F59E0B" strokeWidth="1.5" />
+      <ellipse cx="40" cy="28" rx="12" ry="3.5" fill="#FFFBEB" />
+      <path d="M26 33C18 44 18 64 28 72C34 78 46 78 52 72C62 64 62 44 54 33" fill="url(#qPotGrad)" stroke="#F59E0B" strokeWidth="1.5" />
+      <path d="M24 50C34 56 46 56 56 50" stroke="#FDE047" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="40" cy="20" r="2" fill="#F59E0B" />
+      <line x1="40" y1="4" x2="40" y2="25" stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="2 2" />
+    </svg>
   );
 }

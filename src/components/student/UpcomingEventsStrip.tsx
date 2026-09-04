@@ -73,21 +73,33 @@ export default function UpcomingEventsStrip() {
     staleTime: 5 * 60_000,
   });
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(`${dateStr}T00:00:00`);
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-    if (dateStr === today.toISOString().split("T")[0]) return "Today";
-    if (dateStr === tomorrow.toISOString().split("T")[0]) return "Tomorrow";
-    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(`${dateStr}T00:00:00`);
+      if (isNaN(d.getTime())) return dateStr;
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      if (dateStr === today.toISOString().split("T")[0]) return "Today";
+      if (dateStr === tomorrow.toISOString().split("T")[0]) return "Tomorrow";
+      return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    } catch {
+      return dateStr || "—";
+    }
   };
 
-  const formatTime = (timeStr: string) => {
-    const [h, m] = timeStr.split(":");
-    const hour = parseInt(h);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    return `${hour % 12 || 12}:${m} ${ampm}`;
+  const formatTime = (timeStr?: string | null) => {
+    if (!timeStr) return "";
+    try {
+      const [h = "0", m = "00"] = timeStr.split(":");
+      const hour = parseInt(h, 10);
+      if (isNaN(hour)) return timeStr;
+      const ampm = hour >= 12 ? "PM" : "AM";
+      return `${hour % 12 || 12}:${m} ${ampm}`;
+    } catch {
+      return timeStr || "";
+    }
   };
 
   return (

@@ -26,7 +26,7 @@ import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
 import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveBadge, PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
+import { FestiveBadge, FestiveIcon, PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
 
 type LeaderboardMode = "alltime" | "weekly" | "class";
 
@@ -163,7 +163,7 @@ const PodiumCard = memo(function PodiumCard({
 
       <p className="line-clamp-1 text-sm font-bold text-foreground flex items-center justify-center gap-1">
         <span>{row.name}</span>
-        {isFirst && isFestive && <PeacockFeatherIcon size={12} />}
+        {isFirst && isFestive && <FestiveIcon size={12} />}
       </p>
       {isCurrentUser ? (
         <span className="mt-1 inline-flex rounded-full bg-primary/12 px-2 py-0.5 text-[9px] font-black text-primary">YOU</span>

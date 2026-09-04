@@ -12,7 +12,7 @@ import { format, isPast, isToday, addDays, isSameDay } from "date-fns";
 import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users } from "@/components/icons";
 import StallRegistrationDialog from "./StallRegistrationDialog";
 import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
+import { FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 type EventRow = {
   id: string;
@@ -113,7 +113,9 @@ export default function StudentEventsList() {
           { label: "Today", value: todayList.length },
           { label: "Featured", value: featured.length },
         ]}
-      />
+      >
+        {isFestive && <FestiveIcon className="absolute -top-16 right-4 w-24 opacity-80" />}
+      </ModuleHero>
 
       <HeroOverlap className="space-y-5">
         {/* Calendar strip */}

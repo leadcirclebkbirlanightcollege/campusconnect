@@ -117,7 +117,11 @@ export function BottomNavigation() {
               <span
                 className={cn(
                   "text-[10.5px] leading-none tracking-tight truncate max-w-full font-medium",
-                  active ? "font-bold text-primary" : "text-muted-foreground",
+                  active
+                    ? (isFestive
+                        ? (isDahiHandi ? "font-bold text-amber-600 dark:text-amber-400" : "font-bold text-sky-600 dark:text-sky-400")
+                        : "font-bold text-primary")
+                    : "text-muted-foreground",
                 )}
               >
                 {tab.label}

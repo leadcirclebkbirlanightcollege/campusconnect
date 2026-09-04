@@ -36,11 +36,11 @@ function kindOf(slot: Slot): Kind {
   return "theory";
 }
 
-const KIND_META: Record<Kind, { label: string; chip: string }> = {
-  lab: { label: "Lab", chip: "border-primary/30 bg-primary/10 text-primary" },
-  practical: { label: "Practical", chip: "border-accent/30 bg-accent/10 text-accent" },
-  online: { label: "Online", chip: "border-success/30 bg-success/10 text-success" },
-  theory: { label: "Theory", chip: "border-border-subtle bg-surface-2 text-muted-foreground" },
+const KIND_META: Record<Kind, { label: string; chip: string; icon: React.ComponentType<{ className?: string }>; bar: string }> = {
+  lab: { label: "Lab", chip: "border-primary/30 bg-primary/10 text-primary", icon: FlaskConical, bar: "bg-primary" },
+  practical: { label: "Practical", chip: "border-accent/30 bg-accent/10 text-accent", icon: BookOpen, bar: "bg-accent" },
+  online: { label: "Online", chip: "border-success/30 bg-success/10 text-success", icon: Laptop, bar: "bg-success" },
+  theory: { label: "Theory", chip: "border-border-subtle bg-surface-2 text-muted-foreground", icon: BookOpen, bar: "bg-muted-foreground/40" },
 };
 
 const toMinutes = (t: string) => {
