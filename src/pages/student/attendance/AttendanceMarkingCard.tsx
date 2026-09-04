@@ -13,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { cn } from "@/lib/utils";
 import QrScannerDialog from "./QrScannerDialog";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 type Props = {
   lectureId: string;
@@ -50,6 +53,7 @@ function safeErrorMessage(e: unknown) {
 export default function AttendanceMarkingCard({ lectureId, initialToken }: Props) {
   const reduceMotion = useReducedMotion();
   const { attempt: attemptMark } = useRateLimit("mark-attendance", 5, 60_000);
+  const { isFestive } = useFestivalTheme();
 
   const [otp, setOtp] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -218,13 +222,25 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
         <CardContent className="space-y-4">
           <AnimatePresence mode="wait">
             {success ? (
-              <motion.div key="success" {...anim} className="rounded-2xl border border-success/30 bg-success/10 p-5 space-y-3">
+              <motion.div
+                key="success"
+                {...anim}
+                className={cn(
+                  "rounded-2xl border p-5 space-y-3",
+                  isFestive
+                    ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-emerald-500/10"
+                    : "border-success/30 bg-success/10"
+                )}
+              >
                 <div className="flex items-start gap-3.5">
                   <div className="h-10 w-10 rounded-xl bg-success/20 border border-success/30 flex items-center justify-center shrink-0 text-success">
                     <CheckCircle2 className="h-6 w-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-success text-base">Attendance Verified & Recorded!</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-success text-base">Attendance Verified & Recorded!</h3>
+                      {isFestive && <FestiveIcon size={16} />}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {success.points > 0 ? `+${success.points} points added to your streak.` : "Your lecture attendance has been securely logged."}
                     </p>

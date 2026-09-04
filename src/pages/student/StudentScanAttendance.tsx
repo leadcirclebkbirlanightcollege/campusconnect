@@ -6,9 +6,10 @@ import {
   Calendar, ChevronRight, Wifi, WifiOff, CheckCircle2
 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import AttendanceMarkingCard from "./attendance/AttendanceMarkingCard";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveBadge } from "@/components/festive/FestiveDecorations";
 
 type LectureRow = {
   id: string; topic: string; venue: string;
@@ -44,6 +45,7 @@ function LiveDot() {
 
 export default function StudentScanAttendance() {
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
+  const { isFestive } = useFestivalTheme();
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const lecturesQuery = useQuery({
@@ -75,13 +77,18 @@ export default function StudentScanAttendance() {
     <div className="space-y-6 max-w-2xl mx-auto pb-28">
       {/* ── Native Page Header ── */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
-            <QrCode className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-foreground tracking-tight">Mark Lecture Attendance</h1>
-            <p className="text-xs text-muted-foreground">Scan dynamic QR code or enter the session OTP</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+              <QrCode className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black text-foreground tracking-tight">Mark Lecture Attendance</h1>
+                {isFestive && <FestiveBadge />}
+              </div>
+              <p className="text-xs text-muted-foreground">Scan dynamic QR code or enter the session OTP</p>
+            </div>
           </div>
         </div>
       </motion.div>

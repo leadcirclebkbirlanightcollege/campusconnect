@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveBadge } from "@/components/festive/FestiveDecorations";
 
 type ProfileRow = {
   name: string;
@@ -139,10 +141,16 @@ export default function StudentDigitalId() {
 
   const programmes = programmesQuery.data ?? [];
   const primaryProgramme = programmes[0]?.programmes?.name ?? null;
+  const { isFestive, config } = useFestivalTheme();
 
   return (
     <PageContainer className="flex flex-col items-center gap-6 py-4 pb-24" withBottomNav>
       <div className="w-full max-w-sm text-center">
+        {isFestive && (
+          <div className="mb-2 flex justify-center">
+            <FestiveBadge label={`${config.name} • Verified Student`} />
+          </div>
+        )}
         <PageHeader
           title="Digital Identity Card"
           subtitle="Official institutional credential with cryptographic verification"

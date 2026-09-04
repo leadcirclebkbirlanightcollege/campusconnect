@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { format, isPast, isToday, addDays, isSameDay } from "date-fns";
 import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users } from "@/components/icons";
 import StallRegistrationDialog from "./StallRegistrationDialog";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
 
 type EventRow = {
   id: string;
@@ -37,6 +39,7 @@ const TABS: { value: Tab; label: string }[] = [
 export default function StudentEventsList() {
   const [tab, setTab] = useState<Tab>("upcoming");
   const [activeDay, setActiveDay] = useState<Date | null>(null);
+  const { isFestive, config } = useFestivalTheme();
 
   const query = useQuery({
     queryKey: ["student", "events", "v3"],
@@ -102,7 +105,8 @@ export default function StudentEventsList() {
         tone="community"
         eyebrow={monthLabel}
         title="Campus Events"
-        subtitle="Fests, workshops, competitions and everything in between"
+        subtitle={isFestive ? `${config.name} • Campus events, workshops and gatherings` : "Fests, workshops, competitions and everything in between"}
+        className={isFestive ? "bg-festive-hero border border-amber-400/25" : undefined}
         icon={CalendarDays}
         stats={[
           { label: "Upcoming", value: upcoming.length },

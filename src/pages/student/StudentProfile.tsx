@@ -34,6 +34,8 @@ import { useThemeContext } from "@/providers/ThemeProvider";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveIcon, FestiveBadge } from "@/components/festive/FestiveDecorations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -191,6 +193,7 @@ export default function StudentProfile() {
   const qc = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const { theme, setTheme } = useThemeContext();
+  const { isFestive, config } = useFestivalTheme();
   const { prefs: appPrefs, setPrefs: setAppPrefs } = useLocalAppPrefs();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -462,9 +465,10 @@ export default function StudentProfile() {
     <PageContainer className="pb-28" noPadding withBottomNav>
       <ModuleHero
         tone="profile"
-        eyebrow="My account"
+        eyebrow={isFestive ? `My account • ${config.name} Edition` : "My account"}
         title={profile?.name ?? "Your profile"}
         subtitle={profile?.email ?? user?.email ?? undefined}
+        className={isFestive ? "bg-festive-hero border border-amber-400/25" : undefined}
         stats={[
           { label: "Points", value: pointsQuery.data ?? 0 },
           { label: "Complete", value: `${completion}%` },
@@ -515,6 +519,11 @@ export default function StudentProfile() {
                   <span className="inline-flex items-center rounded-full bg-white/22 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ring-1 ring-white/25">
                     {roleLabel}
                   </span>
+                  {isFestive && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/20 text-amber-200 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-amber-400/30">
+                      <FestiveIcon size={12} /> {config.name}
+                    </span>
+                  )}
                   {profile?.is_verified && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
                       <Shield className="h-3 w-3" /> Verified

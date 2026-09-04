@@ -39,6 +39,12 @@ import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import {
+  FestiveBadge,
+  FestiveIcon,
+  FestiveSparklesBackground,
+} from "@/components/festive/FestiveDecorations";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
@@ -279,6 +285,7 @@ export default function StudentDashboard() {
   const tierConfig = TIER_CONFIG[tier];
   const tierProgress = getTierProgress(coreQuery.data.totalPoints, tier);
 
+  const { isFestive, isDahiHandi, config: festivalConfig } = useFestivalTheme();
   const liveLecture = coreQuery.data.liveNow;
   const nextLecture = secondaryQuery.data?.nextLecture;
   const pendingAssignments = secondaryQuery.data?.pendingAssignments ?? [];
@@ -290,11 +297,27 @@ export default function StudentDashboard() {
         {/* ═══ CLEAN HEADER GREETING ═══ */}
         <div className="flex items-center justify-between pt-1">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              {todayFormatted}
-            </p>
-            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5">
-              Hi, {coreQuery.data.name} 👋
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                {todayFormatted}
+              </p>
+              {isFestive && (
+                <FestiveBadge label={festivalConfig.badgeLabel} />
+              )}
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>Hi, {coreQuery.data.name} 👋</span>
+              {isFestive && (
+                <span className={cn(
+                  "hidden sm:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border",
+                  isDahiHandi
+                    ? "text-amber-600 dark:text-amber-300 bg-amber-500/10 border-amber-500/25"
+                    : "text-cyan-600 dark:text-cyan-300 bg-cyan-500/10 border-cyan-500/25"
+                )}>
+                  <FestiveIcon size={12} />
+                  {festivalConfig.greeting} ✨
+                </span>
+              )}
             </h1>
           </div>
           <button
@@ -312,10 +335,23 @@ export default function StudentDashboard() {
           {/* ═══ 1. DEEP NAVY HERO CARD (Next Class or Live Now) ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             {liveLecture ? (
-              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
-                {/* Decorative glow circles */}
-                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-danger/25 blur-2xl" />
-                <div aria-hidden="true" className="pointer-events-none absolute right-1/4 -bottom-10 h-32 w-32 rounded-full bg-primary/20 blur-xl" />
+              <div
+                className={cn(
+                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
+                  isFestive
+                    ? "bg-festive-hero border-amber-400/30"
+                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
+                )}
+              >
+                {/* Decorative glow circles or festive particles */}
+                {isFestive ? (
+                  <FestiveSparklesBackground />
+                ) : (
+                  <>
+                    <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-danger/25 blur-2xl" />
+                    <div aria-hidden="true" className="pointer-events-none absolute right-1/4 -bottom-10 h-32 w-32 rounded-full bg-primary/20 blur-xl" />
+                  </>
+                )}
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -323,7 +359,10 @@ export default function StudentDashboard() {
                       <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
                       Live Class Now
                     </div>
-                    <span className="text-xs font-mono font-semibold text-white/80">{liveLecture.start_time}</span>
+                    <div className="flex items-center gap-1.5">
+                      {isFestive && <FestiveIcon size={14} />}
+                      <span className="text-xs font-mono font-semibold text-white/80">{liveLecture.start_time}</span>
+                    </div>
                   </div>
 
                   <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{liveLecture.topic}</h2>
@@ -353,10 +392,23 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : nextLecture ? (
-              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
-                {/* Decorative glow circles */}
-                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
-                <div aria-hidden="true" className="pointer-events-none absolute right-1/3 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-xl" />
+              <div
+                className={cn(
+                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
+                  isFestive
+                    ? "bg-festive-hero border-amber-400/30"
+                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
+                )}
+              >
+                {/* Decorative glow circles or festive particles */}
+                {isFestive ? (
+                  <FestiveSparklesBackground />
+                ) : (
+                  <>
+                    <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
+                    <div aria-hidden="true" className="pointer-events-none absolute right-1/3 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-xl" />
+                  </>
+                )}
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -364,7 +416,10 @@ export default function StudentDashboard() {
                       <Clock3 className="h-3 w-3 text-primary-glow" />
                       Next Class
                     </div>
-                    <span className="text-xs font-mono font-semibold text-white/80">{nextLecture.start_time}</span>
+                    <div className="flex items-center gap-1.5">
+                      {isFestive && <FestiveIcon size={14} />}
+                      <span className="text-xs font-mono font-semibold text-white/80">{nextLecture.start_time}</span>
+                    </div>
                   </div>
 
                   <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{nextLecture.topic}</h2>
@@ -394,12 +449,20 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+              <div
+                className={cn(
+                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
+                  isFestive
+                    ? "bg-festive-hero border-amber-400/25"
+                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
+                )}
+              >
+                {isFestive && <FestiveSparklesBackground />}
                 <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      All Caught Up
+                      {isFestive ? "Janmashtami • All Caught Up" : "All Caught Up"}
                     </div>
                     <h2 className="text-lg sm:text-xl font-black text-white">No classes scheduled right now</h2>
                     <p className="text-xs text-white/70">Check your timetable or review study materials</p>
@@ -454,13 +517,22 @@ export default function StudentDashboard() {
             {/* Points Metric */}
             <div
               onClick={() => navigate("/app/points")}
-              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-xs hover:shadow-sm"
+              className={cn(
+                "cursor-pointer rounded-2xl border bg-surface-1 p-3.5 sm:p-4 text-center transition-all active:scale-[0.98] shadow-xs hover:shadow-sm",
+                isFestive
+                  ? "border-amber-400/35 hover:border-amber-400/60 bg-gradient-to-b from-surface-1 to-amber-500/5"
+                  : "border-border-subtle hover:border-primary/40"
+              )}
             >
               <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground truncate">Points</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.totalPoints.toLocaleString()}
               </p>
-              <p className="mt-1 text-[10px] font-bold uppercase text-primary tracking-wide truncate">
+              <p className={cn(
+                "mt-1 text-[10px] font-bold uppercase tracking-wide truncate",
+                isFestive ? "text-amber-500 flex items-center justify-center gap-1" : "text-primary"
+              )}>
+                {isFestive && <PeacockFeatherIcon size={11} />}
                 {tierConfig.label} Tier
               </p>
             </div>

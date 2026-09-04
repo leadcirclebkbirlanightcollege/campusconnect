@@ -5,10 +5,12 @@ import { Clock, MapPin, CalendarRange, Radio, ArrowRight, FlaskConical, BookOpen
 import { getDay } from "date-fns";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
-import { PremiumEmpty } from "@/components/ui/premium-empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FadeIn } from "@/components/ui/motion";
+import { PremiumEmpty } from "@/components/ui/premium-empty";
 import { cn } from "@/lib/utils";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WORK_DAYS = [1, 2, 3, 4, 5, 6];
@@ -27,29 +29,30 @@ type Slot = {
 type Kind = "lab" | "practical" | "online" | "theory";
 
 function kindOf(slot: Slot): Kind {
-  const t = `${slot.subject} ${slot.venue ?? ""}`.toLowerCase();
-  if (t.includes("lab")) return "lab";
-  if (t.includes("practical")) return "practical";
-  if (t.includes("online") || t.includes("zoom") || t.includes("meet")) return "online";
+  const text = `${slot.subject} ${slot.venue ?? ""}`.toLowerCase();
+  if (text.includes("lab")) return "lab";
+  if (text.includes("practical") || text.includes("pr")) return "practical";
+  if (text.includes("online") || text.includes("zoom") || text.includes("meet")) return "online";
   return "theory";
 }
 
-const KIND_META: Record<Kind, { label: string; icon: typeof BookOpen; chip: string; bar: string }> = {
-  lab: { label: "Lab", icon: FlaskConical, chip: "bg-premium/12 text-premium border-premium/25", bar: "bg-premium" },
-  practical: { label: "Practical", icon: FlaskConical, chip: "bg-success/12 text-success border-success/25", bar: "bg-success" },
-  online: { label: "Online", icon: Laptop, chip: "bg-warning/12 text-warning border-warning/25", bar: "bg-warning" },
-  theory: { label: "Theory", icon: BookOpen, chip: "bg-primary/10 text-primary border-primary/20", bar: "bg-primary" },
+const KIND_META: Record<Kind, { label: string; chip: string }> = {
+  lab: { label: "Lab", chip: "border-primary/30 bg-primary/10 text-primary" },
+  practical: { label: "Practical", chip: "border-accent/30 bg-accent/10 text-accent" },
+  online: { label: "Online", chip: "border-success/30 bg-success/10 text-success" },
+  theory: { label: "Theory", chip: "border-border-subtle bg-surface-2 text-muted-foreground" },
 };
 
 const toMinutes = (t: string) => {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + (m || 0);
+  const [h = 0, m = 0] = t.split(":").map(Number);
+  return h * 60 + m;
 };
 const hhmm = (t: string) => t.slice(0, 5);
 
 export default function StudentTimetable() {
   const todayDay = getDay(new Date());
   const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const { isFestive, config } = useFestivalTheme();
 
   const { data: collegeId } = useQuery({
     queryKey: ["my_college_id"],
@@ -99,12 +102,13 @@ export default function StudentTimetable() {
   const weeklyTotal = slots.length;
 
   return (
-    <PageContainer className="space-y-5" noPadding>
+    <PageContainer size="wide" className="space-y-6 pb-24">
       <ModuleHero
         tone="academics"
         eyebrow="Weekly schedule"
         title="Timetable"
-        subtitle={`${DAYS[todayDay]} · ${todaySlots.length} ${todaySlots.length === 1 ? "class" : "classes"} today`}
+        subtitle={isFestive ? `${config.name} • Campus Connect Schedule` : "Weekly schedule & live classes"}
+        className={isFestive ? "bg-festive-hero border border-amber-400/25" : undefined}
         icon={CalendarRange}
         stats={[
           { label: "Today", value: todaySlots.length },
@@ -112,6 +116,7 @@ export default function StudentTimetable() {
           { label: "This week", value: weeklyTotal },
         ]}
       >
+        {isFestive && <FestiveIcon className="absolute -top-16 right-4 w-24 opacity-80" />}
         {/* Weekly day strip */}
         <div className="flex gap-1.5">
           {WORK_DAYS.map((d) => {
@@ -123,12 +128,13 @@ export default function StudentTimetable() {
                 className={cn(
                   "flex flex-1 flex-col items-center rounded-xl border py-1.5 transition",
                   active
-                    ? "border-white/40 bg-white/22"
+                    ? (isFestive ? "border-amber-400/50 bg-white/25 shadow-xs" : "border-white/40 bg-white/22")
                     : "border-white/12 bg-white/8",
                 )}
               >
-                <span className="text-[9.5px] font-bold uppercase tracking-wide text-white/75">
+                <span className="text-[9.5px] font-bold uppercase tracking-wide text-white/75 flex items-center gap-0.5">
                   {DAYS[d].slice(0, 1)}
+                  {active && isFestive && <span className="h-1 w-1 rounded-full bg-amber-300 inline-block" />}
                 </span>
                 <span className="font-heading text-[13px] font-bold tabular-nums">{n}</span>
               </div>
@@ -183,7 +189,9 @@ export default function StudentTimetable() {
               ) : !current ? (
                 <div className="rounded-[20px] border border-dashed border-border-subtle bg-surface-2/60 px-4 py-5 text-center">
                   <p className="text-[13px] font-semibold text-foreground">
-                    {todaySlots.length === 0 ? "No classes today 🎉" : "You're done for today 🎉"}
+                    {todaySlots.length === 0
+                      ? (isFestive ? "Happy Janmashtami! No classes today 🎉" : "No classes today 🎉")
+                      : "You're done for today 🎉"}
                   </p>
                   <p className="mt-0.5 text-[11.5px] text-muted-foreground">
                     Scroll down to see the rest of your week.
@@ -288,25 +296,41 @@ function SectionTitle({ title, count }: { title: string; count?: number }) {
 }
 
 function NowCard({ slot, nowMin }: { slot: Slot; nowMin: number }) {
+  const { isFestive } = useFestivalTheme();
   const start = toMinutes(slot.start_time);
   const end = toMinutes(slot.end_time);
   const pct = Math.min(100, Math.max(0, ((nowMin - start) / Math.max(1, end - start)) * 100));
   const meta = KIND_META[kindOf(slot)];
 
   return (
-    <div className="relative overflow-hidden rounded-[22px] border border-primary/25 bg-surface-1 p-4 shadow-elevated">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[22px] border bg-surface-1 p-4 shadow-elevated",
+        isFestive
+          ? "border-amber-400/35 shadow-[0_4px_20px_-2px_rgba(14,165,233,0.08)]"
+          : "border-primary/25"
+      )}
+    >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/16 to-transparent"
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-24",
+          isFestive
+            ? "bg-gradient-to-b from-sky-500/15 via-amber-500/5 to-transparent"
+            : "bg-gradient-to-b from-primary/16 to-transparent"
+        )}
       />
       <div className="relative space-y-2.5">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-danger">
-            <Radio className="h-2.5 w-2.5 animate-pulse" /> In progress
-          </span>
-          <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold", meta.chip)}>
-            {meta.label}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-danger">
+              <Radio className="h-2.5 w-2.5 animate-pulse" /> In progress
+            </span>
+            <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold", meta.chip)}>
+              {meta.label}
+            </span>
+          </div>
+          {isFestive && <FestiveIcon size={16} />}
         </div>
 
         <div>

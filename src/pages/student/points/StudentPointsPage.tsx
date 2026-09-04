@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
+import { FestiveBadge, FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 const ACTIVITY_OPTIONS = [
   { value: "event_attendance", label: "Event Attendance", emoji: "🎟️" },
@@ -174,6 +176,7 @@ export default function StudentPointsPage() {
   const progressPct = nextThreshold
     ? Math.min(100, Math.round((total / nextThreshold) * 100))
     : 100;
+  const { isFestive } = useFestivalTheme();
 
   return (
     <div className="mx-auto w-full max-w-xl md:max-w-3xl lg:max-w-4xl space-y-5 px-3.5 sm:px-5 pb-8">
@@ -182,12 +185,17 @@ export default function StudentPointsPage() {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-border-subtle p-5 sm:p-6 shadow-sm"
+        className={cn(
+          "relative overflow-hidden rounded-2xl md:rounded-3xl border p-5 sm:p-6 shadow-sm",
+          isFestive ? "border-amber-400/35 text-white" : "border-border-subtle"
+        )}
         style={{
-          background: `
-            radial-gradient(80% 100% at 100% 0%, hsl(var(--warning) / 0.12), transparent 60%),
-            linear-gradient(135deg, hsl(var(--surface-2)), hsl(var(--surface-1)))
-          `,
+          background: isFestive
+            ? "radial-gradient(80% 100% at 100% 0%, hsl(42 88% 50% / 0.25), transparent 60%), radial-gradient(60% 80% at 0% 100%, hsl(194 85% 45% / 0.20), transparent 60%), linear-gradient(135deg, hsl(220 54% 14%), hsl(222 55% 18%))"
+            : `
+              radial-gradient(80% 100% at 100% 0%, hsl(var(--warning) / 0.12), transparent 60%),
+              linear-gradient(135deg, hsl(var(--surface-2)), hsl(var(--surface-1)))
+            `,
         }}
       >
         <motion.div
@@ -195,14 +203,17 @@ export default function StudentPointsPage() {
           animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.6, 0.4] }}
           transition={{ duration: 6, repeat: Infinity }}
           className="absolute -top-16 -right-12 h-44 w-44 rounded-full blur-3xl pointer-events-none"
-          style={{ background: "hsl(var(--warning) / 0.30)" }}
+          style={{ background: isFestive ? "hsl(42 88% 50% / 0.25)" : "hsl(var(--warning) / 0.30)" }}
         />
 
         <div className="relative flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Total points
-            </p>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <p className={cn("text-[10px] font-bold uppercase tracking-[0.16em]", isFestive ? "text-amber-300" : "text-muted-foreground")}>
+                Total points
+              </p>
+              {isFestive && <FestiveBadge />}
+            </div>
             <div className="mt-1 flex items-baseline gap-2">
               {totalQuery.isLoading ? (
                 <Skeleton className="h-9 w-24" />
@@ -211,24 +222,25 @@ export default function StudentPointsPage() {
                   key={total}
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-[34px] font-black tabular-nums leading-none text-foreground"
+                  className={cn("text-[34px] font-black tabular-nums leading-none", isFestive ? "text-white" : "text-foreground")}
                 >
                   {total.toLocaleString()}
                 </motion.h1>
               )}
-              <Coins className="h-5 w-5 text-warning" />
+              <Coins className={cn("h-5 w-5", isFestive ? "text-amber-300" : "text-warning")} />
             </div>
           </div>
 
           <div
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border backdrop-blur-sm"
             style={{
-              background: `${tier.color}20`,
-              borderColor: `${tier.color}55`,
+              background: isFestive ? "rgba(255,255,255,0.12)" : `${tier.color}20`,
+              borderColor: isFestive ? "rgba(251,191,36,0.4)" : `${tier.color}55`,
             }}
           >
+            {isFestive && <FestiveIcon size={14} />}
             <span className="text-base leading-none">{tier.emoji}</span>
-            <span className="text-[12px] font-bold" style={{ color: tier.color }}>
+            <span className="text-[12px] font-bold" style={{ color: isFestive ? "#FDE047" : tier.color }}>
               {tier.label}
             </span>
           </div>
@@ -236,20 +248,22 @@ export default function StudentPointsPage() {
 
         {/* Tier progress */}
         <div className="relative mt-4">
-          <div className="flex justify-between text-[10.5px] text-muted-foreground mb-1.5">
+          <div className={cn("flex justify-between text-[10.5px] mb-1.5", isFestive ? "text-white/80" : "text-muted-foreground")}>
             <span className="font-semibold uppercase tracking-wider">{tier.label}</span>
             <span>
               {nextThreshold ? `${nextThreshold - total} pts to next` : "Max tier reached"}
             </span>
           </div>
-          <div className="h-2 rounded-full bg-surface-3 overflow-hidden">
+          <div className={cn("h-2 rounded-full overflow-hidden", isFestive ? "bg-white/20" : "bg-surface-3")}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
               className="h-full rounded-full"
               style={{
-                background: `linear-gradient(90deg, ${tier.color}, hsl(var(--warning)))`,
+                background: isFestive
+                  ? "linear-gradient(90deg, #0EA5E9, #F59E0B)"
+                  : `linear-gradient(90deg, ${tier.color}, hsl(var(--warning)))`,
               }}
             />
           </div>

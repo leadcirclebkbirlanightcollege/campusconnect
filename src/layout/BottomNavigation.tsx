@@ -13,6 +13,7 @@ import { Rocket01Icon, Rocket02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { STUDENT_TABS, resolveActiveTab, type StudentTab } from "@/ui-engine/navigation-engine";
+import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
 
 const TAB_ICON_MAP: Record<string, { semantic?: SemanticIconName; iconInactive?: any; iconActive?: any }> = {
   home: { semantic: "home" },
@@ -26,6 +27,7 @@ export function BottomNavigation() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const activeId = resolveActiveTab(pathname)?.id;
+  const { isFestive, isDahiHandi } = useFestivalTheme();
 
   const go = (tab: StudentTab) => {
     // Re-tapping the active tab pops back to the tab root (native behaviour)
@@ -40,6 +42,7 @@ export function BottomNavigation() {
         "bg-surface-1/95 backdrop-blur-lg",
         "border-t border-border-subtle",
         "shadow-[0_-2px_10px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.35)]",
+        isFestive && "border-t-amber-400/20"
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -69,14 +72,21 @@ export function BottomNavigation() {
                 "rounded-xl select-none outline-none",
                 "transition-all duration-150",
                 active
-                  ? "text-primary"
+                  ? (isFestive ? (isDahiHandi ? "text-amber-500 dark:text-amber-400" : "text-sky-600 dark:text-sky-400") : "text-primary")
                   : "text-muted-foreground hover:text-foreground active:text-foreground",
               )}
             >
               {active && (
                 <motion.div
                   layoutId="bottom-nav-indicator-pill"
-                  className="absolute inset-x-1.5 inset-y-1 rounded-xl -z-10 bg-primary/10 dark:bg-primary/15 border border-primary/20"
+                  className={cn(
+                    "absolute inset-x-1.5 inset-y-1 rounded-xl -z-10",
+                    isFestive
+                      ? (isDahiHandi
+                          ? "festival-active-tab border border-amber-400/35 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                          : "festival-active-tab border border-sky-400/30 shadow-[0_0_12px_rgba(14,165,233,0.12)]")
+                      : "bg-primary/10 dark:bg-primary/15 border border-primary/20"
+                  )}
                   transition={{ type: "spring", stiffness: 450, damping: 35 }}
                 />
               )}
