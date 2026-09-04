@@ -25,7 +25,6 @@ function AuthenticatedOverlays() {
   if (isLoading || !user) return null;
   return (
     <>
-      <AppSplash />
       <WhatsNewModal />
     </>
   );
@@ -54,6 +53,9 @@ function AppInner() {
 
   return (
     <>
+      {/* Canonical initial splash screen across all entry points */}
+      <AppSplash />
+
       {/* Offline overlay — never blocks rendering */}
       <OfflineAutoRecovery />
 

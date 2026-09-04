@@ -1,118 +1,105 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
+import { Loader2 } from "@/components/icons";
 
 /**
- * Branded PWA splash screen.
- * - Reads platform branding (name, tagline, logo).
- * - Animates logo → name → tagline → progress bar.
- * - Hides once the page loads (≤1.8 s safety cap).
+ * Canonical Campus Connect Splash Screen.
+ *
+ * App opens → Splash appears → Real auth/session initialization → Splash smoothly resolves.
+ * - Branded Campus Connect logo & typography.
+ * - Driven strictly by REAL initialization state (no fake timeouts).
+ * - Safety cap to ensure users are never trapped if network or auth service fails.
+ * - Canonical: Single initial splash across all routes (student, admin, faculty, unauthenticated).
  */
 export default function AppSplash() {
-  const [visible, setVisible] = useState(true);
-  const [progress, setProgress] = useState(0);
+  const { isLoading: authLoading, user } = useAuth();
+  const { isLoading: tenantLoading } = useTenant();
   const { branding } = usePlatformBranding();
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Fake progress bar: 0 → 85% quickly, 85 → 100 when page ready
-  useEffect(() => {
-    let raf: number;
-    let start: number | null = null;
-    const duration = 900;
-
-    const tick = (ts: number) => {
-      if (!start) start = ts;
-      const elapsed = ts - start;
-      const p = Math.min(85, (elapsed / duration) * 85);
-      setProgress(p);
-      if (p < 85) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // App is bootstrapping while auth session is resolving, or (if user present) tenant/role is resolving
+  const isInitializing = authLoading || (Boolean(user) && tenantLoading);
 
   useEffect(() => {
-    let timeout: number;
-
-    const hide = () => {
-      setProgress(100);
-      timeout = window.setTimeout(() => setVisible(false), 320);
-    };
-
-    if (document.readyState === "complete") {
-      hide();
-    } else {
-      window.addEventListener("load", hide, { once: true });
-      // Safety cap: 1.8 s
-      timeout = window.setTimeout(hide, 1800);
+    if (!isInitializing) {
+      setHasInitialized(true);
     }
+  }, [isInitializing]);
 
-    return () => {
-      window.removeEventListener("load", hide);
-      clearTimeout(timeout);
-    };
+  // Safety fallback: Never trap the user indefinitely if network or auth stalls
+  useEffect(() => {
+    const safetyTimer = window.setTimeout(() => {
+      setTimedOut(true);
+    }, 8000);
+    return () => clearTimeout(safetyTimer);
   }, []);
+
+  const isVisible = !hasInitialized && !timedOut;
 
   const logoSrc = branding.logo_url ?? BRANDING.logo;
   const name = branding.brand_name ?? BRANDING.name;
-  const tagline = branding.tagline ?? BRANDING.tagline;
 
   return (
     <AnimatePresence>
-      {visible && (
+      {isVisible && (
         <motion.div
-          key="splash"
+          key="canonical-app-splash"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.28 }}
+          transition={{ duration: 0.28, ease: "easeInOut" }}
           role="status"
-          aria-label="Loading"
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background"
+          aria-label="Loading Campus Connect"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background select-none pointer-events-auto"
         >
-          {/* Logo */}
+          {/* Centered Campus Connect Logo */}
           <motion.div
-            initial={{ scale: 0.72, opacity: 0 }}
+            initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative flex items-center justify-center"
           >
             <img
               src={logoSrc}
-              width={88}
-              height={88}
-              alt={`${name} splash logo`}
-              className="rounded-[22px] shadow-xl"
+              width={76}
+              height={76}
+              alt={`${name} logo`}
+              className="rounded-2xl shadow-lg border border-border/40 object-contain"
               loading="eager"
               decoding="sync"
             />
           </motion.div>
 
-          {/* Name + tagline */}
+          {/* Campus Connect Brand Name & Message */}
           <motion.div
-            initial={{ y: 14, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.22, duration: 0.32, ease: "easeOut" }}
-            className="mt-5 text-center"
+            transition={{ delay: 0.12, duration: 0.28, ease: "easeOut" }}
+            className="mt-4 text-center px-4"
           >
-            <p className="text-[18px] font-bold tracking-tight text-foreground">{name}</p>
-            <p className="text-[12px] text-muted-foreground mt-1">{tagline}</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">{name}</h1>
+            <p className="text-xs text-muted-foreground mt-1.5 font-medium tracking-wide">
+              Loading your campus experience...
+            </p>
           </motion.div>
 
-          {/* Progress bar */}
+          {/* Subtle loading indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 w-36 h-[3px] rounded-full bg-border overflow-hidden"
+            transition={{ delay: 0.2, duration: 0.25 }}
+            className="mt-6 flex items-center justify-center"
           >
-            <motion.div
-              className="h-full bg-primary rounded-full"
-              animate={{ width: `${progress}%` }}
-              transition={{ ease: "easeOut", duration: 0.18 }}
-            />
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </motion.div>
 
-          <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[10.5px] text-muted-foreground/60 font-mono tracking-wider">
+          {/* Version badge */}
+          <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] text-muted-foreground/60 font-mono tracking-wider">
             Version {APP_VERSION}
           </p>
         </motion.div>

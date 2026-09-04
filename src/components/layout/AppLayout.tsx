@@ -51,8 +51,6 @@ import { useAppEventsBridge } from "@/hooks/use-app-events";
 import { useShellRealtime } from "@/hooks/use-shell-realtime";
 import { useSmartBack } from "@/hooks/use-smart-back";
 import ScrollMemory from "@/components/layout/ScrollMemory";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 
 /* ── System Status Dot ─────────────────────────────────────────── */
@@ -178,7 +176,7 @@ export default function AppLayout() {
   const location = useLocation();
   const { title, description } = getPageMeta(location.pathname);
   const { canGoBack, goBack } = useSmartBack();
-  const { isFestive, config } = useFestivalTheme();
+
 
   const { data: user } = useQuery({
     queryKey: ["topbar", "user"],
@@ -212,7 +210,6 @@ export default function AppLayout() {
                 "sticky top-0 z-40 app-header-safe",
                 "bg-surface-1/95 backdrop-blur-md border-b border-border-subtle",
                 "shadow-[0_1px_2px_hsl(var(--navy-deep)/0.03)]",
-                isFestive && "border-b-amber-400/20"
               )}
             >
               <div className="flex h-[52px] items-center gap-2.5 px-3 md:px-5">
@@ -244,16 +241,9 @@ export default function AppLayout() {
                       exit={{ opacity: 0, y: -4 }}
                       transition={{ duration: msToSeconds(MOTION_MS.fast), ease: [0, 0, 0.2, 1] }}
                     >
-                      <div className="flex items-center gap-2">
-                        <p className="text-[14px] font-semibold text-foreground leading-none truncate">
-                          {title}
-                        </p>
-                        {isFestive && (
-                          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                            <FestiveIcon size={10} /> {config.name}
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-[14px] font-semibold text-foreground leading-none truncate">
+                        {title}
+                      </p>
                       {description && (
                         <p className="hidden sm:block text-[11px] text-muted-foreground mt-0.5 leading-none truncate">
                           {description}

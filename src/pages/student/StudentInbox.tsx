@@ -21,8 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveBadge } from "@/components/festive/FestiveDecorations";
 
 type Recipient = {
   id: string;
@@ -179,15 +177,8 @@ export default function StudentInbox() {
     };
   }, [qc, userId]);
 
-  const { isFestive, config } = useFestivalTheme();
-
   return (
     <PageContainer>
-      {isFestive && (
-        <div className="mb-2">
-          <FestiveBadge label={`${config.name} • Inbox`} />
-        </div>
-      )}
       <PageHeader
         title="Notification Inbox"
         subtitle={unreadCount > 0 ? `${unreadCount} unread updates` : "All caught up"}

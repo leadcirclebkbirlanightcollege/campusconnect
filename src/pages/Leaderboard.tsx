@@ -25,8 +25,6 @@ import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { SECTION_REVEAL_ITEM, SECTION_REVEAL_PARENT } from "@/motion/microInteractions";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveBadge, FestiveIcon, PeacockFeatherIcon } from "@/components/festive/FestiveDecorations";
 
 type LeaderboardMode = "alltime" | "weekly" | "class";
 
@@ -120,7 +118,6 @@ const PodiumCard = memo(function PodiumCard({
   rank: 1 | 2 | 3;
   isCurrentUser: boolean;
 }) {
-  const { isFestive } = useFestivalTheme();
   const isFirst = rank === 1;
 
   return (
@@ -131,40 +128,25 @@ const PodiumCard = memo(function PodiumCard({
       className={cn(
         "rounded-2xl border p-3 text-center",
         isFirst
-          ? (isFestive
-              ? "border-amber-400/50 bg-gradient-to-b from-amber-500/15 via-primary/10 to-surface-1 shadow-[0_4px_24px_-4px_rgba(245,158,11,0.25)]"
-              : "border-primary/35 bg-gradient-to-b from-primary/12 to-surface-1 shadow-glow")
-          : (isFestive ? "border-sky-400/25 bg-surface-1" : "border-border-subtle bg-surface-1"),
+          ? "border-primary/35 bg-gradient-to-b from-primary/12 to-surface-1 shadow-glow"
+          : "border-border-subtle bg-surface-1",
         rank === 1 ? "min-h-[190px]" : "min-h-[162px]",
       )}
     >
-      <div className={cn(
-        "mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border-subtle bg-surface-2 text-foreground",
-        isFirst && isFestive && "border-amber-400/40 bg-amber-500/15"
-      )}>
-        {rank === 1 ? (
-          <Trophy className={cn("h-3.5 w-3.5", isFestive ? "text-amber-500" : "text-primary")} />
-        ) : (
-          <Medal className="h-3.5 w-3.5" />
-        )}
+      <div className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border-subtle bg-surface-2 text-foreground">
+        {rank === 1 ? <Trophy className="h-3.5 w-3.5 text-primary" /> : <Medal className="h-3.5 w-3.5" />}
       </div>
 
       <div className="mx-auto mb-2 w-fit">
-        <Avatar className={cn(
-          rank === 1 ? "h-14 w-14" : "h-12 w-12",
-          isFirst && isFestive ? "ring-2 ring-amber-400/60" : "ring-2 ring-border-subtle"
-        )}>
+        <Avatar className={cn(rank === 1 ? "h-14 w-14" : "h-12 w-12", "ring-2 ring-border-subtle")}>
           <AvatarImage src={row.avatar_url ?? undefined} />
-          <AvatarFallback className={cn("font-bold", isFirst && isFestive ? "bg-amber-500/15 text-amber-600 dark:text-amber-300" : "bg-primary/12 text-primary")}>
+          <AvatarFallback className="bg-primary/12 font-bold text-primary">
             {row.name.slice(0, 1)}
           </AvatarFallback>
         </Avatar>
       </div>
 
-      <p className="line-clamp-1 text-sm font-bold text-foreground flex items-center justify-center gap-1">
-        <span>{row.name}</span>
-        {isFirst && isFestive && <FestiveIcon size={12} />}
-      </p>
+      <p className="line-clamp-1 text-sm font-bold text-foreground">{row.name}</p>
       {isCurrentUser ? (
         <span className="mt-1 inline-flex rounded-full bg-primary/12 px-2 py-0.5 text-[9px] font-black text-primary">YOU</span>
       ) : null}
@@ -236,7 +218,6 @@ const LeaderboardListRow = memo(function LeaderboardListRow({
 export default function Leaderboard() {
   const [mode, setMode] = useState<LeaderboardMode>("alltime");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const { isFestive, config } = useFestivalTheme();
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
@@ -342,17 +323,10 @@ export default function Leaderboard() {
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
       <PageContainer className="space-y-6" withBottomNav>
-        {isFestive && (
-          <div className="mb-1">
-            <FestiveBadge label={`${config.name} Leaderboard`} />
-          </div>
-        )}
         <PageHeader
           title="Leaderboard"
           subtitle={
-            isFestive
-              ? `${config.name} competition standings & class rankings`
-              : mode === "alltime"
+            mode === "alltime"
               ? "All-time competition standings"
               : mode === "weekly"
               ? "Weekly competition standings"

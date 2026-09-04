@@ -29,7 +29,6 @@ import {
   AlertTriangle,
   QrCode,
   MapPin,
-  Megaphone,
 } from "@/components/icons";
 import UpcomingEventsStrip from "@/components/student/UpcomingEventsStrip";
 import { motion } from "framer-motion";
@@ -40,18 +39,6 @@ import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { TIER_CONFIG } from "@/lib/intelligenceEngine";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import {
-  FestiveBadge,
-  FestiveIcon,
-  FestiveSparklesBackground,
-  JanmashtamiHeroIllustration,
-  DahiHandiHeroIllustration,
-  JanmashtamiQuoteDecoration,
-  DahiHandiQuoteDecoration,
-  PeacockFeatherIcon,
-  DahiHandiIcon,
-} from "@/components/festive/FestiveDecorations";
 
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
@@ -292,249 +279,43 @@ export default function StudentDashboard() {
   const tierConfig = TIER_CONFIG[tier];
   const tierProgress = getTierProgress(coreQuery.data.totalPoints, tier);
 
-  const { isFestive, isDahiHandi, config: festivalConfig } = useFestivalTheme();
   const liveLecture = coreQuery.data.liveNow;
   const nextLecture = secondaryQuery.data?.nextLecture;
   const pendingAssignments = secondaryQuery.data?.pendingAssignments ?? [];
 
-  const festivalDateStr = useMemo(() => {
-    if (isDahiHandi) return "Sat, 5 Sep";
-    if (isFestive) return "Fri, 4 Sep";
-    return new Date().toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
-  }, [isDahiHandi, isFestive]);
-
-  const festivalPillLabel = useMemo(() => {
-    if (isDahiHandi) return "🪔 Dahi Handi 🏺";
-    if (isFestive) return "🕉️ Janmashtami ✨";
-    return "";
-  }, [isDahiHandi, isFestive]);
-
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
-      <PageContainer className="space-y-4 md:space-y-5 pb-6 md:pb-12" size="wide">
+      <PageContainer className="space-y-5 md:space-y-6 pb-6 md:pb-12" size="wide">
         
-        {/* ═══ 1. TOP BRANDING & INSTITUTIONAL HEADER (Matches reference) ═══ */}
-        <div className="flex items-center justify-between pt-1 pb-0.5">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-navy-deep text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0 border border-white/10">
-              C
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="text-[15px] sm:text-base font-black text-foreground tracking-tight leading-none truncate">
-                  Campus Connect
-                </h1>
-                {isFestive && (
-                  <FestiveBadge label={festivalConfig.badgeLabel} className="hidden sm:inline-flex" />
-                )}
-              </div>
-              <p className="text-[11px] font-medium text-muted-foreground leading-tight truncate mt-0.5">
-                B. K. Birla Night College, Kalyan
-              </p>
-            </div>
+        {/* ═══ CLEAN HEADER GREETING ═══ */}
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              {todayFormatted}
+            </p>
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5">
+              Hi, {coreQuery.data.name} 👋
+            </h1>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => navigate("/app/scan")}
-              aria-label="Scan QR Attendance"
-              className="h-9 px-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-primary/20 hover:brightness-105 active:scale-95 transition-all"
-            >
-              <QrCode className="h-4 w-4" />
-              <span className="hidden sm:inline">Scan QR</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/app/profile")}
-              aria-label="Student Profile"
-              className="h-9 w-9 rounded-xl border border-border-subtle bg-surface-2 flex items-center justify-center text-xs font-bold text-primary hover:border-border-strong active:scale-95 transition-all overflow-hidden"
-            >
-              {coreQuery.data.name[0]?.toUpperCase() ?? "S"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/app/scan")}
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm shadow-primary/25 hover:brightness-105 active:scale-95 transition-all"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>Scan QR</span>
+          </button>
         </div>
 
-        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-4 md:space-y-5">
+        <motion.div variants={SECTION_REVEAL_PARENT} initial="hidden" animate="show" className="space-y-5 md:space-y-6">
 
-          {/* ═══ 2. FESTIVE HERO CARD (Janmashtami & Dahi Handi) ═══ */}
-          {isFestive && (
-            <motion.section variants={SECTION_REVEAL_ITEM}>
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-3xl p-5 sm:p-6 text-white shadow-lg border transition-all duration-300",
-                  isDahiHandi
-                    ? "bg-gradient-to-br from-[#271507] via-[#432107] to-[#180A02] border-amber-400/35 shadow-[0_8px_32px_-4px_rgba(245,158,11,0.22)]"
-                    : "bg-gradient-to-br from-[#091738] via-[#0C2456] to-[#081530] border-sky-400/30 shadow-[0_8px_32px_-4px_rgba(14,165,233,0.20)]"
-                )}
-              >
-                {/* Background ambient sparkles and glows */}
-                <FestiveSparklesBackground />
-
-                {/* Vector Artwork on Right Side */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-32 sm:w-44 h-full flex items-center justify-end pr-2 sm:pr-5 pointer-events-none opacity-90 sm:opacity-100">
-                  {isDahiHandi ? (
-                    <DahiHandiHeroIllustration className="w-28 sm:w-36 h-36 sm:h-44" />
-                  ) : (
-                    <JanmashtamiHeroIllustration className="w-28 sm:w-36 h-36 sm:h-44" />
-                  )}
-                </div>
-
-                {/* Left Content Area */}
-                <div className="relative z-10 max-w-[70%] sm:max-w-[65%] space-y-3.5">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-white/75 tracking-wide">
-                      {greeting},
-                    </p>
-                    <h2 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight mt-1">
-                      {isDahiHandi
-                        ? "Teamwork builds stronger tomorrows."
-                        : "Krishna reminds us that brighter days always follow."}
-                    </h2>
-                  </div>
-
-                  {/* Date and Festival Pills Row */}
-                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/12 border border-white/20 text-white text-[11px] font-semibold backdrop-blur-md shadow-xs">
-                      <span>{festivalDateStr}</span>
-                    </div>
-
-                    <div
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold backdrop-blur-md shadow-xs border",
-                        isDahiHandi
-                          ? "bg-amber-500/20 text-amber-200 border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
-                          : "bg-cyan-500/20 text-cyan-200 border-cyan-400/40 shadow-[0_0_12px_rgba(14,165,233,0.25)]"
-                      )}
-                    >
-                      <span>{festivalPillLabel}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-          {/* ═══ 3. QUICK ACTIONS GRID (8 cards, 4x2 mobile layout matching reference) ═══ */}
-          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Quick Actions
-              </h2>
-              <button
-                type="button"
-                onClick={() => navigate("/app/more")}
-                className="text-[11px] font-semibold text-primary hover:underline"
-              >
-                All Modules →
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
-              <QuickActionCard
-                icon={CalendarCheck}
-                label="Attendance"
-                tint="sky"
-                onClick={() => navigate("/app/attendance")}
-              />
-              <QuickActionCard
-                icon={GraduationCap}
-                label="Academics"
-                tint="indigo"
-                onClick={() => navigate("/app/academics")}
-              />
-              <QuickActionCard
-                icon={CalendarDays}
-                label="Events"
-                tint="amber"
-                onClick={() => navigate("/app/events")}
-              />
-              <QuickActionCard
-                icon={Rocket}
-                label="E-Cell"
-                tint="emerald"
-                onClick={() => navigate("/app/ecell")}
-              />
-              <QuickActionCard
-                icon={Megaphone}
-                label="Announcements"
-                tint="orange"
-                onClick={() => navigate("/app/announcements")}
-              />
-              <QuickActionCard
-                icon={Clock3}
-                label="Timetable"
-                tint="blue"
-                onClick={() => navigate("/app/timetable")}
-              />
-              <QuickActionCard
-                icon={BookOpen}
-                label="Assignments"
-                tint="purple"
-                onClick={() => navigate("/app/assignments")}
-              />
-              <QuickActionCard
-                icon={LayoutGrid}
-                label="More"
-                tint="slate"
-                onClick={() => navigate("/app/more")}
-              />
-            </div>
-          </motion.section>
-
-          {/* ═══ 4. INSPIRATIONAL FESTIVE QUOTE CARD (Matches reference) ═══ */}
-          {isFestive && (
-            <motion.section variants={SECTION_REVEAL_ITEM}>
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-2xl border p-4 sm:p-5 transition-all shadow-xs flex items-center justify-between gap-4",
-                  isDahiHandi
-                    ? "bg-gradient-to-r from-surface-1 via-amber-500/[0.04] to-surface-1 border-amber-500/25 dark:border-amber-400/20"
-                    : "bg-gradient-to-r from-surface-1 via-cyan-500/[0.04] to-surface-1 border-cyan-500/25 dark:border-cyan-400/20"
-                )}
-              >
-                <div className="space-y-1 z-10 max-w-[78%]">
-                  <p className="text-[13px] sm:text-[14px] font-medium text-foreground leading-relaxed italic">
-                    {isDahiHandi
-                      ? "“Higher we lift each other, stronger we grow together.”"
-                      : "“Do your duty with devotion, and let the divine handle the rest.”"}
-                  </p>
-                  <p className="text-[11px] font-semibold text-muted-foreground">
-                    {isDahiHandi ? "— Dahi Handi Spirit" : "— Lord Krishna"}
-                  </p>
-                </div>
-
-                <div className="shrink-0 flex items-center justify-center opacity-85">
-                  {isDahiHandi ? (
-                    <DahiHandiQuoteDecoration className="w-14 h-14 sm:w-16 sm:h-16" />
-                  ) : (
-                    <JanmashtamiQuoteDecoration className="w-14 h-14 sm:w-16 sm:h-16" />
-                  )}
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-          {/* ═══ 5. REAL LECTURE BANNER (Next Class or Live Now) ═══ */}
+          {/* ═══ 1. DEEP NAVY HERO CARD (Next Class or Live Now) ═══ */}
           <motion.section variants={SECTION_REVEAL_ITEM}>
             {liveLecture ? (
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
-                  isFestive
-                    ? "bg-festive-hero border-amber-400/30"
-                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
-                )}
-              >
-                {/* Decorative glow circles or festive particles */}
-                {isFestive ? (
-                  <FestiveSparklesBackground />
-                ) : (
-                  <>
-                    <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-danger/25 blur-2xl" />
-                    <div aria-hidden="true" className="pointer-events-none absolute right-1/4 -bottom-10 h-32 w-32 rounded-full bg-primary/20 blur-xl" />
-                  </>
-                )}
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+                {/* Decorative glow circles */}
+                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-danger/25 blur-2xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute right-1/4 -bottom-10 h-32 w-32 rounded-full bg-primary/20 blur-xl" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -542,10 +323,7 @@ export default function StudentDashboard() {
                       <span className="h-2 w-2 rounded-full bg-danger animate-ping" />
                       Live Class Now
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      {isFestive && <FestiveIcon size={14} />}
-                      <span className="text-xs font-mono font-semibold text-white/80">{liveLecture.start_time}</span>
-                    </div>
+                    <span className="text-xs font-mono font-semibold text-white/80">{liveLecture.start_time}</span>
                   </div>
 
                   <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{liveLecture.topic}</h2>
@@ -575,23 +353,10 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : nextLecture ? (
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
-                  isFestive
-                    ? "bg-festive-hero border-amber-400/30"
-                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
-                )}
-              >
-                {/* Decorative glow circles or festive particles */}
-                {isFestive ? (
-                  <FestiveSparklesBackground />
-                ) : (
-                  <>
-                    <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
-                    <div aria-hidden="true" className="pointer-events-none absolute right-1/3 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-xl" />
-                  </>
-                )}
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
+                {/* Decorative glow circles */}
+                <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/25 blur-2xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute right-1/3 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-xl" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -599,10 +364,7 @@ export default function StudentDashboard() {
                       <Clock3 className="h-3 w-3 text-primary-glow" />
                       Next Class
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      {isFestive && <FestiveIcon size={14} />}
-                      <span className="text-xs font-mono font-semibold text-white/80">{nextLecture.start_time}</span>
-                    </div>
+                    <span className="text-xs font-mono font-semibold text-white/80">{nextLecture.start_time}</span>
                   </div>
 
                   <h2 className="text-lg sm:text-2xl font-black text-white leading-snug">{nextLecture.topic}</h2>
@@ -632,20 +394,12 @@ export default function StudentDashboard() {
                 </div>
               </div>
             ) : (
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-2xl md:rounded-3xl p-5 sm:p-6 text-white shadow-md border",
-                  isFestive
-                    ? "bg-festive-hero border-amber-400/25"
-                    : "bg-gradient-to-br from-navy-deep via-navy-card to-navy-light border-white/10"
-                )}
-              >
-                {isFestive && <FestiveSparklesBackground />}
+              <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-navy-deep via-navy-card to-navy-light p-5 sm:p-6 text-white shadow-md border border-white/10">
                 <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      {isFestive ? `${festivalConfig.name} • All Caught Up` : "All Caught Up"}
+                      All Caught Up
                     </div>
                     <h2 className="text-lg sm:text-xl font-black text-white">No classes scheduled right now</h2>
                     <p className="text-xs text-white/70">Check your timetable or review study materials</p>
@@ -700,22 +454,13 @@ export default function StudentDashboard() {
             {/* Points Metric */}
             <div
               onClick={() => navigate("/app/points")}
-              className={cn(
-                "cursor-pointer rounded-2xl border bg-surface-1 p-3.5 sm:p-4 text-center transition-all active:scale-[0.98] shadow-xs hover:shadow-sm",
-                isFestive
-                  ? "border-amber-400/35 hover:border-amber-400/60 bg-gradient-to-b from-surface-1 to-amber-500/5"
-                  : "border-border-subtle hover:border-primary/40"
-              )}
+              className="cursor-pointer rounded-2xl border border-border-subtle bg-surface-1 p-3.5 sm:p-4 text-center hover:border-primary/40 transition-all active:scale-[0.98] shadow-xs hover:shadow-sm"
             >
               <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground truncate">Points</p>
               <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums mt-1">
                 {coreQuery.data.totalPoints.toLocaleString()}
               </p>
-              <p className={cn(
-                "mt-1 text-[10px] font-bold uppercase tracking-wide truncate",
-                isFestive ? "text-amber-500 flex items-center justify-center gap-1" : "text-primary"
-              )}>
-                {isFestive && <FestiveIcon size={11} />}
+              <p className="mt-1 text-[10px] font-bold uppercase text-primary tracking-wide truncate">
                 {tierConfig.label} Tier
               </p>
             </div>
@@ -751,6 +496,25 @@ export default function StudentDashboard() {
             </motion.section>
           )}
 
+          {/* ═══ 4. QUICK ACCESS GRID ═══ */}
+          <motion.section variants={SECTION_REVEAL_ITEM} className="space-y-2.5">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Quick Access</h2>
+              <button onClick={() => navigate("/app/more")} className="text-[11px] font-semibold text-primary hover:underline">
+                All Modules →
+              </button>
+            </div>
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
+              <QuickTile icon={CalendarCheck} label="Attendance" tint="indigo" onClick={() => navigate("/app/attendance")} />
+              <QuickTile icon={Clock3}        label="Timetable"  tint="rose"   onClick={() => navigate("/app/timetable")} />
+              <QuickTile icon={BookOpen}      label="Tasks"      tint="amber"  onClick={() => navigate("/app/assignments")} />
+              <QuickTile icon={GraduationCap} label="Results"    tint="purple" onClick={() => navigate("/app/results")} />
+              <QuickTile icon={IdCard}        label="Digital ID" tint="sky"    onClick={() => navigate("/app/id-card")} />
+              <QuickTile icon={Trophy}        label="Ranks"      tint="emerald"onClick={() => navigate("/app/leaderboard")} />
+              <QuickTile icon={Rocket}        label="E-Cell"     tint="orange" onClick={() => navigate("/app/ecell")} />
+              <QuickTile icon={LayoutGrid}    label="More"       tint="slate"  onClick={() => navigate("/app/more")} />
+            </div>
+          </motion.section>
 
           {/* ═══ 5. DAILY CHECK-IN CARD ═══ */}
           <motion.section id="daily-checkin" variants={SECTION_REVEAL_ITEM}>
@@ -829,20 +593,20 @@ const ActivityRow = memo(function ActivityRow({ activity, index }: { activity: R
   );
 });
 
-type QuickTint = "sky" | "indigo" | "amber" | "emerald" | "orange" | "blue" | "purple" | "slate";
+type Tint = "indigo" | "rose" | "amber" | "purple" | "emerald" | "sky" | "orange" | "slate";
 
-const QUICK_TINT_CLASSES: Record<QuickTint, { box: string; icon: string }> = {
-  sky:     { box: "bg-sky-500/10 border-sky-500/20", icon: "text-sky-600 dark:text-sky-400" },
-  indigo:  { box: "bg-indigo-500/10 border-indigo-500/20", icon: "text-indigo-600 dark:text-indigo-400" },
-  amber:   { box: "bg-amber-500/10 border-amber-500/20", icon: "text-amber-600 dark:text-amber-400" },
-  emerald: { box: "bg-emerald-500/10 border-emerald-500/20", icon: "text-emerald-600 dark:text-emerald-400" },
-  orange:  { box: "bg-orange-500/10 border-orange-500/20", icon: "text-orange-600 dark:text-orange-400" },
-  blue:    { box: "bg-blue-500/10 border-blue-500/20", icon: "text-blue-600 dark:text-blue-400" },
-  purple:  { box: "bg-purple-500/10 border-purple-500/20", icon: "text-purple-600 dark:text-purple-400" },
-  slate:   { box: "bg-slate-500/10 border-slate-500/20", icon: "text-slate-600 dark:text-slate-400" },
+const TINT_CLASSES: Record<Tint, string> = {
+  indigo:  "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+  rose:    "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  amber:   "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  purple:  "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  sky:     "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+  orange:  "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+  slate:   "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
 };
 
-const QuickActionCard = memo(function QuickActionCard({
+const QuickTile = memo(function QuickTile({
   icon: Icon,
   label,
   tint,
@@ -850,22 +614,19 @@ const QuickActionCard = memo(function QuickActionCard({
 }: {
   icon: React.ElementType;
   label: string;
-  tint: QuickTint;
+  tint: Tint;
   onClick: () => void;
 }) {
-  const styling = QUICK_TINT_CLASSES[tint];
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl border border-border-subtle/80 bg-surface-1 hover:border-primary/40 hover:shadow-xs active:scale-95 transition-all text-center group"
+      className="flex flex-col items-center justify-center gap-1.5 p-2.5 sm:p-3 rounded-2xl border border-border-subtle bg-surface-1 hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all"
     >
-      <div className={cn("w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105", styling.box, styling.icon)}>
+      <div className={cn("w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border", TINT_CLASSES[tint])}>
         <Icon className="w-5 h-5" />
       </div>
-      <span className="text-[11px] sm:text-[11.5px] font-medium text-foreground tracking-tight leading-tight truncate w-full text-center">
-        {label}
-      </span>
+      <span className="text-[11px] sm:text-[12px] font-bold text-foreground leading-tight truncate w-full text-center">{label}</span>
     </button>
   );
 });

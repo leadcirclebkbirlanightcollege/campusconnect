@@ -37,8 +37,6 @@ import {
   SECTION_REVEAL_ITEM,
   SECTION_REVEAL_PARENT,
 } from "@/motion/microInteractions";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveIcon } from "@/components/festive/FestiveDecorations";
 
 const PAGE_SIZE = 20;
 const THRESHOLD = 0.75;
@@ -115,7 +113,6 @@ function GroupTitle({ title, hint }: { title: string; hint?: string }) {
 export default function StudentAttendanceHistory() {
   const [exporting, setExporting] = useState(false);
   const growth = useGrowthInsights();
-  const { isFestive, config } = useFestivalTheme();
 
   const userQuery = useQuery({
     queryKey: ["student", "auth-user-id"],
@@ -384,8 +381,7 @@ export default function StudentAttendanceHistory() {
           tone="academics"
           eyebrow="Academics"
           title="Attendance"
-          subtitle={isFestive ? `${config.name} • Attendance & Analytics` : "Your attendance health, trends and forecast"}
-          className={isFestive ? "bg-festive-hero border border-amber-400/25" : undefined}
+          subtitle="Your attendance health, trends and forecast"
           action={
             <button
               onClick={handleExportCSV}
@@ -402,9 +398,8 @@ export default function StudentAttendanceHistory() {
               <ProgressRing value={totals.percentage} size={92} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-heading text-[38px] font-black leading-none tabular-nums flex items-center gap-2">
-                <span>{totals.percentage}%</span>
-                {isFestive && <FestiveIcon size={20} className="text-amber-300" />}
+              <p className="font-heading text-[38px] font-black leading-none tabular-nums">
+                {totals.percentage}%
               </p>
               <p className="mt-1.5 text-[12px] text-white/80">
                 {totals.attendedCount} of {totals.totalCount} lectures attended

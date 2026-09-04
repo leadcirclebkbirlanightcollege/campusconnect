@@ -16,7 +16,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider, queryClient } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { FestivalThemeProvider } from "@/contexts/FestivalThemeContext";
 import { NotificationProvider } from "@/providers/NotificationProvider";
 import { PerformanceProvider } from "@/providers/PerformanceProvider";
 import { TenantProvider } from "@/providers/TenantProvider";
@@ -49,13 +48,11 @@ export function AppProviders({ children }: AppProvidersProps) {
         <GlobalAuthListener>
           <TenantProvider>
             <ThemeProvider>
-              <FestivalThemeProvider>
-                <PerformanceProvider>
-                  <TooltipProvider delayDuration={400}>
-                    <NotificationProvider>{children}</NotificationProvider>
-                  </TooltipProvider>
-                </PerformanceProvider>
-              </FestivalThemeProvider>
+              <PerformanceProvider>
+                <TooltipProvider delayDuration={400}>
+                  <NotificationProvider>{children}</NotificationProvider>
+                </TooltipProvider>
+              </PerformanceProvider>
             </ThemeProvider>
           </TenantProvider>
         </GlobalAuthListener>

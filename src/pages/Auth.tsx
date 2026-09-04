@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
-import { cn } from "@/lib/utils";
 import {
   Loader2, Eye, EyeOff,
   ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, GraduationCap, ShieldCheck, QrCode
@@ -16,8 +15,6 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
 import { motion } from "framer-motion";
-import { useFestivalTheme } from "@/contexts/FestivalThemeContext";
-import { FestiveBadge } from "@/components/festive/FestiveDecorations";
 
 /* ── Feature chips for left hero panel ── */
 const HIGHLIGHTS = [
@@ -66,7 +63,6 @@ function PasswordInput({
 const Auth = () => {
   const navigate = useNavigate();
   const { branding } = usePlatformBranding();
-  const { isFestive, isDahiHandi } = useFestivalTheme();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -225,23 +221,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex bg-background text-foreground selection:bg-primary/20 selection:text-primary">
       {/* ── Left Hero Panel (Desktop Showcase) ── */}
-      <div className={cn(
-        "hidden lg:flex lg:w-[45%] xl:w-[48%] bg-surface-1 border-r border-border-subtle flex-col justify-between p-12 relative overflow-hidden",
-        isFestive && "border-r-amber-400/20"
-      )}>
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[48%] bg-surface-1 border-r border-border-subtle flex-col justify-between p-12 relative overflow-hidden">
         {/* Subtle mesh background */}
-        <div className={cn(
-          "absolute inset-0",
-          isFestive
-            ? (isDahiHandi
-                ? "bg-[radial-gradient(ellipse_80%_80%_at_20%_20%,hsl(42_95%_50%/0.16),transparent_60%)]"
-                : "bg-[radial-gradient(ellipse_80%_80%_at_20%_20%,hsl(194_85%_45%/0.16),transparent_60%)]")
-            : "bg-[radial-gradient(ellipse_80%_80%_at_20%_20%,hsl(var(--primary)/0.15),transparent_60%)]"
-        )} />
-        <div className={cn(
-          "absolute bottom-0 right-0 h-80 w-80 rounded-full blur-[100px] pointer-events-none",
-          isFestive ? "bg-amber-400/15" : "bg-accent/10"
-        )} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_20%_20%,hsl(var(--primary)/0.15),transparent_60%)]" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
 
         {/* Brand Header */}
         <Link to="/" className="relative z-10 flex items-center gap-3 group">
@@ -253,10 +236,7 @@ const Auth = () => {
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <p className="text-base font-black tracking-tight text-foreground leading-tight">{branding.brand_name}</p>
-              {isFestive && <FestiveBadge />}
-            </div>
+            <p className="text-base font-black tracking-tight text-foreground leading-tight">{branding.brand_name}</p>
             <p className="text-[11px] font-medium text-muted-foreground">{branding.tagline}</p>
           </div>
         </Link>
@@ -305,14 +285,11 @@ const Auth = () => {
         <div className="lg:hidden absolute top-0 inset-x-0 h-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,hsl(var(--primary)/0.15),transparent_70%)] pointer-events-none" />
 
         {/* Mobile Header */}
-        <Link to="/" className="lg:hidden flex items-center justify-between w-full max-w-[400px] mb-8">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
-              <GraduationCap className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-lg font-black tracking-tight text-foreground">{branding.brand_name}</span>
+        <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-8">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
+            <GraduationCap className="h-5 w-5 text-primary" />
           </div>
-          {isFestive && <FestiveBadge />}
+          <span className="text-lg font-black tracking-tight text-foreground">{branding.brand_name}</span>
         </Link>
 
         {/* Focused Auth Card */}

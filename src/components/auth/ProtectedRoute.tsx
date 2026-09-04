@@ -2,7 +2,6 @@ import { Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTenant } from "@/providers/TenantProvider";
-import { Loader2 } from "@/components/icons";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,16 +19,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   // Derive role from TenantProvider's cached query
   const userRole = useResolvedRole();
 
-  // Loading: wait for both auth + tenant role resolution
+  // Loading: wait for both auth + tenant role resolution (AppSplash handles the initial splash)
   if (authLoading || (!!user && (tenantLoading || userRole === null))) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-xs text-muted-foreground">Loading…</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Not authenticated → redirect to login

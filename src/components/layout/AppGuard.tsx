@@ -13,7 +13,6 @@
 
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
-import { Loader2 } from "@/components/icons";
 import type { ReactNode } from "react";
 
 /** Routes that must NEVER be blocked by auth loading */
@@ -41,18 +40,9 @@ export default function AppGuard({ overlays, children }: AppGuardProps) {
     return <>{children}</>;
   }
 
-  // Protected routes: wait for auth session to resolve before rendering
+  // Protected routes: wait for auth session to resolve before rendering (AppSplash provides the canonical initial loader)
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
-        <div className="relative">
-          <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground tracking-wide">Loading Campus Connect…</p>
-      </div>
-    );
+    return null;
   }
 
   // Authenticated + protected route → show overlays + page content
