@@ -26,7 +26,7 @@ import {
   Star,
   Store,
   Rocket,
-  Edit2,
+  Pencil,
   ExternalLink,
 } from "@/components/icons";
 import { format } from "date-fns";
@@ -366,7 +366,7 @@ export default function AdminEventsTab() {
                       onClick={() => openEditDialog(e)}
                       aria-label="Edit event"
                     >
-                      <Edit2 className="h-3.5 w-3.5 text-foreground" />
+                      <Pencil className="h-3.5 w-3.5 text-foreground" />
                     </Button>
 
                     {/* Delete Event */}
