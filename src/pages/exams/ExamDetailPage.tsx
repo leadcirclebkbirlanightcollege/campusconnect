@@ -105,7 +105,7 @@ export default function ExamDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
         <PremiumEmpty
-          art="exams"
+          art="results"
           tone="danger"
           title="Exam Not Found"
           description="This examination schedule may have concluded or the link is invalid."

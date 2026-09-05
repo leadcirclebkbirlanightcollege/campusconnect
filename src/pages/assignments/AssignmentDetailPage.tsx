@@ -69,15 +69,15 @@ export default function AssignmentDetailPage() {
     enabled: Boolean(id) && !authLoading,
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("assignments" as any)
+      const { data, error } = await (supabase as any)
+        .from("assignments")
         .select("*")
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
 
       if (error) return null;
-      return data as AssignmentRecord | null;
+      return (data as unknown) as AssignmentRecord | null;
     },
     staleTime: 60_000,
   });
@@ -88,15 +88,15 @@ export default function AssignmentDetailPage() {
     enabled: Boolean(id) && Boolean(user?.id),
     queryFn: async () => {
       if (!id || !user?.id) return null;
-      const { data, error } = await supabase
-        .from("submissions" as any)
+      const { data, error } = await (supabase as any)
+        .from("submissions")
         .select("assignment_id, status, marks_obtained, feedback, submitted_at, attachment_url, attachment_name, content")
         .eq("assignment_id", id)
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (error) return null;
-      return data as MySubmissionRecord | null;
+      return (data as unknown) as MySubmissionRecord | null;
     },
     staleTime: 30_000,
   });
@@ -135,7 +135,7 @@ export default function AssignmentDetailPage() {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const { error } = await supabase.from("submissions" as any).upsert(
+      const { error } = await (supabase as any).from("submissions").upsert(
         {
           assignment_id: assignment.id,
           user_id: user.id,

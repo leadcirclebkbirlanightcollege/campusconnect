@@ -110,7 +110,7 @@ export default function DocumentDetailPage() {
         </Button>
         <PremiumEmpty
           art="documents"
-          tone="info"
+          tone="primary"
           title="Document Not Found"
           description="This study material or document may have been removed or you do not have permission to view it."
         />
