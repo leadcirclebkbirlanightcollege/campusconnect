@@ -27,6 +27,7 @@ interface FacultyDetailDrawerProps {
   initialTab?: "overview" | "lectures" | "timetable";
   onClose: () => void;
   onEdit: (faculty: FacultyMember) => void;
+  onAssignInstitution?: (faculty: FacultyMember) => void;
   onToggleVerify: (faculty: FacultyMember) => void;
   onToggleActive: (faculty: FacultyMember) => void;
 }
@@ -37,6 +38,7 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
   initialTab = "overview",
   onClose,
   onEdit,
+  onAssignInstitution,
   onToggleVerify,
   onToggleActive,
 }: FacultyDetailDrawerProps) {
@@ -140,18 +142,34 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
             </div>
 
             {/* Top Action */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                onClose();
-                onEdit(faculty);
-              }}
-              className="gap-1.5 shrink-0"
-            >
-              <UserPen className="h-3.5 w-3.5" />
-              Edit
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {onAssignInstitution && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    onClose();
+                    onAssignInstitution(faculty);
+                  }}
+                  className="gap-1.5 text-xs h-8"
+                >
+                  <Building2 className="h-3.5 w-3.5 text-primary" />
+                  Assign Institution
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  onClose();
+                  onEdit(faculty);
+                }}
+                className="gap-1.5 text-xs h-8"
+              >
+                <UserPen className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -198,6 +216,34 @@ export const FacultyDetailDrawer = memo(function FacultyDetailDrawer({
                 <div className="flex items-center justify-between p-3">
                   <span className="text-muted-foreground font-medium">Employee / Faculty ID</span>
                   <span className="font-semibold text-foreground font-mono">{faculty.student_id || "Not assigned"}</span>
+                </div>
+                <div className="flex items-center justify-between p-3">
+                  <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-primary" />
+                    Affiliated Institution
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {faculty.college_name ? (
+                      <span className="font-semibold text-foreground">{faculty.college_name}</span>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] py-0 h-5 bg-muted text-muted-foreground">
+                        Not assigned
+                      </Badge>
+                    )}
+                    {onAssignInstitution && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          onClose();
+                          onAssignInstitution(faculty);
+                        }}
+                        className="h-6 px-1.5 text-[11px] text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        Change
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-3">
                   <span className="text-muted-foreground font-medium">Department</span>

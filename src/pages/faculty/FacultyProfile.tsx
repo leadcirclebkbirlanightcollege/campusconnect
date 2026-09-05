@@ -237,7 +237,7 @@ export default function FacultyProfile() {
   });
 
   const displayName = formatFacultyName(profile?.name, profile?.title) || "Faculty Member";
-  const collegeName = (profile as any)?.colleges?.college_name || "Campus Connect Institution";
+  const collegeName: string | null = (profile as any)?.colleges?.college_name || null;
   const departmentName = profile?.department || "Department not specified";
   const designationTitle = "Faculty Member";
 
@@ -317,9 +317,16 @@ export default function FacultyProfile() {
                     <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                     <span>{designationTitle} · {departmentName}</span>
                   </p>
-                  <p className="text-[11.5px] text-muted-foreground/80 mt-1 truncate">
-                    {collegeName}
-                  </p>
+                  {collegeName ? (
+                    <p className="text-[11.5px] text-muted-foreground/80 mt-1 truncate flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                      <span>{collegeName}</span>
+                    </p>
+                  ) : (
+                    <p className="text-[11.5px] text-muted-foreground/60 mt-1 truncate italic">
+                      Institution: Not assigned
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -635,8 +642,21 @@ export default function FacultyProfile() {
             <div className="space-y-3 text-[12.5px]">
               <div className="p-3 rounded-xl bg-muted/30 border border-border/40">
                 <p className="text-[11px] text-muted-foreground font-medium">Affiliated College</p>
-                <p className="text-[13px] font-semibold text-foreground mt-0.5">{collegeName}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">System managed affiliation</p>
+                {collegeName ? (
+                  <p className="text-[13px] font-semibold text-foreground mt-1 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span>{collegeName}</span>
+                  </p>
+                ) : (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground border border-border/60">
+                      Not assigned
+                    </span>
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground/80 mt-1.5">
+                  System managed affiliation
+                </p>
               </div>
 
               <div className="p-3 rounded-xl bg-muted/30 border border-border/40">

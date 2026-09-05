@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { FACULTY_TITLES, type FacultyTitle } from "@/lib/faculty";
-import type { FacultyMember, DepartmentOption } from "./types";
+import type { FacultyMember, DepartmentOption, CollegeOption } from "./types";
 
 interface EditFacultyDialogProps {
   faculty: FacultyMember | null;
@@ -24,6 +24,7 @@ interface EditFacultyDialogProps {
   onClose: () => void;
   onSuccess: () => void;
   departments: DepartmentOption[];
+  colleges?: CollegeOption[];
 }
 
 export const EditFacultyDialog = memo(function EditFacultyDialog({
@@ -32,6 +33,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
   onClose,
   onSuccess,
   departments,
+  colleges = [],
 }: EditFacultyDialogProps) {
   const [form, setForm] = useState<{
     title: FacultyTitle | "";
@@ -39,6 +41,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
     phone: string;
     employeeId: string;
     department: string;
+    collegeId: string;
     isVerified: boolean;
     isActive: boolean;
   }>({
@@ -47,6 +50,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
     phone: "",
     employeeId: "",
     department: "",
+    collegeId: "none",
     isVerified: false,
     isActive: true,
   });
@@ -60,6 +64,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
         phone: faculty.phone || "",
         employeeId: faculty.student_id || "",
         department: faculty.department || "",
+        collegeId: faculty.college_id || "none",
         isVerified: Boolean(faculty.is_verified),
         isActive: !faculty.is_deleted,
       });
@@ -78,6 +83,9 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
 
     setLoading(true);
     try {
+      const targetCollegeId = form.collegeId === "none" ? null : form.collegeId;
+      const collegeChanged = targetCollegeId !== (faculty.college_id || null);
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -86,6 +94,7 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
           phone: form.phone.trim() || null,
           student_id: form.employeeId.trim() || null,
           department: form.department.trim() || null,
+          college_id: targetCollegeId,
           is_verified: form.isVerified,
           is_deleted: !form.isActive,
           updated_at: new Date().toISOString(),
@@ -93,6 +102,14 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
         .eq("user_id", faculty.user_id);
 
       if (error) throw error;
+
+      if (collegeChanged) {
+        await supabase
+          .from("user_roles")
+          .update({ college_id: targetCollegeId })
+          .eq("user_id", faculty.user_id)
+          .eq("role", "faculty");
+      }
 
       toast.success(`Faculty profile for "${trimmedName}" updated`);
       onSuccess();
@@ -246,6 +263,38 @@ export const EditFacultyDialog = memo(function EditFacultyDialog({
                 className="h-9"
               />
             )}
+          </div>
+
+          {/* Institutional Affiliation (Admin Controlled) */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                Institution / College
+              </span>
+              <span className="text-[10.5px] text-muted-foreground font-normal">
+                Admin Managed
+              </span>
+            </Label>
+            <Select
+              value={form.collegeId}
+              onValueChange={(val) => setForm((p) => ({ ...p, collegeId: val }))}
+              disabled={loading}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select institution / college" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                <SelectItem value="none" className="text-xs text-muted-foreground italic">
+                  — Unassigned / None —
+                </SelectItem>
+                {colleges.map((col) => (
+                  <SelectItem key={col.id} value={col.id} className="text-xs">
+                    {col.college_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Status & Verification Toggles */}

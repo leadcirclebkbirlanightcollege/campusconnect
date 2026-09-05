@@ -7,6 +7,7 @@ export interface FacultyMember {
   department: string | null;
   student_id: string | null; // Used for Employee / Faculty ID
   college_id: string | null;
+  college_name?: string | null;
   avatar_url: string | null;
   is_verified: boolean;
   is_deleted: boolean;
@@ -15,6 +16,11 @@ export interface FacultyMember {
   roleId?: string;
   total_lectures?: number;
   total_timetable_slots?: number;
+}
+
+export interface CollegeOption {
+  id: string;
+  college_name: string;
 }
 
 export interface DepartmentOption {

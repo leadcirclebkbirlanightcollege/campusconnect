@@ -36,10 +36,11 @@ import { toast } from "sonner";
 import { formatFacultyName } from "@/lib/faculty";
 import { cn } from "@/lib/utils";
 
-import type { FacultyMember, DepartmentOption, FacultyFilters } from "./types";
+import type { FacultyMember, DepartmentOption, FacultyFilters, CollegeOption } from "./types";
 import { AddFacultyDialog } from "./AddFacultyDialog";
 import { EditFacultyDialog } from "./EditFacultyDialog";
 import { FacultyDetailDrawer } from "./FacultyDetailDrawer";
+import { InstitutionalAssignmentDialog } from "./InstitutionalAssignmentDialog";
 
 const DEFAULT_FILTERS: FacultyFilters = {
   search: "",
@@ -56,10 +57,26 @@ export default function AdminFacultyTab() {
   const [filters, setFilters] = useState<FacultyFilters>(DEFAULT_FILTERS);
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<FacultyMember | null>(null);
+  const [assignInstitutionTarget, setAssignInstitutionTarget] = useState<FacultyMember | null>(null);
   const [viewTarget, setViewTarget] = useState<FacultyMember | null>(null);
   const [viewTab, setViewTab] = useState<"overview" | "lectures" | "timetable">("overview");
   const [removeTarget, setRemoveTarget] = useState<FacultyMember | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<FacultyMember | null>(null);
+
+  // Fetch colleges list for institutional assignment and display
+  const { data: colleges = [], isLoading: isLoadingColleges } = useQuery<CollegeOption[]>({
+    queryKey: ["admin", "colleges_list"],
+    staleTime: 300_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("id, college_name")
+        .eq("is_active", true)
+        .order("college_name");
+      if (error) throw error;
+      return (data ?? []) as CollegeOption[];
+    },
+  });
 
   // 1. Fetch academic departments for filter and forms
   const { data: departments = [] } = useQuery<DepartmentOption[]>({
@@ -87,24 +104,34 @@ export default function AdminFacultyTab() {
       const { data: roles, error: rolesErr } = await supabase
         .from("user_roles")
         .select("id, user_id, college_id, created_at")
-        .eq("role", "faculty")
-        .eq("college_id", collegeId!);
+        .eq("role", "faculty");
       if (rolesErr) throw rolesErr;
       if (!roles || roles.length === 0) return [];
 
       const userIds = roles.map((r) => r.user_id);
 
-      // Fetch profiles
+      // Fetch profiles with joined colleges
       const { data: profiles, error: profErr } = await supabase
         .from("profiles")
-        .select("user_id, name, title, email, phone, department, student_id, college_id, avatar_url, is_verified, is_deleted, created_at, updated_at")
+        .select("user_id, name, title, email, phone, department, student_id, college_id, avatar_url, is_verified, is_deleted, created_at, updated_at, colleges(college_name)")
         .in("user_id", userIds);
       if (profErr) throw profErr;
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
 
-      return roles.map((r) => {
+      // Filter by collegeId if tenant scope is defined:
+      const scopedRoles = collegeId
+        ? roles.filter((r) => {
+            const p = profileMap.get(r.user_id);
+            return r.college_id === collegeId || p?.college_id === collegeId;
+          })
+        : roles;
+
+      return scopedRoles.map((r) => {
         const p = profileMap.get(r.user_id);
+        const assignedCollegeId = p?.college_id || r.college_id || null;
+        const joinedCollegeName = (p as any)?.colleges?.college_name;
+        const lookupCollegeName = colleges.find((c) => c.id === assignedCollegeId)?.college_name;
         return {
           user_id: r.user_id,
           name: p?.name || "Unknown Faculty",
@@ -113,7 +140,8 @@ export default function AdminFacultyTab() {
           phone: p?.phone || null,
           department: p?.department || null,
           student_id: p?.student_id || null,
-          college_id: p?.college_id || r.college_id,
+          college_id: assignedCollegeId,
+          college_name: joinedCollegeName || lookupCollegeName || null,
           avatar_url: p?.avatar_url || null,
           is_verified: Boolean(p?.is_verified),
           is_deleted: Boolean(p?.is_deleted),
@@ -127,8 +155,9 @@ export default function AdminFacultyTab() {
 
   // Invalidate queries helper
   const invalidateFaculty = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["admin_faculty", collegeId] });
-  }, [queryClient, collegeId]);
+    queryClient.invalidateQueries({ queryKey: ["admin_faculty"] });
+    queryClient.invalidateQueries({ queryKey: ["faculty-profile"] });
+  }, [queryClient]);
 
   // 3. Mutations for Quick Actions
   // Toggle Verification
@@ -199,7 +228,8 @@ export default function AdminFacultyTab() {
           f.email.toLowerCase().includes(q) ||
           (f.student_id ?? "").toLowerCase().includes(q) ||
           (f.phone ?? "").toLowerCase().includes(q) ||
-          (f.department ?? "").toLowerCase().includes(q);
+          (f.department ?? "").toLowerCase().includes(q) ||
+          (f.college_name ?? "").toLowerCase().includes(q);
         if (!matchesSearch) return false;
       }
 
@@ -409,6 +439,7 @@ export default function AdminFacultyTab() {
               <TableHead className="text-xs font-semibold uppercase tracking-wider">Contact Info</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider">Faculty ID</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider">Department</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider">Institution</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider">Status</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider">Joined</TableHead>
               <TableHead className="w-16 text-right text-xs font-semibold uppercase tracking-wider">Actions</TableHead>
@@ -417,7 +448,7 @@ export default function AdminFacultyTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-16 text-center">
+                <TableCell colSpan={9} className="py-16 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     <p className="text-xs text-muted-foreground">Loading faculty directory…</p>
@@ -426,7 +457,7 @@ export default function AdminFacultyTab() {
               </TableRow>
             ) : filteredFaculty.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-16 text-center">
+                <TableCell colSpan={9} className="py-16 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-muted-foreground">
                     <GraduationCap className="h-10 w-10 opacity-30" />
                     <p className="text-sm font-semibold text-foreground">
@@ -530,6 +561,22 @@ export default function AdminFacultyTab() {
                       )}
                     </TableCell>
 
+                    {/* Institution */}
+                    <TableCell>
+                      {member.college_name ? (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                          <Building2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="truncate max-w-[130px]" title={member.college_name}>
+                            {member.college_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] py-0 h-5 bg-muted/60 text-muted-foreground border-border/60">
+                          Not assigned
+                        </Badge>
+                      )}
+                    </TableCell>
+
                     {/* Status */}
                     <TableCell>
                       {member.is_deleted ? (
@@ -593,7 +640,13 @@ export default function AdminFacultyTab() {
                             View Weekly Timetable
                           </DropdownMenuItem>
 
-                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setAssignInstitutionTarget(member)}
+                            className="text-xs gap-2 cursor-pointer font-medium text-primary focus:text-primary"
+                          >
+                            <Building2 className="h-3.5 w-3.5" />
+                            Institutional Assignment
+                          </DropdownMenuItem>
 
                           <DropdownMenuItem
                             onClick={() => setEditTarget(member)}
@@ -663,6 +716,7 @@ export default function AdminFacultyTab() {
         onClose={() => setAddOpen(false)}
         onSuccess={invalidateFaculty}
         departments={departments}
+        colleges={colleges}
       />
 
       {/* 2. Edit Faculty Dialog */}
@@ -672,6 +726,7 @@ export default function AdminFacultyTab() {
         onClose={() => setEditTarget(null)}
         onSuccess={invalidateFaculty}
         departments={departments}
+        colleges={colleges}
       />
 
       {/* 3. View Full Detail Drawer */}
@@ -681,12 +736,36 @@ export default function AdminFacultyTab() {
         initialTab={viewTab}
         onClose={() => setViewTarget(null)}
         onEdit={(m) => setEditTarget(m)}
+        onAssignInstitution={(m) => setAssignInstitutionTarget(m)}
         onToggleVerify={(m) =>
           verifyMutation.mutate({ uid: m.user_id, verify: !m.is_verified })
         }
         onToggleActive={(m) =>
           toggleActiveMutation.mutate({ uid: m.user_id, isDeleted: !m.is_deleted })
         }
+      />
+
+      {/* 3b. Dedicated Institutional Assignment Dialog */}
+      <InstitutionalAssignmentDialog
+        faculty={assignInstitutionTarget}
+        open={Boolean(assignInstitutionTarget)}
+        onClose={() => setAssignInstitutionTarget(null)}
+        onSuccess={(newCollegeId, newCollegeName) => {
+          invalidateFaculty();
+          if (viewTarget && viewTarget.user_id === assignInstitutionTarget?.user_id) {
+            setViewTarget((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    college_id: newCollegeId,
+                    college_name: newCollegeName,
+                  }
+                : null
+            );
+          }
+        }}
+        colleges={colleges}
+        isLoadingColleges={isLoadingColleges}
       />
 
       {/* 4. Deactivate / Reactivate Confirmation Dialog */}

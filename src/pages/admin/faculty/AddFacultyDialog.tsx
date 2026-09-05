@@ -17,13 +17,14 @@ import {
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { toast } from "sonner";
 import { FACULTY_TITLES, type FacultyTitle, formatFacultyName } from "@/lib/faculty";
-import type { DepartmentOption } from "./types";
+import type { DepartmentOption, CollegeOption } from "./types";
 
 interface AddFacultyDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   departments: DepartmentOption[];
+  colleges?: CollegeOption[];
 }
 
 export const AddFacultyDialog = memo(function AddFacultyDialog({
@@ -31,6 +32,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
   onClose,
   onSuccess,
   departments,
+  colleges = [],
 }: AddFacultyDialogProps) {
   const collegeId = useTenantId();
   const [form, setForm] = useState<{
@@ -41,6 +43,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
     phone: string;
     employeeId: string;
     department: string;
+    collegeId: string;
   }>({
     title: "",
     name: "",
@@ -49,6 +52,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
     phone: "",
     employeeId: "",
     department: "",
+    collegeId: collegeId || "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -70,8 +74,9 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
       toast.error("Password must be at least 8 characters long");
       return;
     }
-    if (!collegeId) {
-      toast.error("No college tenant context found");
+    const targetCollegeId = form.collegeId || collegeId;
+    if (!targetCollegeId) {
+      toast.error("Please select an institution / college");
       return;
     }
 
@@ -86,7 +91,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
           phone: form.phone.trim() || null,
           student_id: form.employeeId.trim() || null, // stores Faculty/Employee ID
           department: form.department.trim() || null,
-          college_id: collegeId,
+          college_id: targetCollegeId,
           role: "faculty",
         },
       });
@@ -114,6 +119,7 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
         phone: "",
         employeeId: "",
         department: "",
+        collegeId: collegeId || "",
       });
       onSuccess();
       onClose();
@@ -268,6 +274,37 @@ export const AddFacultyDialog = memo(function AddFacultyDialog({
               />
             )}
           </div>
+
+          {/* Institution / College Selection (if multiple colleges available) */}
+          {colleges.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-foreground flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-primary" />
+                  Institution / College
+                </span>
+                <span className="text-[10.5px] text-muted-foreground font-normal">
+                  Admin Assigned
+                </span>
+              </Label>
+              <Select
+                value={form.collegeId || collegeId || "none"}
+                onValueChange={(val) => setForm((p) => ({ ...p, collegeId: val === "none" ? "" : val }))}
+                disabled={loading}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select institution / college" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {colleges.map((col) => (
+                    <SelectItem key={col.id} value={col.id} className="text-xs">
+                      {col.college_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Initial Password */}
           <div className="space-y-1.5">
