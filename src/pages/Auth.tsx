@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,7 @@ function PasswordInput({
 /* ── Auth page ── */
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { branding } = usePlatformBranding();
   const logoSrc = branding.logo_url || BRANDING.logo;
   const brandName = branding.brand_name || BRANDING.name;
@@ -88,27 +89,55 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const getSafeRedirectUrl = (): string | null => {
+    try {
+      const paramRedirect = searchParams.get("redirect");
+      const storedRedirect = sessionStorage.getItem("cc_redirect_after_login");
+      const target = paramRedirect || storedRedirect;
+      if (target) {
+        sessionStorage.removeItem("cc_redirect_after_login");
+        // Ensure safe relative target (no open redirects, no auth loop)
+        if (target.startsWith("/") && !target.startsWith("//") && !target.startsWith("/auth")) {
+          return target;
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   const redirectToDashboard = async (userId: string) => {
     try {
       const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
       const r = role?.role;
+      const safeRedirect = getSafeRedirectUrl();
+
+      // Student onboarding & approval checks
+      if (r !== "super_admin" && r !== "admin" && r !== "faculty") {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("profile_completed, approval_status, college_assigned")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!profile || !profile.profile_completed) {
+          return navigate("/onboarding-wizard", { replace: true });
+        }
+        if (profile.approval_status !== "approved" || !profile.college_assigned) {
+          return navigate("/pending-approval", { replace: true });
+        }
+      }
+
+      // If user came via an authorized deep link, honor it!
+      if (safeRedirect) {
+        return navigate(safeRedirect, { replace: true });
+      }
+
+      // Otherwise fall back to role-specific dashboard
       if (r === "super_admin") return navigate("/platform/admin-control/dashboard", { replace: true });
       if (r === "admin")       return navigate("/platform/admin/dashboard", { replace: true });
       if (r === "faculty")     return navigate("/faculty/dashboard", { replace: true });
-
-      // Student: route based on onboarding/approval state
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("profile_completed, approval_status, college_assigned")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (!profile || !profile.profile_completed) {
-        navigate("/onboarding-wizard", { replace: true });
-      } else if (profile.approval_status !== "approved" || !profile.college_assigned) {
-        navigate("/pending-approval", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
+      return navigate("/app/dashboard", { replace: true });
     } catch {
       navigate("/onboarding-wizard", { replace: true });
     }

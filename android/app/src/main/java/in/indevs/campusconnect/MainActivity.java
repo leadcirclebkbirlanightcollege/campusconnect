@@ -79,6 +79,9 @@ public class MainActivity extends BridgeActivity {
         setupErrorOverlay();
         setupNetworkMonitoring();
         setupSmartBackNavigation();
+
+        // Handle cold start Verified App Links
+        handleIncomingDeepLink(getIntent(), true);
     }
 
     /**
@@ -533,6 +536,28 @@ public class MainActivity extends BridgeActivity {
             return ROOT_EXIT_PATHS.contains(path);
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingDeepLink(intent, false);
+    }
+
+    /**
+     * Handle incoming deep links / verified app links.
+     * Cold start: directly directs the WebView to the requested URL so default fallback is bypassed.
+     * Warm start: super.onNewIntent notifies Capacitor's App plugin which fires appUrlOpen in JS.
+     */
+    private void handleIncomingDeepLink(Intent intent, boolean isColdStart) {
+        if (intent == null) return;
+        Uri data = intent.getData();
+        if (data != null && webView != null && isTrustedHost(data.getHost())) {
+            if (isColdStart) {
+                webView.loadUrl(data.toString());
+            }
         }
     }
 

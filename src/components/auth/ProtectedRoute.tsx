@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTenant } from "@/providers/TenantProvider";
@@ -13,6 +13,7 @@ interface ProtectedRouteProps {
  * No more duplicate role fetching or module-level caches.
  */
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { isLoading: tenantLoading, isSuperAdmin, collegeId } = useTenant();
 
@@ -24,8 +25,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return null;
   }
 
-  // Not authenticated → redirect to login
+  // Not authenticated → redirect to login, preserving destination for deep linking
   if (!user) {
+    const fullTarget = location.pathname + location.search + location.hash;
+    if (fullTarget && fullTarget !== "/" && fullTarget !== "/auth" && !fullTarget.startsWith("/auth?")) {
+      sessionStorage.setItem("cc_redirect_after_login", fullTarget);
+      return <Navigate to={`/auth?redirect=${encodeURIComponent(fullTarget)}`} replace />;
+    }
     return <Navigate to="/auth" replace />;
   }
 

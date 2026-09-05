@@ -78,10 +78,61 @@ export default function CapacitorAppBridge() {
       backListenerHandle = handle;
     });
 
+    // 5. Helper to parse and extract valid in-app deep link paths
+    const handleIncomingUrl = (rawUrl: string) => {
+      if (!rawUrl) return;
+      try {
+        let targetPath: string | null = null;
+        if (rawUrl.startsWith("campusconnect://")) {
+          const pathPart = rawUrl.replace(/^campusconnect:\/\//, "");
+          targetPath = pathPart.startsWith("/") ? pathPart : `/${pathPart}`;
+        } else {
+          const parsed = new URL(rawUrl);
+          const host = parsed.hostname.toLowerCase();
+          if (host === "campusconnect.indevs.in" || host.endsWith(".campusconnect.indevs.in")) {
+            targetPath = parsed.pathname + parsed.search + parsed.hash;
+          }
+        }
+
+        if (targetPath) {
+          // Normalize and preserve destination for post-login redirect if needed
+          if (targetPath !== "/" && targetPath !== "/auth" && !targetPath.startsWith("/auth?")) {
+            sessionStorage.setItem("cc_redirect_after_login", targetPath);
+          }
+          const currentFullPath = locationRef.current.pathname + locationRef.current.search + locationRef.current.hash;
+          if (targetPath !== currentFullPath) {
+            navigate(targetPath);
+          }
+        }
+      } catch (err) {
+        console.error("[CapacitorAppBridge] Failed to parse deep link URL:", err);
+      }
+    };
+
+    // 6. Handle Warm-Start Verified App Links (app already running in background)
+    let urlListenerHandle: { remove: () => void } | null = null;
+    CapApp.addListener("appUrlOpen", (event) => {
+      if (event?.url) {
+        handleIncomingUrl(event.url);
+      }
+    }).then((handle) => {
+      urlListenerHandle = handle;
+    });
+
+    // 7. Handle Cold-Start Verified App Links (app launched from URL)
+    CapApp.getLaunchUrl().then((launchUrl) => {
+      if (launchUrl?.url) {
+        handleIncomingUrl(launchUrl.url);
+      }
+    }).catch(() => {});
+
     return () => {
       clearTimeout(splashTimer);
       if (backListenerHandle) {
         backListenerHandle.remove();
+      }
+      if (urlListenerHandle) {
+        urlListenerHandle.remove();
       }
     };
   }, [navigate]);
