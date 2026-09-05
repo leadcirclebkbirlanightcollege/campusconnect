@@ -38,12 +38,24 @@ export default function ShareButton({
   // Absolute canonical link
   const canonicalUrl = (() => {
     if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const origin =
-      typeof window !== "undefined" && window.location.origin
-        ? window.location.origin
-        : "https://campusconnect.indevs.in";
-    return `${origin}${url.startsWith("/") ? url : `/${url}`}`;
+    const CANONICAL_ORIGIN = "https://campusconnect.indevs.in";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      try {
+        const parsed = new URL(url);
+        if (
+          parsed.hostname.includes("localhost") ||
+          parsed.hostname.includes("vercel.app") ||
+          parsed.hostname.includes("lovable") ||
+          parsed.hostname.includes("127.0.0.1")
+        ) {
+          return `${CANONICAL_ORIGIN}${parsed.pathname}${parsed.search}`;
+        }
+        return url;
+      } catch {
+        return url;
+      }
+    }
+    return `${CANONICAL_ORIGIN}${url.startsWith("/") ? url : `/${url}`}`;
   })();
 
   const handleClick = async (e: React.MouseEvent) => {
