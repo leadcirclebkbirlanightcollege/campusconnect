@@ -13,6 +13,7 @@ import { format, isPast, isToday, addDays, isSameDay } from "date-fns";
 import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users, ArrowRight } from "@/components/icons";
 import StallRegistrationDialog from "./StallRegistrationDialog";
 import ShareButton from "@/components/share/ShareButton";
+import { normalizeFlyerUrl } from "@/lib/crop-image";
 
 type EventRow = {
   id: string;
@@ -202,7 +203,7 @@ export default function StudentEventsList() {
               </div>
               <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
                 {featured.map((e) => {
-                  const flyer = e.flyer_url || e.poster_url;
+                  const flyer = normalizeFlyerUrl(e.flyer_url || e.poster_url);
                   return (
                     <div
                       key={e.id}
@@ -292,7 +293,7 @@ export default function StudentEventsList() {
               const eventDay = new Date(e.event_date + "T00:00:00");
               const isPastEvent = isPast(eventDay) && !isToday(eventDay);
               const today = isToday(eventDay);
-              const flyer = e.flyer_url || e.poster_url;
+              const flyer = normalizeFlyerUrl(e.flyer_url || e.poster_url);
 
               return (
                 <FadeIn key={e.id} delay={i * 20}>

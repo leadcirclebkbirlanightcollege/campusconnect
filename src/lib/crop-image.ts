@@ -102,3 +102,15 @@ export function validateImageFile(
 
   return { valid: true };
 }
+
+/**
+ * Normalizes image URLs, including Google Drive preview/file links, into high-performance CDN image endpoints.
+ */
+export function normalizeFlyerUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+  return url;
+}

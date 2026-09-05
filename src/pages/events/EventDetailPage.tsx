@@ -43,6 +43,8 @@ type EventRecord = {
   created_at: string;
 };
 
+import { normalizeFlyerUrl } from "@/lib/crop-image";
+
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -58,8 +60,8 @@ export default function EventDetailPage() {
         .select(
           "id,title,description,venue,event_date,event_time,poster_url,flyer_url,college_id,is_featured,is_ecell_event,max_stalls,created_at"
         )
-        .eq("id", id)
-        .maybeSingle();
+      .eq("id", id)
+      .maybeSingle();
 
       if (error) {
         // If query error, return null to show polished not found state
@@ -70,7 +72,8 @@ export default function EventDetailPage() {
     staleTime: 60_000,
   });
 
-  const flyerImage = event?.flyer_url || event?.poster_url || null;
+  const rawFlyer = event?.flyer_url || event?.poster_url || null;
+  const flyerImage = normalizeFlyerUrl(rawFlyer);
 
   useShareMeta({
     title: event?.title || "Campus Event",
