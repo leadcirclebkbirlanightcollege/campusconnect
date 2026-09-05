@@ -18,19 +18,12 @@ self.skipWaiting();
 workbox.core.clientsClaim();
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    await caches.delete("pages");
-    const windowClients = await self.clients.matchAll({
-      type: "window",
-      includeUncontrolled: true,
-    });
-    await Promise.all(windowClients.map((client) => {
-      const url = new URL(client.url);
-      if (url.searchParams.has("cc_sw_refresh")) return undefined;
-      url.searchParams.set("cc_sw_refresh", Date.now().toString());
-      return client.navigate(url.toString());
-    }));
-  })());
+  event.waitUntil(
+    (async () => {
+      await caches.delete("pages");
+      await self.clients.claim();
+    })()
+  );
 });
 
 // SPA navigation: network-first, skip OAuth/auth routes

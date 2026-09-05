@@ -9,6 +9,21 @@ import { useEffect } from "react";
 
 export default function SwUpdateManager() {
   useEffect(() => {
+    // Clean up any legacy cc_sw_refresh query parameter from the address bar without reload
+    try {
+      if (typeof window !== "undefined" && window.location.search.includes("cc_sw_refresh")) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("cc_sw_refresh");
+        window.history.replaceState(
+          window.history.state,
+          "",
+          cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : "") + cleanUrl.hash
+        );
+      }
+    } catch {
+      // Gracefully ignore
+    }
+
     if (!("serviceWorker" in navigator)) return;
 
     let refreshing = false;
