@@ -20,6 +20,17 @@
   ],
   "rewrites": [
     {
+      "source": "/events/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|twitterbot|telegrambot|slackbot|linkedinbot|discordbot|embedly|quora link preview|pinterest).*"
+        }
+      ],
+      "destination": "/api/og-event?id=:id"
+    },
+    {
       "source": "/((?!\\.well-known/).*)",
       "destination": "/index.html"
     }
