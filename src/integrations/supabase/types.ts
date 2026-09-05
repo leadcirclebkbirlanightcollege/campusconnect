@@ -3106,6 +3106,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_faculty_institution: {
+        Args: { p_college_id?: string | null; p_faculty_user_id: string }
+        Returns: Json
+      }
       admin_approve_student: {
         Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
         Returns: Json
