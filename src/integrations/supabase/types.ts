@@ -3217,6 +3217,10 @@ export type Database = {
         Args: { p_course_code: string }
         Returns: string
       }
+      delete_event_cascade: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       delete_exam: { Args: { p_exam_id: string }; Returns: Json }
       delete_student_account_permanently: {
         Args: { p_user_id: string }

@@ -16,6 +16,15 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Plus,
@@ -29,6 +38,8 @@ import {
   Pencil,
   ExternalLink,
   Phone,
+  AlertTriangle,
+  Loader2,
 } from "@/components/icons";
 import { format } from "date-fns";
 import EventFlyerUploader from "./EventFlyerUploader";
@@ -68,10 +79,27 @@ const initialForm = {
   max_stalls: "" as string,
 };
 
+export function extractEventStoragePath(url: string | null | undefined): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const marker = "/lecture-flyers/";
+  const idx = trimmed.indexOf(marker);
+  if (idx !== -1) {
+    const rawPath = trimmed.substring(idx + marker.length);
+    const cleanPath = rawPath.split("?")[0].split("#")[0];
+    if (cleanPath.startsWith("events/") && !cleanPath.includes("..")) {
+      return cleanPath;
+    }
+  }
+  return null;
+}
+
 export default function AdminEventsTab() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<EventRow | null>(null);
+  const [deleteTargetEvent, setDeleteTargetEvent] = useState<EventRow | null>(null);
   const [form, setForm] = useState(initialForm);
   const [filter, setFilter] = useState<EventFilter>("all");
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
@@ -195,15 +223,77 @@ export default function AdminEventsTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("events").delete().eq("id", id);
-      if (error) throw error;
+    mutationFn: async (target: EventRow) => {
+      // 1. Attempt transactional delete via delete_event_cascade RPC
+      let rpcResult: any = null;
+      const { data, error: rpcError } = await supabase.rpc("delete_event_cascade", {
+        p_event_id: target.id,
+      });
+
+      if (rpcError) {
+        console.warn("delete_event_cascade RPC failed, attempting direct delete:", rpcError);
+        // Direct delete fallback — foreign key ON DELETE CASCADE still enforces stall deletion
+        const { error: directError } = await supabase
+          .from("events")
+          .delete()
+          .eq("id", target.id);
+        if (directError) throw directError;
+      } else {
+        rpcResult = data;
+      }
+
+      // 2. Safe event-owned storage asset cleanup
+      const candidateUrls: (string | null | undefined)[] = [
+        target.flyer_url,
+        target.poster_url,
+        target.full_flyer_url,
+      ];
+      if (rpcResult && Array.isArray(rpcResult.flyer_urls)) {
+        candidateUrls.push(...rpcResult.flyer_urls);
+      }
+
+      const pathsToDelete = Array.from(
+        new Set(
+          candidateUrls
+            .map(extractEventStoragePath)
+            .filter((p): p is string => Boolean(p))
+        )
+      );
+
+      if (pathsToDelete.length > 0) {
+        try {
+          await supabase.storage.from("lecture-flyers").remove(pathsToDelete);
+        } catch (storageErr) {
+          console.warn("Post-deletion storage asset cleanup warning:", storageErr);
+        }
+      }
+
+      return { target, rpcResult };
     },
-    onSuccess: () => {
-      toast.success("Event deleted");
+    onSuccess: ({ target, rpcResult }) => {
+      const stallsCount = rpcResult?.deleted_stalls_count;
+      const detailMsg =
+        typeof stallsCount === "number" && stallsCount > 0
+          ? `Event "${target.title}" and ${stallsCount} stall registration${stallsCount === 1 ? "" : "s"} permanently deleted.`
+          : `Event "${target.title}" and all linked event-specific data permanently deleted.`;
+
+      toast.success(detailMsg);
+      setDeleteTargetEvent(null);
+
+      // Invalidate all related query caches
       qc.invalidateQueries({ queryKey: ["admin", "events"] });
+      qc.invalidateQueries({ queryKey: ["admin", "all-events-filter"] });
+      qc.invalidateQueries({ queryKey: ["admin", "stalls"] });
       qc.invalidateQueries({ queryKey: ["student", "events"] });
       qc.invalidateQueries({ queryKey: ["event", "detail"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+      qc.invalidateQueries({ queryKey: ["ecell", "user_stalls"] });
+      qc.invalidateQueries({ queryKey: ["stall-existing"] });
+      qc.invalidateQueries({ queryKey: ["upcoming-events"] });
+
+      // Expire cached entries for this deleted event
+      qc.removeQueries({ queryKey: ["event", "detail", target.id] });
+      qc.removeQueries({ queryKey: ["stall-existing", target.id] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete event"),
   });
@@ -436,16 +526,8 @@ export default function AdminEventsTab() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-xl text-destructive hover:text-destructive"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Delete "${e.title}"?\n\nThis will remove the event detail page and any linked registrations.`
-                          )
-                        ) {
-                          deleteMutation.mutate(e.id);
-                        }
-                      }}
+                      className="h-8 w-8 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTargetEvent(e)}
                       aria-label="Delete event"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -456,6 +538,79 @@ export default function AdminEventsTab() {
             );
           })}
       </div>
+
+      {/* Admin Delete Confirmation Dialog */}
+      <AlertDialog
+        open={Boolean(deleteTargetEvent)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen && !deleteMutation.isPending) {
+            setDeleteTargetEvent(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-lg font-bold text-foreground">
+                  Delete Event?
+                </AlertDialogTitle>
+                <p className="text-xs text-muted-foreground">
+                  Permanent data deletion
+                </p>
+              </div>
+            </div>
+            <AlertDialogDescription className="space-y-3 pt-3 text-foreground/90 text-sm">
+              <p>
+                Deleting <strong className="text-foreground font-semibold">"{deleteTargetEvent?.title}"</strong> will permanently remove:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs text-muted-foreground">
+                <li>Event details & public page (<code className="text-[11px] font-mono">/events/{deleteTargetEvent?.id}</code>)</li>
+                <li>All stall registrations & student team submissions</li>
+                <li>Event-specific configurations & WhatsApp references</li>
+                <li>Event flyer and banner files where applicable</li>
+              </ul>
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive font-medium leading-relaxed">
+                ⚠️ This action cannot be undone. All child records will be cascade-deleted at the database level.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-2 gap-2 sm:gap-0">
+            <AlertDialogCancel
+              disabled={deleteMutation.isPending}
+              onClick={() => setDeleteTargetEvent(null)}
+              className="rounded-xl font-medium"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (deleteTargetEvent) {
+                  deleteMutation.mutate(deleteTargetEvent);
+                }
+              }}
+              className="gap-2 rounded-xl font-bold"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Delete Event
+                </>
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create / Edit Dialog with WhatsApp Group Link and Flyer */}
       <Dialog open={open} onOpenChange={setOpen}>
