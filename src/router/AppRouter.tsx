@@ -57,6 +57,12 @@ const StudentAssignments   = lazy(() => import("@/pages/student/StudentAssignmen
 const StudentTimetable     = lazy(() => import("@/pages/student/StudentTimetable"));
 const StudentDocuments     = lazy(() => import("@/pages/student/StudentDocuments"));
 const StudentResults       = lazy(() => import("@/pages/student/StudentResults"));
+const EventDetailPage      = lazy(() => import("@/pages/events/EventDetailPage"));
+const DocumentDetailPage   = lazy(() => import("@/pages/documents/DocumentDetailPage"));
+const AssignmentDetailPage = lazy(() => import("@/pages/assignments/AssignmentDetailPage"));
+const ExamDetailPage       = lazy(() => import("@/pages/exams/ExamDetailPage"));
+const AnnouncementDetailPage = lazy(() => import("@/pages/announcements/AnnouncementDetailPage"));
+const ResultDetailPage     = lazy(() => import("@/pages/student/results/ResultDetailPage"));
 const Leaderboard          = lazy(() => import("@/pages/Leaderboard"));
 const PwaInstallPage       = lazy(() => import("@/pages/student/PwaInstallPage"));
 const NotificationSettings = lazy(() => import("@/pages/student/NotificationSettings"));
@@ -349,15 +355,40 @@ export default function AppRouter() {
           <Route path="/app/admin/attendance/corrections" element={<Navigate to="/platform/admin/attendance/corrections" replace />} />
 
           {/* Other legacy routes */}
-          {/* Shareable deep links → canonical in-app routes */}
+          {/* Shareable deep links → canonical detail pages & in-app routes */}
+          <Route path="/events/:id"       element={<EventDetailPage />} />
+          <Route path="/event/:id"        element={<EventDetailPage />} />
+          <Route path="/app/events/:id"   element={<DeepLink to="/events/:id" />} />
+
+          <Route path="/notes/:id"        element={<DocumentDetailPage />} />
+          <Route path="/documents/:id"    element={<DocumentDetailPage />} />
+          <Route path="/document/:id"     element={<DocumentDetailPage />} />
+          <Route path="/app/documents/:id" element={<DeepLink to="/notes/:id" />} />
+          <Route path="/app/notes/:id"    element={<DeepLink to="/notes/:id" />} />
+
+          <Route path="/assignments/:id"  element={<AssignmentDetailPage />} />
+          <Route path="/assignment/:id"   element={<AssignmentDetailPage />} />
+          <Route path="/app/assignments/:id" element={<DeepLink to="/assignments/:id" />} />
+
+          <Route path="/exams/:id"        element={<ExamDetailPage />} />
+          <Route path="/exam/:id"         element={<ExamDetailPage />} />
+          <Route path="/app/exams/:id"    element={<DeepLink to="/exams/:id" />} />
+
+          <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+          <Route path="/announcement/:id" element={<AnnouncementDetailPage />} />
+          <Route path="/app/announcements/:id" element={<DeepLink to="/announcements/:id" />} />
+
+          <Route path="/results/:id"      element={<ResultDetailPage />} />
+          <Route path="/result/:id"       element={<ResultDetailPage />} />
+          <Route path="/app/results/:id"  element={<DeepLink to="/results/:id" />} />
+
           <Route path="/lecture/:id"      element={<DeepLink to="/app/lectures/:id" />} />
           <Route path="/lectures/:id"     element={<DeepLink to="/app/lectures/:id" />} />
           <Route path="/programme/:id"    element={<DeepLink to="/app/programmes/:id" />} />
           <Route path="/programmes/:id"   element={<DeepLink to="/app/programmes/:id" />} />
-          <Route path="/event/:id"        element={<DeepLink to="/app/events" />} />
-          <Route path="/announcement/:id" element={<DeepLink to="/app/announcements" />} />
-          <Route path="/assignment/:id"   element={<DeepLink to="/app/assignments" />} />
-          <Route path="/document/:id"     element={<DeepLink to="/app/documents" />} />
+          <Route path="/club/:id"         element={<DeepLink to="/app/programmes/:id" />} />
+          <Route path="/clubs/:id"        element={<DeepLink to="/app/programmes/:id" />} />
+          <Route path="/community/posts/:id" element={<DeepLink to="/app/community" />} />
           <Route path="/profile/:id"      element={<DeepLink to="/app/settings" />} />
           <Route path="/faculty/profile/:id" element={<DeepLink to="/faculty/profile" />} />
 

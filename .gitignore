@@ -36,3 +36,5 @@ keystore.properties
 # Android Build Binaries
 *.apk
 *.aab
+release/
+RELEASE_CHECKLIST.md

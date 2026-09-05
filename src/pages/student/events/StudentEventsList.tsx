@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,8 +10,9 @@ import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, addDays, isSameDay } from "date-fns";
-import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users } from "@/components/icons";
+import { MapPin, Clock, PartyPopper, Sparkles, Store, Rocket, CalendarDays, Users, ArrowRight } from "@/components/icons";
 import StallRegistrationDialog from "./StallRegistrationDialog";
+import ShareButton from "@/components/share/ShareButton";
 
 type EventRow = {
   id: string;
@@ -35,6 +37,7 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 export default function StudentEventsList() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("upcoming");
   const [activeDay, setActiveDay] = useState<Date | null>(null);
 
@@ -203,7 +206,8 @@ export default function StudentEventsList() {
                   return (
                     <div
                       key={e.id}
-                      className="w-[80%] shrink-0 snap-start overflow-hidden rounded-[22px] border border-premium/25 bg-surface-1 shadow-elevated"
+                      onClick={() => navigate(`/events/${e.id}`)}
+                      className="w-[80%] shrink-0 snap-start overflow-hidden rounded-[22px] border border-premium/25 bg-surface-1 shadow-elevated cursor-pointer group transition-transform duration-180 hover:-translate-y-0.5"
                     >
                       {flyer ? (
                         <img src={flyer} alt={e.title} className="h-36 w-full object-cover" loading="lazy" />
@@ -213,7 +217,9 @@ export default function StudentEventsList() {
                         </div>
                       )}
                       <div className="space-y-1.5 p-4">
-                        <p className="line-clamp-1 text-[14px] font-bold text-foreground">{e.title}</p>
+                        <p className="line-clamp-1 text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
+                          {e.title}
+                        </p>
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                           <span>{format(new Date(e.event_date + "T00:00:00"), "d MMM")}</span>
                           <span className="h-1 w-1 rounded-full bg-border-strong" />
@@ -225,17 +231,34 @@ export default function StudentEventsList() {
                             </>
                           )}
                         </div>
-                        {e.max_stalls != null && (
-                          <StallRegistrationDialog
-                            eventId={e.id}
-                            eventTitle={e.title}
-                            trigger={
-                              <button className="mt-1 inline-flex items-center gap-1 rounded-lg bg-premium/12 px-2.5 py-1 text-[11px] font-bold text-premium">
-                                <Store className="h-3 w-3" /> Register stall
-                              </button>
-                            }
+                        <div className="flex items-center justify-between pt-1 gap-2">
+                          <div className="flex items-center gap-1.5">
+                            {e.max_stalls != null && (
+                              <div onClick={(ev) => ev.stopPropagation()}>
+                                <StallRegistrationDialog
+                                  eventId={e.id}
+                                  eventTitle={e.title}
+                                  trigger={
+                                    <button className="inline-flex items-center gap-1 rounded-lg bg-premium/12 px-2.5 py-1 text-[11px] font-bold text-premium">
+                                      <Store className="h-3 w-3" /> Register stall
+                                    </button>
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <ShareButton
+                            title={e.title}
+                            description={e.description}
+                            url={`/events/${e.id}`}
+                            entityType="event"
+                            imageUrl={flyer}
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[11px] rounded-lg"
+                            text="Share"
                           />
-                        )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -274,8 +297,9 @@ export default function StudentEventsList() {
               return (
                 <FadeIn key={e.id} delay={i * 20}>
                   <div
+                    onClick={() => navigate(`/events/${e.id}`)}
                     className={cn(
-                      "overflow-hidden rounded-[20px] border bg-surface-1 shadow-card transition-[transform,box-shadow] duration-180 active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-elevated",
+                      "overflow-hidden rounded-[20px] border bg-surface-1 shadow-card transition-[transform,box-shadow] duration-180 active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-elevated cursor-pointer group",
                       today
                         ? "border-success/30"
                         : isPastEvent
@@ -283,7 +307,16 @@ export default function StudentEventsList() {
                         : "border-border-subtle",
                     )}
                   >
-                    {flyer && <img src={flyer} alt={e.title} className="h-32 w-full object-cover" loading="lazy" />}
+                    {flyer && (
+                      <div className="w-full h-36 bg-neutral-950 overflow-hidden relative">
+                        <img
+                          src={flyer}
+                          alt={e.title}
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                     <div className="flex gap-4 px-4 py-4">
                       <div
                         className={cn(
@@ -306,7 +339,7 @@ export default function StudentEventsList() {
 
                       <div className="min-w-0 flex-1 space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="flex flex-wrap items-center gap-1.5 text-[14.5px] font-bold leading-snug text-foreground">
+                          <h3 className="flex flex-wrap items-center gap-1.5 text-[14.5px] font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
                             {e.title}
                             {e.is_ecell_event && (
                               <Badge className="shrink-0 gap-1 bg-[hsl(var(--module-ecell))] text-[9px] text-white hover:bg-[hsl(var(--module-ecell))]">
@@ -350,11 +383,31 @@ export default function StudentEventsList() {
                           )}
                         </div>
 
-                        {!isPastEvent && e.max_stalls != null && (
-                          <div className="pt-1.5">
-                            <StallRegistrationDialog eventId={e.id} eventTitle={e.title} />
+                        {/* Card action strip */}
+                        <div className="flex items-center justify-between pt-2 border-t border-border-subtle/60 mt-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:translate-x-0.5 transition-transform">
+                              View Event <ArrowRight className="h-3 w-3" />
+                            </span>
+                            {!isPastEvent && e.max_stalls != null && (
+                              <div onClick={(ev) => ev.stopPropagation()}>
+                                <StallRegistrationDialog eventId={e.id} eventTitle={e.title} />
+                              </div>
+                            )}
                           </div>
-                        )}
+
+                          <ShareButton
+                            title={e.title}
+                            description={e.description}
+                            url={`/events/${e.id}`}
+                            entityType="event"
+                            imageUrl={flyer}
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs rounded-lg"
+                            text="Share"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -23,6 +23,8 @@ import {
 import { format, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
+import { Link } from "react-router-dom";
+import ShareButton from "@/components/share/ShareButton";
 
 const MAX_FILES = 5;
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -258,18 +260,33 @@ export default function StudentAssignments() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border-subtle/60 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-primary" />
-                    Due {format(new Date(a.due_date), "MMM dd, yyyy")}
-                  </span>
-                  <span>·</span>
-                  <span>Max {a.max_marks} marks</span>
-                  {sub?.marks_obtained != null && (
-                    <span className="ml-auto flex items-center gap-1 text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                      <Star className="h-3.5 w-3.5 fill-current" /> {sub.marks_obtained}/{a.max_marks}
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-border-subtle/60 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                      Due {format(new Date(a.due_date), "MMM dd, yyyy")}
                     </span>
-                  )}
+                    <span>·</span>
+                    <span>Max {a.max_marks} marks</span>
+                    {sub?.marks_obtained != null && (
+                      <span className="flex items-center gap-1 text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                        <Star className="h-3.5 w-3.5 fill-current" /> {sub.marks_obtained}/{a.max_marks}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5" onClick={(ev) => ev.stopPropagation()}>
+                    <ShareButton
+                      title={a.title}
+                      description={a.description}
+                      url={`/assignments/${a.id}`}
+                      entityType="assignment"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs rounded-lg"
+                      text="Share"
+                    />
+                  </div>
                 </div>
               </div>
             );

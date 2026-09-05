@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, BookOpen } from "@/components/icons";
+import ShareButton from "@/components/share/ShareButton";
 import {
   Table,
   TableBody,
@@ -121,14 +122,26 @@ export default function ProgrammeDetail() {
       </Button>
 
       {/* Programme header */}
-      <div className="flex items-center gap-3">
-        <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: programme.color }} />
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">{programme.name}</h2>
-          {programme.description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{programme.description}</p>
-          )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: programme.color }} />
+          <div>
+            <h2 className="text-xl font-bold text-foreground">{programme.name}</h2>
+            {programme.description && (
+              <p className="text-sm text-muted-foreground mt-0.5">{programme.description}</p>
+            )}
+          </div>
         </div>
+
+        <ShareButton
+          title={programme.name}
+          description={programme.description}
+          url={`/clubs/${programme.id}`}
+          entityType="club"
+          variant="outline"
+          size="sm"
+          className="rounded-xl font-semibold shrink-0"
+        />
       </div>
 
       {/* Lectures table */}

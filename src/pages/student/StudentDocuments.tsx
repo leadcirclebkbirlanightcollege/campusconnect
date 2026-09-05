@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, Search, FileText, FileType2 } from "@/components/icons";
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SegmentedFilter } from "@/components/ui/SegmentedFilter";
 import { format } from "date-fns";
 import { useDebounce } from "@/hooks/use-debounce";
+import ShareButton from "@/components/share/ShareButton";
 
 type Doc = {
   id: string;
@@ -32,6 +34,7 @@ const TYPE_STYLES: Record<string, string> = {
 type FilterKey = "all" | string;
 
 export default function StudentDocuments() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const debouncedSearch = useDebounce(search, 300);
@@ -112,7 +115,8 @@ export default function StudentDocuments() {
           {filtered.map((doc) => (
             <article
               key={doc.id}
-              className="group flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 p-3.5 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated"
+              onClick={() => navigate(`/notes/${doc.id}`)}
+              className="group flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-1 p-3.5 shadow-card transition-[transform,box-shadow] duration-180 hover:-translate-y-0.5 hover:shadow-elevated cursor-pointer"
             >
               <div
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${TYPE_STYLES[doc.doc_type] ?? "bg-surface-3 text-muted-foreground"}`}
@@ -120,7 +124,7 @@ export default function StudentDocuments() {
                 <FileType2 className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-semibold text-foreground">{doc.title}</p>
+                <p className="truncate text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">{doc.title}</p>
                 <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="capitalize rounded-full bg-surface-3 px-1.5 py-0.5 text-[10px] font-medium">
                     {doc.doc_type}
@@ -130,15 +134,29 @@ export default function StudentDocuments() {
                   <span>{format(new Date(doc.created_at), "dd MMM")}</span>
                 </div>
               </div>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-9 w-9 shrink-0 rounded-xl"
-                onClick={() => window.open(doc.file_url, "_blank")}
-                aria-label="Download"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 shrink-0">
+                <ShareButton
+                  title={doc.title}
+                  description={doc.subject ? `${doc.title} (${doc.subject})` : doc.title}
+                  url={`/notes/${doc.id}`}
+                  entityType="note"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 rounded-xl"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(doc.file_url, "_blank");
+                  }}
+                  aria-label="Download"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
             </article>
           ))}
         </div>

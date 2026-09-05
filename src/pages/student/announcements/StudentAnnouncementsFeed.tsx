@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +9,8 @@ import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, isYesterday, formatDistanceToNow } from "date-fns";
-import { Pin, Clock, AlertCircle, Search, ArrowUpDown, Megaphone, Building2, Check } from "@/components/icons";
+import { Pin, Clock, AlertCircle, Search, ArrowUpDown, Megaphone, Building2, Check, ArrowRight } from "@/components/icons";
+import ShareButton from "@/components/share/ShareButton";
 
 type Filter = "all" | "pinned" | "critical";
 
@@ -32,6 +34,7 @@ function groupLabel(d: Date) {
 }
 
 export default function StudentAnnouncementsFeed() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [newestFirst, setNewestFirst] = useState(true);
@@ -232,8 +235,9 @@ export default function StudentAnnouncementsFeed() {
                       return (
                         <FadeIn key={a.id} delay={i * 20}>
                           <article
+                            onClick={() => navigate(`/announcements/${a.id}`)}
                             className={cn(
-                              "group relative overflow-hidden rounded-2xl border bg-surface-1 p-4 shadow-card transition-[transform,box-shadow] duration-180 active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-elevated",
+                              "group relative overflow-hidden rounded-2xl border bg-surface-1 p-4 shadow-card transition-[transform,box-shadow] duration-180 active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-elevated cursor-pointer",
                               a.is_pinned && "border-l-[3px] border-l-primary",
                               isCritical ? "border-danger/30" : "border-border-subtle",
                               expired && "opacity-60",
@@ -277,27 +281,37 @@ export default function StudentAnnouncementsFeed() {
                                   )}
                                 </div>
 
-                                <h3 className="text-[14px] font-semibold leading-snug text-foreground">
+                                <h3 className="text-[14px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
                                   {a.title}
                                 </h3>
                                 <p className="text-[12.5px] leading-relaxed text-muted-foreground line-clamp-3">
                                   {a.description}
                                 </p>
 
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[11px] text-muted-foreground/75">
-                                  <span className="inline-flex items-center gap-1">
-                                    <Building2 className="h-3 w-3" />
-                                    <span className="capitalize">{a.target ?? "All students"}</span>
-                                  </span>
-                                  <span className="inline-flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {format(new Date(a.created_at), "h:mm a")}
-                                  </span>
-                                  {!expired && (
-                                    <span className="inline-flex items-center gap-1 text-success">
-                                      <Check className="h-3 w-3" /> Active
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border-subtle/60 text-[11px] text-muted-foreground/75 mt-1">
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <span className="inline-flex items-center gap-1">
+                                      <Building2 className="h-3 w-3" />
+                                      <span className="capitalize">{a.target ?? "All students"}</span>
                                     </span>
-                                  )}
+                                    <span className="inline-flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {format(new Date(a.created_at), "h:mm a")}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+                                    <ShareButton
+                                      title={a.title}
+                                      description={a.description}
+                                      url={`/announcements/${a.id}`}
+                                      entityType="announcement"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs rounded-lg"
+                                      text="Share"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>
