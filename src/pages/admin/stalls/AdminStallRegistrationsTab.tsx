@@ -639,10 +639,10 @@ export default function AdminStallRegistrationsTab() {
                     </div>
                   </div>
 
-                  {/* 4-Member Team Structure Display with Individual Genders */}
+                  {/* Team Structure Display with Individual Genders */}
                   <div className="space-y-1.5">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-primary" /> Team Members, Classes & Genders (4 Total)
+                      <Users className="h-3.5 w-3.5 text-primary" /> Team Members, Classes & Genders
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
                       {/* 1. Team Lead */}

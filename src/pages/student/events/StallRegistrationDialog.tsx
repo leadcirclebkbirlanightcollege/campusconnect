@@ -33,6 +33,7 @@ import {
   Calendar,
   Building2,
   Rocket,
+  ChevronDown,
 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -48,13 +49,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { GUEST_STALL_REGISTRATION_ENABLED } from "@/config/features";
 
@@ -90,49 +84,185 @@ export const EXTRA_REQUIREMENT_OPTIONS = [
 
 const phoneRegex = /^[6-9]\d{9}$/;
 
-export const stallFormSchema = z.object({
-  team_lead_name: z.string().trim().min(2, "Team Lead name is required").max(100),
-  team_lead_class: z.string().min(1, "Team Lead class is required"),
-  team_lead_gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select Team Lead gender" }),
-  }),
-
-  member_2_name: z.string().trim().min(2, "Member 2 name is required").max(100),
-  member_2_class: z.string().min(1, "Member 2 class is required"),
-  member_2_gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select Member 2 gender" }),
-  }),
-
-  member_3_name: z.string().trim().min(2, "Member 3 name is required").max(100),
-  member_3_class: z.string().min(1, "Member 3 class is required"),
-  member_3_gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select Member 3 gender" }),
-  }),
-
-  member_4_name: z.string().trim().min(2, "Member 4 name is required").max(100),
-  member_4_class: z.string().min(1, "Member 4 class is required"),
-  member_4_gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select Member 4 gender" }),
-  }),
-
-  phone: z
-    .string()
-    .trim()
-    .refine((v) => phoneRegex.test(v.replace(/[\s-+]/g, "")), {
-      message: "Please enter a valid 10-digit Indian mobile number",
+export const stallFormSchema = z
+  .object({
+    team_lead_name: z.string().trim().min(2, "Team Lead name is required").max(100),
+    team_lead_class: z.string().min(1, "Team Lead class is required"),
+    team_lead_gender: z.enum(["Male", "Female"], {
+      errorMap: () => ({ message: "Please select Team Lead gender" }),
     }),
-  selling_description: z
-    .string()
-    .trim()
-    .min(3, "Please describe what you want to sell")
-    .max(500, "Description must be under 500 characters"),
-  extra_requirements: z
-    .array(z.string())
-    .length(2, "Please select exactly 2 extra requirements"),
-  suggestion: z.string().trim().max(500).optional().or(z.literal("")),
-});
 
-type StallFormData = z.infer<typeof stallFormSchema>;
+    member_2_name: z.string().trim().max(100).optional().default(""),
+    member_2_class: z.string().optional().default(""),
+    member_2_gender: z.enum(["Male", "Female"]).optional().default("Male"),
+
+    member_3_name: z.string().trim().max(100).optional().default(""),
+    member_3_class: z.string().optional().default(""),
+    member_3_gender: z.enum(["Male", "Female"]).optional().default("Male"),
+
+    member_4_name: z.string().trim().max(100).optional().default(""),
+    member_4_class: z.string().optional().default(""),
+    member_4_gender: z.enum(["Male", "Female"]).optional().default("Male"),
+
+    phone: z
+      .string()
+      .trim()
+      .refine((v) => phoneRegex.test(v.replace(/[\s-+]/g, "")), {
+        message: "Please enter a valid 10-digit Indian mobile number",
+      }),
+    selling_description: z
+      .string()
+      .trim()
+      .min(3, "Please describe what you want to sell")
+      .max(500, "Description must be under 500 characters"),
+    extra_requirements: z
+      .array(z.string())
+      .length(2, "Please select exactly 2 extra requirements"),
+    suggestion: z.string().trim().max(500).optional().or(z.literal("")),
+  })
+  .superRefine((data, ctx) => {
+    // If Member 2 name OR class is entered, both must be valid
+    const m2HasData = Boolean(data.member_2_name?.trim() || data.member_2_class?.trim());
+    if (m2HasData) {
+      if (!data.member_2_name || data.member_2_name.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Member 2 name must be at least 2 characters",
+          path: ["member_2_name"],
+        });
+      }
+      if (!data.member_2_class || data.member_2_class.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please select Member 2 class",
+          path: ["member_2_class"],
+        });
+      }
+    }
+
+    // If Member 3 name OR class is entered, both must be valid
+    const m3HasData = Boolean(data.member_3_name?.trim() || data.member_3_class?.trim());
+    if (m3HasData) {
+      if (!data.member_3_name || data.member_3_name.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Member 3 name must be at least 2 characters",
+          path: ["member_3_name"],
+        });
+      }
+      if (!data.member_3_class || data.member_3_class.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please select Member 3 class",
+          path: ["member_3_class"],
+        });
+      }
+    }
+
+    // If Member 4 name OR class is entered, both must be valid
+    const m4HasData = Boolean(data.member_4_name?.trim() || data.member_4_class?.trim());
+    if (m4HasData) {
+      if (!data.member_4_name || data.member_4_name.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Member 4 name must be at least 2 characters",
+          path: ["member_4_name"],
+        });
+      }
+      if (!data.member_4_class || data.member_4_class.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please select Member 4 class",
+          path: ["member_4_class"],
+        });
+      }
+    }
+  });
+
+export type StallFormData = {
+  team_lead_name: string;
+  team_lead_class: string;
+  team_lead_gender: "Male" | "Female";
+  member_2_name: string;
+  member_2_class: string;
+  member_2_gender: "Male" | "Female";
+  member_3_name: string;
+  member_3_class: string;
+  member_3_gender: "Male" | "Female";
+  member_4_name: string;
+  member_4_class: string;
+  member_4_gender: "Male" | "Female";
+  phone: string;
+  selling_description: string;
+  extra_requirements: string[];
+  suggestion: string;
+};
+
+interface ClassSelectProps {
+  id: string;
+  name: string;
+  value: string;
+  onChange: (val: string) => void;
+  error?: string;
+  placeholder?: string;
+  label: string;
+  required?: boolean;
+}
+
+export function ClassSelect({
+  id,
+  name,
+  value,
+  onChange,
+  error,
+  placeholder = "Select class",
+  label,
+  required = false,
+}: ClassSelectProps) {
+  return (
+    <div className="pt-2 space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label htmlFor={id} className="text-xs font-semibold text-foreground">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        {value && (
+          <span className="text-[10.5px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 animate-in fade-in duration-200">
+            {value}
+          </span>
+        )}
+      </div>
+      <div className="relative">
+        <select
+          id={id}
+          name={name}
+          aria-label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "w-full appearance-none rounded-xl border border-border-subtle bg-background px-3.5 py-2.5 pr-10 text-sm font-medium text-foreground transition-all cursor-pointer shadow-xs",
+            "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+            "hover:border-border",
+            !value && "text-muted-foreground",
+            error && "border-destructive focus:border-destructive focus:ring-destructive/20"
+          )}
+        >
+          <option value="" disabled className="text-muted-foreground bg-background">
+            {placeholder}
+          </option>
+          {CLASS_OPTIONS.map((c) => (
+            <option key={c} value={c} className="text-foreground bg-background py-1.5 font-medium">
+              {c}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
+          <ChevronDown className="h-4 w-4" />
+        </div>
+      </div>
+      {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+    </div>
+  );
+}
 
 interface Props {
   eventId: string;
@@ -308,22 +438,26 @@ export default function StallRegistrationDialog({
 
       const validData = parsed.data;
 
+      const m2HasName = Boolean(validData.member_2_name?.trim());
+      const m3HasName = Boolean(validData.member_3_name?.trim());
+      const m4HasName = Boolean(validData.member_4_name?.trim());
+
       // Prepare payload with backward-compatible legacy columns and modern team columns
       const insertPayload = {
         event_id: eventId,
         user_id: user?.id ?? null,
-        team_lead_name: validData.team_lead_name,
+        team_lead_name: validData.team_lead_name.trim(),
         team_lead_class: validData.team_lead_class,
         team_lead_gender: validData.team_lead_gender,
-        member_2_name: validData.member_2_name,
-        member_2_class: validData.member_2_class,
-        member_2_gender: validData.member_2_gender,
-        member_3_name: validData.member_3_name,
-        member_3_class: validData.member_3_class,
-        member_3_gender: validData.member_3_gender,
-        member_4_name: validData.member_4_name,
-        member_4_class: validData.member_4_class,
-        member_4_gender: validData.member_4_gender,
+        member_2_name: m2HasName ? validData.member_2_name!.trim() : null,
+        member_2_class: m2HasName ? validData.member_2_class : null,
+        member_2_gender: m2HasName ? validData.member_2_gender : null,
+        member_3_name: m3HasName ? validData.member_3_name!.trim() : null,
+        member_3_class: m3HasName ? validData.member_3_class : null,
+        member_3_gender: m3HasName ? validData.member_3_gender : null,
+        member_4_name: m4HasName ? validData.member_4_name!.trim() : null,
+        member_4_class: m4HasName ? validData.member_4_class : null,
+        member_4_gender: m4HasName ? validData.member_4_gender : null,
         gender: validData.team_lead_gender,
         phone: validData.phone,
         selling_description: validData.selling_description,
@@ -331,10 +465,10 @@ export default function StallRegistrationDialog({
         suggestion: validData.suggestion || null,
 
         // Legacy compatibility columns so existing views/queries remain working
-        contact_name: validData.team_lead_name,
+        contact_name: validData.team_lead_name.trim(),
         contact_phone: validData.phone,
         contact_email: user?.email ?? null,
-        stall_name: `${validData.team_lead_name}'s Stall`,
+        stall_name: `${validData.team_lead_name.trim()}'s Stall`,
         description: validData.selling_description,
         requirements: validData.extra_requirements.join(", "),
         type: "other" as const,
@@ -573,27 +707,41 @@ export default function StallRegistrationDialog({
               >
                 {/* 1. Team Lead */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
-                  <div className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      1
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
+                        1
+                      </span>
+                      <Label htmlFor="team_lead_name" className="text-sm font-bold text-foreground">
+                        Name (Team Lead) <span className="text-destructive">*</span>
+                      </Label>
+                    </div>
+                    <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                      Required
                     </span>
-                    <Label className="text-sm font-bold text-foreground">
-                      Name (Team Lead) <span className="text-destructive">*</span>
-                    </Label>
                   </div>
                   <Input
-                    placeholder="Enter your answer"
+                    id="team_lead_name"
+                    placeholder="Enter team lead full name"
                     value={form.team_lead_name}
-                    onChange={(e) =>
-                      setForm({ ...form, team_lead_name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, team_lead_name: val }));
+                      if (errors.team_lead_name) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.team_lead_name;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl",
                       errors.team_lead_name && "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Member name
+                    Compulsory team leader
                   </p>
                   {errors.team_lead_name && (
                     <p className="text-xs text-destructive font-medium">
@@ -601,38 +749,25 @@ export default function StallRegistrationDialog({
                     </p>
                   )}
 
-                  <div className="pt-2 space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">
-                      Team Lead Class <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={form.team_lead_class}
-                      onValueChange={(val) =>
-                        setForm({ ...form, team_lead_class: val })
+                  <ClassSelect
+                    id="team_lead_class"
+                    name="team_lead_class"
+                    label="Team Lead Class"
+                    required
+                    placeholder="Select class"
+                    value={form.team_lead_class}
+                    error={errors.team_lead_class}
+                    onChange={(val) => {
+                      setForm((prev) => ({ ...prev, team_lead_class: val }));
+                      if (errors.team_lead_class) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.team_lead_class;
+                          return next;
+                        });
                       }
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "rounded-xl bg-background",
-                          errors.team_lead_class && "border-destructive"
-                        )}
-                      >
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 rounded-xl">
-                        {CLASS_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.team_lead_class && (
-                      <p className="text-xs text-destructive font-medium">
-                        {errors.team_lead_class}
-                      </p>
-                    )}
-                  </div>
+                    }}
+                  />
 
                   <div className="pt-2 space-y-1.5">
                     <Label className="text-xs font-semibold text-foreground">
@@ -643,7 +778,16 @@ export default function StallRegistrationDialog({
                         <button
                           key={g}
                           type="button"
-                          onClick={() => setForm({ ...form, team_lead_gender: g })}
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, team_lead_gender: g }));
+                            if (errors.team_lead_gender) {
+                              setErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.team_lead_gender;
+                                return next;
+                              });
+                            }
+                          }}
                           className={cn(
                             "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
                             form.team_lead_gender === g
@@ -671,22 +815,36 @@ export default function StallRegistrationDialog({
                   </div>
                 </div>
 
-                {/* 2. Member 2 */}
+                {/* 2. Member 2 (Optional) */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
-                  <div className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      2
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
+                        2
+                      </span>
+                      <Label htmlFor="member_2_name" className="text-sm font-bold text-foreground">
+                        Member 2
+                      </Label>
+                    </div>
+                    <span className="text-[11px] font-semibold text-muted-foreground bg-surface-2 px-2 py-0.5 rounded-full border border-border-subtle">
+                      Optional
                     </span>
-                    <Label className="text-sm font-bold text-foreground">
-                      Member 2 <span className="text-destructive">*</span>
-                    </Label>
                   </div>
                   <Input
-                    placeholder="Enter your answer"
+                    id="member_2_name"
+                    placeholder="Enter member 2 name (optional)"
                     value={form.member_2_name}
-                    onChange={(e) =>
-                      setForm({ ...form, member_2_name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, member_2_name: val }));
+                      if (errors.member_2_name) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_2_name;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl",
                       errors.member_2_name && "border-destructive focus-visible:ring-destructive"
@@ -698,49 +856,45 @@ export default function StallRegistrationDialog({
                     </p>
                   )}
 
-                  <div className="pt-2 space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">
-                      Member 2 Class <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={form.member_2_class}
-                      onValueChange={(val) =>
-                        setForm({ ...form, member_2_class: val })
+                  <ClassSelect
+                    id="member_2_class"
+                    name="member_2_class"
+                    label="Member 2 Class"
+                    required={Boolean(form.member_2_name.trim())}
+                    placeholder={Boolean(form.member_2_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    value={form.member_2_class}
+                    error={errors.member_2_class}
+                    onChange={(val) => {
+                      setForm((prev) => ({ ...prev, member_2_class: val }));
+                      if (errors.member_2_class) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_2_class;
+                          return next;
+                        });
                       }
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "rounded-xl bg-background",
-                          errors.member_2_class && "border-destructive"
-                        )}
-                      >
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 rounded-xl">
-                        {CLASS_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.member_2_class && (
-                      <p className="text-xs text-destructive font-medium">
-                        {errors.member_2_class}
-                      </p>
-                    )}
-                  </div>
+                    }}
+                  />
 
                   <div className="pt-2 space-y-1.5">
                     <Label className="text-xs font-semibold text-foreground">
-                      Gender <span className="text-destructive">*</span>
+                      Gender {Boolean(form.member_2_name.trim()) && <span className="text-destructive">*</span>}
                     </Label>
                     <div className="grid grid-cols-2 gap-2">
                       {GENDER_OPTIONS.map((g) => (
                         <button
                           key={g}
                           type="button"
-                          onClick={() => setForm({ ...form, member_2_gender: g })}
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, member_2_gender: g }));
+                            if (errors.member_2_gender) {
+                              setErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.member_2_gender;
+                                return next;
+                              });
+                            }
+                          }}
                           className={cn(
                             "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
                             form.member_2_gender === g
@@ -768,22 +922,36 @@ export default function StallRegistrationDialog({
                   </div>
                 </div>
 
-                {/* 3. Member 3 */}
+                {/* 3. Member 3 (Optional) */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
-                  <div className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      3
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
+                        3
+                      </span>
+                      <Label htmlFor="member_3_name" className="text-sm font-bold text-foreground">
+                        Member 3
+                      </Label>
+                    </div>
+                    <span className="text-[11px] font-semibold text-muted-foreground bg-surface-2 px-2 py-0.5 rounded-full border border-border-subtle">
+                      Optional
                     </span>
-                    <Label className="text-sm font-bold text-foreground">
-                      Member 3 <span className="text-destructive">*</span>
-                    </Label>
                   </div>
                   <Input
-                    placeholder="Enter your answer"
+                    id="member_3_name"
+                    placeholder="Enter member 3 name (optional)"
                     value={form.member_3_name}
-                    onChange={(e) =>
-                      setForm({ ...form, member_3_name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, member_3_name: val }));
+                      if (errors.member_3_name) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_3_name;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl",
                       errors.member_3_name && "border-destructive focus-visible:ring-destructive"
@@ -795,49 +963,45 @@ export default function StallRegistrationDialog({
                     </p>
                   )}
 
-                  <div className="pt-2 space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">
-                      Member 3 Class <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={form.member_3_class}
-                      onValueChange={(val) =>
-                        setForm({ ...form, member_3_class: val })
+                  <ClassSelect
+                    id="member_3_class"
+                    name="member_3_class"
+                    label="Member 3 Class"
+                    required={Boolean(form.member_3_name.trim())}
+                    placeholder={Boolean(form.member_3_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    value={form.member_3_class}
+                    error={errors.member_3_class}
+                    onChange={(val) => {
+                      setForm((prev) => ({ ...prev, member_3_class: val }));
+                      if (errors.member_3_class) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_3_class;
+                          return next;
+                        });
                       }
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "rounded-xl bg-background",
-                          errors.member_3_class && "border-destructive"
-                        )}
-                      >
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 rounded-xl">
-                        {CLASS_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.member_3_class && (
-                      <p className="text-xs text-destructive font-medium">
-                        {errors.member_3_class}
-                      </p>
-                    )}
-                  </div>
+                    }}
+                  />
 
                   <div className="pt-2 space-y-1.5">
                     <Label className="text-xs font-semibold text-foreground">
-                      Gender <span className="text-destructive">*</span>
+                      Gender {Boolean(form.member_3_name.trim()) && <span className="text-destructive">*</span>}
                     </Label>
                     <div className="grid grid-cols-2 gap-2">
                       {GENDER_OPTIONS.map((g) => (
                         <button
                           key={g}
                           type="button"
-                          onClick={() => setForm({ ...form, member_3_gender: g })}
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, member_3_gender: g }));
+                            if (errors.member_3_gender) {
+                              setErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.member_3_gender;
+                                return next;
+                              });
+                            }
+                          }}
                           className={cn(
                             "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
                             form.member_3_gender === g
@@ -865,22 +1029,36 @@ export default function StallRegistrationDialog({
                   </div>
                 </div>
 
-                {/* 4. Member 4 */}
+                {/* 4. Member 4 (Optional) */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
-                  <div className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      4
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
+                        4
+                      </span>
+                      <Label htmlFor="member_4_name" className="text-sm font-bold text-foreground">
+                        Member 4
+                      </Label>
+                    </div>
+                    <span className="text-[11px] font-semibold text-muted-foreground bg-surface-2 px-2 py-0.5 rounded-full border border-border-subtle">
+                      Optional
                     </span>
-                    <Label className="text-sm font-bold text-foreground">
-                      Member 4 <span className="text-destructive">*</span>
-                    </Label>
                   </div>
                   <Input
-                    placeholder="Enter your answer"
+                    id="member_4_name"
+                    placeholder="Enter member 4 name (optional)"
                     value={form.member_4_name}
-                    onChange={(e) =>
-                      setForm({ ...form, member_4_name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, member_4_name: val }));
+                      if (errors.member_4_name) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_4_name;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl",
                       errors.member_4_name && "border-destructive focus-visible:ring-destructive"
@@ -892,49 +1070,45 @@ export default function StallRegistrationDialog({
                     </p>
                   )}
 
-                  <div className="pt-2 space-y-1.5">
-                    <Label className="text-xs font-semibold text-foreground">
-                      Member 4 Class <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={form.member_4_class}
-                      onValueChange={(val) =>
-                        setForm({ ...form, member_4_class: val })
+                  <ClassSelect
+                    id="member_4_class"
+                    name="member_4_class"
+                    label="Member 4 Class"
+                    required={Boolean(form.member_4_name.trim())}
+                    placeholder={Boolean(form.member_4_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    value={form.member_4_class}
+                    error={errors.member_4_class}
+                    onChange={(val) => {
+                      setForm((prev) => ({ ...prev, member_4_class: val }));
+                      if (errors.member_4_class) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.member_4_class;
+                          return next;
+                        });
                       }
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "rounded-xl bg-background",
-                          errors.member_4_class && "border-destructive"
-                        )}
-                      >
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 rounded-xl">
-                        {CLASS_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.member_4_class && (
-                      <p className="text-xs text-destructive font-medium">
-                        {errors.member_4_class}
-                      </p>
-                    )}
-                  </div>
+                    }}
+                  />
 
                   <div className="pt-2 space-y-1.5">
                     <Label className="text-xs font-semibold text-foreground">
-                      Gender <span className="text-destructive">*</span>
+                      Gender {Boolean(form.member_4_name.trim()) && <span className="text-destructive">*</span>}
                     </Label>
                     <div className="grid grid-cols-2 gap-2">
                       {GENDER_OPTIONS.map((g) => (
                         <button
                           key={g}
                           type="button"
-                          onClick={() => setForm({ ...form, member_4_gender: g })}
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, member_4_gender: g }));
+                            if (errors.member_4_gender) {
+                              setErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.member_4_gender;
+                                return next;
+                              });
+                            }
+                          }}
                           className={cn(
                             "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
                             form.member_4_gender === g
@@ -976,9 +1150,17 @@ export default function StallRegistrationDialog({
                     placeholder="Enter your answer"
                     type="tel"
                     value={form.phone}
-                    onChange={(e) =>
-                      setForm({ ...form, phone: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, phone: val }));
+                      if (errors.phone) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.phone;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl",
                       errors.phone && "border-destructive focus-visible:ring-destructive"
@@ -1005,9 +1187,17 @@ export default function StallRegistrationDialog({
                     placeholder="Enter your answer"
                     rows={3}
                     value={form.selling_description}
-                    onChange={(e) =>
-                      setForm({ ...form, selling_description: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, selling_description: val }));
+                      if (errors.selling_description) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.selling_description;
+                          return next;
+                        });
+                      }
+                    }}
                     className={cn(
                       "rounded-xl resize-none",
                       errors.selling_description && "border-destructive focus-visible:ring-destructive"
@@ -1102,9 +1292,10 @@ export default function StallRegistrationDialog({
                     placeholder="Enter your answer"
                     rows={2}
                     value={form.suggestion}
-                    onChange={(e) =>
-                      setForm({ ...form, suggestion: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((prev) => ({ ...prev, suggestion: val }));
+                    }}
                     className="rounded-xl resize-none"
                   />
                 </div>

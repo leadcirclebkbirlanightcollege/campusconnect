@@ -75,15 +75,37 @@ describe("Stall Registration Validation & Configuration", () => {
     expect(isValidWhatsAppUrl(undefined)).toBe(false);
   });
 
-  it("validates that all 4 team members require individual name, class, and gender", async () => {
+  it("validates that 1 member (Team Lead) is mandatory, while members 2-4 are optional", async () => {
     const { stallFormSchema } = await import(
       "@/pages/student/events/StallRegistrationDialog"
     );
 
-    const validBase = {
+    // Solo registration (only 1 member, members 2-4 empty) MUST succeed!
+    const soloRegistration = {
       team_lead_name: "Aarav Sharma",
       team_lead_class: "TYCS",
       team_lead_gender: "Male" as const,
+      member_2_name: "",
+      member_2_class: "",
+      member_2_gender: "Male" as const,
+      member_3_name: "",
+      member_3_class: "",
+      member_3_gender: "Male" as const,
+      member_4_name: "",
+      member_4_class: "",
+      member_4_gender: "Male" as const,
+      phone: "9876543210",
+      selling_description: "Handcrafted Ganpati eco-friendly idols and stationery stalls",
+      extra_requirements: ["Table", "Electric Board"],
+      suggestion: "Corner stall please",
+    };
+
+    const soloResult = stallFormSchema.safeParse(soloRegistration);
+    expect(soloResult.success).toBe(true);
+
+    // Full 4-member team registration MUST succeed
+    const fullTeamRegistration = {
+      ...soloRegistration,
       member_2_name: "Priya Patil",
       member_2_class: "SYCS",
       member_2_gender: "Female" as const,
@@ -93,38 +115,99 @@ describe("Stall Registration Validation & Configuration", () => {
       member_4_name: "Ananya Deshmukh",
       member_4_class: "TYBCOM",
       member_4_gender: "Female" as const,
-      phone: "9876543210",
-      selling_description: "Handcrafted Ganpati eco-friendly idols and stationery stalls",
-      extra_requirements: ["Table", "Electric Board"],
-      suggestion: "Need corner stall if possible",
     };
+    expect(stallFormSchema.safeParse(fullTeamRegistration).success).toBe(true);
 
-    // Valid data succeeds
-    const successResult = stallFormSchema.safeParse(validBase);
-    expect(successResult.success).toBe(true);
+    // 2-member team registration MUST succeed
+    const twoMemberRegistration = {
+      ...soloRegistration,
+      member_2_name: "Priya Patil",
+      member_2_class: "SYCS",
+      member_2_gender: "Female" as const,
+    };
+    expect(stallFormSchema.safeParse(twoMemberRegistration).success).toBe(true);
 
-    // Missing Member 2 gender fails
-    const missingM2Gender = { ...validBase, member_2_gender: undefined };
-    expect(stallFormSchema.safeParse(missingM2Gender).success).toBe(false);
+    // If Member 2 name is entered, Member 2 class MUST be selected
+    const m2WithoutClass = {
+      ...soloRegistration,
+      member_2_name: "Priya Patil",
+      member_2_class: "",
+    };
+    const m2WithoutClassResult = stallFormSchema.safeParse(m2WithoutClass);
+    expect(m2WithoutClassResult.success).toBe(false);
 
-    // Missing Member 4 class fails
-    const missingM4Class = { ...validBase, member_4_class: "" };
-    expect(stallFormSchema.safeParse(missingM4Class).success).toBe(false);
+    // If Member 2 class is selected, Member 2 name MUST be entered
+    const m2WithoutName = {
+      ...soloRegistration,
+      member_2_name: "",
+      member_2_class: "SYCS",
+    };
+    expect(stallFormSchema.safeParse(m2WithoutName).success).toBe(false);
 
-    // Missing Team Lead name fails
-    const missingLeadName = { ...validBase, team_lead_name: " " };
+    // Missing Team Lead name MUST fail
+    const missingLeadName = { ...soloRegistration, team_lead_name: " " };
     expect(stallFormSchema.safeParse(missingLeadName).success).toBe(false);
 
-    // Less than 2 extra requirements fails
-    const oneReq = { ...validBase, extra_requirements: ["Table"] };
+    // Missing Team Lead class MUST fail
+    const missingLeadClass = { ...soloRegistration, team_lead_class: "" };
+    expect(stallFormSchema.safeParse(missingLeadClass).success).toBe(false);
+
+    // Less than 2 extra requirements MUST fail
+    const oneReq = { ...soloRegistration, extra_requirements: ["Table"] };
     expect(stallFormSchema.safeParse(oneReq).success).toBe(false);
 
-    // More than 2 extra requirements fails
-    const threeReqs = { ...validBase, extra_requirements: ["Table", "Chair", "Bench"] };
+    // More than 2 extra requirements MUST fail
+    const threeReqs = { ...soloRegistration, extra_requirements: ["Table", "Chair", "Bench"] };
     expect(stallFormSchema.safeParse(threeReqs).success).toBe(false);
 
-    // Invalid phone number fails
-    const invalidPhone = { ...validBase, phone: "12345" };
+    // Invalid phone number MUST fail
+    const invalidPhone = { ...soloRegistration, phone: "12345" };
     expect(stallFormSchema.safeParse(invalidPhone).success).toBe(false);
+  });
+
+  it("renders ClassSelect and preserves selected value immediately", async () => {
+    const React = await import("react");
+    const { render, screen, fireEvent } = await import("@testing-library/react");
+    const { ClassSelect } = await import(
+      "@/pages/student/events/StallRegistrationDialog"
+    );
+
+    let currentValue = "";
+    const handleChange = (v: string) => {
+      currentValue = v;
+    };
+
+    const { rerender } = render(
+      React.createElement(ClassSelect, {
+        id: "team_lead_class",
+        name: "team_lead_class",
+        label: "Team Lead Class",
+        value: currentValue,
+        onChange: handleChange,
+      })
+    );
+
+    const select = screen.getByLabelText("Team Lead Class") as HTMLSelectElement;
+    expect(select.value).toBe("");
+
+    // User selects FYBCom (Management studies)
+    fireEvent.change(select, {
+      target: { value: "FYBCom (Management studies)" },
+    });
+    expect(currentValue).toBe("FYBCom (Management studies)");
+
+    // Parent re-renders with the new controlled value
+    rerender(
+      React.createElement(ClassSelect, {
+        id: "team_lead_class",
+        name: "team_lead_class",
+        label: "Team Lead Class",
+        value: currentValue,
+        onChange: handleChange,
+      })
+    );
+
+    expect(select.value).toBe("FYBCom (Management studies)");
+    expect(screen.getAllByText("FYBCom (Management studies)").length).toBeGreaterThan(0);
   });
 });
