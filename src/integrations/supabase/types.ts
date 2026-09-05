@@ -2491,10 +2491,13 @@ export type Database = {
           gender: string | null
           id: string
           member_2_class: string | null
+          member_2_gender: string | null
           member_2_name: string | null
           member_3_class: string | null
+          member_3_gender: string | null
           member_3_name: string | null
           member_4_class: string | null
+          member_4_gender: string | null
           member_4_name: string | null
           phone: string | null
           requirements: string | null
@@ -2506,6 +2509,7 @@ export type Database = {
           status: Database["public"]["Enums"]["stall_status"]
           suggestion: string | null
           team_lead_class: string | null
+          team_lead_gender: string | null
           team_lead_name: string | null
           type: Database["public"]["Enums"]["stall_type"] | null
           updated_at: string
@@ -2523,10 +2527,13 @@ export type Database = {
           gender?: string | null
           id?: string
           member_2_class?: string | null
+          member_2_gender?: string | null
           member_2_name?: string | null
           member_3_class?: string | null
+          member_3_gender?: string | null
           member_3_name?: string | null
           member_4_class?: string | null
+          member_4_gender?: string | null
           member_4_name?: string | null
           phone?: string | null
           requirements?: string | null
@@ -2538,6 +2545,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["stall_status"]
           suggestion?: string | null
           team_lead_class?: string | null
+          team_lead_gender?: string | null
           team_lead_name?: string | null
           type?: Database["public"]["Enums"]["stall_type"] | null
           updated_at?: string
@@ -2555,10 +2563,13 @@ export type Database = {
           gender?: string | null
           id?: string
           member_2_class?: string | null
+          member_2_gender?: string | null
           member_2_name?: string | null
           member_3_class?: string | null
+          member_3_gender?: string | null
           member_3_name?: string | null
           member_4_class?: string | null
+          member_4_gender?: string | null
           member_4_name?: string | null
           phone?: string | null
           requirements?: string | null
@@ -2570,6 +2581,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["stall_status"]
           suggestion?: string | null
           team_lead_class?: string | null
+          team_lead_gender?: string | null
           team_lead_name?: string | null
           type?: Database["public"]["Enums"]["stall_type"] | null
           updated_at?: string

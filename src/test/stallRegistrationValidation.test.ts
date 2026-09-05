@@ -74,4 +74,57 @@ describe("Stall Registration Validation & Configuration", () => {
     expect(isValidWhatsAppUrl(null)).toBe(false);
     expect(isValidWhatsAppUrl(undefined)).toBe(false);
   });
+
+  it("validates that all 4 team members require individual name, class, and gender", async () => {
+    const { stallFormSchema } = await import(
+      "@/pages/student/events/StallRegistrationDialog"
+    );
+
+    const validBase = {
+      team_lead_name: "Aarav Sharma",
+      team_lead_class: "TYCS",
+      team_lead_gender: "Male" as const,
+      member_2_name: "Priya Patil",
+      member_2_class: "SYCS",
+      member_2_gender: "Female" as const,
+      member_3_name: "Rohan Gupta",
+      member_3_class: "FYCS",
+      member_3_gender: "Male" as const,
+      member_4_name: "Ananya Deshmukh",
+      member_4_class: "TYBCOM",
+      member_4_gender: "Female" as const,
+      phone: "9876543210",
+      selling_description: "Handcrafted Ganpati eco-friendly idols and stationery stalls",
+      extra_requirements: ["Table", "Electric Board"],
+      suggestion: "Need corner stall if possible",
+    };
+
+    // Valid data succeeds
+    const successResult = stallFormSchema.safeParse(validBase);
+    expect(successResult.success).toBe(true);
+
+    // Missing Member 2 gender fails
+    const missingM2Gender = { ...validBase, member_2_gender: undefined };
+    expect(stallFormSchema.safeParse(missingM2Gender).success).toBe(false);
+
+    // Missing Member 4 class fails
+    const missingM4Class = { ...validBase, member_4_class: "" };
+    expect(stallFormSchema.safeParse(missingM4Class).success).toBe(false);
+
+    // Missing Team Lead name fails
+    const missingLeadName = { ...validBase, team_lead_name: " " };
+    expect(stallFormSchema.safeParse(missingLeadName).success).toBe(false);
+
+    // Less than 2 extra requirements fails
+    const oneReq = { ...validBase, extra_requirements: ["Table"] };
+    expect(stallFormSchema.safeParse(oneReq).success).toBe(false);
+
+    // More than 2 extra requirements fails
+    const threeReqs = { ...validBase, extra_requirements: ["Table", "Chair", "Bench"] };
+    expect(stallFormSchema.safeParse(threeReqs).success).toBe(false);
+
+    // Invalid phone number fails
+    const invalidPhone = { ...validBase, phone: "12345" };
+    expect(stallFormSchema.safeParse(invalidPhone).success).toBe(false);
+  });
 });

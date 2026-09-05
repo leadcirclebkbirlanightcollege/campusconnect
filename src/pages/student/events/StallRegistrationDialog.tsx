@@ -90,18 +90,31 @@ export const EXTRA_REQUIREMENT_OPTIONS = [
 
 const phoneRegex = /^[6-9]\d{9}$/;
 
-const stallFormSchema = z.object({
+export const stallFormSchema = z.object({
   team_lead_name: z.string().trim().min(2, "Team Lead name is required").max(100),
   team_lead_class: z.string().min(1, "Team Lead class is required"),
+  team_lead_gender: z.enum(["Male", "Female"], {
+    errorMap: () => ({ message: "Please select Team Lead gender" }),
+  }),
+
   member_2_name: z.string().trim().min(2, "Member 2 name is required").max(100),
   member_2_class: z.string().min(1, "Member 2 class is required"),
+  member_2_gender: z.enum(["Male", "Female"], {
+    errorMap: () => ({ message: "Please select Member 2 gender" }),
+  }),
+
   member_3_name: z.string().trim().min(2, "Member 3 name is required").max(100),
   member_3_class: z.string().min(1, "Member 3 class is required"),
+  member_3_gender: z.enum(["Male", "Female"], {
+    errorMap: () => ({ message: "Please select Member 3 gender" }),
+  }),
+
   member_4_name: z.string().trim().min(2, "Member 4 name is required").max(100),
   member_4_class: z.string().min(1, "Member 4 class is required"),
-  gender: z.enum(["Male", "Female"], {
-    errorMap: () => ({ message: "Please select Gender" }),
+  member_4_gender: z.enum(["Male", "Female"], {
+    errorMap: () => ({ message: "Please select Member 4 gender" }),
   }),
+
   phone: z
     .string()
     .trim()
@@ -148,13 +161,16 @@ export default function StallRegistrationDialog({
   const [form, setForm] = useState<StallFormData>({
     team_lead_name: "",
     team_lead_class: "",
+    team_lead_gender: "Male",
     member_2_name: "",
     member_2_class: "",
+    member_2_gender: "Male",
     member_3_name: "",
     member_3_class: "",
+    member_3_gender: "Male",
     member_4_name: "",
     member_4_class: "",
-    gender: "Male",
+    member_4_gender: "Male",
     phone: "",
     selling_description: "",
     extra_requirements: [],
@@ -298,13 +314,17 @@ export default function StallRegistrationDialog({
         user_id: user?.id ?? null,
         team_lead_name: validData.team_lead_name,
         team_lead_class: validData.team_lead_class,
+        team_lead_gender: validData.team_lead_gender,
         member_2_name: validData.member_2_name,
         member_2_class: validData.member_2_class,
+        member_2_gender: validData.member_2_gender,
         member_3_name: validData.member_3_name,
         member_3_class: validData.member_3_class,
+        member_3_gender: validData.member_3_gender,
         member_4_name: validData.member_4_name,
         member_4_class: validData.member_4_class,
-        gender: validData.gender,
+        member_4_gender: validData.member_4_gender,
+        gender: validData.team_lead_gender,
         phone: validData.phone,
         selling_description: validData.selling_description,
         extra_requirements: validData.extra_requirements,
@@ -332,7 +352,7 @@ export default function StallRegistrationDialog({
         throw error;
       }
 
-      return data;
+      return true;
     },
     onSuccess: () => {
       toast.success("Stall registration submitted successfully!");
@@ -551,7 +571,7 @@ export default function StallRegistrationDialog({
                 }}
                 className="space-y-6"
               >
-                {/* 1. Team Lead Name & Class */}
+                {/* 1. Team Lead */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
@@ -587,8 +607,8 @@ export default function StallRegistrationDialog({
                     </Label>
                     <Select
                       value={form.team_lead_class}
-                      onChange={(e) =>
-                        setForm({ ...form, team_lead_class: e.target.value })
+                      onValueChange={(val) =>
+                        setForm({ ...form, team_lead_class: val })
                       }
                     >
                       <SelectTrigger
@@ -613,9 +633,45 @@ export default function StallRegistrationDialog({
                       </p>
                     )}
                   </div>
+
+                  <div className="pt-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                      Gender <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {GENDER_OPTIONS.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setForm({ ...form, team_lead_gender: g })}
+                          className={cn(
+                            "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
+                            form.team_lead_gender === g
+                              ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                              : "border-border-subtle bg-background text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-2.5 w-2.5 rounded-full border",
+                              form.team_lead_gender === g
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          />
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.team_lead_gender && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.team_lead_gender}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* 2. Member 2 Name & Class */}
+                {/* 2. Member 2 */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
@@ -648,8 +704,8 @@ export default function StallRegistrationDialog({
                     </Label>
                     <Select
                       value={form.member_2_class}
-                      onChange={(e) =>
-                        setForm({ ...form, member_2_class: e.target.value })
+                      onValueChange={(val) =>
+                        setForm({ ...form, member_2_class: val })
                       }
                     >
                       <SelectTrigger
@@ -674,9 +730,45 @@ export default function StallRegistrationDialog({
                       </p>
                     )}
                   </div>
+
+                  <div className="pt-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                      Gender <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {GENDER_OPTIONS.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setForm({ ...form, member_2_gender: g })}
+                          className={cn(
+                            "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
+                            form.member_2_gender === g
+                              ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                              : "border-border-subtle bg-background text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-2.5 w-2.5 rounded-full border",
+                              form.member_2_gender === g
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          />
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.member_2_gender && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.member_2_gender}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* 3. Member 3 Name & Class */}
+                {/* 3. Member 3 */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
@@ -709,8 +801,8 @@ export default function StallRegistrationDialog({
                     </Label>
                     <Select
                       value={form.member_3_class}
-                      onChange={(e) =>
-                        setForm({ ...form, member_3_class: e.target.value })
+                      onValueChange={(val) =>
+                        setForm({ ...form, member_3_class: val })
                       }
                     >
                       <SelectTrigger
@@ -735,9 +827,45 @@ export default function StallRegistrationDialog({
                       </p>
                     )}
                   </div>
+
+                  <div className="pt-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                      Gender <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {GENDER_OPTIONS.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setForm({ ...form, member_3_gender: g })}
+                          className={cn(
+                            "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
+                            form.member_3_gender === g
+                              ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                              : "border-border-subtle bg-background text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-2.5 w-2.5 rounded-full border",
+                              form.member_3_gender === g
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          />
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.member_3_gender && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.member_3_gender}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* 4. Member 4 Name & Class */}
+                {/* 4. Member 4 */}
                 <div className="space-y-3 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
@@ -770,8 +898,8 @@ export default function StallRegistrationDialog({
                     </Label>
                     <Select
                       value={form.member_4_class}
-                      onChange={(e) =>
-                        setForm({ ...form, member_4_class: e.target.value })
+                      onValueChange={(val) =>
+                        setForm({ ...form, member_4_class: val })
                       }
                     >
                       <SelectTrigger
@@ -796,55 +924,49 @@ export default function StallRegistrationDialog({
                       </p>
                     )}
                   </div>
+
+                  <div className="pt-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                      Gender <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {GENDER_OPTIONS.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setForm({ ...form, member_4_gender: g })}
+                          className={cn(
+                            "flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-semibold transition-all",
+                            form.member_4_gender === g
+                              ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                              : "border-border-subtle bg-background text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-2.5 w-2.5 rounded-full border",
+                              form.member_4_gender === g
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          />
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.member_4_gender && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.member_4_gender}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* 5. Gender */}
+                {/* 5. Phone Number (WhatsApp Preferably) */}
                 <div className="space-y-2 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
                       5
-                    </span>
-                    <Label className="text-sm font-bold text-foreground">
-                      Gender <span className="text-destructive">*</span>
-                    </Label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    {GENDER_OPTIONS.map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setForm({ ...form, gender: g })}
-                        className={cn(
-                          "flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-sm font-semibold transition-all",
-                          form.gender === g
-                            ? "border-primary bg-primary/10 text-primary shadow-xs"
-                            : "border-border-subtle bg-background text-foreground hover:bg-surface-2"
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "h-3 w-3 rounded-full border",
-                            form.gender === g
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground"
-                          )}
-                        />
-                        {g}
-                      </button>
-                    ))}
-                  </div>
-                  {errors.gender && (
-                    <p className="text-xs text-destructive font-medium">
-                      {errors.gender}
-                    </p>
-                  )}
-                </div>
-
-                {/* 6. Phone Number (WhatsApp Preferably) */}
-                <div className="space-y-2 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
-                  <div className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      6
                     </span>
                     <Label className="text-sm font-bold text-foreground">
                       Phone Number (WhatsApp Preferably) <span className="text-destructive">*</span>
@@ -869,11 +991,11 @@ export default function StallRegistrationDialog({
                   )}
                 </div>
 
-                {/* 7. Mention What You want to sell */}
+                {/* 6. Mention What You want to sell */}
                 <div className="space-y-2 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                      7
+                      6
                     </span>
                     <Label className="text-sm font-bold text-foreground">
                       Mention What You want to sell <span className="text-destructive">*</span>
@@ -898,12 +1020,12 @@ export default function StallRegistrationDialog({
                   )}
                 </div>
 
-                {/* 8. Any Extra Requirements (Please select 2 options) */}
+                {/* 7. Any Extra Requirements (Please select 2 options) */}
                 <div className="space-y-2 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                        8
+                        7
                       </span>
                       <Label className="text-sm font-bold text-foreground">
                         Any Extra Requirements <span className="text-destructive">*</span>
@@ -961,12 +1083,12 @@ export default function StallRegistrationDialog({
                   )}
                 </div>
 
-                {/* 9. Suggestion (Optional) */}
+                {/* 8. Suggestion (Optional) */}
                 <div className="space-y-2 rounded-2xl p-4 bg-surface-1 border border-border-subtle">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
-                        9
+                        8
                       </span>
                       <Label className="text-sm font-bold text-foreground">
                         Suggestion

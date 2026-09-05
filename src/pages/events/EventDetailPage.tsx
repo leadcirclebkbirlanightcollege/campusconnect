@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,18 +23,8 @@ import {
   Building2,
   CalendarPlus,
   LogIn,
-  Eye,
-  Plus,
-  Minus,
-  RotateCcw,
-  X,
 } from "@/components/icons";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { normalizeFlyerUrl } from "@/lib/crop-image";
 
 type EventRecord = {
@@ -59,8 +49,15 @@ export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { data: event, isLoading, isError } = useQuery<EventRecord | null>({
     queryKey: ["event", "detail", id],
@@ -199,8 +196,15 @@ export default function EventDetailPage() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      {/* Top sticky app bar */}
-      <header className="sticky top-0 z-30 border-b border-border-subtle bg-background/85 backdrop-blur-md">
+      {/* Top sticky app bar with subtle scroll-based glassmorphism */}
+      <header
+        className={cn(
+          "sticky top-0 z-30 transition-all duration-300",
+          isScrolled
+            ? "border-b border-border-subtle/80 bg-background/80 backdrop-blur-xl shadow-xs"
+            : "border-b border-border-subtle/40 bg-background/60 backdrop-blur-sm"
+        )}
+      >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <Button
             variant="ghost"
@@ -211,6 +215,14 @@ export default function EventDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             <span>Events</span>
           </Button>
+
+          <div className="flex-1 min-w-0 px-2 text-center transition-opacity duration-300">
+            {isScrolled && (
+              <p className="text-xs font-bold text-foreground truncate animate-fade-in">
+                {event.title}
+              </p>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <ShareButton
@@ -266,41 +278,15 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        {/* Complete Event Flyer Container (No aggressive or destructive crop) */}
+        {/* Complete Event Flyer Container (Original aspect ratio, completely visible, uncropped) */}
         {flyerImage ? (
-          <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-neutral-950 shadow-card">
-            {/* Full proportional flyer display */}
-            <div className="relative w-full flex flex-col items-center justify-center p-2 sm:p-4 min-h-[300px] max-h-[700px] overflow-hidden bg-neutral-900/50">
-              <img
-                src={flyerImage}
-                alt={`${event.title} flyer`}
-                className="w-auto max-w-full max-h-[660px] h-auto object-contain rounded-2xl shadow-lg cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
-                loading="eager"
-                onClick={() => {
-                  setLightboxZoom(1);
-                  setIsLightboxOpen(true);
-                }}
-              />
-            </div>
-
-            {/* Flyer toolbar action overlay */}
-            <div className="border-t border-white/10 bg-neutral-950/80 px-4 py-2.5 flex items-center justify-between gap-3 text-xs text-neutral-300 backdrop-blur-sm">
-              <span className="font-medium truncate">
-                Official Event Flyer • Complete Uncropped View
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setLightboxZoom(1);
-                  setIsLightboxOpen(true);
-                }}
-                className="rounded-xl h-8 text-xs font-semibold gap-1.5 shrink-0 bg-white/10 hover:bg-white/20 text-white border border-white/10"
-              >
-                <Eye className="h-3.5 w-3.5" />
-                View Full Flyer
-              </Button>
-            </div>
+          <div className="relative overflow-hidden rounded-3xl border border-border-subtle bg-surface-1/60 dark:bg-neutral-950 p-2 sm:p-4 shadow-sm flex items-center justify-center">
+            <img
+              src={flyerImage}
+              alt={`${event.title} flyer`}
+              className="w-full h-auto max-h-[85vh] object-contain rounded-2xl"
+              loading="eager"
+            />
           </div>
         ) : (
           <div className="w-full h-44 sm:h-56 rounded-3xl border border-border-subtle bg-gradient-to-br from-primary/20 via-surface-2 to-premium/20 flex flex-col items-center justify-center text-primary/70 p-6 text-center shadow-card">
@@ -310,74 +296,6 @@ export default function EventDetailPage() {
             </p>
           </div>
         )}
-
-        {/* Fullscreen Flyer Lightbox Dialog */}
-        <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[96vh] p-0 rounded-3xl overflow-hidden border border-border-subtle bg-neutral-950 text-white shadow-2xl flex flex-col">
-            <DialogHeader className="p-4 sm:px-6 border-b border-white/10 bg-neutral-900/90 flex flex-row items-center justify-between gap-3 space-y-0 shrink-0">
-              <div className="min-w-0">
-                <DialogTitle className="text-base font-bold text-white truncate">
-                  {event.title} — Full Flyer
-                </DialogTitle>
-                <p className="text-xs text-neutral-400 truncate">
-                  {collegeDisplayName}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg"
-                  onClick={() => setLightboxZoom((z) => Math.max(0.75, z - 0.25))}
-                  title="Zoom Out"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="text-xs font-mono px-1.5 text-neutral-400">
-                  {Math.round(lightboxZoom * 100)}%
-                </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg"
-                  onClick={() => setLightboxZoom((z) => Math.min(3, z + 0.25))}
-                  title="Zoom In"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg ml-1"
-                  onClick={() => setLightboxZoom(1)}
-                  title="Reset Zoom"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-neutral-300 hover:text-white hover:bg-white/10 rounded-lg ml-2"
-                  onClick={() => setIsLightboxOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-neutral-950/95 min-h-[50vh]">
-              {flyerImage && (
-                <img
-                  src={flyerImage}
-                  alt={`${event.title} full flyer`}
-                  style={{ transform: `scale(${lightboxZoom})` }}
-                  className="max-h-[82vh] max-w-full w-auto h-auto object-contain transition-transform duration-150 rounded-lg shadow-2xl origin-center"
-                />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Content & Metadata */}
         <div className="space-y-6">
