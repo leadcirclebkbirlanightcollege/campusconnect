@@ -1178,6 +1178,7 @@ export type Database = {
           event_date: string
           event_time: string
           flyer_url: string | null
+          full_flyer_url: string | null
           id: string
           is_ecell_event: boolean
           is_featured: boolean
@@ -1186,6 +1187,7 @@ export type Database = {
           title: string
           updated_at: string
           venue: string | null
+          whatsapp_group_link: string | null
         }
         Insert: {
           college_id?: string | null
@@ -1195,6 +1197,7 @@ export type Database = {
           event_date: string
           event_time: string
           flyer_url?: string | null
+          full_flyer_url?: string | null
           id?: string
           is_ecell_event?: boolean
           is_featured?: boolean
@@ -1203,6 +1206,7 @@ export type Database = {
           title: string
           updated_at?: string
           venue?: string | null
+          whatsapp_group_link?: string | null
         }
         Update: {
           college_id?: string | null
@@ -1212,6 +1216,7 @@ export type Database = {
           event_date?: string
           event_time?: string
           flyer_url?: string | null
+          full_flyer_url?: string | null
           id?: string
           is_ecell_event?: boolean
           is_featured?: boolean
@@ -1220,6 +1225,7 @@ export type Database = {
           title?: string
           updated_at?: string
           venue?: string | null
+          whatsapp_group_link?: string | null
         }
         Relationships: []
       }
@@ -2475,60 +2481,99 @@ export type Database = {
       stall_registrations: {
         Row: {
           college_id: string | null
-          contact_email: string
-          contact_name: string
+          contact_email: string | null
+          contact_name: string | null
           contact_phone: string | null
           created_at: string
           description: string | null
           event_id: string | null
+          extra_requirements: string[] | null
+          gender: string | null
           id: string
+          member_2_class: string | null
+          member_2_name: string | null
+          member_3_class: string | null
+          member_3_name: string | null
+          member_4_class: string | null
+          member_4_name: string | null
+          phone: string | null
           requirements: string | null
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          stall_name: string
+          selling_description: string | null
+          stall_name: string | null
           status: Database["public"]["Enums"]["stall_status"]
-          type: Database["public"]["Enums"]["stall_type"]
+          suggestion: string | null
+          team_lead_class: string | null
+          team_lead_name: string | null
+          type: Database["public"]["Enums"]["stall_type"] | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           college_id?: string | null
-          contact_email: string
-          contact_name: string
+          contact_email?: string | null
+          contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           description?: string | null
           event_id?: string | null
+          extra_requirements?: string[] | null
+          gender?: string | null
           id?: string
+          member_2_class?: string | null
+          member_2_name?: string | null
+          member_3_class?: string | null
+          member_3_name?: string | null
+          member_4_class?: string | null
+          member_4_name?: string | null
+          phone?: string | null
           requirements?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          stall_name: string
+          selling_description?: string | null
+          stall_name?: string | null
           status?: Database["public"]["Enums"]["stall_status"]
-          type?: Database["public"]["Enums"]["stall_type"]
+          suggestion?: string | null
+          team_lead_class?: string | null
+          team_lead_name?: string | null
+          type?: Database["public"]["Enums"]["stall_type"] | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           college_id?: string | null
-          contact_email?: string
-          contact_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
           description?: string | null
           event_id?: string | null
+          extra_requirements?: string[] | null
+          gender?: string | null
           id?: string
+          member_2_class?: string | null
+          member_2_name?: string | null
+          member_3_class?: string | null
+          member_3_name?: string | null
+          member_4_class?: string | null
+          member_4_name?: string | null
+          phone?: string | null
           requirements?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          stall_name?: string
+          selling_description?: string | null
+          stall_name?: string | null
           status?: Database["public"]["Enums"]["stall_status"]
-          type?: Database["public"]["Enums"]["stall_type"]
+          suggestion?: string | null
+          team_lead_class?: string | null
+          team_lead_name?: string | null
+          type?: Database["public"]["Enums"]["stall_type"] | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -3106,12 +3151,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_assign_faculty_institution: {
-        Args: { p_college_id?: string | null; p_faculty_user_id: string }
-        Returns: Json
-      }
       admin_approve_student: {
         Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_assign_faculty_institution: {
+        Args: { p_college_id?: string; p_faculty_user_id: string }
         Returns: Json
       }
       admin_get_attendance_corrections: {
@@ -3160,10 +3205,7 @@ export type Database = {
         Args: { p_course_code: string }
         Returns: string
       }
-      delete_exam: {
-        Args: { p_exam_id: string }
-        Returns: Json
-      }
+      delete_exam: { Args: { p_exam_id: string }; Returns: Json }
       delete_student_account_permanently: {
         Args: { p_user_id: string }
         Returns: boolean
