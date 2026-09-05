@@ -56,6 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { GUEST_STALL_REGISTRATION_ENABLED } from "@/config/features";
 
 export const CLASS_OPTIONS = [
   "FYBA",
@@ -312,7 +313,7 @@ export default function StallRegistrationDialog({
         // Legacy compatibility columns so existing views/queries remain working
         contact_name: validData.team_lead_name,
         contact_phone: validData.phone,
-        contact_email: user?.email ?? `${validData.phone}@student.campusconnect.local`,
+        contact_email: user?.email ?? null,
         stall_name: `${validData.team_lead_name}'s Stall`,
         description: validData.selling_description,
         requirements: validData.extra_requirements.join(", "),
@@ -451,7 +452,34 @@ export default function StallRegistrationDialog({
 
         <div className="p-5 sm:p-6 pt-2">
           <AnimatePresence mode="wait">
-            {step === "success" ? (
+            {!GUEST_STALL_REGISTRATION_ENABLED && !user ? (
+              <motion.div
+                key="auth_required"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="py-8 px-4 text-center space-y-4"
+              >
+                <div className="h-14 w-14 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <User className="h-7 w-7" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-bold text-foreground">Sign In Required</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Please sign in with your student account to register a stall for this event.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    const redirectPath = encodeURIComponent(window.location.pathname + window.location.search);
+                    window.location.href = `/auth?redirect=${redirectPath}`;
+                  }}
+                  className="rounded-xl font-bold px-6 bg-gradient-to-r from-[#FCE541] to-[#FAD943] text-black hover:brightness-105"
+                >
+                  Sign In to Register
+                </Button>
+              </motion.div>
+            ) : step === "success" ? (
               <motion.div
                 key="success"
                 initial={{ opacity: 0, scale: 0.96 }}

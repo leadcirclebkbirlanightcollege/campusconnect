@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type StallRow = {
   id: string;
@@ -137,6 +138,7 @@ export default function AdminStallRegistrationsTab() {
 
     const headers = [
       "Registration ID",
+      "Registration Type",
       "Event Title",
       "Team Lead Name",
       "Team Lead Class",
@@ -165,6 +167,7 @@ export default function AdminStallRegistrationsTab() {
 
         return [
           clean(r.id),
+          clean(r.user_id ? "Registered Student" : "Guest Registration"),
           clean(ev?.title ?? "Unknown Event"),
           clean(r.team_lead_name || r.contact_name),
           clean(r.team_lead_class),
@@ -317,7 +320,18 @@ export default function AdminStallRegistrationsTab() {
                         Submitted on {format(new Date(s.created_at), "PPP 'at' p")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[11px] font-semibold",
+                          s.user_id
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30"
+                            : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                        )}
+                      >
+                        {s.user_id ? "Registered Student" : "Registration Type: Guest"}
+                      </Badge>
                       <StatusBadge
                         status={
                           s.status === "approved"
