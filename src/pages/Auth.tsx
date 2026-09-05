@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import {
   Loader2, Eye, EyeOff,
-  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, GraduationCap, ShieldCheck, QrCode
+  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, ShieldCheck, QrCode
 } from "@/components/icons";
 import { User } from "@supabase/supabase-js";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -63,6 +63,9 @@ function PasswordInput({
 const Auth = () => {
   const navigate = useNavigate();
   const { branding } = usePlatformBranding();
+  const logoSrc = branding.logo_url || BRANDING.logo;
+  const brandName = branding.brand_name || BRANDING.name;
+  const tagline = branding.tagline || BRANDING.tagline;
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -227,19 +230,19 @@ const Auth = () => {
         <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
 
         {/* Brand Header */}
-        <Link to="/" className="relative z-10 flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 shadow-sm transition-transform group-hover:scale-105">
-            {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.brand_name} className="h-6 w-6 object-contain" />
-            ) : (
-              <GraduationCap className="h-5 w-5 text-primary" />
-            )}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 shadow-sm p-1.5 shrink-0">
+            <img
+              src={logoSrc}
+              alt={brandName}
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <div>
-            <p className="text-base font-black tracking-tight text-foreground leading-tight">{branding.brand_name}</p>
-            <p className="text-[11px] font-medium text-muted-foreground">{branding.tagline}</p>
+            <p className="text-base font-black tracking-tight text-foreground leading-tight">{brandName}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{tagline}</p>
           </div>
-        </Link>
+        </div>
 
         {/* Main Value Proposition Content */}
         <div className="relative z-10 space-y-8 my-auto py-10">
@@ -284,25 +287,36 @@ const Auth = () => {
         {/* Ambient Top Glow for Mobile */}
         <div className="lg:hidden absolute top-0 inset-x-0 h-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,hsl(var(--primary)/0.15),transparent_70%)] pointer-events-none" />
 
-        {/* Mobile Header */}
-        <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10">
-            <GraduationCap className="h-5 w-5 text-primary" />
-          </div>
-          <span className="text-lg font-black tracking-tight text-foreground">{branding.brand_name}</span>
-        </Link>
-
         {/* Focused Auth Card */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="w-full max-w-[400px] space-y-6"
+          className="w-full max-w-[420px] space-y-6"
         >
-          {/* Header Title */}
-          <div className="space-y-1 text-center sm:text-left">
-            <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">Access Your Portal</h1>
-            <p className="text-[13px] text-muted-foreground">Sign in with your email or Student ID to continue.</p>
+          {/* Campus Connect Brand Header — Official Logo & Name */}
+          <div className="flex items-center gap-3 select-none">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 shadow-sm p-1.5 shrink-0">
+              <img
+                src={logoSrc}
+                alt={brandName}
+                className="h-9 w-9 object-contain"
+              />
+            </div>
+            <div>
+              <p className="text-xl font-black tracking-tight text-foreground leading-tight">{brandName}</p>
+              <p className="text-[11px] font-medium text-muted-foreground">{tagline}</p>
+            </div>
+          </div>
+
+          {/* Welcome Heading */}
+          <div className="space-y-1 text-left">
+            <h1 className="font-heading text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+              Welcome to Campus Connect
+            </h1>
+            <p className="text-[13px] text-muted-foreground">
+              Sign in to continue to your campus experience.
+            </p>
           </div>
 
           {/* Form Tabs */}

@@ -18,6 +18,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import NoInternet from "@/components/system/NoInternet";
 import PageMeta from "@/components/seo/PageMeta";
 import { AnimatePresence } from "framer-motion";
+import CapacitorAppBridge from "@/components/mobile/CapacitorAppBridge";
 
 /** Overlays that must only appear for logged-in users on protected routes */
 function AuthenticatedOverlays() {
@@ -53,6 +54,9 @@ function AppInner() {
 
   return (
     <>
+      {/* Native Capacitor integration bridge */}
+      <CapacitorAppBridge />
+
       {/* Canonical initial splash screen across all entry points */}
       <AppSplash />
 

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.indevs.campusconnect",
+      "sha256_cert_fingerprints": [
+        "54:59:63:73:4F:71:57:FF:E2:4B:B4:E5:28:2A:D0:AA:2F:7E:02:71:1F:BC:8F:8C:80:CD:2B:EF:D8:E5:BF:C2"
+      ]
+    }
+  }
+]

@@ -27,3 +27,12 @@ dist-ssr
 supabase/.temp/
 .vercel
 .env*
+
+# Android Keystores & Signing
+*.keystore
+*.jks
+keystore.properties
+
+# Android Build Binaries
+*.apk
+*.aab
