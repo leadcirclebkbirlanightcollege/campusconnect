@@ -31,7 +31,7 @@
       "destination": "/api/og-event?id=:id"
     },
     {
-      "source": "/((?!\\.well-known/).*)",
+      "source": "/((?!\\.well-known/|api/).*)",
       "destination": "/index.html"
     }
   ]
