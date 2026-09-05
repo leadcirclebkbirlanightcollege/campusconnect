@@ -80,6 +80,17 @@ export default function TenantBrandingApplicator() {
       return;
     }
 
+    // Strictly enforce Campus Connect master brand policy: no cyan/teal as brand primary
+    const isCyanColor =
+      (hsl.h >= 165 && hsl.h <= 205) ||
+      college.primary_color.toLowerCase() === "#06b6d4" ||
+      college.primary_color.toLowerCase() === "#19c7d8" ||
+      college.primary_color.toLowerCase() === "#25d5e5";
+    if (isCyanColor) {
+      resetBrand(root);
+      return;
+    }
+
     // Guardrail: reject brand colors that would fail contrast against white
     // text (too light) or look like a paint glitch (too dark / pure black).
     // White text on white bg = invisible button. Clamp + fall back to system

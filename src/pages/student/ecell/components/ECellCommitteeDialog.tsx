@@ -161,13 +161,18 @@ export function ECellCommitteeDialog({ open, onOpenChange }: Props) {
                     key={m.id}
                     className="flex flex-col justify-between rounded-xl border border-[#E8D98A]/60 dark:border-[#3D3523] bg-card p-3.5 hover:border-[#C08634] transition-all"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="h-13 w-13 rounded-full overflow-hidden border border-[#E8D98A] bg-white shrink-0 flex items-center justify-center">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className="h-14 w-14 rounded-full overflow-hidden border-2 border-[#E8D98A] dark:border-[#C08634]/60 bg-white dark:bg-[#1D1B17] shrink-0 flex items-center justify-center aspect-square shadow-xs"
+                        style={{ width: "56px", height: "56px", minWidth: "56px", minHeight: "56px", maxWidth: "56px", maxHeight: "56px" }}
+                      >
                         {m.photo_url ? (
                           <img
                             src={m.photo_url}
                             alt={m.name}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover rounded-full aspect-square shrink-0"
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "9999px" }}
+                            loading="lazy"
                             onError={(e) => {
                               (e.currentTarget as HTMLElement).style.display = "none";
                               const fallback = e.currentTarget.parentElement?.querySelector(".avatar-fallback");
@@ -177,9 +182,10 @@ export function ECellCommitteeDialog({ open, onOpenChange }: Props) {
                         ) : null}
                         <div
                           className={cn(
-                            "avatar-fallback h-full w-full items-center justify-center rounded-full bg-[#FAF9F7] text-[#000000] font-black text-xs",
+                            "avatar-fallback h-full w-full items-center justify-center rounded-full bg-[#FAF9F7] dark:bg-[#23201B] text-[#000000] dark:text-[#FCE541] font-black text-xs select-none",
                             m.photo_url ? "hidden" : "flex"
                           )}
+                          style={{ width: "100%", height: "100%" }}
                         >
                           {initials}
                         </div>

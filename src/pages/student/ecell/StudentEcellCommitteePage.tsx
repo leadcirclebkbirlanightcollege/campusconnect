@@ -216,12 +216,16 @@ export default function StudentEcellCommitteePage() {
                   <div className="flex items-start gap-3.5">
                     {/* Member Avatar */}
                     <div className="relative shrink-0">
-                      <div className="h-16 w-16 sm:h-18 sm:w-18 rounded-full overflow-hidden border-2 border-[#E8D98A] dark:border-[#C08634] p-0.5 bg-white dark:bg-[#1D1B17] shadow-xs">
+                      <div
+                        className="h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border-2 border-[#E8D98A] dark:border-[#C08634] p-0.5 bg-white dark:bg-[#1D1B17] shadow-xs shrink-0 aspect-square"
+                        style={{ width: "64px", height: "64px", minWidth: "64px", minHeight: "64px", maxWidth: "64px", maxHeight: "64px" }}
+                      >
                         {m.photo_url ? (
                           <img
                             src={m.photo_url}
                             alt={m.name}
-                            className="h-full w-full object-cover rounded-full"
+                            className="h-full w-full object-cover rounded-full aspect-square shrink-0 max-h-full max-w-full"
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "9999px" }}
                             loading="lazy"
                             onError={(e) => {
                               (e.currentTarget as HTMLElement).style.display = "none";

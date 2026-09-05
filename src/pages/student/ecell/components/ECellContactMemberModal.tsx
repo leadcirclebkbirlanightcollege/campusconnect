@@ -138,12 +138,17 @@ export function ECellContactMemberModal({ member, onClose }: Props) {
               <form onSubmit={handleSubmit} className="space-y-4 py-1">
                 {/* Member Badge Card */}
                 <div className="flex items-center gap-3 rounded-xl border border-[#E8D98A]/60 bg-[#FAF9F7] dark:bg-[#1D1B17] p-3">
-                  <div className="h-11 w-11 rounded-full overflow-hidden border border-[#C08634]/50 bg-white dark:bg-[#23201B] shrink-0 flex items-center justify-center">
+                  <div
+                    className="h-12 w-12 rounded-full overflow-hidden border border-[#C08634]/50 bg-white dark:bg-[#23201B] shrink-0 flex items-center justify-center aspect-square"
+                    style={{ width: "48px", height: "48px", minWidth: "48px", minHeight: "48px", maxWidth: "48px", maxHeight: "48px" }}
+                  >
                     {member.photo_url ? (
                       <img
                         src={member.photo_url}
                         alt={member.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover rounded-full aspect-square shrink-0"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "9999px" }}
+                        loading="lazy"
                       />
                     ) : (
                       <UserRound className="h-6 w-6 text-[#C08634]" />

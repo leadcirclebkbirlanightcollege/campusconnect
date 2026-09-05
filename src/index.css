@@ -12,106 +12,110 @@
 
 @layer base {
   :root {
-    /* ── Background Depth Stack (Light — clean #F5F6FA canvas) ── */
-    --bg-base:    232 27% 97%;   /* #F5F6FA */
-    --surface-1:  0 0% 100%;      /* pure white cards */
-    --surface-2:  230 20% 98%;    /* #F8F8FA soft neutral */
-    --surface-3:  228 18% 94%;
-    --surface-4:  228 14% 90%;
+    /* ── Campus Connect Master Brand Tokens ── */
+    --brand-primary:      226.4 81.5% 55.5%; /* #315BEA Master Brand Blue */
+    --brand-navy:         222 64.5% 12.2%;   /* #0B1733 Deep Navy */
+
+    /* ── Background Depth Stack (Light — #F6F8FC canvas) ── */
+    --bg-base:    220 50% 97.6%;     /* #F6F8FC */
+    --surface-1:  0 0% 100%;         /* #FFFFFF pure white cards */
+    --surface-2:  210 100% 99.6%;    /* #FDFEFF elevated surface */
+    --surface-3:  220 30% 95%;
+    --surface-4:  217 25% 91%;
 
     /* ── Legacy shadcn compat ── */
     --background:            var(--bg-base);
-    --foreground:            216 50% 17%;   /* #172236 dark navy */
+    --foreground:            221 43% 11%;   /* #101828 primary text */
     --card:                  var(--surface-1);
-    --card-foreground:       216 50% 17%;
+    --card-foreground:       221 43% 11%;
     --popover:               var(--surface-1);
-    --popover-foreground:    216 50% 17%;
+    --popover-foreground:    221 43% 11%;
 
     /* ── Borders ── */
-    --border-subtle:  228 18% 91%;   /* #E6E8EF */
-    --border-strong:  228 16% 82%;
+    --border-subtle:  217 33% 92.3%; /* #E5EAF2 */
+    --border-strong:  218 25% 84%;
     --border:         var(--border-subtle);
     --input:          var(--border-subtle);
 
     /* ── Text Hierarchy ── */
-    --text-primary:   216 50% 17%;   /* #172236 dark navy */
-    --text-secondary: 220 15% 32%;
-    --text-muted:     220 10% 52%;
+    --text-primary:   221 43% 11%;   /* #101828 */
+    --text-secondary: 221 13% 46%;   /* #667085 */
+    --text-muted:     220 10% 55%;
 
-    /* ── Brand: Royal Blue (#3157C7) ── */
-    --primary:            224 59% 49%;   /* #3157C7 royal blue */
+    /* ── Brand: Master Blue (#315BEA) ── */
+    --primary:            226.4 81.5% 55.5%; /* #315BEA */
     --primary-foreground: 0 0% 100%;
-    --primary-hover:      224 62% 42%;
-    --primary-dim:        224 40% 58%;
-    --primary-glow:       224 70% 58%;
+    --primary-hover:      226 82% 48%;
+    --primary-dim:        226 60% 60%;
+    --primary-glow:       226 85% 65%;
 
-    /* ── Deep Navy (hero cards, emphasis) ── */
-    --navy-deep:   216 50% 17%;   /* #172236 */
-    --navy-card:   216 42% 19%;   /* #1B2942 */
-    --navy-light:  216 38% 25%;
+    /* ── Deep Navy (hero cards, core identity) ── */
+    --navy-deep:   222 64.5% 12.2%;   /* #0B1733 */
+    --navy-card:   222 55% 16%;
+    --navy-light:  222 45% 22%;
 
     /* ── Enterprise interaction tokens (button/input/WebView safe) ──
        NOTE: These MUST contain raw H S% L% triplets, NEVER var() refs.
        Android WebView and some Chrome versions fail to resolve nested
        var() inside hsl(...) on first paint, causing white/invisible
        buttons until an interaction triggers a repaint. */
-    --action-primary-bg:       224 59% 49%;
-    --action-primary-hover:    224 62% 42%;
+    --action-primary-bg:       226.4 81.5% 55.5%; /* #315BEA */
+    --action-primary-hover:    226 82% 48%;
     --action-primary-text:     0 0% 100%;
-    --action-secondary-bg:     232 18% 97%;
-    --action-secondary-hover:  232 16% 93%;
-    --action-secondary-text:   216 42% 19%;
-    --action-danger-bg:        0 68% 44%;
-    --action-danger-hover:     0 72% 38%;
+    --action-secondary-bg:     0 0% 100%;
+    --action-secondary-hover:  220 50% 97.6%;
+    --action-secondary-text:   221 43% 11%;
+    --action-danger-bg:        0 72% 62.5%;       /* #E45B5B */
+    --action-danger-hover:     0 75% 55%;
     --action-danger-text:      0 0% 100%;
-    --action-disabled-bg:      220 10% 36%;
-    --action-disabled-text:    220 12% 78%;
-    --control-bg:             232 18% 97%;
-    --control-hover:          232 16% 93%;
-    --control-text:           216 50% 17%;
-    --control-muted:          220 15% 32%;
+    --action-disabled-bg:      220 15% 88%;
+    --action-disabled-text:    220 10% 55%;
+    --control-bg:             0 0% 100%;
+    --control-hover:          220 50% 97.6%;
+    --control-text:           221 43% 11%;
+    --control-muted:          221 13% 46%;
     --input-bg:               0 0% 100%;
-    --input-text:             216 50% 17%;
-    --input-placeholder:      220 10% 54%;
+    --input-text:             221 43% 11%;
+    --input-placeholder:      220 10% 55%;
 
     /* ── Accent (same as primary for clean consistency) ── */
-    --accent-glow:        224 70% 62%;
+    --accent-glow:        226 85% 65%;
 
-    /* ── Gradient stops (navy hero cards) ── */
-    --gradient-from:  216 50% 17%;   /* navy deep */
-    --gradient-to:    216 42% 25%;   /* navy light */
-    --gradient-gold:  43 90% 50%;
+    /* ── Gradient stops (navy hero cards: #0B1733 → #315BEA) ── */
+    --gradient-from:  222 64.5% 12.2%;   /* #0B1733 */
+    --gradient-to:    226.4 81.5% 55.5%; /* #315BEA */
+    --gradient-gold:  40 79% 57.5%;
 
     /* ── Gold Accent (tier/premium) ── */
-    --gold:           43 90% 50%;
-    --gold-foreground: 40 60% 15%;
+    --gold:           40 79% 57.5%;      /* #E8AE3D */
+    --gold-foreground: 0 0% 100%;
 
     /* ── Accent ── */
-    --accent:            224 59% 49%;
+    --accent:            226.4 81.5% 55.5%;
     --accent-foreground: 0 0% 100%;
-    --ring:              224 59% 49%;
+    --ring:              226.4 81.5% 55.5%;
 
     /* ── Semantic (soft tinted backgrounds per spec) ── */
-    --success:             162 55% 40%;    /* teal/mint */
+    --success:             173 75% 38%;    /* #18A999 */
     --success-foreground:  0 0% 100%;
-    --success-soft:        162 50% 95%;
-    --warning:             38 90% 50%;     /* soft amber */
+    --success-soft:        173 50% 95%;
+    --warning:             40 79% 57.5%;   /* #E8AE3D */
     --warning-foreground:  0 0% 100%;
-    --warning-soft:        38 85% 95%;
-    --danger:              0 65% 50%;      /* soft coral/red */
+    --warning-soft:        40 85% 95%;
+    --danger:              0 72% 62.5%;    /* #E45B5B */
     --danger-foreground:   0 0% 100%;
-    --danger-soft:         0 55% 95%;
+    --danger-soft:         0 70% 96%;
     --destructive:         var(--danger);
     --destructive-foreground: var(--danger-foreground);
-    --info:                210 60% 50%;    /* soft blue */
-    --info-soft:           210 55% 95%;
+    --info:                226.4 81.5% 55.5%;
+    --info-soft:           226 80% 96%;
 
     /* ── Neutral tokens ── */
-    --secondary:            228 18% 92%;
-    --secondary-foreground: 216 28% 22%;
-    --muted:                228 18% 92%;
-    --muted-foreground:     var(--text-muted);
-    --premium:              43 90% 50%;
+    --secondary:            220 30% 95%;
+    --secondary-foreground: 221 43% 11%;
+    --muted:                220 30% 95%;
+    --muted-foreground:     var(--text-secondary);
+    --premium:              40 79% 57.5%;
 
     /* ── Module identity accents (deep navy unified) ── */
     --module-academics:  216 50% 17%;
@@ -157,108 +161,108 @@
 
   .dark {
     /* ══════════════════════════════════════════════════════════
-       CLEAN DARK — Complementary to Royal Blue light palette
-       Base #0C1220 · Surface #131B2E · Elevated #1A2540
+       CAMPUS CONNECT MASTER DARK — Professional & Restrained
+       Base #080D18 · Surface #101827 · Elevated #151E30 · Primary #4B6FFB
     ══════════════════════════════════════════════════════════ */
 
-    /* ── Background Depth Stack (Dark) ── */
-    --bg-base:    220 40% 8%;     /* #0C1220 */
-    --surface-1:  220 34% 13%;    /* #131B2E */
-    --surface-2:  220 30% 16%;    /* #1A2540 — card */
-    --surface-3:  220 26% 21%;
-    --surface-4:  220 22% 27%;
+    /* ── Background Depth Stack (Dark Mode) ── */
+    --bg-base:    221 50% 6.3%;      /* #080D18 */
+    --surface-1:  219 42% 10.8%;     /* #101827 */
+    --surface-2:  220 39% 13.5%;     /* #151E30 — card elevated */
+    --surface-3:  220 30% 18%;
+    --surface-4:  220 25% 23%;
 
     /* ── Legacy ── */
     --background:         var(--bg-base);
-    --foreground:         210 40% 98%;   /* #F8FAFC */
-    --card:               var(--surface-2);
-    --card-foreground:    210 40% 98%;
-    --popover:            var(--surface-2);
-    --popover-foreground: 210 40% 98%;
+    --foreground:         228 100% 98%;      /* #F5F7FF */
+    --card:               var(--surface-1);
+    --card-foreground:    228 100% 98%;
+    --popover:            var(--surface-1);
+    --popover-foreground: 228 100% 98%;
 
     /* ── Borders ── */
-    --border-subtle: 220 20% 22%;
-    --border-strong: 220 18% 32%;
+    --border-subtle: 220 31.5% 21.2%;   /* #253047 */
+    --border-strong: 220 25% 30%;
     --border:        var(--border-subtle);
-    --input:         220 20% 22%;
+    --input:         var(--border-subtle);
 
     /* ── Text Hierarchy ── */
-    --text-primary:   210 40% 98%;   /* #F8FAFC */
-    --text-secondary: 215 20% 65%;
-    --text-muted:     215 16% 50%;
+    --text-primary:   228 100% 98%;      /* #F5F7FF */
+    --text-secondary: 218 15% 65%;       /* #98A2B3 */
+    --text-muted:     218 12% 52%;
 
-    /* ── Brand: Light Royal Blue (#6B8AFF) ── */
-    --primary:            228 100% 71%;  /* #6B8AFF */
+    /* ── Brand: Electric Blue (#4B6FFB) ── */
+    --primary:            228 95.5% 64%;     /* #4B6FFB */
     --primary-foreground: 0 0% 100%;
-    --primary-hover:      228 90% 64%;
-    --primary-dim:        228 60% 58%;
-    --primary-glow:       228 100% 76%;
+    --primary-hover:      228 95% 58%;
+    --primary-dim:        228 65% 55%;
+    --primary-glow:       228 100% 74%;
 
     /* ── Deep Navy ── */
-    --navy-deep:   220 40% 8%;
-    --navy-card:   220 34% 13%;
-    --navy-light:  220 30% 18%;
+    --navy-deep:   222 64.5% 12.2%;   /* #0B1733 */
+    --navy-card:   219 42% 10.8%;     /* #101827 */
+    --navy-light:  220 39% 13.5%;     /* #151E30 */
 
     /* ── Enterprise interaction tokens ── */
-    --action-primary-bg:       228 100% 71%;
-    --action-primary-hover:    228 90% 64%;
+    --action-primary-bg:       228 95.5% 64%; /* #4B6FFB */
+    --action-primary-hover:    228 95% 58%;
     --action-primary-text:     0 0% 100%;
-    --action-secondary-bg:     220 30% 16%;
-    --action-secondary-hover:  220 26% 21%;
-    --action-secondary-text:   215 20% 88%;
-    --action-danger-bg:        0 72% 52%;
-    --action-danger-hover:     0 75% 58%;
+    --action-secondary-bg:     220 39% 13.5%;
+    --action-secondary-hover:  220 30% 18%;
+    --action-secondary-text:   228 100% 98%;
+    --action-danger-bg:        0 72% 62.5%;   /* #E45B5B */
+    --action-danger-hover:     0 75% 55%;
     --action-danger-text:      0 0% 100%;
-    --action-disabled-bg:      220 14% 26%;
-    --action-disabled-text:    215 16% 72%;
-    --control-bg:             220 30% 16%;
-    --control-hover:          220 26% 21%;
-    --control-text:           210 40% 98%;
-    --control-muted:          215 20% 72%;
-    --input-bg:               220 34% 11%;
-    --input-text:             210 40% 98%;
-    --input-placeholder:      215 20% 68%;
+    --action-disabled-bg:      220 20% 18%;
+    --action-disabled-text:    218 15% 50%;
+    --control-bg:             220 39% 13.5%;
+    --control-hover:          220 30% 18%;
+    --control-text:           228 100% 98%;
+    --control-muted:          218 15% 65%;
+    --input-bg:               219 42% 10.8%;
+    --input-text:             228 100% 98%;
+    --input-placeholder:      218 12% 52%;
 
     /* ── Accent Glow ── */
-    --accent-glow:        228 100% 76%;
+    --accent-glow:        228 100% 74%;
 
     /* ── Gradient stops ── */
-    --gradient-from:  228 100% 71%;
-    --gradient-to:    262 83% 70%;
-    --gradient-gold:  43 88% 56%;
+    --gradient-from:  222 64.5% 12.2%;   /* #0B1733 */
+    --gradient-to:    228 95.5% 64%;     /* #4B6FFB */
+    --gradient-gold:  40 79% 57.5%;
 
     /* ── Gold ── */
-    --gold:           43 88% 56%;
-    --gold-foreground: 40 60% 15%;
+    --gold:           40 79% 57.5%;
+    --gold-foreground: 0 0% 100%;
 
     /* ── Accent ── */
-    --accent:            228 100% 71%;
+    --accent:            228 95.5% 64%;
     --accent-foreground: 0 0% 100%;
-    --ring:              228 100% 71%;
+    --ring:              228 95.5% 64%;
 
     /* ── Semantic ── */
-    --success:             162 60% 48%;
+    --success:             173 75% 45%;      /* #18A999 */
     --success-foreground:  0 0% 100%;
-    --success-soft:        162 45% 14%;
-    --warning:             38 90% 52%;
+    --success-soft:        173 50% 14%;
+    --warning:             40 79% 57.5%;     /* #E8AE3D */
     --warning-foreground:  0 0% 100%;
-    --warning-soft:        38 45% 14%;
-    --danger:              0 75% 58%;
+    --warning-soft:        40 50% 14%;
+    --danger:              0 72% 62.5%;      /* #E45B5B */
     --danger-foreground:   0 0% 100%;
-    --danger-soft:         0 45% 16%;
+    --danger-soft:         0 50% 16%;
     --destructive:         var(--danger);
     --destructive-foreground: var(--danger-foreground);
-    --info:                210 65% 55%;
-    --info-soft:           210 45% 15%;
+    --info:                228 95.5% 64%;
+    --info-soft:           228 80% 16%;
 
-    --secondary:            220 30% 16%;
-    --secondary-foreground: 215 20% 85%;
-    --muted:                220 30% 16%;
-    --muted-foreground:     var(--text-muted);
-    --premium:              43 88% 56%;
+    --secondary:            220 39% 13.5%;
+    --secondary-foreground: 228 100% 98%;
+    --muted:                220 39% 13.5%;
+    --muted-foreground:     var(--text-secondary);
+    --premium:              40 79% 57.5%;
 
     /* ── Module identity accents ── */
-    --module-academics:  228 80% 65%;
+    --module-academics:  222 64.5% 12.2%;
     --module-community:  162 55% 50%;
     --module-ecell:      265 85% 68%;
     --module-profile:    228 80% 65%;
@@ -632,44 +636,7 @@
 }
 
 
-/* ══════════════════════════════════════════════
-   EVENT THEMES (CSS var overrides)
-══════════════════════════════════════════════ */
-[data-theme="fest"] {
-  --primary: 22 96% 52%;
-  --accent:  22 96% 52%;
-  --ring:    22 96% 52%;
-  --gradient-from: 22 96% 52%;
-  --gradient-to:   38 96% 52%;
-}
-[data-theme="annual_day"] {
-  --primary: 272 62% 50%;
-  --accent:  272 62% 50%;
-  --ring:    272 62% 50%;
-  --gradient-from: 272 62% 50%;
-  --gradient-to:   300 62% 55%;
-}
-[data-theme="tech_week"] {
-  --primary: 194 82% 40%;
-  --accent:  194 82% 40%;
-  --ring:    194 82% 40%;
-  --gradient-from: 194 82% 40%;
-  --gradient-to:   210 82% 44%;
-}
-[data-theme="exam"] {
-  --primary: 222 76% 46%;
-  --accent:  222 76% 46%;
-  --ring:    222 76% 46%;
-  --gradient-from: 222 76% 46%;
-  --gradient-to:   245 76% 50%;
-}
-[data-theme="diwali"] {
-  --primary: 36 96% 50%;
-  --accent:  36 96% 50%;
-  --ring:    36 96% 50%;
-  --gradient-from: 36 96% 50%;
-  --gradient-to:   22 96% 52%;
-}
+
 
 /* ══════════════════════════════════════════════
    ENHANCED MICRO-INTERACTIONS
@@ -1487,4 +1454,9 @@
     mask-composite: exclude;
     pointer-events: none;
   }
+}
+
+/* Defensive media guard: never allow content or decorative images to blow out of bounds */
+img, video {
+  max-width: 100%;
 }

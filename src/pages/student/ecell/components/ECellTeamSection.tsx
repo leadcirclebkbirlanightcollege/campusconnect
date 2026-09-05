@@ -154,12 +154,16 @@ export function ECellTeamSection({ onOpenCommittee }: ECellTeamSectionProps = {}
               >
                 {/* Profile Photo / Initials Fallback */}
                 <div className="relative mb-3">
-                  <div className="h-20 w-20 sm:h-22 sm:w-22 rounded-full overflow-hidden border-2 border-[#E8D98A] dark:border-[#C08634] p-0.5 bg-white dark:bg-[#1D1B17] shadow-xs">
+                  <div
+                    className="h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden border-2 border-[#E8D98A] dark:border-[#C08634] p-0.5 bg-white dark:bg-[#1D1B17] shadow-xs shrink-0 aspect-square"
+                    style={{ width: "80px", height: "80px", minWidth: "80px", minHeight: "80px", maxWidth: "80px", maxHeight: "80px" }}
+                  >
                     {m.photo_url ? (
                       <img
                         src={m.photo_url}
                         alt={m.name}
-                        className="h-full w-full object-cover rounded-full"
+                        className="h-full w-full object-cover rounded-full aspect-square shrink-0 max-h-full max-w-full"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "9999px" }}
                         loading="lazy"
                         onError={(e) => {
                           // Image failed to load, fallback gracefully to initials
