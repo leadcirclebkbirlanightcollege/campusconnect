@@ -6,6 +6,7 @@ import { UserPlus, ArrowLeft } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import { invalidateStudentQueries } from "@/lib/student-queries";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export default function AdminCreateStudentPage() {
     onSuccess: async () => {
       showSuccessToast("Student account created successfully!", "Default password: student");
       setForm(EMPTY);
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => {
       showErrorToast(e, { context: "create-student" });

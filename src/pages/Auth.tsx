@@ -226,7 +226,7 @@ const Auth = () => {
       );
       await supabase.from("user_roles").upsert(
         [{ user_id: authData.user.id, role: "student" }],
-        { onConflict: "user_id,role" }
+        { onConflict: "user_id" }
       );
 
       showSuccessToast("Account created — let's set up your profile");

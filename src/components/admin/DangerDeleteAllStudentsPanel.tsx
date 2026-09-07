@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateStudentQueries } from "@/lib/student-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,6 +41,7 @@ type ResetResponse = {
  * (attendance, points, claims, notifications, sessions, intelligence, etc.).
  */
 export default function DangerDeleteAllStudentsPanel({ scope }: Props) {
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
   const [collegeId, setCollegeId] = useState<string>("__all__");
@@ -95,6 +97,7 @@ export default function DangerDeleteAllStudentsPanel({ scope }: Props) {
       setResult(res);
       const deleted = res.deleted ?? 0;
       toast.success(`${deleted.toLocaleString()} student account${deleted === 1 ? "" : "s"} deleted.`);
+      await invalidateStudentQueries(qc);
     } catch (e) {
       toast.error((e as Error).message ?? "Reset failed");
     } finally {

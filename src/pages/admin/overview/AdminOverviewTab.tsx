@@ -18,6 +18,8 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useMetricCountUp } from "@/components/ui/motion";
 import AdminAnalyticsChart from "./AdminAnalyticsChart";
+import { useTenantId } from "@/providers/TenantProvider";
+import { fetchApprovedStudentCount } from "@/lib/student-queries";
 
 /* ── Types ─────────────────────────────────────────── */
 type CommandMetrics = {
@@ -125,6 +127,7 @@ function QuickAction({ icon: Icon, label, to, color, bg }: {
 /* ── Main Component ────────────────────────────────── */
 export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: string) => void }) {
   const qc = useQueryClient();
+  const collegeId = useTenantId();
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementBody, setAnnouncementBody] = useState("");
 
@@ -137,11 +140,14 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
 
   /* ── Metrics Query ── */
   const metricsQ = useQuery({
-    queryKey: ["admin", "cc", "metrics", startIso],
+    queryKey: ["admin", "cc", "metrics", collegeId, startIso],
     queryFn: async (): Promise<CommandMetrics> => {
-      const [students, faculty, lectures, todayAtt, live, progs, platform, risk] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_deleted", false),
-        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "faculty"),
+      let facultyQ = supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "faculty");
+      if (collegeId) facultyQ = facultyQ.eq("college_id", collegeId);
+
+      const [studentCount, faculty, lectures, todayAtt, live, progs, platform, risk] = await Promise.all([
+        fetchApprovedStudentCount(supabase, collegeId),
+        facultyQ,
         supabase.from("lectures").select("id", { count: "exact", head: true }),
         supabase.from("attendance").select("id", { count: "exact", head: true }).gte("marked_at", startIso).lt("marked_at", endIso),
         supabase.from("lectures").select("id", { count: "exact", head: true }).eq("status", "live"),
@@ -150,7 +156,7 @@ export default function AdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (t
         supabase.from("student_intelligence").select("id", { count: "exact", head: true }).or("attendance_consistency.lt.50,engagement_index.lt.40"),
       ]);
       return {
-        totalStudents: students.count ?? 0,
+        totalStudents: studentCount,
         totalFaculty: faculty.count ?? 0,
         lecturesConducted: lectures.count ?? 0,
         attendanceToday: todayAtt.count ?? 0,

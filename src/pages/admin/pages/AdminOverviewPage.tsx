@@ -23,6 +23,8 @@ export default function AdminOverviewPage() {
   };
 
   const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "cc"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
     await queryClient.invalidateQueries({ queryKey: ["admin_overview"] });
     await queryClient.invalidateQueries({ queryKey: ["admin_kpis"] });
     await queryClient.invalidateQueries({ queryKey: ["admin_live_ops"] });

@@ -6,6 +6,7 @@ import { useTenantId } from "@/providers/TenantProvider";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getDeptAbbr } from "@/lib/programme-utils";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -559,7 +560,10 @@ export default function StudentManagementTab() {
                       </TableCell>
 
                       <TableCell className="hidden md:table-cell">
-                        {s.department ? <span>{s.department}</span> : <span className="text-muted-foreground">—</span>}
+                        {s.department
+                          ? <span title={s.department}>{getDeptAbbr(s.department)}</span>
+                          : <span className="text-muted-foreground">—</span>
+                        }
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {s.class_name ? <span>{s.class_name}</span> : <span className="text-muted-foreground">—</span>}

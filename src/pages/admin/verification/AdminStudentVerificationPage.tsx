@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateStudentQueries } from "@/lib/student-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -269,7 +270,7 @@ export default function AdminStudentVerificationPage() {
       });
       setMode(null);
       setTarget(null);
-      qc.invalidateQueries({ queryKey: ["verification"] });
+      await invalidateStudentQueries(qc);
     } catch (e: any) {
       toast.error(friendly(e));
     } finally {
@@ -291,7 +292,7 @@ export default function AdminStudentVerificationPage() {
       });
       setMode(null);
       setTarget(null);
-      qc.invalidateQueries({ queryKey: ["verification"] });
+      await invalidateStudentQueries(qc);
     } catch (e: any) {
       toast.error(friendly(e));
     } finally {

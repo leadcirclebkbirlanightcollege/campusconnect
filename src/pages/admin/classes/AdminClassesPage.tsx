@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, Plus, Pencil, Trash2, Loader2 } from "@/components/icons";
 import { toast } from "sonner";
+import { getDeptAbbr } from "@/lib/programme-utils";
 
 type Department = { id: string; name: string };
 type Class = {
@@ -131,6 +132,12 @@ export default function AdminClassesPage() {
   const getDeptName = (id: string | null) =>
     id ? (departments.find((d) => d.id === id)?.name ?? "—") : "—";
 
+  /** Short abbreviation for the department column (BAF, BMS, BCOM, …) */
+  const getDeptLabel = (id: string | null) => {
+    const fullName = getDeptName(id);
+    return fullName === "—" ? "—" : getDeptAbbr(fullName);
+  };
+
   return (
     <PageContainer size="tablet" withBottomNav={false} className="space-y-5 py-4">
       <PageHeader
@@ -170,7 +177,9 @@ export default function AdminClassesPage() {
                 <TableRow key={cls.id} className="border-border-subtle">
                   <TableCell className="font-medium text-sm">{cls.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
-                    {getDeptName(cls.department_id)}
+                    <span title={getDeptName(cls.department_id)}>
+                      {getDeptLabel(cls.department_id)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm">{cls.year ?? "—"}</TableCell>
                   <TableCell className="text-sm hidden sm:table-cell">{cls.section ?? "—"}</TableCell>
@@ -228,7 +237,10 @@ export default function AdminClassesPage() {
                 <SelectContent>
                   <SelectItem value="__none__">No department</SelectItem>
                   {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    <SelectItem key={d.id} value={d.id}>
+                      <span className="font-medium">{getDeptAbbr(d.name)}</span>
+                      <span className="ml-1.5 text-muted-foreground text-xs">{d.name.replace(/\s*\(\d+\)\s*$/, "").trim()}</span>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -1,4 +1,7 @@
+// @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.90.1'
+
+declare const Deno: any;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +27,7 @@ function json(status: number, body: unknown) {
   })
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: any) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
@@ -95,7 +98,7 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Failed to validate existing users' })
     }
 
-    const already = existing.users.find((u) => (u.email ?? '').toLowerCase() === email)
+    const already = existing.users.find((u: any) => (u.email ?? '').toLowerCase() === email)
     if (already) {
       return json(409, { error: 'A user with this email already exists' })
     }
@@ -130,6 +133,8 @@ Deno.serve(async (req) => {
       department: body.department ?? null,
       class_name: body.class_name ?? null,
       college_id: targetCollegeId,
+      approval_status: 'approved',
+      is_verified: true,
       must_change_password: false,
       onboarding_completed: true,
     })

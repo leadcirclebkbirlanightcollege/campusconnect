@@ -83,6 +83,23 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
     staleTime: 60_000,
   });
 
+  // Real-time auth integrity check: verify user actually exists on server
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (!active) return;
+      if (error || !data?.user) {
+        toast.error("Session expired. Please sign in again.");
+        await supabase.auth.signOut().catch(() => {});
+        navigate("/auth", { replace: true });
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
   // PERSISTENCE GUARD: If student already submitted profile & ID verification, never show profile creation again!
   useEffect(() => {
     if (!existingProfile) return;
@@ -200,11 +217,26 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
   }
 
   async function handleSubmit() {
-    if (!user || !canSubmit) return;
+    if (!canSubmit) return;
     setLoading(true);
-    setUploadProgress(15);
+    setUploadProgress(10);
 
     try {
+      // 0. Verify fresh authentication directly against Supabase server
+      const { data: authData, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !authData?.user) {
+        toast.error("Session expired. Please sign in again.", {
+          description: "Your user account is not active on the server.",
+        });
+        await supabase.auth.signOut().catch(() => {});
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      const activeUser = authData.user;
+      const activeUserId = activeUser.id;
+      const activeEmail = activeUser.email ?? email;
+
       const course = COURSES.find((c) => c.code === courseCode)!;
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
@@ -214,7 +246,7 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
           .from("profiles")
           .select("user_id")
           .ilike("enrollment_number", enrollment.trim())
-          .neq("user_id", user.id)
+          .neq("user_id", activeUserId)
           .maybeSingle();
         if (existing) {
           throw new Error("This enrollment number is already registered to another account.");
@@ -228,7 +260,7 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
         setUploadProgress(40);
         const rawExt = idCardFile.name.split(".").pop()?.toLowerCase() || "jpg";
         const safeExt = ["jpg", "jpeg", "png", "webp"].includes(rawExt) ? rawExt : "jpg";
-        storagePath = `${user.id}/college-id-${Date.now()}.${safeExt}`;
+        storagePath = `${activeUserId}/college-id-${Date.now()}.${safeExt}`;
 
         const { error: uploadErr } = await supabase.storage
           .from("student-id-cards")
@@ -245,7 +277,7 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
 
         // 2. Insert into student_verifications audit table
         const { error: verifErr } = await supabase.from("student_verifications").insert({
-          user_id: user.id,
+          user_id: activeUserId,
           document_type: "college_id",
           storage_path: storagePath,
           file_name: idCardFile.name,
@@ -262,10 +294,10 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
       setUploadProgress(90);
 
       // 3. Upsert student profile with all details and pending verification status
-      const payload = {
-        user_id: user.id,
+      const payload: any = {
+        user_id: activeUserId,
         name: fullName,
-        email,
+        email: activeEmail,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone: phone.trim(),
@@ -287,16 +319,24 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
         id_card_rejection_reason: null,
       };
 
+      if (existingProfile?.college_id) {
+        payload.college_id = existingProfile.college_id;
+      }
+
       const { error: profileErr } = await supabase
         .from("profiles")
         .upsert(payload, { onConflict: "user_id" });
 
       if (profileErr) throw profileErr;
 
-      // Ensure student role exists
-      await supabase
+      // Ensure student role exists in user_roles
+      const { error: roleErr } = await supabase
         .from("user_roles")
-        .upsert({ user_id: user.id, role: "student" }, { onConflict: "user_id,role" });
+        .upsert({ user_id: activeUserId, role: "student" }, { onConflict: "user_id" });
+
+      if (roleErr) {
+        console.warn("user_roles upsert notice:", roleErr.message);
+      }
 
       setUploadProgress(100);
 
@@ -304,7 +344,7 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
       sessionStorage.setItem("cc_just_submitted_verification", "true");
 
       // Synchronously populate the React Query cache so PendingApproval reads verified state immediately
-      qc.setQueryData(["onboarding_status", user.id], (old: any) => ({
+      qc.setQueryData(["onboarding_status", activeUserId], (old: any) => ({
         ...(old || {}),
         profile_completed: true,
         approval_status: "pending",
@@ -313,14 +353,14 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
         college_assigned: Boolean(old?.college_assigned),
         role: "student",
       }));
-      qc.setQueryData(["onboarding_profile", user.id], (old: any) => ({
+      qc.setQueryData(["onboarding_profile", activeUserId], (old: any) => ({
         ...(old || {}),
         ...payload,
       }));
 
       // Background invalidate to stay in sync with database
-      void qc.invalidateQueries({ queryKey: ["onboarding_status", user.id] });
-      void qc.invalidateQueries({ queryKey: ["onboarding_profile", user.id] });
+      void qc.invalidateQueries({ queryKey: ["onboarding_status", activeUserId] });
+      void qc.invalidateQueries({ queryKey: ["onboarding_profile", activeUserId] });
 
       toast.success("Verification submitted! 🎉", {
         description: "Your college ID card has been submitted for administrative review.",
@@ -329,6 +369,14 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
       navigate("/pending-approval", { replace: true });
     } catch (err: any) {
       const msg = err?.message ?? "Submission failed. Please try again.";
+      if (msg.includes("profiles_user_id_fkey") || msg.includes("foreign key")) {
+        toast.error("Session expired. Please sign in or register again.", {
+          description: "User account was not found on the server.",
+        });
+        await supabase.auth.signOut().catch(() => {});
+        navigate("/auth", { replace: true });
+        return;
+      }
       toast.error(msg);
     } finally {
       setLoading(false);

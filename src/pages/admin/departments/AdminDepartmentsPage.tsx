@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, Plus, Pencil, Trash2, Loader2 } from "@/components/icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getDeptAbbr } from "@/lib/programme-utils";
 
 type Department = {
   id: string;
@@ -133,7 +134,16 @@ export default function AdminDepartmentsPage() {
             <TableBody>
               {departments.map((dept) => (
                 <TableRow key={dept.id} className="border-border-subtle">
-                  <TableCell className="font-medium text-sm">{dept.name}</TableCell>
+                  <TableCell className="font-medium text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[11px] font-bold shrink-0">
+                        {getDeptAbbr(dept.name)}
+                      </Badge>
+                      <span className="truncate" title={dept.name}>
+                        {dept.name.replace(/\s*\(\d+\)\s*$/, "").trim()}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
                     {dept.description ?? "—"}
                   </TableCell>

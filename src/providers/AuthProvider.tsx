@@ -32,11 +32,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: nextSession } }) => {
       if (!mounted) return;
-      setSession(nextSession ?? null);
-      setUser(nextSession?.user ?? null);
-      setIsLoading(false);
+      if (nextSession) {
+        setSession(nextSession);
+        setUser(nextSession.user);
+        setIsLoading(false);
+
+        // Verify that the user still exists on the server
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (!mounted) return;
+        if (userError || !userData?.user) {
+          const msg = (userError?.message || "").toLowerCase();
+          const isUserMissing =
+            userError?.status === 401 ||
+            userError?.status === 403 ||
+            userError?.status === 404 ||
+            msg.includes("does not exist") ||
+            msg.includes("user not found") ||
+            msg.includes("invalid claim");
+
+          if (isUserMissing) {
+            console.warn("[AuthProvider] Stale session detected; user not found on server. Clearing session.");
+            await supabase.auth.signOut().catch(() => {});
+            setSession(null);
+            setUser(null);
+          }
+        }
+      } else {
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+      }
     });
 
     return () => {

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { getDeptAbbr } from "@/lib/programme-utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -427,7 +429,11 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
                   </div>
                   <div className="text-sm">
                     <div className="text-muted-foreground">Department</div>
-                    <div className="font-medium">{profileQuery.data?.department ?? "—"}</div>
+                    <div className="font-medium">
+                      {profileQuery.data?.department
+                        ? <><span className="font-bold">{getDeptAbbr(profileQuery.data.department)}</span><span className="ml-1.5 text-muted-foreground text-xs">{profileQuery.data.department.replace(/\s*\(\d+\)\s*$/, "").trim()}</span></>
+                        : "—"}
+                    </div>
                   </div>
                   <div className="text-sm">
                     <div className="text-muted-foreground">Class</div>

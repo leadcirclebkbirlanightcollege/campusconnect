@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import { invalidateStudentQueries } from "@/lib/student-queries";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -73,7 +74,7 @@ export default function CreateStudentDialog() {
       showSuccessToast("Student account created successfully!", "Default password: student");
       setOpen(false);
       setForm({ name: "", email: "", phone: "", student_id: "", department: "", class_name: "" });
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => {
       showErrorToast(e, { context: "create-student" });
