@@ -22,6 +22,7 @@ import OnboardingGate from "@/components/auth/OnboardingGate";
 
 const OnboardingWizard = lazy(() => import("@/pages/onboarding/OnboardingWizard"));
 const PendingApproval  = lazy(() => import("@/pages/PendingApproval"));
+const EmailVerificationPage = lazy(() => import("@/pages/auth/EmailVerificationPage"));
 const AdminStudentVerificationPage = lazy(() => import("@/pages/admin/verification/AdminStudentVerificationPage"));
 
 
@@ -155,10 +156,15 @@ export default function AppRouter() {
           <Route path="/auth"        element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/auth/login"  element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/auth/signup" element={<PublicRoute><Auth /></PublicRoute>} />
+          <Route path="/auth/verify" element={<EmailVerificationPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
 
           {/* Onboarding & approval gate (signed-in but not yet approved) */}
-          <Route path="/onboarding-wizard" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
-          <Route path="/pending-approval"  element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
+          <Route path="/onboarding-wizard"         element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
+          <Route path="/pending-approval"          element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
+          <Route path="/profile/create"            element={<ProtectedRoute><OnboardingWizard initialStep={1} /></ProtectedRoute>} />
+          <Route path="/verification"              element={<ProtectedRoute><OnboardingWizard initialStep={2} /></ProtectedRoute>} />
+          <Route path="/verification/under-review" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
 
           {/* Demo, Help & Public (public) */}
           <Route path="/demo" element={<DemoPage />} />

@@ -32,12 +32,16 @@ import { CollegeIdUploadCard } from "@/components/onboarding/CollegeIdUploadCard
 
 type Gender = "male" | "female" | "other";
 
-export default function OnboardingWizard() {
+interface OnboardingWizardProps {
+  initialStep?: 1 | 2;
+}
+
+export default function OnboardingWizard({ initialStep }: OnboardingWizardProps = {}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(initialStep ?? 1);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
@@ -79,6 +83,39 @@ export default function OnboardingWizard() {
     staleTime: 60_000,
   });
 
+  // PERSISTENCE GUARD: If student already submitted profile & ID verification, never show profile creation again!
+  useEffect(() => {
+    if (!existingProfile) return;
+
+    // 1. If already approved, route to dashboard
+    if (existingProfile.approval_status === "approved" && existingProfile.college_assigned) {
+      navigate("/app/dashboard", { replace: true });
+      return;
+    }
+
+    // 2. If already submitted (profile_completed & pending review), route directly to Under Review
+    if (existingProfile.profile_completed && existingProfile.approval_status === "pending") {
+      navigate("/pending-approval", { replace: true });
+      return;
+    }
+
+    // 3. If rejected, stay on Step 2 to allow re-uploading ID card
+    if (existingProfile.approval_status === "rejected") {
+      setStep(2);
+      return;
+    }
+
+    // 4. If profile is completed but ID card is missing, open Step 2 directly
+    if (existingProfile.profile_completed && !existingProfile.id_card_path) {
+      setStep(2);
+      return;
+    }
+
+    if (initialStep) {
+      setStep(initialStep);
+    }
+  }, [existingProfile, navigate, initialStep]);
+
   // Populate fields from existing profile
   useEffect(() => {
     if (!existingProfile) return;
@@ -105,12 +142,7 @@ export default function OnboardingWizard() {
         })
         .catch(() => {});
     }
-
-    // If previously rejected, open directly to Step 2 so student can replace ID card
-    if (existingProfile.approval_status === "rejected") {
-      setStep(2);
-    }
-  }, [existingProfile]);
+  }, [existingProfile, idCardFile]);
 
   const canNextStep1 = useMemo(
     () =>
@@ -267,7 +299,28 @@ export default function OnboardingWizard() {
         .upsert({ user_id: user.id, role: "student" }, { onConflict: "user_id,role" });
 
       setUploadProgress(100);
-      await qc.invalidateQueries({ queryKey: ["onboarding_status", user.id] });
+
+      // Persist state in sessionStorage immediately for synchronous transitions
+      sessionStorage.setItem("cc_just_submitted_verification", "true");
+
+      // Synchronously populate the React Query cache so PendingApproval reads verified state immediately
+      qc.setQueryData(["onboarding_status", user.id], (old: any) => ({
+        ...(old || {}),
+        profile_completed: true,
+        approval_status: "pending",
+        id_card_path: storagePath,
+        id_card_status: "pending",
+        college_assigned: Boolean(old?.college_assigned),
+        role: "student",
+      }));
+      qc.setQueryData(["onboarding_profile", user.id], (old: any) => ({
+        ...(old || {}),
+        ...payload,
+      }));
+
+      // Background invalidate to stay in sync with database
+      void qc.invalidateQueries({ queryKey: ["onboarding_status", user.id] });
+      void qc.invalidateQueries({ queryKey: ["onboarding_profile", user.id] });
 
       toast.success("Verification submitted! 🎉", {
         description: "Your college ID card has been submitted for administrative review.",

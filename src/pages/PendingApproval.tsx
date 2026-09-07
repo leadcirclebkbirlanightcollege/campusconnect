@@ -23,7 +23,7 @@ import { toast } from "sonner";
 
 export default function PendingApproval() {
   const { user } = useAuth();
-  const { data: status, refetch, isFetching } = useOnboardingStatus();
+  const { data: status, refetch, isFetching, isLoading } = useOnboardingStatus();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const logout = useLogout();
@@ -35,13 +35,21 @@ export default function PendingApproval() {
 
   // Auto-redirect when approved
   useEffect(() => {
+    // If query is loading or student literally just submitted, do NOT bounce to wizard
+    if (isLoading) return;
+    const justSubmitted = sessionStorage.getItem("cc_just_submitted_verification") === "true";
+
     if (status?.approval_status === "approved" && status?.college_assigned) {
+      sessionStorage.removeItem("cc_just_submitted_verification");
       navigate("/app/dashboard", { replace: true });
+      return;
     }
-    if (status && !status.profile_completed) {
+
+    // Only bounce back to onboarding-wizard if query is firmly settled with profile_completed === false
+    if (!justSubmitted && status && !status.profile_completed && !isFetching) {
       navigate("/onboarding-wizard", { replace: true });
     }
-  }, [status, navigate]);
+  }, [status, isLoading, isFetching, navigate]);
 
   // Realtime subscribe to own profile row
   useEffect(() => {
@@ -177,7 +185,7 @@ export default function PendingApproval() {
     { key: "id_uploaded", label: "ID Card Submitted", done: true },
     {
       key: "review",
-      label: isRejected ? "Rejected" : "Admin Review",
+      label: isRejected ? "Rejected" : "Under Review",
       done: status?.approval_status === "approved",
       inProgress: status?.approval_status === "pending",
       danger: isRejected,
@@ -208,6 +216,14 @@ export default function PendingApproval() {
         transition={{ duration: 0.3 }}
         className="relative z-10 w-full max-w-[540px] rounded-2xl border border-border-subtle bg-surface-1/90 backdrop-blur-xl p-6 sm:p-8 shadow-2xl text-center"
       >
+        {/* Status Indicator Badge */}
+        {!isRejected && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 text-xs font-bold mb-4">
+            <Clock className="h-3.5 w-3.5 animate-pulse shrink-0" />
+            <span>Under Review</span>
+          </div>
+        )}
+
         {/* State Icon Badge */}
         <div
           className={`mx-auto h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform ${
@@ -227,13 +243,13 @@ export default function PendingApproval() {
         <h1 className="text-[22px] font-bold tracking-tight mb-2">
           {isRejected
             ? "Verification Rejected"
-            : "College ID Submitted for Verification"}
+            : "Verification Under Review"}
         </h1>
 
         <p className="text-[14px] text-muted-foreground leading-relaxed mb-6">
           {isRejected
             ? "Your college ID card submission could not be verified by the college administration. Please review the official feedback below."
-            : "Your B. K. Birla Night Arts, Science & Commerce College ID card has been received. Our administration will review your document and verify your academic cohort."}
+            : "Your profile and ID verification request has been submitted successfully. Our team will review your information and update your verification status once the review is complete."}
         </p>
 
         {/* Rejection Alert Card with Live Auto-Deletion Timer */}
@@ -351,13 +367,19 @@ export default function PendingApproval() {
             <Button
               onClick={() => {
                 refetch();
-                toast.success("Status refreshed");
+                if (status?.approval_status === "approved") {
+                  navigate("/app/dashboard", { replace: true });
+                } else {
+                  toast.info("Application Under Review", {
+                    description: "Your verification request is currently being reviewed by college administrators. You will have full access once approved.",
+                  });
+                }
               }}
               disabled={isFetching}
-              className="w-full h-11 gap-2 font-bold"
+              className="w-full h-11 gap-2 font-bold shadow-md shadow-primary/20"
             >
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-              Refresh Status
+              Continue to Campus Connect
             </Button>
           )}
 

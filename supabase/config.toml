@@ -1,4 +1,13 @@
-project_id = "your-project-ref"
+project_id = "alllxeqkxhdjyyyavyai"
+
+[auth]
+enabled = true
+site_url = "https://campusconnect.indevs.in"
+additional_redirect_urls = ["https://campusconnect.indevs.in/**", "http://localhost:5173/**", "http://localhost:8080/**"]
+
+[auth.email.template.confirmation]
+subject = "Verify your email address — Campus Connect"
+content_path = "./supabase/templates/email-verification.html"
 
 [functions.bootstrap-clean-reset]
 verify_jwt = false
@@ -14,4 +23,3 @@ verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false
-

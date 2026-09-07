@@ -15,6 +15,7 @@ import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
 import { motion } from "framer-motion";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect";
 
 /* ── Feature chips for left hero panel ── */
 const HIGHLIGHTS = [
@@ -197,7 +198,7 @@ const Auth = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email, password,
         options: {
-          emailRedirectTo: `${window.location.origin}/onboarding-wizard`,
+          emailRedirectTo: getAuthRedirectUrl("/auth/verify"),
         },
       });
       if (authError) {
@@ -213,7 +214,7 @@ const Auth = () => {
       if (!session) {
         const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
-          showSuccessToast("Account created", "Check your inbox to verify your email, then sign in.");
+          showSuccessToast("Account created — Verification Required", "Please check your inbox and click 'Verify Email Address' to activate your account.");
           return;
         }
         session = signIn.session;
