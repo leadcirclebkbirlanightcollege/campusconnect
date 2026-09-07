@@ -2152,6 +2152,7 @@ export type Database = {
           id_card_verified_at: string | null
           id_card_verified_by: string | null
           is_active: boolean
+          is_core_member: boolean
           is_deleted: boolean
           is_verified: boolean
           last_name: string | null
@@ -2220,6 +2221,7 @@ export type Database = {
           id_card_verified_at?: string | null
           id_card_verified_by?: string | null
           is_active?: boolean
+          is_core_member?: boolean
           is_deleted?: boolean
           is_verified?: boolean
           last_name?: string | null
@@ -2288,6 +2290,7 @@ export type Database = {
           id_card_verified_at?: string | null
           id_card_verified_by?: string | null
           is_active?: boolean
+          is_core_member?: boolean
           is_deleted?: boolean
           is_verified?: boolean
           last_name?: string | null
@@ -3165,6 +3168,10 @@ export type Database = {
     Functions: {
       admin_approve_student: {
         Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_set_core_member: {
+        Args: { p_is_core_member: boolean; p_user_id: string }
         Returns: Json
       }
       admin_assign_faculty_institution: {

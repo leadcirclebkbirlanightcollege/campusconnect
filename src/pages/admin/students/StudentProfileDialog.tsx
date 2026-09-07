@@ -2,8 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { toast } from "sonner";
-import { Mail } from "@/components/icons";
+import { Mail, ShieldCheck, ShieldAlert } from "@/components/icons";
+import { invalidateStudentQueries } from "@/lib/student-queries";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import {
   Dialog,
@@ -42,6 +53,7 @@ type Profile = {
   class_name: string | null;
   is_deleted: boolean;
   is_verified: boolean;
+  is_core_member: boolean;
   created_at: string;
 };
 
@@ -65,6 +77,7 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
+  const [coreMemberConfirmAction, setCoreMemberConfirmAction] = useState<null | "grant" | "remove">(null);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -96,7 +109,7 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
       setEditEmail(false);
       setNewEmail("");
       qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
-      qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update email"),
   });
@@ -108,7 +121,7 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,created_at")
+        .select("user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,is_core_member,created_at")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
@@ -154,10 +167,40 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
     onSuccess: async () => {
       toast.success("Student details updated");
       setIsEditing(false);
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
       await qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update profile"),
+  });
+
+  const coreMemberMutation = useMutation({
+    mutationFn: async (grant: boolean) => {
+      if (!userId) throw new Error("Missing userId");
+      const { error } = await supabase.rpc("admin_set_core_member", {
+        p_user_id: userId,
+        p_is_core_member: grant,
+      });
+      if (error) {
+        // Resilient fallback to direct admin update
+        const { error: updateErr } = await supabase
+          .from("profiles")
+          .update({ is_core_member: grant, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        if (updateErr) throw updateErr;
+      }
+    },
+    onSuccess: async (_, grant) => {
+      toast.success(grant ? "Granted Core Member status" : "Removed Core Member status");
+      setCoreMemberConfirmAction(null);
+      await qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
+      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await qc.invalidateQueries({ queryKey: ["shell", "profile_mini"] });
+      await qc.invalidateQueries({ queryKey: ["profile"] });
+      await invalidateStudentQueries(qc);
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Failed to update Core Member status");
+    },
   });
 
   const attendanceQuery = useQuery({
@@ -213,13 +256,16 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
                 <div className="flex items-center gap-3">
                   <span className="inline-flex items-center gap-2">
                     {profileQuery.data?.name ?? "—"}
+                    {profileQuery.data?.is_core_member ? (
+                      <CoreMemberBadge variant="profile" />
+                    ) : null}
                     {profileQuery.data?.is_verified ? (
                       <span
                         className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                        aria-label="Verified"
-                        title="Verified"
+                        aria-label="Student Identity Verified"
+                        title="Student Identity Verified"
                       >
-                        <span className="sr-only">Verified</span>
+                        <span className="sr-only">Student Identity Verified</span>
                         <svg
                           viewBox="0 0 24 24"
                           className="h-3.5 w-3.5"
@@ -389,6 +435,75 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
                   </div>
                 </div>
               )}
+
+              {/* ── Status & Credentials: Clear distinction between Identity and Core Member ── */}
+              <div className="rounded-xl border border-border/60 bg-surface-2/40 p-4 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Credentials & Authority
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Student Identity Verification */}
+                  <div className="space-y-1.5 rounded-lg border border-border-subtle bg-surface-1 p-3">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Student Identity
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {profileQuery.data?.is_verified ? (
+                        <Badge className="bg-primary/15 text-primary border-primary/30 gap-1.5 font-semibold">
+                          <ShieldCheck className="h-3.5 w-3.5" /> Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground gap-1.5">
+                          <ShieldAlert className="h-3.5 w-3.5" /> Unverified
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      College enrollment & ID card status.
+                    </p>
+                  </div>
+
+                  {/* Campus Connect Status */}
+                  <div className="space-y-1.5 rounded-lg border border-border-subtle bg-surface-1 p-3">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Campus Connect Status
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {profileQuery.data?.is_core_member ? (
+                        <div className="flex items-center gap-2">
+                          <CoreMemberBadge variant="profile" />
+                        </div>
+                      ) : (
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          Normal Member
+                        </span>
+                      )}
+                    </div>
+                    <div className="pt-1">
+                      {profileQuery.data?.is_core_member ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+                          onClick={() => setCoreMemberConfirmAction("remove")}
+                          disabled={coreMemberMutation.isPending}
+                        >
+                          Remove Core Member
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs bg-[#0B192C] text-[#38BDF8] hover:bg-[#132A4A] border border-[#38BDF8]/40 shadow-xs"
+                          onClick={() => setCoreMemberConfirmAction("grant")}
+                          disabled={coreMemberMutation.isPending}
+                        >
+                          Make Core Member
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -478,6 +593,47 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
           </Card>
         </div>
       </DialogContent>
+
+      {/* Confirmation modal before grant/removal of Core Member status */}
+      <AlertDialog
+        open={Boolean(coreMemberConfirmAction)}
+        onOpenChange={(open) => !open && setCoreMemberConfirmAction(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {coreMemberConfirmAction === "grant" ? "Make Core Member?" : "Remove Core Member Status?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {coreMemberConfirmAction === "grant"
+                ? `Are you sure you want to make ${profileQuery.data?.name ?? "this student"} an official Campus Connect Core Team member? They will receive the official Core Member badge across their profile and community presence.`
+                : `Are you sure you want to remove Core Member status from ${profileQuery.data?.name ?? "this student"}? Their official Campus Connect Core Member badge will be removed immediately.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={coreMemberMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (coreMemberConfirmAction) {
+                  coreMemberMutation.mutate(coreMemberConfirmAction === "grant");
+                }
+              }}
+              className={
+                coreMemberConfirmAction === "remove"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+              disabled={coreMemberMutation.isPending}
+            >
+              {coreMemberMutation.isPending
+                ? "Updating…"
+                : coreMemberConfirmAction === "grant"
+                ? "Make Core Member"
+                : "Remove Core Member"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

@@ -33,6 +33,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useThemeContext } from "@/providers/ThemeProvider";
 import { PageContainer } from "@/layout/PageContainer";
 import { ModuleHero, HeroOverlap } from "@/layout/ModuleHero";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -209,7 +210,7 @@ export default function StudentProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "name,email,avatar_url,college_id,student_id,class_name,department,academic_year,approval_status,is_verified,enrollment_number,id_card_status,created_at",
+          "name,email,avatar_url,college_id,student_id,class_name,department,academic_year,approval_status,is_verified,is_core_member,enrollment_number,id_card_status,created_at",
         )
         .eq("user_id", user!.id)
         .maybeSingle();
@@ -463,7 +464,12 @@ export default function StudentProfile() {
       <ModuleHero
         tone="profile"
         eyebrow="My account"
-        title={profile?.name ?? "Your profile"}
+        title={
+          <span className="inline-flex items-center gap-2 flex-wrap">
+            <span>{profile?.name ?? "Your profile"}</span>
+            {profile?.is_core_member ? <CoreMemberBadge variant="compact" size="md" /> : null}
+          </span>
+        }
         subtitle={profile?.email ?? user?.email ?? undefined}
         stats={[
           { label: "Points", value: pointsQuery.data ?? 0 },
@@ -515,6 +521,9 @@ export default function StudentProfile() {
                   <span className="inline-flex items-center rounded-full bg-white/22 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ring-1 ring-white/25">
                     {roleLabel}
                   </span>
+                  {profile?.is_core_member && (
+                    <CoreMemberBadge variant="profile" />
+                  )}
                   {profile?.is_verified && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
                       <Shield className="h-3 w-3" /> Verified

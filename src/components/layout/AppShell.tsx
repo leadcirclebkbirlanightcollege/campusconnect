@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
 import { BRANDING } from "@/config/branding";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -291,9 +292,9 @@ const AppShell = ({ children }: AppShellProps) => {
     enabled: Boolean(authQuery.data?.id) && roleQuery.data === "student",
     queryFn: async () => {
       const uid = authQuery.data!.id;
-      const { data, error } = await supabase.from("profiles").select("name,avatar_url,is_verified").eq("user_id", uid).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("name,avatar_url,is_verified,is_core_member").eq("user_id", uid).maybeSingle();
       if (error) throw error;
-      return data as { name: string; avatar_url: string | null; is_verified: boolean } | null;
+      return data as { name: string; avatar_url: string | null; is_verified: boolean; is_core_member?: boolean } | null;
     },
   });
 
@@ -363,18 +364,30 @@ const AppShell = ({ children }: AppShellProps) => {
                           <AvatarImage src={profileMiniQuery.data?.avatar_url ?? undefined} alt="Profile photo" />
                           <AvatarFallback>{avatarInitial}</AvatarFallback>
                         </Avatar>
-                        {profileMiniQuery.data?.is_verified && (
+                        {profileMiniQuery.data?.is_core_member ? (
+                          <span className="absolute -bottom-1 -right-1">
+                            <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
+                          </span>
+                        ) : profileMiniQuery.data?.is_verified ? (
                           <span className="absolute -bottom-1 -right-1">
                             <span className="pulse absolute inset-0 rounded-full bg-primary/30" />
                             <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-                              <BadgeCheck className="h-3.5 w-3.5" aria-label="Verified" />
+                              <BadgeCheck className="h-3.5 w-3.5" aria-label="Student Identity Verified" />
                             </span>
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="z-50 w-48 bg-popover text-popover-foreground">
+                  <DropdownMenuContent align="end" className="z-50 w-52 bg-popover text-popover-foreground">
+                    {profileMiniQuery.data?.is_core_member ? (
+                      <div className="px-2.5 py-1.5 border-b border-border/40 mb-1 flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Campus Connect
+                        </span>
+                        <CoreMemberBadge variant="compact" size="sm" />
+                      </div>
+                    ) : null}
                     <DropdownMenuItem asChild><Link to="/app/settings">Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/inbox">Inbox {unread > 0 && `(${unread})`}</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to="/app/settings/notifications">Notification Settings</Link></DropdownMenuItem>

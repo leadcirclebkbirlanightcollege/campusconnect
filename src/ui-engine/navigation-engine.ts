@@ -71,7 +71,7 @@ export const STUDENT_TABS: StudentTab[] = [
     id: "profile",
     label: "Profile",
     href: "/app/settings",
-    match: ["/app/settings", "/app/profile", "/app/id-card", "/app/support", "/app/install"],
+    match: ["/app/settings", "/app/profile", "/app/id-card", "/app/support"],
     prefetch: () => { void import("@/pages/student/StudentProfile"); },
   },
 ];

@@ -21,7 +21,7 @@ export interface HeroStat {
 interface ModuleHeroProps {
   tone?: ModuleTone;
   eyebrow?: string;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   icon?: React.ComponentType<{ className?: string }>;
   stats?: HeroStat[];

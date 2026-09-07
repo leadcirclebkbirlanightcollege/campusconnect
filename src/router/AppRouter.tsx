@@ -225,6 +225,7 @@ export default function AppRouter() {
           >
             <Route index element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="dashboard"                element={<AdminOverviewPage />} />
+            <Route path="overview"                 element={<Navigate to="/platform/admin/dashboard" replace />} />
             <Route path="setup"                    element={<AdminSetupWizard />} />
             <Route path="students"                 element={<AdminStudentsPage />} />
             <Route path="students/create"          element={<AdminCreateStudentPage />} />
@@ -313,8 +314,7 @@ export default function AppRouter() {
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="academics"              element={<AcademicsHub />} />
             <Route path="more"                   element={<MoreHub />} />
-            <Route path="community"              element={<CommunityHub />} />
-            <Route path="install"                element={<PwaInstallPage />} />
+            <Route path="install"                element={<Navigate to="/app" replace />} />
 
             {/* Removed modules — redirect to dashboard */}
             <Route path="analytics"     element={<Navigate to="/app/dashboard" replace />} />

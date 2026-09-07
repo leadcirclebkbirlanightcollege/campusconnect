@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   CheckCircle,
 } from "@/components/icons";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import { motion, AnimatePresence } from "framer-motion";
 import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
@@ -71,7 +72,7 @@ function ProfileMenu({ userId }: { userId: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("name, avatar_url, is_verified, student_id")
+        .select("name, avatar_url, is_verified, is_core_member, student_id")
         .eq("user_id", userId)
         .maybeSingle();
       return data;
@@ -107,11 +108,15 @@ function ProfileMenu({ userId }: { userId: string }) {
                 {initial}
               </AvatarFallback>
             </Avatar>
-            {profile?.is_verified && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary flex items-center justify-center">
-                <BadgeCheck className="h-2 w-2 text-primary-foreground" />
+            {profile?.is_core_member ? (
+              <span className="absolute -bottom-1 -right-1">
+                <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
               </span>
-            )}
+            ) : profile?.is_verified ? (
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary flex items-center justify-center">
+                <BadgeCheck className="h-2 w-2 text-primary-foreground" aria-label="Student Identity Verified" />
+              </span>
+            ) : null}
           </div>
           <span className="hidden sm:block text-[12px] font-medium text-foreground leading-none max-w-[72px] truncate">
             {profile?.name?.split(" ")[0] ?? "Student"}
@@ -134,8 +139,14 @@ function ProfileMenu({ userId }: { userId: string }) {
               )}
             </div>
           </div>
+          {profile?.is_core_member && (
+            <div className="mt-2 flex items-center justify-between rounded-lg bg-[#0B192C] border border-[#38BDF8]/30 px-2 py-1">
+              <span className="text-[11px] font-bold text-[#38BDF8]">Campus Connect</span>
+              <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
+            </div>
+          )}
           {profile?.is_verified && (
-            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-success/8 border border-success/20 px-2 py-1">
+            <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success/8 border border-success/20 px-2 py-1">
               <CheckCircle className="h-3 w-3 text-success" />
               <span className="text-[11px] font-semibold text-success">Verified Student</span>
             </div>

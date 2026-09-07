@@ -87,7 +87,6 @@ const GROUPS: Group[] = [
       { label: "Digital ID", description: "Your campus identity card", href: "/app/id-card", icon: CreditCard, tone: "primary", keywords: "id card badge" },
       { label: "Profile", description: "Your details & academics", href: "/app/profile", icon: UserRound, tone: "primary", keywords: "account me" },
       { label: "Notification Settings", description: "Control what reaches you", href: "/app/settings/notifications", icon: Settings, tone: "info", keywords: "push preferences" },
-      { label: "Install App", description: "Add Campus Connect to home", href: "/app/install", icon: Download, tone: "success", keywords: "pwa install apk" },
       { label: "Help & Support", description: "Raise a ticket, get answers", href: "/app/support", icon: LifeBuoy, tone: "warning", keywords: "ticket contact faq" },
     ],
   },

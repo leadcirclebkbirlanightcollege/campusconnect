@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ import StudentProfileDialog from "./StudentProfileDialog";
 import CreateStudentDialog from "./CreateStudentDialog";
 import BulkImportDialog from "./BulkImportDialog";
 import DangerDeleteAllStudentsPanel from "@/components/admin/DangerDeleteAllStudentsPanel";
+import { invalidateStudentQueries } from "@/lib/student-queries";
 
 export type StudentRow = {
   id: string;
@@ -53,6 +55,8 @@ export type StudentRow = {
   class_name: string | null;
   is_deleted: boolean;
   is_verified: boolean;
+  is_core_member?: boolean;
+  approval_status?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -144,9 +148,10 @@ export default function StudentManagementTab() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,created_at,updated_at",
+          "id,user_id,name,email,phone,student_id,department,class_name,is_deleted,is_verified,is_core_member,approval_status,created_at,updated_at",
         )
         .in("user_id", studentUserIds)
+        .eq("approval_status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -194,7 +199,7 @@ export default function StudentManagementTab() {
     onSuccess: async () => {
       toast.success("Students soft-deleted");
       clearSelection();
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete students"),
   });
@@ -210,7 +215,7 @@ export default function StudentManagementTab() {
     onSuccess: async () => {
       toast.success("Students restored");
       clearSelection();
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to restore students"),
   });
@@ -236,7 +241,7 @@ export default function StudentManagementTab() {
     },
     onSuccess: async () => {
       toast.success("Verification updated");
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update verification"),
   });
@@ -262,7 +267,7 @@ export default function StudentManagementTab() {
       setAssignCollegeOpen(false);
       setAssignCollegeId("");
       clearSelection();
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to assign college"),
   });
@@ -279,7 +284,7 @@ export default function StudentManagementTab() {
     onSuccess: async () => {
       toast.success(`${selectedIds.length} student(s) graduated`);
       clearSelection();
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to graduate students"),
   });
@@ -296,7 +301,7 @@ export default function StudentManagementTab() {
     onSuccess: async () => {
       toast.success(`${selectedIds.length} student(s) promoted`);
       clearSelection();
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to promote students"),
   });
@@ -520,21 +525,24 @@ export default function StudentManagementTab() {
 
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium leading-tight inline-flex items-center gap-2">
+                          <span className="font-medium leading-tight inline-flex items-center gap-1.5">
                             {s.name}
+                            {s.is_core_member ? (
+                              <CoreMemberBadge variant="compact" size="sm" />
+                            ) : null}
                             {s.is_verified ? (
                               <span
-                                className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                                aria-label="Verified"
-                                title="Verified"
+                                className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                                aria-label="Student Identity Verified"
+                                title="Student Identity Verified"
                               >
-                                <span className="sr-only">Verified</span>
+                                <span className="sr-only">Student Identity Verified</span>
                                 <svg
                                   viewBox="0 0 24 24"
-                                  className="h-3.5 w-3.5"
+                                  className="h-3 w-3"
                                   fill="none"
                                   stroke="currentColor"
-                                  strokeWidth="2"
+                                  strokeWidth="2.2"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 >
