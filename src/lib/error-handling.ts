@@ -149,6 +149,7 @@ interface ContextMessageConfig {
   permissionMessage?: string;
   conflictMessage?: string;
   validationMessage?: string;
+  rateLimitMessage?: string;
 }
 
 const CONTEXT_MESSAGES: Record<string, ContextMessageConfig> = {
@@ -220,6 +221,7 @@ const CONTEXT_MESSAGES: Record<string, ContextMessageConfig> = {
   "signup": {
     defaultMessage: "Unable to create account right now. Please try again.",
     conflictMessage: "An account with this email address already exists.",
+    rateLimitMessage: "Too many signup attempts. Please wait a few minutes and try again.",
   },
 };
 
@@ -350,10 +352,10 @@ export function normalizeError(
     category = "conflict";
     userMessage = "This record or identifier already exists.";
     isRetryable = false;
-  } else if (status === 429 || lowerMsg.includes("too many requests") || lowerMsg.includes("rate limit")) {
+  } else if (status === 429 || lowerMsg.includes("too many requests") || lowerMsg.includes("rate limit") || lowerMsg.includes("over_email_send_rate_limit")) {
     category = "rate_limit";
     userMessage = "Too many requests. Please wait a moment before trying again.";
-    isRetryable = true;
+    isRetryable = false;
   } else if (
     lowerMsg.includes("failed to fetch") ||
     lowerMsg.includes("network error") ||
@@ -396,6 +398,8 @@ export function normalizeError(
       userMessage = ctx.conflictMessage;
     } else if (category === "validation" && ctx.validationMessage) {
       userMessage = ctx.validationMessage;
+    } else if (category === "rate_limit" && ctx.rateLimitMessage) {
+      userMessage = ctx.rateLimitMessage;
     } else if (fallbackMessage) {
       userMessage = fallbackMessage;
     } else if (category === "unknown" || category === "server") {

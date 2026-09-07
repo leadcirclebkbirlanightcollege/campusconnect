@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,11 @@ const Auth = () => {
   const logoSrc = branding.logo_url || BRANDING.logo;
   const brandName = branding.brand_name || BRANDING.name;
   const tagline = branding.tagline || BRANDING.tagline;
-  const [loading, setLoading] = useState(false);
+  // Separate loading states so login and signup don't share a single flag
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [signupLoading, setSignupLoading] = useState(false);
+  // Synchronous in-flight guard — blocks re-entry before React re-renders
+  const signupInFlight = useRef(false);
   const [user, setUser] = useState<User | null>(null);
 
   // Login form
@@ -154,7 +158,7 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoginLoading(true);
     try {
       const identifier = loginIdentifier.trim();
       if (!identifier) throw new Error("Please enter Email or Student ID");
@@ -181,13 +185,18 @@ const Auth = () => {
     } catch (error: any) {
       showErrorToast(error, { context: "login" });
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    // Synchronous in-flight guard — prevents double-submit before React re-renders
+    if (signupInFlight.current) return;
+    signupInFlight.current = true;
+    setSignupLoading(true);
+
     try {
       const email = signupEmail.trim().toLowerCase();
       const password = signupPassword;
@@ -195,31 +204,68 @@ const Auth = () => {
       if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
       if (password !== signupConfirm) throw new Error("Passwords do not match");
 
+      // ── Single signup request. No automatic signInWithPassword after this. ──
+      // When email confirmation is enabled, Supabase returns session=null.
+      // We do NOT call signInWithPassword here — that would consume an extra
+      // rate-limit slot and always fail (email not yet confirmed).
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email, password,
         options: {
           emailRedirectTo: getAuthRedirectUrl("/auth/verify"),
         },
       });
+
       if (authError) {
         const lower = (authError.message || "").toLowerCase();
-        if (lower.includes("already registered") || lower.includes("already been registered")) {
+        const status = (authError as any).status ?? 0;
+
+        // Explicit 429 / rate-limit handling
+        if (
+          status === 429 ||
+          lower.includes("too many requests") ||
+          lower.includes("rate limit") ||
+          lower.includes("over_email_send_rate_limit")
+        ) {
+          throw new Error(
+            "Too many signup attempts. Please wait a few minutes and try again."
+          );
+        }
+
+        // Already-registered detection
+        if (
+          lower.includes("already registered") ||
+          lower.includes("already been registered") ||
+          lower.includes("user already registered")
+        ) {
           throw new Error("This email is already registered. Please sign in instead.");
         }
+
         throw authError;
       }
-      if (!authData.user) throw new Error("Failed to create account");
 
-      let session = authData.session;
-      if (!session) {
-        const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) {
-          showSuccessToast("Account created — Verification Required", "Please check your inbox and click 'Verify Email Address' to activate your account.");
-          return;
-        }
-        session = signIn.session;
+      if (!authData.user) throw new Error("Failed to create account. Please try again.");
+
+      // Email confirmation is required — session will be null. This is expected.
+      // Do NOT attempt signInWithPassword here.
+      if (!authData.session) {
+        // Account created; email confirmation pending.
+        // Seed the profile row now so onboarding can proceed after verification.
+        await supabase.from("profiles").upsert(
+          [{ user_id: authData.user.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
+          { onConflict: "user_id" }
+        );
+        await supabase.from("user_roles").upsert(
+          [{ user_id: authData.user.id, role: "student" }],
+          { onConflict: "user_id" }
+        );
+        showSuccessToast(
+          "Check Your Email",
+          "We've sent a verification link to your inbox. Click it to activate your account."
+        );
+        return;
       }
 
+      // Session returned immediately (email confirmation disabled on this project)
       await supabase.from("profiles").upsert(
         [{ user_id: authData.user.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
         { onConflict: "user_id" }
@@ -234,7 +280,8 @@ const Auth = () => {
     } catch (error: any) {
       showErrorToast(error, { context: "signup" });
     } finally {
-      setLoading(false);
+      setSignupLoading(false);
+      signupInFlight.current = false;
     }
   };
 
@@ -394,9 +441,9 @@ const Auth = () => {
                 <Button
                   type="submit"
                   className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-2"
-                  disabled={loading}
+                  disabled={loginLoading}
                 >
-                  {loading ? (
+                  {loginLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>Sign In <ArrowRight className="h-4 w-4" /></>
@@ -445,11 +492,13 @@ const Auth = () => {
 
                 <Button
                   type="submit"
+                  id="signup-submit-btn"
                   className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-1"
-                  disabled={loading}
+                  disabled={signupLoading}
+                  aria-busy={signupLoading}
                 >
-                  {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  {signupLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account…</>
                   ) : (
                     <>Create Account <ArrowRight className="h-4 w-4" /></>
                   )}
