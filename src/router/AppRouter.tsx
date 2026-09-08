@@ -313,6 +313,7 @@ export default function AppRouter() {
             <Route path="ecell/committee"        element={<StudentEcellCommitteePage />} />
             <Route path="ecell/stalls"           element={<StudentEcellStalls />} />
             <Route path="academics"              element={<AcademicsHub />} />
+            <Route path="community"              element={<CommunityHub />} />
             <Route path="more"                   element={<MoreHub />} />
             <Route path="install"                element={<Navigate to="/app" replace />} />
 
@@ -395,6 +396,7 @@ export default function AppRouter() {
           <Route path="/club/:id"         element={<DeepLink to="/app/programmes/:id" />} />
           <Route path="/clubs/:id"        element={<DeepLink to="/app/programmes/:id" />} />
           <Route path="/community/posts/:id" element={<DeepLink to="/app/community" />} />
+          <Route path="/community"        element={<Navigate to="/app/community" replace />} />
           <Route path="/profile/:id"      element={<DeepLink to="/app/settings" />} />
           <Route path="/faculty/profile/:id" element={<DeepLink to="/faculty/profile" />} />
 
