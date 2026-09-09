@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Verify your email address — Campus Connect</title>
+  <title>Confirm your new email address — Campus Connect</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -106,6 +106,33 @@
       border: 1px solid #e2e8f0;
       word-break: break-all;
     }
+    .email-badge-new {
+      display: inline-block;
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #bfdbfe;
+      word-break: break-all;
+    }
+    .change-table {
+      width: 100%;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .change-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .change-label {
+      color: #64748b;
+      font-weight: 500;
+      width: 120px;
+    }
     .btn-container {
       margin: 28px 0;
       text-align: left;
@@ -161,13 +188,13 @@
       text-decoration: underline;
     }
     .security-box {
-      background-color: #f8fafc;
-      border-left: 3px solid #64748b;
+      background-color: #fff7ed;
+      border-left: 3px solid #f97316;
       padding: 12px 14px;
       border-radius: 4px;
       margin-top: 24px;
       font-size: 13px;
-      color: #64748b;
+      color: #9a3412;
       line-height: 1.5;
     }
     .footer {
@@ -218,10 +245,25 @@
 
             <!-- Content -->
             <div class="content">
-              <h1>Verify your email address</h1>
-              <p>Welcome to <strong>Campus Connect</strong>!</p>
+              <h1>Confirm your new email address</h1>
+              <p>Hello,</p>
               <p>
-                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span> belongs to you to complete your registration and begin student onboarding.
+                A request has been made to update the email address linked to your Campus Connect account.
+              </p>
+
+              <table role="presentation" cellpadding="0" cellspacing="0" class="change-table">
+                <tr>
+                  <td class="change-label">Current Email:</td>
+                  <td><span class="email-badge">{{ .Email }}</span></td>
+                </tr>
+                <tr>
+                  <td class="change-label" style="border-top: 1px solid #e2e8f0;">New Email:</td>
+                  <td style="border-top: 1px solid #e2e8f0;"><span class="email-badge-new">{{ .NewEmail }}</span></td>
+                </tr>
+              </table>
+
+              <p>
+                To complete this change and verify that you have access to this email address, please confirm below:
               </p>
 
               <!-- Primary CTA -->
@@ -229,31 +271,31 @@
                 <!--[if mso]>
                 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="23%" stroke="f" fillcolor="#1a56db">
                   <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Verify Email Address &rarr;</center>
+                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Confirm New Email &rarr;</center>
                 </v:roundrect>
                 <![endif]-->
                 <!--[if !mso]><!-- -->
                 <a href="{{ .ConfirmationURL }}" class="btn" target="_blank" rel="noopener noreferrer">
-                  Verify Email Address &rarr;
+                  Confirm New Email &rarr;
                 </a>
                 <!--<![endif]-->
               </div>
 
               <!-- OTP Code Alternative -->
               <div class="otp-container">
-                <div class="otp-label">Or enter this 6-digit verification code:</div>
+                <div class="otp-label">Or enter this confirmation code:</div>
                 <div class="otp-code">{{ .Token }}</div>
               </div>
 
               <!-- Fallback plain text URL -->
               <div class="alt-link">
-                If the button above does not open directly, copy and paste this verification URL into your browser:<br>
+                If the button above does not open directly, copy and paste this link into your browser:<br>
                 <a href="{{ .ConfirmationURL }}" target="_blank">{{ .ConfirmationURL }}</a>
               </div>
 
               <!-- Security notice -->
               <div class="security-box">
-                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard this email. Your email address will not be activated without verification.
+                <strong>Important Security Advisory:</strong> If you did not request to change your email address, please contact your campus administrator immediately. Your current email address will remain active until confirmed.
               </div>
             </div>
 
@@ -263,7 +305,7 @@
               <div class="footer-inst">Department of Computer Science</div>
               <div class="footer-inst">B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</div>
               <div class="footer-note">
-                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this email.
+                Sent to {{ .NewEmail }} regarding Campus Connect account {{ .Email }}. Please do not reply directly to this email.
               </div>
             </div>
           </div>

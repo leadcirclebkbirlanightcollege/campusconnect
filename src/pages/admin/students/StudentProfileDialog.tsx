@@ -7,16 +7,6 @@ import { format } from "date-fns";
 import { Mail, ShieldCheck, ShieldAlert } from "@/components/icons";
 import { invalidateStudentQueries } from "@/lib/student-queries";
 import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 import {
   Dialog,
@@ -79,7 +69,6 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [coreMemberConfirmAction, setCoreMemberConfirmAction] = useState<null | "grant" | "remove">(null);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -173,36 +162,6 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
       await invalidateStudentQueries(qc);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update profile"),
-  });
-
-  const coreMemberMutation = useMutation({
-    mutationFn: async (grant: boolean) => {
-      if (!userId) throw new Error("Missing userId");
-      const { error } = await supabase.rpc("admin_set_core_member", {
-        p_user_id: userId,
-        p_is_core_member: grant,
-      });
-      if (error) {
-        // Resilient fallback to direct admin update
-        const { error: updateErr } = await supabase
-          .from("profiles")
-          .update({ is_core_member: grant, updated_at: new Date().toISOString() })
-          .eq("user_id", userId);
-        if (updateErr) throw updateErr;
-      }
-    },
-    onSuccess: async (_, grant) => {
-      toast.success(grant ? "Granted Core Member status" : "Removed Core Member status");
-      setCoreMemberConfirmAction(null);
-      await qc.invalidateQueries({ queryKey: ["admin", "student", userId] });
-      await qc.invalidateQueries({ queryKey: ["admin", "students"] });
-      await qc.invalidateQueries({ queryKey: ["shell", "profile_mini"] });
-      await qc.invalidateQueries({ queryKey: ["profile"] });
-      await invalidateStudentQueries(qc);
-    },
-    onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Failed to update Core Member status");
-    },
   });
 
   const attendanceQuery = useQuery({
@@ -465,28 +424,6 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
                         </span>
                       )}
                     </div>
-                    <div className="pt-1">
-                      {profileQuery.data?.is_core_member ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-                          onClick={() => setCoreMemberConfirmAction("remove")}
-                          disabled={coreMemberMutation.isPending}
-                        >
-                          Remove Core Member
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs bg-[#0B192C] text-[#38BDF8] hover:bg-[#132A4A] border border-[#38BDF8]/40 shadow-xs"
-                          onClick={() => setCoreMemberConfirmAction("grant")}
-                          disabled={coreMemberMutation.isPending}
-                        >
-                          Make Core Member
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -579,47 +516,6 @@ export default function StudentProfileDialog({ userId, onOpenChange }: Props) {
           </Card>
         </div>
       </DialogContent>
-
-      {/* Confirmation modal before grant/removal of Core Member status */}
-      <AlertDialog
-        open={Boolean(coreMemberConfirmAction)}
-        onOpenChange={(open) => !open && setCoreMemberConfirmAction(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {coreMemberConfirmAction === "grant" ? "Make Core Member?" : "Remove Core Member Status?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {coreMemberConfirmAction === "grant"
-                ? `Are you sure you want to make ${profileQuery.data?.name ?? "this student"} an official Campus Connect Core Team member? They will receive the official Core Member badge across their profile and community presence.`
-                : `Are you sure you want to remove Core Member status from ${profileQuery.data?.name ?? "this student"}? Their official Campus Connect Core Member badge will be removed immediately.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={coreMemberMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (coreMemberConfirmAction) {
-                  coreMemberMutation.mutate(coreMemberConfirmAction === "grant");
-                }
-              }}
-              className={
-                coreMemberConfirmAction === "remove"
-                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  : ""
-              }
-              disabled={coreMemberMutation.isPending}
-            >
-              {coreMemberMutation.isPending
-                ? "Updating…"
-                : coreMemberConfirmAction === "grant"
-                ? "Make Core Member"
-                : "Remove Core Member"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }

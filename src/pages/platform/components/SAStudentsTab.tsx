@@ -1,9 +1,9 @@
 /**
- * SAStudentsTab — Server-side paginated global student directory.
- * Filters are pushed to the DB; client never loads more than PAGE_SIZE rows.
+ * SAStudentsTab — Server-side paginated global student directory for Super Admin.
+ * Provides exclusive Super Admin authority over Campus Connect Core Team memberships.
  */
 import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCollegeContext } from "@/contexts/CollegeContext";
 import {
   Search, Users, AlertTriangle, CheckCircle2,
-  ChevronLeft, ChevronRight as ChevronRightIcon, RefreshCw,
+  ChevronLeft, ChevronRight as ChevronRightIcon, RefreshCw, Shield, Sparkles,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
+import { toast } from "sonner";
+import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const PAGE_SIZE = 50;
 
@@ -33,6 +45,7 @@ type StudentRow = {
   email: string;
   college_id: string | null;
   is_verified: boolean;
+  is_core_member: boolean;
   student_id: string | null;
   class_name: string | null;
   tier: string | null;
@@ -41,31 +54,43 @@ type StudentRow = {
 };
 
 export default function SAStudentsTab() {
+  const qc = useQueryClient();
   const { colleges } = useCollegeContext();
   const [search, setSearch]               = useState("");
   const [filterCollege, setFilterCollege] = useState("all");
   const [filterRisk, setFilterRisk]       = useState("all");
+  const [filterCore, setFilterCore]       = useState("all");
   const [page, setPage]                   = useState(0);
+
+  // Super Admin Core Team action confirmation
+  const [confirmDialog, setConfirmDialog] = useState<{
+    student: StudentRow;
+    action: "grant" | "remove";
+  } | null>(null);
 
   const debouncedSearch = useDebounce(search, 350);
 
   // Reset to page 0 on filter change
   const handleCollegeChange = useCallback((v: string) => { setFilterCollege(v); setPage(0); }, []);
   const handleRiskChange    = useCallback((v: string) => { setFilterRisk(v); setPage(0); }, []);
+  const handleCoreChange    = useCallback((v: string) => { setFilterCore(v); setPage(0); }, []);
   const handleSearchChange  = useCallback((v: string) => { setSearch(v); setPage(0); }, []);
 
   const studentsQuery = useQuery<{ rows: StudentRow[]; total: number }>({
-    queryKey: ["sa_students_global", debouncedSearch, filterCollege, filterRisk, page],
+    queryKey: ["sa_students_global", debouncedSearch, filterCollege, filterRisk, filterCore, page],
     queryFn: async () => {
       // Build base query with server-side filters
       let q = supabase
         .from("profiles")
-        .select("user_id, name, email, college_id, is_verified, student_id, class_name", { count: "exact" })
+        .select("user_id, name, email, college_id, is_verified, is_core_member, student_id, class_name", { count: "exact" })
         .eq("is_deleted", false)
         .order("name", { ascending: true })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
       if (filterCollege !== "all") q = q.eq("college_id", filterCollege);
+      if (filterCore === "core") q = q.eq("is_core_member", true);
+      if (filterCore === "standard") q = q.eq("is_core_member", false);
+
       if (debouncedSearch.trim()) {
         q = q.or(
           `name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,student_id.ilike.%${debouncedSearch}%`
@@ -86,12 +111,13 @@ export default function SAStudentsTab() {
       const intelMap = new Map((intel ?? []).map((i) => [i.user_id, i]));
       let rows = (data ?? []).map((p) => ({
         ...p,
+        is_core_member:         Boolean(p.is_core_member),
         tier:                   intelMap.get(p.user_id)?.tier ?? null,
         risk_flags:             intelMap.get(p.user_id)?.risk_flags ?? null,
         attendance_consistency: intelMap.get(p.user_id)?.attendance_consistency ?? null,
       }));
 
-      // Client-side risk filter (can't push to DB easily without join)
+      // Client-side risk filter
       if (filterRisk === "risk")  rows = rows.filter((s) => (s.risk_flags?.length ?? 0) > 0);
       if (filterRisk === "safe")  rows = rows.filter((s) => (s.risk_flags?.length ?? 0) === 0);
 
@@ -99,6 +125,27 @@ export default function SAStudentsTab() {
     },
     staleTime: 45_000,
     placeholderData: (prev) => prev,
+  });
+
+  // Super Admin RPC call to grant or revoke Core Member status
+  const coreMemberMutation = useMutation({
+    mutationFn: async ({ userId, grant }: { userId: string; grant: boolean }) => {
+      const { error } = await supabase.rpc("admin_set_core_member", {
+        p_user_id: userId,
+        p_is_core_member: grant,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, { grant }) => {
+      toast.success(grant ? "Granted Campus Connect Core Team badge" : "Removed Core Team membership");
+      setConfirmDialog(null);
+      qc.invalidateQueries({ queryKey: ["sa_students_global"] });
+      qc.invalidateQueries({ queryKey: ["admin", "students"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Failed to update Core Team status");
+    },
   });
 
   const rows  = (studentsQuery.data as any)?.rows  as StudentRow[] ?? [];
@@ -148,9 +195,19 @@ export default function SAStudentsTab() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={filterCore} onValueChange={handleCoreChange}>
+          <SelectTrigger className="w-40 h-9 text-xs bg-surface-2 border-border-subtle">
+            <SelectValue placeholder="All Members" />
+          </SelectTrigger>
+          <SelectContent className="bg-surface-1 border-border-subtle">
+            <SelectItem value="all">All Members</SelectItem>
+            <SelectItem value="core">Core Team Only</SelectItem>
+            <SelectItem value="standard">Standard Students</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={filterRisk} onValueChange={handleRiskChange}>
           <SelectTrigger className="w-36 h-9 text-xs bg-surface-2 border-border-subtle">
-            <SelectValue placeholder="All" />
+            <SelectValue placeholder="All Risk" />
           </SelectTrigger>
           <SelectContent className="bg-surface-1 border-border-subtle">
             <SelectItem value="all">All Status</SelectItem>
@@ -173,13 +230,15 @@ export default function SAStudentsTab() {
       ) : (
         <div className={cn("rounded-xl border border-border-subtle overflow-hidden shadow-xs transition-opacity", studentsQuery.isFetching && "opacity-70")}>
           {/* Header */}
-          <div className="grid grid-cols-[1.5fr_1fr_1fr_80px_80px_64px] text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-surface-2 px-5 py-3 border-b border-border-subtle">
+          <div className="grid grid-cols-[1.4fr_1fr_0.9fr_70px_70px_50px_120px_110px] text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-surface-2 px-5 py-3 border-b border-border-subtle">
             <span>Student</span>
             <span>College</span>
             <span>Class</span>
             <span className="text-center">Tier</span>
             <span className="text-center">Attend.</span>
             <span className="text-center">Risk</span>
+            <span className="text-center">Core Team</span>
+            <span className="text-right">Action</span>
           </div>
           {/* Rows */}
           <div className="divide-y divide-border-subtle/40 bg-surface-1">
@@ -189,10 +248,15 @@ export default function SAStudentsTab() {
               return (
                 <div
                   key={s.user_id}
-                  className="grid grid-cols-[1.5fr_1fr_1fr_80px_80px_64px] items-center px-5 py-2.5 hover:bg-surface-2/50 transition-colors duration-100"
+                  className="grid grid-cols-[1.4fr_1fr_0.9fr_70px_70px_50px_120px_110px] items-center px-5 py-2.5 hover:bg-surface-2/50 transition-colors duration-100"
                 >
                   <div className="min-w-0">
-                    <p className="text-[12px] font-medium text-foreground truncate">{s.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[12px] font-medium text-foreground truncate">{s.name}</p>
+                      {s.is_core_member ? (
+                        <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
+                      ) : null}
+                    </div>
                     <p className="text-[10px] text-muted-foreground truncate">{s.student_id ?? s.email}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground truncate">{college?.college_name ?? "—"}</span>
@@ -214,6 +278,40 @@ export default function SAStudentsTab() {
                     {hasRisk
                       ? <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                       : <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+                  </div>
+                  {/* Campus Connect Core Team Status */}
+                  <div className="flex justify-center">
+                    {s.is_core_member ? (
+                      <span className="inline-flex items-center text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-md">
+                        Core Member
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">Standard</span>
+                    )}
+                  </div>
+                  {/* Super Admin Control Actions */}
+                  <div className="flex justify-end">
+                    {s.is_core_member ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] border-destructive/30 text-destructive hover:bg-destructive/10"
+                        onClick={() => setConfirmDialog({ student: s, action: "remove" })}
+                        disabled={coreMemberMutation.isPending}
+                      >
+                        Remove Core
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] border-sky-500/40 text-sky-400 hover:bg-sky-500/10"
+                        onClick={() => setConfirmDialog({ student: s, action: "grant" })}
+                        disabled={coreMemberMutation.isPending}
+                      >
+                        Grant Core
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -261,6 +359,54 @@ export default function SAStudentsTab() {
           </div>
         </div>
       )}
+
+      {/* Super Admin Confirmation Dialog */}
+      <AlertDialog
+        open={Boolean(confirmDialog)}
+        onOpenChange={(open) => !open && setConfirmDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog?.action === "grant"
+                ? "Grant Core Team badge?"
+                : "Remove Core Team badge?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog?.action === "grant"
+                ? `This will mark ${confirmDialog.student.name} as a Campus Connect Core Team member and display the Core Team badge across the platform.`
+                : `This will remove ${confirmDialog?.student.name}'s Campus Connect Core Team membership.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={coreMemberMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDialog) {
+                  coreMemberMutation.mutate({
+                    userId: confirmDialog.student.user_id,
+                    grant: confirmDialog.action === "grant",
+                  });
+                }
+              }}
+              className={
+                confirmDialog?.action === "remove"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }
+              disabled={coreMemberMutation.isPending}
+            >
+              {coreMemberMutation.isPending
+                ? "Updating…"
+                : confirmDialog?.action === "grant"
+                ? "Grant Core Team Badge"
+                : "Remove Core Team Badge"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

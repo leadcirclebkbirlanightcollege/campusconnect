@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Verify your email address — Campus Connect</title>
+  <title>A sign-in method was linked — Campus Connect</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -12,10 +12,6 @@
         <o:PixelsPerInch>96</o:PixelsPerInch>
       </o:OfficeDocumentSettings>
     </xml>
-    <style>
-      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-      img { -ms-interpolation-mode: bicubic; }
-    </style>
   </noscript>
   <![endif]-->
   <style>
@@ -106,69 +102,39 @@
       border: 1px solid #e2e8f0;
       word-break: break-all;
     }
-    .btn-container {
-      margin: 28px 0;
-      text-align: left;
-    }
-    .btn {
-      display: inline-block;
-      background-color: #1a56db;
-      color: #ffffff !important;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 13px 28px;
-      border-radius: 10px;
-      text-decoration: none;
-      box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
-    }
-    .otp-container {
+    .notice-box {
       margin: 24px 0;
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
-      padding: 16px;
-      text-align: center;
+      padding: 18px 20px;
     }
-    .otp-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
+    .notice-box-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
     }
-    .otp-code {
-      font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-      font-size: 28px;
-      font-weight: 800;
-      color: #1e293b;
-      letter-spacing: 6px;
+    .notice-box-desc {
+      font-size: 14px;
+      color: #475569;
       margin: 0;
+      line-height: 1.6;
     }
-    .alt-link {
-      font-size: 12px;
-      color: #64748b;
-      word-break: break-all;
-      background-color: #f8fafc;
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      margin: 22px 0 16px 0;
-      line-height: 1.5;
-    }
-    .alt-link a {
-      color: #1a56db;
-      text-decoration: underline;
-    }
-    .security-box {
-      background-color: #f8fafc;
-      border-left: 3px solid #64748b;
-      padding: 12px 14px;
-      border-radius: 4px;
+    .security-warning {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 16px;
+      border-radius: 6px;
       margin-top: 24px;
       font-size: 13px;
-      color: #64748b;
+      color: #92400e;
       line-height: 1.5;
+    }
+    .security-warning strong {
+      color: #78350f;
     }
     .footer {
       background-color: #f8fafc;
@@ -218,42 +184,29 @@
 
             <!-- Content -->
             <div class="content">
-              <h1>Verify your email address</h1>
-              <p>Welcome to <strong>Campus Connect</strong>!</p>
+              <h1>A sign-in method was linked</h1>
+              <p>Hello,</p>
               <p>
-                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span> belongs to you to complete your registration and begin student onboarding.
+                A new identity provider has been linked as an authorized sign-in method for your <strong>Campus Connect</strong> account (<span class="email-badge">{{ .Email }}</span>).
               </p>
 
-              <!-- Primary CTA -->
-              <div class="btn-container">
-                <!--[if mso]>
-                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="23%" stroke="f" fillcolor="#1a56db">
-                  <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Verify Email Address &rarr;</center>
-                </v:roundrect>
-                <![endif]-->
-                <!--[if !mso]><!-- -->
-                <a href="{{ .ConfirmationURL }}" class="btn" target="_blank" rel="noopener noreferrer">
-                  Verify Email Address &rarr;
-                </a>
-                <!--<![endif]-->
+              <!-- Event Details -->
+              <div class="notice-box">
+                <div class="notice-box-title">Linked Identity Details</div>
+                <p class="notice-box-desc">
+                  <strong>Linked Provider:</strong> <span class="email-badge">{{ .Provider }}</span><br>
+                  <strong>Account Email:</strong> {{ .Email }}<br>
+                  <strong>Status:</strong> Linked &amp; Authorized
+                </p>
               </div>
 
-              <!-- OTP Code Alternative -->
-              <div class="otp-container">
-                <div class="otp-label">Or enter this 6-digit verification code:</div>
-                <div class="otp-code">{{ .Token }}</div>
-              </div>
+              <p>
+                You can now use your {{ .Provider }} credentials to authenticate and sign in to Campus Connect.
+              </p>
 
-              <!-- Fallback plain text URL -->
-              <div class="alt-link">
-                If the button above does not open directly, copy and paste this verification URL into your browser:<br>
-                <a href="{{ .ConfirmationURL }}" target="_blank">{{ .ConfirmationURL }}</a>
-              </div>
-
-              <!-- Security notice -->
-              <div class="security-box">
-                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard this email. Your email address will not be activated without verification.
+              <!-- Security Warning -->
+              <div class="security-warning">
+                <strong>Important Security Warning:</strong> If you did not make this change, someone else may have attached their identity provider to your Campus Connect profile. Please contact institutional support immediately at <a href="mailto:support@campusconnect.indevs.in" style="color:#b45309; text-decoration:underline;">support@campusconnect.indevs.in</a> or alert your college administrator right away.
               </div>
             </div>
 
@@ -263,7 +216,7 @@
               <div class="footer-inst">Department of Computer Science</div>
               <div class="footer-inst">B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</div>
               <div class="footer-note">
-                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this email.
+                This is an automated transactional security alert sent to {{ .Email }}. Please do not reply directly to this email.
               </div>
             </div>
           </div>

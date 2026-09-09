@@ -49,7 +49,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-type Role = "admin" | "student" | null;
+import { AppRole } from "@/lib/roleRouting";
+
+type Role = AppRole | null;
 
 interface NavItem {
   title: string;
@@ -117,6 +119,7 @@ export default function AppSidebar() {
   });
 
   const currentPath = location.pathname;
+  const isSuperAdmin = roleQuery.data === "super_admin";
   const isAdmin = roleQuery.data === "admin";
   const unreadCount = unreadQuery.data ?? 0;
 
@@ -149,6 +152,16 @@ export default function AppSidebar() {
       },
     ],
     [unreadCount],
+  );
+
+  const superAdminSection: NavSection = useMemo(
+    () => ({
+      label: "Platform",
+      items: [
+        { title: "Super Admin Console", url: "/platform/admin-control/dashboard", icon: Shield, accent: "text-warning" },
+      ],
+    }),
+    [],
   );
 
   const adminSection: NavSection = useMemo(
@@ -286,10 +299,17 @@ export default function AppSidebar() {
       <SidebarContent className="overflow-y-auto px-1.5 py-2 gap-0">
         {sections.map((s, i) => renderSection(s, i))}
 
+        {isSuperAdmin && (
+          <>
+            <div className="mx-3 my-1.5 h-px bg-sidebar-border" />
+            {renderSection(superAdminSection, sections.length)}
+          </>
+        )}
+
         {isAdmin && (
           <>
             <div className="mx-3 my-1.5 h-px bg-sidebar-border" />
-            {renderSection(adminSection, sections.length)}
+            {renderSection(adminSection, sections.length + 1)}
           </>
         )}
       </SidebarContent>

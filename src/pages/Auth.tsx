@@ -16,6 +16,7 @@ import { BRANDING } from "@/config/branding";
 import { APP_VERSION } from "@/config/version";
 import { motion } from "framer-motion";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect";
+import { resolveRoleDashboard, isRouteAllowedForRole } from "@/lib/roleRouting";
 
 /* ── Feature chips for left hero panel ── */
 const HIGHLIGHTS = [
@@ -89,6 +90,8 @@ const Auth = () => {
       if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // If signup is currently in flight, handleSignup manages profile initialization and direct navigation
+      if (signupInFlight.current) return;
       if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
     });
     return () => subscription.unsubscribe();
@@ -133,16 +136,13 @@ const Auth = () => {
         }
       }
 
-      // If user came via an authorized deep link, honor it!
-      if (safeRedirect) {
+      // If user came via an authorized deep link, honor it only if permitted for this role!
+      if (safeRedirect && isRouteAllowedForRole(r, safeRedirect)) {
         return navigate(safeRedirect, { replace: true });
       }
 
-      // Otherwise fall back to role-specific dashboard
-      if (r === "super_admin") return navigate("/platform/admin-control/dashboard", { replace: true });
-      if (r === "admin")       return navigate("/platform/admin/dashboard", { replace: true });
-      if (r === "faculty")     return navigate("/faculty/dashboard", { replace: true });
-      return navigate("/app/dashboard", { replace: true });
+      // Otherwise fall back to canonical role-specific dashboard (Super Admin -> /platform/admin-control/dashboard)
+      return navigate(resolveRoleDashboard(r), { replace: true });
     } catch {
       navigate("/onboarding-wizard", { replace: true });
     }
@@ -195,6 +195,9 @@ const Auth = () => {
     // Synchronous in-flight guard — prevents double-submit before React re-renders
     if (signupInFlight.current) return;
     signupInFlight.current = true;
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("cc_signup_in_progress", "true");
+    }
     setSignupLoading(true);
 
     try {
@@ -204,58 +207,71 @@ const Auth = () => {
       if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
       if (password !== signupConfirm) throw new Error("Passwords do not match");
 
+      // Check if an active session already exists for this email
+      // (e.g. controlled retry if profile/role creation failed on previous attempt)
+      const { data: currentSessionData } = await supabase.auth.getSession();
+      const existingUser = currentSessionData?.session?.user;
+      let authUser = existingUser?.email?.toLowerCase() === email ? existingUser : null;
+      let authSession = existingUser?.email?.toLowerCase() === email ? currentSessionData?.session : null;
+
       // ── Single signup request. No automatic signInWithPassword after this. ──
       // When email confirmation is enabled, Supabase returns session=null.
       // We do NOT call signInWithPassword here — that would consume an extra
       // rate-limit slot and always fail (email not yet confirmed).
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email, password,
-        options: {
-          emailRedirectTo: getAuthRedirectUrl("/auth/verify"),
-        },
-      });
+      if (!authUser) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getAuthRedirectUrl("/auth/verify"),
+          },
+        });
 
-      if (authError) {
-        const lower = (authError.message || "").toLowerCase();
-        const status = (authError as any).status ?? 0;
+        if (authError) {
+          const lower = (authError.message || "").toLowerCase();
+          const status = (authError as any).status ?? 0;
 
-        // Explicit 429 / rate-limit handling
-        if (
-          status === 429 ||
-          lower.includes("too many requests") ||
-          lower.includes("rate limit") ||
-          lower.includes("over_email_send_rate_limit")
-        ) {
-          throw new Error(
-            "Too many signup attempts. Please wait a few minutes and try again."
-          );
+          // Explicit 429 / rate-limit handling
+          if (
+            status === 429 ||
+            lower.includes("too many requests") ||
+            lower.includes("rate limit") ||
+            lower.includes("over_email_send_rate_limit")
+          ) {
+            throw new Error(
+              "Too many signup attempts. Please wait a few minutes and try again."
+            );
+          }
+
+          // Already-registered detection
+          if (
+            lower.includes("already registered") ||
+            lower.includes("already been registered") ||
+            lower.includes("user already registered")
+          ) {
+            throw new Error("This email is already registered. Please sign in instead.");
+          }
+
+          throw authError;
         }
 
-        // Already-registered detection
-        if (
-          lower.includes("already registered") ||
-          lower.includes("already been registered") ||
-          lower.includes("user already registered")
-        ) {
-          throw new Error("This email is already registered. Please sign in instead.");
-        }
+        if (!authData.user) throw new Error("Failed to create account. Please try again.");
 
-        throw authError;
+        authUser = authData.user;
+        authSession = authData.session;
       }
-
-      if (!authData.user) throw new Error("Failed to create account. Please try again.");
 
       // Email confirmation is required — session will be null. This is expected.
       // Do NOT attempt signInWithPassword here.
-      if (!authData.session) {
+      if (!authSession) {
         // Account created; email confirmation pending.
         // Seed the profile row now so onboarding can proceed after verification.
         await supabase.from("profiles").upsert(
-          [{ user_id: authData.user.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
+          [{ user_id: authUser.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
           { onConflict: "user_id" }
         );
         await supabase.from("user_roles").upsert(
-          [{ user_id: authData.user.id, role: "student" }],
+          [{ user_id: authUser.id, role: "student" }],
           { onConflict: "user_id" }
         );
         showSuccessToast(
@@ -265,21 +281,84 @@ const Auth = () => {
         return;
       }
 
-      // Session returned immediately (email confirmation disabled on this project)
-      await supabase.from("profiles").upsert(
-        [{ user_id: authData.user.id, email, name: email.split("@")[0], profile_completed: false, approval_status: "pending" }],
-        { onConflict: "user_id" }
-      );
-      await supabase.from("user_roles").upsert(
-        [{ user_id: authData.user.id, role: "student" }],
+      // Session returned immediately (email confirmation disabled for launch)
+      // 1. Initialize user profile record
+      const { error: profileError } = await supabase.from("profiles").upsert(
+        [{
+          user_id: authUser.id,
+          email,
+          name: email.split("@")[0],
+          profile_completed: false,
+          approval_status: "pending",
+        }],
         { onConflict: "user_id" }
       );
 
+      if (profileError) {
+        console.error("Profile initialization error:", profileError);
+        throw new Error("Account created, but profile setup failed. Click Create Account again to retry.");
+      }
+
+      // 2. Initialize student role record
+      const { error: roleError } = await supabase.from("user_roles").upsert(
+        [{ user_id: authUser.id, role: "student" }],
+        { onConflict: "user_id" }
+      );
+
+      if (roleError) {
+        console.warn("user_roles initialization notice:", roleError.message);
+      }
+
+      // 3. Verify profile record actually exists before navigating
+      const { data: verifiedProfile, error: verifyError } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+
+      if (verifyError || !verifiedProfile) {
+        throw new Error("Unable to verify profile record. Click Create Account again to retry.");
+      }
+
+      // 4. Asynchronously dispatch custom Welcome / Profile Created email (non-blocking)
+      // Must NEVER block navigation, throw errors, or delay onboarding.
+      try {
+        void supabase.functions
+          .invoke("send-welcome-email", {
+            body: {
+              user_id: authUser.id,
+              email: authUser.email ?? email,
+              name: email.split("@")[0],
+            },
+          })
+          .then(({ data, error }) => {
+            if (error) {
+              console.warn("[WelcomeEmail] Non-blocking delivery notice:", error.message);
+            } else if (data?.status === "sent") {
+              console.log("[WelcomeEmail] Sent successfully to:", authUser.email ?? email);
+            } else {
+              console.log("[WelcomeEmail] Status:", data?.status);
+            }
+          })
+          .catch((err) => {
+            console.warn("[WelcomeEmail] Non-blocking dispatch caught error:", err?.message);
+          });
+      } catch (invokeErr: any) {
+        console.warn("[WelcomeEmail] Failed to initiate email dispatch:", invokeErr?.message);
+      }
+
+      // 5. Direct navigation to existing Onboarding Wizard without intermediate screens
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("cc_signup_in_progress");
+      }
       showSuccessToast("Account created — let's set up your profile");
       navigate("/onboarding-wizard", { replace: true });
     } catch (error: any) {
       showErrorToast(error, { context: "signup" });
     } finally {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("cc_signup_in_progress");
+      }
       setSignupLoading(false);
       signupInFlight.current = false;
     }

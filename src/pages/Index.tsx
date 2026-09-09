@@ -9,6 +9,8 @@ import {
 } from "@/components/icons";
 
 import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
+import { resolveRoleDashboard } from "@/lib/roleRouting";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { useLandingContent } from "@/hooks/use-landing-content";
 import { Button } from "@/components/ui/button";
@@ -35,34 +37,25 @@ export default function Index() {
   const { branding } = usePlatformBranding();
   const { content } = useLandingContent();
   const { user, isLoading: authLoading } = useAuth();
+  const { role, isLoading: tenantLoading } = useTenant();
 
-  // If launched as installed PWA, jump straight into the app shell.
+  // If already logged in, route immediately to the canonical role-specific dashboard
+  useEffect(() => {
+    if (authLoading || !user || tenantLoading) return;
+    navigate(resolveRoleDashboard(role), { replace: true });
+  }, [user, authLoading, tenantLoading, role, navigate]);
+
+  // If launched as installed PWA and not logged in, route to /auth
   useEffect(() => {
     const isStandalone =
       typeof window !== "undefined" &&
       (window.matchMedia?.("(display-mode: standalone)").matches ||
         (window.navigator as any).standalone === true ||
         new URLSearchParams(window.location.search).get("source") === "pwa");
-    if (isStandalone) {
-      navigate("/app/dashboard", { replace: true });
+    if (isStandalone && !authLoading && !user) {
+      navigate("/auth", { replace: true });
     }
-  }, [navigate]);
-
-  useEffect(() => {
-    if (authLoading || !user) return;
-    import("@/providers/QueryProvider").then(({ queryClient }) => {
-      const go = () => {
-        const role = queryClient.getQueryData<{ role: string; college_id: string | null }>(["tenant", "role", user.id]);
-        if (role?.role === "super_admin") navigate("/platform/admin-control/dashboard", { replace: true });
-        else if (role?.role === "admin") navigate("/platform/admin/dashboard", { replace: true });
-        else if (role?.role === "faculty") navigate("/faculty/dashboard", { replace: true });
-        else if (role) navigate("/app/dashboard", { replace: true });
-      };
-      const cached = queryClient.getQueryData(["tenant", "role", user.id]);
-      if (cached) go();
-      else { const t = setTimeout(go, 1500); return () => clearTimeout(t); }
-    });
-  }, [user, authLoading, navigate]);
+  }, [authLoading, user, navigate]);
 
   const year = useMemo(() => new Date().getFullYear(), []);
   const [scrolled, setScrolled] = useState(false);

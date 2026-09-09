@@ -1,13 +1,20 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
+import { resolveRoleDashboard } from "@/lib/roleRouting";
 
 export default function PublicRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const { role, isLoading: tenantLoading } = useTenant();
 
-  if (isLoading) return null;
-  if (user) return <Navigate to="/app/dashboard" replace />;
+  // If a signup is actively initializing its profile and navigating to onboarding, do not interrupt
+  if (typeof window !== "undefined" && sessionStorage.getItem("cc_signup_in_progress") === "true") {
+    return <>{children}</>;
+  }
+
+  if (authLoading || (!!user && tenantLoading)) return null;
+  if (user) return <Navigate to={resolveRoleDashboard(role)} replace />;
 
   return <>{children}</>;
 }
-

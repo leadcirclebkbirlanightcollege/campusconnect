@@ -16,6 +16,7 @@ import { BRANDING } from "@/config/branding";
 import { useAuth } from "@/providers/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import PublicFooter from "@/components/layout/PublicFooter";
+import { resolveRoleDashboard } from "@/lib/roleRouting";
 
 export default function NotFound() {
   const location = useLocation();
@@ -39,16 +40,7 @@ export default function NotFound() {
           .maybeSingle();
 
         if (!isMounted) return;
-        const role = data?.role;
-        if (role === "super_admin") {
-          setDashboardPath("/platform/admin-control/dashboard");
-        } else if (role === "admin") {
-          setDashboardPath("/platform/admin/dashboard");
-        } else if (role === "faculty") {
-          setDashboardPath("/faculty/dashboard");
-        } else {
-          setDashboardPath("/app/dashboard");
-        }
+        setDashboardPath(resolveRoleDashboard(data?.role));
       } catch {
         if (isMounted) setDashboardPath("/app/dashboard");
       }

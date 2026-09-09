@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Verify your email address — Campus Connect</title>
+  <title>Confirm your identity — Campus Connect</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -106,68 +106,58 @@
       border: 1px solid #e2e8f0;
       word-break: break-all;
     }
-    .btn-container {
+    .code-container {
       margin: 28px 0;
-      text-align: left;
-    }
-    .btn {
-      display: inline-block;
-      background-color: #1a56db;
-      color: #ffffff !important;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 13px 28px;
-      border-radius: 10px;
-      text-decoration: none;
-      box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
-    }
-    .otp-container {
-      margin: 24px 0;
       background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 16px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 24px 20px;
       text-align: center;
     }
-    .otp-label {
+    .code-label {
       font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
+      font-weight: 700;
+      color: #475569;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
     }
-    .otp-code {
+    .code-value {
       font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-      font-size: 28px;
+      font-size: 36px;
       font-weight: 800;
-      color: #1e293b;
-      letter-spacing: 6px;
+      color: #0f172a;
+      letter-spacing: 8px;
       margin: 0;
+      line-height: 1.2;
     }
-    .alt-link {
+    .code-expiry {
       font-size: 12px;
       color: #64748b;
-      word-break: break-all;
-      background-color: #f8fafc;
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      margin: 22px 0 16px 0;
-      line-height: 1.5;
+      margin-top: 10px;
     }
-    .alt-link a {
-      color: #1a56db;
-      text-decoration: underline;
+    .instruction-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 20px 0;
+    }
+    .instruction-card p {
+      margin: 0;
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.55;
     }
     .security-box {
-      background-color: #f8fafc;
-      border-left: 3px solid #64748b;
+      background-color: #fef2f2;
+      border-left: 3px solid #ef4444;
       padding: 12px 14px;
       border-radius: 4px;
       margin-top: 24px;
       font-size: 13px;
-      color: #64748b;
+      color: #991b1b;
       line-height: 1.5;
     }
     .footer {
@@ -218,42 +208,28 @@
 
             <!-- Content -->
             <div class="content">
-              <h1>Verify your email address</h1>
-              <p>Welcome to <strong>Campus Connect</strong>!</p>
+              <h1>Confirm your identity</h1>
+              <p>Hello,</p>
               <p>
-                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span> belongs to you to complete your registration and begin student onboarding.
+                A sensitive security action was requested on your Campus Connect account (<span class="email-badge">{{ .Email }}</span>).
               </p>
 
-              <!-- Primary CTA -->
-              <div class="btn-container">
-                <!--[if mso]>
-                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="23%" stroke="f" fillcolor="#1a56db">
-                  <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Verify Email Address &rarr;</center>
-                </v:roundrect>
-                <![endif]-->
-                <!--[if !mso]><!-- -->
-                <a href="{{ .ConfirmationURL }}" class="btn" target="_blank" rel="noopener noreferrer">
-                  Verify Email Address &rarr;
-                </a>
-                <!--<![endif]-->
+              <div class="instruction-card">
+                <p>
+                  To confirm that you initiated this action, enter the 6-digit security code below into the active prompt in Campus Connect.
+                </p>
               </div>
 
-              <!-- OTP Code Alternative -->
-              <div class="otp-container">
-                <div class="otp-label">Or enter this 6-digit verification code:</div>
-                <div class="otp-code">{{ .Token }}</div>
-              </div>
-
-              <!-- Fallback plain text URL -->
-              <div class="alt-link">
-                If the button above does not open directly, copy and paste this verification URL into your browser:<br>
-                <a href="{{ .ConfirmationURL }}" target="_blank">{{ .ConfirmationURL }}</a>
+              <!-- Reauthentication Security Code -->
+              <div class="code-container">
+                <div class="code-label">Verification Code</div>
+                <div class="code-value">{{ .Token }}</div>
+                <div class="code-expiry">Expires in a few minutes &bull; Single-use only</div>
               </div>
 
               <!-- Security notice -->
               <div class="security-box">
-                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard this email. Your email address will not be activated without verification.
+                <strong>Critical Security Advisory:</strong> Never share this verification code with anyone. Campus administrators and college faculty will never ask for your verification code. If you did not initiate this request, change your password immediately.
               </div>
             </div>
 
@@ -263,7 +239,7 @@
               <div class="footer-inst">Department of Computer Science</div>
               <div class="footer-inst">B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</div>
               <div class="footer-note">
-                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this email.
+                Identity verification dispatch to {{ .Email }}. Please do not reply directly to this email.
               </div>
             </div>
           </div>

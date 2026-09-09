@@ -15,6 +15,23 @@ import RouteLoader from "@/router/RouteLoader";
 import PlatformModeGuard from "@/components/platform/PlatformModeGuard";
 import FeatureGate from "@/components/platform/FeatureGate";
 import AppLayout from "@/components/layout/AppLayout";
+import { useAuth } from "@/providers/AuthProvider";
+import { useTenant } from "@/providers/TenantProvider";
+
+/** Role-aware redirect for legacy /admin and /app/admin entry points. */
+function AdminEntryRedirect() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { role, isLoading: tenantLoading } = useTenant();
+
+  if (authLoading || (!!user && tenantLoading)) {
+    return null;
+  }
+
+  if (role === "super_admin") {
+    return <Navigate to="/platform/admin-control/dashboard" replace />;
+  }
+  return <Navigate to="/platform/admin/dashboard" replace />;
+}
 
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
@@ -354,9 +371,9 @@ export default function AppRouter() {
           {/* Old super admin path → new control center */}
           <Route path="/platform/admin/super"    element={<Navigate to="/platform/admin-control/dashboard" replace />} />
 
-          {/* Old app/admin paths → new /platform/admin paths */}
-          <Route path="/app/admin"                 element={<Navigate to="/platform/admin/dashboard" replace />} />
-          <Route path="/app/admin/dashboard"       element={<Navigate to="/platform/admin/dashboard" replace />} />
+          {/* Old app/admin paths → role-aware redirects */}
+          <Route path="/app/admin"                 element={<AdminEntryRedirect />} />
+          <Route path="/app/admin/dashboard"       element={<AdminEntryRedirect />} />
           <Route path="/app/admin/lectures"        element={<Navigate to="/platform/admin/lectures" replace />} />
           <Route path="/app/admin/attendance"      element={<Navigate to="/platform/admin/attendance" replace />} />
           <Route path="/app/admin/attendance/corrections" element={<Navigate to="/platform/admin/attendance/corrections" replace />} />
@@ -408,7 +425,7 @@ export default function AppRouter() {
           <Route path="/attendance"       element={<Navigate to="/app/attendance" replace />} />
           <Route path="/lectures"         element={<Navigate to="/app/lectures" replace />} />
           <Route path="/leaderboard"      element={<Navigate to="/app/leaderboard" replace />} />
-          <Route path="/admin"            element={<Navigate to="/platform/admin/dashboard" replace />} />
+          <Route path="/admin"            element={<AdminEntryRedirect />} />
 
           {/* SPA fallback */}
           <Route path="*" element={<NotFound />} />

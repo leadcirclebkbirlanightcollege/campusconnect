@@ -221,32 +221,6 @@ export default function StudentManagementTab() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to restore students"),
   });
 
-  const toggleVerifyMutation = useMutation({
-    mutationFn: async ({ userId, next }: { userId: string; next: boolean }) => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      if (!data.user) throw new Error("Not logged in");
-
-      const now = new Date().toISOString();
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          is_verified: next,
-          verified_at: next ? now : null,
-          verified_by: next ? data.user.id : null,
-          updated_at: now,
-        })
-        .eq("user_id", userId);
-
-      if (updateError) throw updateError;
-    },
-    onSuccess: async () => {
-      toast.success("Verification updated");
-      await invalidateStudentQueries(qc);
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update verification"),
-  });
-
   // Bulk assign college
   const bulkAssignCollegeMutation = useMutation({
     mutationFn: async ({ userIds, collegeId }: { userIds: string[]; collegeId: string }) => {
@@ -311,7 +285,6 @@ export default function StudentManagementTab() {
     studentsQuery.isLoading ||
     softDeleteMutation.isPending ||
     restoreMutation.isPending ||
-    toggleVerifyMutation.isPending ||
     bulkAssignCollegeMutation.isPending ||
     graduateMutation.isPending ||
     promoteMutation.isPending;
@@ -565,16 +538,6 @@ export default function StudentManagementTab() {
                             onClick={() => setOpenStudentUserId(s.user_id)}
                           >
                             View
-                          </Button>
-                          <Button
-                            variant={s.is_verified ? "outline" : "secondary"}
-                            size="sm"
-                            disabled={busy}
-                            onClick={() =>
-                              toggleVerifyMutation.mutate({ userId: s.user_id, next: !s.is_verified })
-                            }
-                          >
-                            {s.is_verified ? "Unverify" : "Verify"}
                           </Button>
                         </div>
                       </TableCell>

@@ -38,6 +38,7 @@ export interface TenantContextValue {
   college: TenantCollege | null;
   isLoading: boolean;
   isSuperAdmin: boolean;
+  role: "super_admin" | "admin" | "faculty" | "student" | null;
 }
 
 // ─── Context ─────────────────────────────────────────────────────────────────
@@ -47,6 +48,7 @@ const TenantContext = React.createContext<TenantContextValue>({
   college: null,
   isLoading: true,
   isSuperAdmin: false,
+  role: null,
 });
 
 // ─── Provider ────────────────────────────────────────────────────────────────
@@ -70,7 +72,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const role = roleQuery.data?.role ?? null;
+  const role: "super_admin" | "admin" | "faculty" | "student" | null =
+    (roleQuery.data?.role as any) ?? (roleQuery.isSuccess ? "student" : null);
   const isSuperAdmin = role === "super_admin";
 
   // 2. Resolve college_id: from role row, or fallback to profile
@@ -121,6 +124,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         college: collegeQuery.data ?? null,
         isLoading,
         isSuperAdmin,
+        role,
       }}
     >
       {children}
@@ -132,6 +136,13 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
 export function useTenant(): TenantContextValue {
   return React.useContext(TenantContext);
+}
+
+/**
+ * Returns the resolved role ("super_admin" | "admin" | "faculty" | "student" | null).
+ */
+export function useTenantRole(): "super_admin" | "admin" | "faculty" | "student" | null {
+  return React.useContext(TenantContext).role;
 }
 
 /**

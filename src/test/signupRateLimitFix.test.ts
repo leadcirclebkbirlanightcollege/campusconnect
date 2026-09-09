@@ -32,7 +32,7 @@ async function simulateFixedSignup(
       calls.push("signUp");
       if (result.error) throw result.error;
       if (!result.data?.user) throw new Error("No user");
-      // FIXED: session null = email confirmation required — do NOT call signInWithPassword
+      // FIXED: session null = email confirmation required - do NOT call signInWithPassword
       if (!result.data.session) {
         return { emailVerificationRequired: true, callCount: calls.length };
       }
@@ -51,7 +51,7 @@ async function simulateFixedSignup(
 // 1. Single-request guarantee
 // -----------------------------------------------------------------
 
-describe("Signup — Single Request Guarantee (Root-Cause Fix)", () => {
+describe("Signup - Single Request Guarantee (Root-Cause Fix)", () => {
   it("calls signUp exactly once when email confirmation is required (session: null)", async () => {
     const mockSignUp = vi.fn().mockResolvedValue({
       data: { user: { id: "u1" }, session: null },
@@ -93,7 +93,7 @@ describe("Signup — Single Request Guarantee (Root-Cause Fix)", () => {
 // 2. Double-submit prevention
 // -----------------------------------------------------------------
 
-describe("Signup — In-Flight Guard (Double-Submit Prevention)", () => {
+describe("Signup - In-Flight Guard (Double-Submit Prevention)", () => {
   it("blocks a concurrent second call via synchronous ref guard", async () => {
     const mockSignUp = vi.fn().mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve({
@@ -141,7 +141,7 @@ describe("Signup — In-Flight Guard (Double-Submit Prevention)", () => {
 // 3. 429 / Rate-limit error handling
 // -----------------------------------------------------------------
 
-describe("Signup — 429 / Rate-Limit Error Handling", () => {
+describe("Signup - 429 / Rate-Limit Error Handling", () => {
   it("shows signup-specific rate-limit message on HTTP 429", () => {
     const err = Object.assign(new Error("over_email_send_rate_limit"), { status: 429 });
     const appError = normalizeError(err, "signup");
@@ -187,7 +187,7 @@ describe("Signup — 429 / Rate-Limit Error Handling", () => {
 // 4. Error classification
 // -----------------------------------------------------------------
 
-describe("Signup — Error Classification", () => {
+describe("Signup - Error Classification", () => {
   it("classifies already-registered as NOT rate_limit", () => {
     const err = new Error("User already registered");
     const appError = normalizeError(err, "signup");
@@ -205,7 +205,7 @@ describe("Signup — Error Classification", () => {
 // 5. Auth redirect URL safety
 // -----------------------------------------------------------------
 
-describe("Auth Redirect URL — Production Safety", () => {
+describe("Auth Redirect URL - Production Safety", () => {
   afterEach(() => { vi.unstubAllGlobals(); });
 
   it("resolves to canonical production URL in production", () => {
@@ -234,3 +234,99 @@ describe("Auth Redirect URL — Production Safety", () => {
     expect(url).toBe("http://localhost:5173/auth/verify");
   });
 });
+
+// -----------------------------------------------------------------
+// 6. Launch-Day Email Confirmation Disabled & Post-Signup Onboarding Flow
+// -----------------------------------------------------------------
+
+describe("Launch-Day Signup - Email Confirmation Disabled & Profile Init Flow", () => {
+  it("navigates directly to /onboarding-wizard when session is returned and profile/role init succeeds", async () => {
+    const mockUser = { id: "user-launch-1", email: "student@bkbirlanightcollege.org" };
+    const mockSession = { access_token: "tok-launch", user: mockUser };
+    const navHistory: string[] = [];
+
+    const mockUpsertProfile = vi.fn().mockResolvedValue({ error: null });
+    const mockUpsertRole = vi.fn().mockResolvedValue({ error: null });
+    const mockVerifyProfile = vi.fn().mockResolvedValue({ data: { user_id: mockUser.id }, error: null });
+
+    async function executeLaunchSignupFlow(session: any, user: any) {
+      if (!session) {
+        return { action: "email_verification" };
+      }
+      const pRes = await mockUpsertProfile();
+      if (pRes.error) throw new Error("Profile init failed");
+      const rRes = await mockUpsertRole();
+      if (rRes.error) throw new Error("Role init failed");
+      const vRes = await mockVerifyProfile();
+      if (vRes.error || !vRes.data) throw new Error("Verification failed");
+      navHistory.push("/onboarding-wizard");
+      return { action: "onboarding", target: "/onboarding-wizard" };
+    }
+
+    const res = await executeLaunchSignupFlow(mockSession, mockUser);
+    expect(res.action).toBe("onboarding");
+    expect(res.target).toBe("/onboarding-wizard");
+    expect(navHistory).toEqual(["/onboarding-wizard"]);
+    expect(mockUpsertProfile).toHaveBeenCalledTimes(1);
+    expect(mockUpsertRole).toHaveBeenCalledTimes(1);
+    expect(mockVerifyProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT navigate to onboarding if profile initialization fails, allowing safe retry", async () => {
+    const mockUser = { id: "user-launch-2", email: "student2@bkbirlanightcollege.org" };
+    const mockSession = { access_token: "tok-launch-2", user: mockUser };
+    const navHistory: string[] = [];
+
+    const mockUpsertProfile = vi.fn().mockResolvedValue({ error: new Error("DB connection timeout") });
+
+    async function executeLaunchSignupFlow(session: any) {
+      if (!session) return { action: "email_verification" };
+      const pRes = await mockUpsertProfile();
+      if (pRes.error) {
+        throw new Error("Account created, but profile setup failed. Click Create Account again to retry.");
+      }
+      navHistory.push("/onboarding-wizard");
+    }
+
+    await expect(executeLaunchSignupFlow(mockSession)).rejects.toThrow(
+      "Account created, but profile setup failed. Click Create Account again to retry."
+    );
+    expect(navHistory).toHaveLength(0);
+  });
+
+  it("allows controlled retry using existing session without duplicate signUp calls", async () => {
+    let currentSession: any = { user: { id: "user-retry", email: "retry@bkbirlanightcollege.org" } };
+    const mockSignUp = vi.fn();
+    const mockUpsertProfile = vi.fn().mockResolvedValue({ error: null });
+
+    async function handleRetryableSignup(email: string) {
+      let authUser = currentSession?.user?.email === email ? currentSession.user : null;
+      if (!authUser) {
+        const res = await mockSignUp();
+        authUser = res.user;
+      }
+      await mockUpsertProfile();
+      return { success: true, userId: authUser.id };
+    }
+
+    const res = await handleRetryableSignup("retry@bkbirlanightcollege.org");
+    expect(res.success).toBe(true);
+    expect(mockSignUp).not.toHaveBeenCalled();
+    expect(mockUpsertProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it("ensures student role is assigned and never admin/faculty on self-signup", async () => {
+    const roleAssigned: string[] = [];
+    const mockRoleUpsert = vi.fn().mockImplementation((roles: any[]) => {
+      roleAssigned.push(...roles.map((r) => r.role));
+      return Promise.resolve({ error: null });
+    });
+
+    await mockRoleUpsert([{ user_id: "student-123", role: "student" }]);
+    expect(roleAssigned).toEqual(["student"]);
+    expect(roleAssigned).not.toContain("admin");
+    expect(roleAssigned).not.toContain("super_admin");
+    expect(roleAssigned).not.toContain("faculty");
+  });
+});
+

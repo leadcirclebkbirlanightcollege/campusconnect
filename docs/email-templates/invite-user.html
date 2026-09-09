@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Verify your email address — Campus Connect</title>
+  <title>You've been invited to Campus Connect</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -121,30 +121,6 @@
       text-decoration: none;
       box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
     }
-    .otp-container {
-      margin: 24px 0;
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 16px;
-      text-align: center;
-    }
-    .otp-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-    .otp-code {
-      font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-      font-size: 28px;
-      font-weight: 800;
-      color: #1e293b;
-      letter-spacing: 6px;
-      margin: 0;
-    }
     .alt-link {
       font-size: 12px;
       color: #64748b;
@@ -159,6 +135,20 @@
     .alt-link a {
       color: #1a56db;
       text-decoration: underline;
+    }
+    .info-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 20px 0;
+    }
+    .info-card p {
+      margin: 0;
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.5;
     }
     .security-box {
       background-color: #f8fafc;
@@ -218,42 +208,43 @@
 
             <!-- Content -->
             <div class="content">
-              <h1>Verify your email address</h1>
-              <p>Welcome to <strong>Campus Connect</strong>!</p>
+              <h1>You've been invited to Campus Connect</h1>
+              <p>Hello,</p>
               <p>
-                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span> belongs to you to complete your registration and begin student onboarding.
+                An administrator has invited you to join <strong>Campus Connect</strong> for <strong>B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</strong>.
               </p>
+
+              <div class="info-card">
+                <p>
+                  <strong>Invited Account:</strong> <span class="email-badge">{{ .Email }}</span><br>
+                  Accepting this invitation will allow you to activate your official account and set your secure password.
+                </p>
+              </div>
 
               <!-- Primary CTA -->
               <div class="btn-container">
                 <!--[if mso]>
-                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="23%" stroke="f" fillcolor="#1a56db">
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="23%" stroke="f" fillcolor="#1a56db">
                   <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Verify Email Address &rarr;</center>
+                  <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Accept Invitation &rarr;</center>
                 </v:roundrect>
                 <![endif]-->
                 <!--[if !mso]><!-- -->
                 <a href="{{ .ConfirmationURL }}" class="btn" target="_blank" rel="noopener noreferrer">
-                  Verify Email Address &rarr;
+                  Accept Invitation &rarr;
                 </a>
                 <!--<![endif]-->
               </div>
 
-              <!-- OTP Code Alternative -->
-              <div class="otp-container">
-                <div class="otp-label">Or enter this 6-digit verification code:</div>
-                <div class="otp-code">{{ .Token }}</div>
-              </div>
-
               <!-- Fallback plain text URL -->
               <div class="alt-link">
-                If the button above does not open directly, copy and paste this verification URL into your browser:<br>
+                If the button above does not open directly, copy and paste this link into your browser to accept your invitation:<br>
                 <a href="{{ .ConfirmationURL }}" target="_blank">{{ .ConfirmationURL }}</a>
               </div>
 
               <!-- Security notice -->
               <div class="security-box">
-                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard this email. Your email address will not be activated without verification.
+                <strong>Notice:</strong> If you did not expect this invitation or believe it was sent in error, you can safely ignore this email.
               </div>
             </div>
 
@@ -263,7 +254,7 @@
               <div class="footer-inst">Department of Computer Science</div>
               <div class="footer-inst">B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</div>
               <div class="footer-note">
-                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this email.
+                This invitation was dispatched to {{ .Email }}. Please do not reply directly to this email.
               </div>
             </div>
           </div>
