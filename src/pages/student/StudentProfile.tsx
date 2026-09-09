@@ -524,11 +524,6 @@ export default function StudentProfile() {
                   {profile?.is_core_member && (
                     <CoreMemberBadge variant="profile" />
                   )}
-                  {profile?.is_verified && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
-                      <Shield className="h-3 w-3" /> Verified
-                    </span>
-                  )}
                   {collegeQuery.data && (
                     <span className="inline-flex max-w-[190px] items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-white/20">
                       <Building2 className="h-3 w-3" />

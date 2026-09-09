@@ -531,26 +531,6 @@ export default function StudentManagementTab() {
                             {s.is_core_member ? (
                               <CoreMemberBadge variant="compact" size="sm" />
                             ) : null}
-                            {s.is_verified ? (
-                              <span
-                                className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                                aria-label="Student Identity Verified"
-                                title="Student Identity Verified"
-                              >
-                                <span className="sr-only">Student Identity Verified</span>
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                              </span>
-                            ) : null}
                           </span>
                           <span className="text-xs text-muted-foreground">{s.email}</span>
                           {s.student_id ? (

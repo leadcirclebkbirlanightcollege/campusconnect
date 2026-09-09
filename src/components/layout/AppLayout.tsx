@@ -8,8 +8,6 @@ import {
   UserRound,
   LogOut,
   CreditCard,
-  BadgeCheck,
-  CheckCircle,
 } from "@/components/icons";
 import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -112,10 +110,6 @@ function ProfileMenu({ userId }: { userId: string }) {
               <span className="absolute -bottom-1 -right-1">
                 <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
               </span>
-            ) : profile?.is_verified ? (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary flex items-center justify-center">
-                <BadgeCheck className="h-2 w-2 text-primary-foreground" aria-label="Student Identity Verified" />
-              </span>
             ) : null}
           </div>
           <span className="hidden sm:block text-[12px] font-medium text-foreground leading-none max-w-[72px] truncate">
@@ -143,12 +137,6 @@ function ProfileMenu({ userId }: { userId: string }) {
             <div className="mt-2 flex items-center justify-between rounded-lg bg-[#0B192C] border border-[#38BDF8]/30 px-2 py-1">
               <span className="text-[11px] font-bold text-[#38BDF8]">Campus Connect</span>
               <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
-            </div>
-          )}
-          {profile?.is_verified && (
-            <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-success/8 border border-success/20 px-2 py-1">
-              <CheckCircle className="h-3 w-3 text-success" />
-              <span className="text-[11px] font-semibold text-success">Verified Student</span>
             </div>
           )}
         </DropdownMenuLabel>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen, CalendarDays, MailOpen, UserRound, LogOut,
-  BadgeCheck, Bell, BellOff, Megaphone, AlertTriangle,
+  Bell, BellOff, Megaphone, AlertTriangle,
   Trophy, Settings, ChevronRight, CheckCheck,
 } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
@@ -367,13 +367,6 @@ const AppShell = ({ children }: AppShellProps) => {
                         {profileMiniQuery.data?.is_core_member ? (
                           <span className="absolute -bottom-1 -right-1">
                             <CoreMemberBadge variant="compact" size="sm" showTooltip={false} />
-                          </span>
-                        ) : profileMiniQuery.data?.is_verified ? (
-                          <span className="absolute -bottom-1 -right-1">
-                            <span className="pulse absolute inset-0 rounded-full bg-primary/30" />
-                            <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-                              <BadgeCheck className="h-3.5 w-3.5" aria-label="Student Identity Verified" />
-                            </span>
                           </span>
                         ) : null}
                       </div>

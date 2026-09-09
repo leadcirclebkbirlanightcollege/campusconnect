@@ -6,7 +6,6 @@ import {
   ArrowUp,
   Medal,
   Minus,
-  Shield,
   Star,
   Trophy,
   Users,
@@ -198,7 +197,6 @@ const LeaderboardListRow = memo(function LeaderboardListRow({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="truncate text-sm font-semibold text-foreground">{row.name}</p>
-              {row.is_verified ? <Shield className="h-3.5 w-3.5 text-primary" /> : null}
             </div>
             <TierPill points={row.points_total} />
           </div>
