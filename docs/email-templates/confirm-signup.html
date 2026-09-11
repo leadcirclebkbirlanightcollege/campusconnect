@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +20,20 @@
   </noscript>
   <![endif]-->
   <style>
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    img { border: 0; outline: none; text-decoration: none; }
+    body,
+    table,
+    td,
+    a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+    }
+
     body {
       margin: 0;
       padding: 0;
@@ -32,12 +45,17 @@
       color: #0f172a;
       -webkit-font-smoothing: antialiased;
     }
-    table { border-collapse: collapse !important; }
+
+    table {
+      border-collapse: collapse !important;
+    }
+
     .wrapper {
       width: 100%;
       background-color: #0b0f17;
       padding: 40px 16px;
     }
+
     .card {
       max-width: 560px;
       margin: 0 auto;
@@ -47,12 +65,17 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
       border: 1px solid #1e293b;
     }
+
     .header-bar {
       background: linear-gradient(135deg, #0b1220 0%, #172554 100%);
       padding: 28px 32px;
       text-align: left;
     }
-    .brand-table td { vertical-align: middle; }
+
+    .brand-table td {
+      vertical-align: middle;
+    }
+
     .brand-icon {
       width: 40px;
       height: 40px;
@@ -62,6 +85,7 @@
       text-align: center;
       line-height: 40px;
     }
+
     .brand-title {
       font-size: 20px;
       font-weight: 800;
@@ -70,6 +94,7 @@
       margin: 0;
       padding-left: 12px;
     }
+
     .brand-tagline {
       font-size: 11px;
       font-weight: 600;
@@ -79,9 +104,11 @@
       margin: 2px 0 0 0;
       padding-left: 12px;
     }
+
     .content {
       padding: 36px 32px 28px 32px;
     }
+
     h1 {
       font-size: 22px;
       font-weight: 700;
@@ -90,12 +117,14 @@
       letter-spacing: -0.01em;
       line-height: 1.3;
     }
+
     p {
       font-size: 15px;
       line-height: 1.6;
       color: #334155;
       margin: 0 0 16px 0;
     }
+
     .email-badge {
       display: inline-block;
       background-color: #f1f5f9;
@@ -106,10 +135,12 @@
       border: 1px solid #e2e8f0;
       word-break: break-all;
     }
+
     .btn-container {
       margin: 28px 0;
       text-align: left;
     }
+
     .btn {
       display: inline-block;
       background-color: #1a56db;
@@ -121,6 +152,7 @@
       text-decoration: none;
       box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
     }
+
     .otp-container {
       margin: 24px 0;
       background-color: #f8fafc;
@@ -129,6 +161,7 @@
       padding: 16px;
       text-align: center;
     }
+
     .otp-label {
       font-size: 12px;
       font-weight: 600;
@@ -137,6 +170,7 @@
       letter-spacing: 0.05em;
       margin-bottom: 8px;
     }
+
     .otp-code {
       font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
       font-size: 28px;
@@ -145,6 +179,7 @@
       letter-spacing: 6px;
       margin: 0;
     }
+
     .alt-link {
       font-size: 12px;
       color: #64748b;
@@ -156,10 +191,12 @@
       margin: 22px 0 16px 0;
       line-height: 1.5;
     }
+
     .alt-link a {
       color: #1a56db;
       text-decoration: underline;
     }
+
     .security-box {
       background-color: #f8fafc;
       border-left: 3px solid #64748b;
@@ -170,6 +207,7 @@
       color: #64748b;
       line-height: 1.5;
     }
+
     .footer {
       background-color: #f8fafc;
       padding: 24px 32px;
@@ -178,14 +216,17 @@
       color: #475569;
       line-height: 1.5;
     }
+
     .footer-brand {
       font-weight: 700;
       color: #0f172a;
       margin-bottom: 2px;
     }
+
     .footer-inst {
       color: #64748b;
     }
+
     .footer-note {
       font-size: 11px;
       color: #94a3b8;
@@ -193,6 +234,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrapper">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -205,7 +247,8 @@
                 <tr>
                   <td>
                     <div class="brand-icon">
-                      <img src="https://campusconnect.indevs.in/icons/icon-192.png" alt="Campus Connect" width="30" height="30" style="display:inline-block; vertical-align:middle; border-radius:6px;" onerror="this.style.display='none'" />
+                      <img src="https://campusconnect.indevs.in/icons/icon-192.png" alt="Campus Connect" width="30"
+                        height="30" style="display:inline-block; vertical-align:middle; border-radius:6px;" />
                     </div>
                   </td>
                   <td>
@@ -221,7 +264,8 @@
               <h1>Verify your email address</h1>
               <p>Welcome to <strong>Campus Connect</strong>!</p>
               <p>
-                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span> belongs to you to complete your registration and begin student onboarding.
+                Thank you for creating an account. Please verify that <span class="email-badge">{{ .Email }}</span>
+                belongs to you to complete your registration and begin student onboarding.
               </p>
 
               <!-- Primary CTA -->
@@ -253,7 +297,8 @@
 
               <!-- Security notice -->
               <div class="security-box">
-                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard this email. Your email address will not be activated without verification.
+                <strong>Security Notice:</strong> If you did not sign up for a Campus Connect account, please disregard
+                this email. Your email address will not be activated without verification.
               </div>
             </div>
 
@@ -263,7 +308,8 @@
               <div class="footer-inst">Department of Computer Science</div>
               <div class="footer-inst">B. K. Birla Night Arts, Science &amp; Commerce College, Kalyan</div>
               <div class="footer-note">
-                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this email.
+                This is an automated transactional message sent to {{ .Email }}. Please do not reply directly to this
+                email.
               </div>
             </div>
           </div>
@@ -272,4 +318,5 @@
     </table>
   </div>
 </body>
+
 </html>

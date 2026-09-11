@@ -861,7 +861,7 @@ export default function StallRegistrationDialog({
                     name="member_2_class"
                     label="Member 2 Class"
                     required={Boolean(form.member_2_name.trim())}
-                    placeholder={Boolean(form.member_2_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    placeholder={form.member_2_name.trim() ? "Select class *" : "Select class (optional)"}
                     value={form.member_2_class}
                     error={errors.member_2_class}
                     onChange={(val) => {
@@ -968,7 +968,7 @@ export default function StallRegistrationDialog({
                     name="member_3_class"
                     label="Member 3 Class"
                     required={Boolean(form.member_3_name.trim())}
-                    placeholder={Boolean(form.member_3_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    placeholder={form.member_3_name.trim() ? "Select class *" : "Select class (optional)"}
                     value={form.member_3_class}
                     error={errors.member_3_class}
                     onChange={(val) => {
@@ -1075,7 +1075,7 @@ export default function StallRegistrationDialog({
                     name="member_4_class"
                     label="Member 4 Class"
                     required={Boolean(form.member_4_name.trim())}
-                    placeholder={Boolean(form.member_4_name.trim()) ? "Select class *" : "Select class (optional)"}
+                    placeholder={form.member_4_name.trim() ? "Select class *" : "Select class (optional)"}
                     value={form.member_4_class}
                     error={errors.member_4_class}
                     onChange={(val) => {

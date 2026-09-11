@@ -10,7 +10,7 @@ import {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, LogOut, Moon, Sun,
   Building2, School, Hash, BarChart2, FileText, Download, ClipboardList, Store,
-  ChevronDown, ShieldCheck, LifeBuoy, ArrowUpCircle,
+  ChevronDown, ShieldCheck, LifeBuoy, ArrowUpCircle, UploadCloud,
 } from "@/components/icons";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   CheckSquare, BarChart3, FileEdit, Megaphone, CalendarDays, Sparkles,
   Bell, Trophy, Coins, ScanLine, SlidersHorizontal, Building2, School,
   Hash, BarChart2, FileText, Download, ClipboardList, Store, ShieldCheck, LifeBuoy,
-  ArrowUpCircle,
+  ArrowUpCircle, UploadCloud,
 };
 
 export default function AdminSidebar() {

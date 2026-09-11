@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FACULTY_TITLES, formatFacultyName } from "@/lib/faculty";
+import AccountSecuritySettings from "@/pages/settings/AccountSecuritySettings";
 
 // Validation schema for profile details
 const profileSchema = z.object({
@@ -46,17 +47,6 @@ const profileSchema = z.object({
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
-
-// Password change schema
-const passwordSchema = z.object({
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password required"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function FacultyProfile() {
   const { user } = useAuth();
@@ -89,14 +79,6 @@ export default function FacultyProfile() {
       email: "",
       phone: "",
       department: "",
-    },
-  });
-
-  const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      newPassword: "",
-      confirmPassword: "",
     },
   });
 
@@ -216,23 +198,6 @@ export default function FacultyProfile() {
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to remove photo");
-    },
-  });
-
-  // Password Update Mutation
-  const updatePasswordMutation = useMutation({
-    mutationFn: async (values: PasswordFormValues) => {
-      const { error } = await supabase.auth.updateUser({
-        password: values.newPassword,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Password changed successfully!");
-      passwordForm.reset();
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "Failed to update password");
     },
   });
 
@@ -551,84 +516,8 @@ export default function FacultyProfile() {
             </Form>
           </div>
 
-          {/* Security / Password Change */}
-          <div className="rounded-2xl border border-border/50 bg-card p-6 shadow-2xs">
-            <div className="pb-4 mb-4 border-b border-border/40 flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Lock className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-[14px] font-bold text-foreground">Account Security</h3>
-                <p className="text-[11.5px] text-muted-foreground">
-                  Update your authentication password
-                </p>
-              </div>
-            </div>
-
-            <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit((v) => updatePasswordMutation.mutate(v))} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={passwordForm.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[12px] font-medium text-foreground">New Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="At least 6 characters"
-                            className="rounded-xl text-[13px] bg-background border-border/50"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-[11px]" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={passwordForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[12px] font-medium text-foreground">Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Re-type new password"
-                            className="rounded-xl text-[13px] bg-background border-border/50"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-[11px]" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    disabled={updatePasswordMutation.isPending}
-                    className="rounded-xl text-[12px] h-9 gap-1.5"
-                  >
-                    {updatePasswordMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Updating…
-                      </>
-                    ) : (
-                      <>
-                        <KeyRound className="h-3.5 w-3.5" /> Update Password
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+          {/* Security & Account Settings */}
+          <AccountSecuritySettings initialTab="security" />
         </div>
 
         {/* Right 1 Col: Institution & System Metadata */}

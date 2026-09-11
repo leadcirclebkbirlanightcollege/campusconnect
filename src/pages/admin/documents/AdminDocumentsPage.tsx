@@ -1,7 +1,14 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
+import {
+  uploadToGoogleDrive,
+  deleteFromGoogleDrive,
+  GoogleDriveConfigError,
+} from "@/services/googleDriveStorage";
+import { HardDrive } from "lucide-react";
 import {
   Plus, FileText, Trash2, Download, Search, BookOpen, File,
 } from "@/components/icons";
@@ -21,17 +28,9 @@ import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
 import { format } from "date-fns";
 
-type Doc = {
-  id: string;
-  title: string;
-  file_url: string;
-  file_name: string | null;
-  doc_type: string;
-  subject: string | null;
-  access_level: string;
-  created_at: string;
-  uploaded_by: string;
-};
+import type { Tables } from "@/integrations/supabase/types";
+
+type Doc = Tables<"documents">;
 
 const DOC_TYPES = ["notes", "syllabus", "assignment", "resource"];
 const ACCESS_LEVELS = ["students", "faculty", "admin"];
@@ -76,14 +75,15 @@ export default function AdminDocumentsPage() {
     queryFn: async () => {
       let q = supabase
         .from("documents")
-        .select("id,title,file_url,file_name,doc_type,subject,access_level,created_at,uploaded_by")
+        .select("*")
         .eq("college_id", collegeId!)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (typeFilter !== "all") q = q.eq("doc_type", typeFilter);
       if (debouncedSearch) q = q.ilike("title", `%${debouncedSearch}%`);
-      const { data } = await q.limit(100);
-      return (data ?? []) as Doc[];
+      const { data, error } = await q.limit(100);
+      if (error) throw error;
+      return data ?? [];
     },
     staleTime: 30_000,
   });
@@ -93,24 +93,55 @@ export default function AdminDocumentsPage() {
     if (!form.title.trim()) { toast.error("Please enter a title first"); return; }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${collegeId}/${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("documents").upload(path, file, { upsert: true });
-      if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(path);
+      let fileUrl = "";
+      let storageProvider = "supabase";
+      let driveFileId: string | null = null;
+      let storageFileId: string | null = null;
+
+      try {
+        const driveRecord = await uploadToGoogleDrive({
+          file,
+          entity_type: "document",
+          access_level: form.access_level === "admin" ? "private" : "authenticated",
+          college_id: collegeId,
+        });
+        fileUrl = driveRecord.drive_url;
+        storageProvider = "google_drive";
+        driveFileId = driveRecord.google_drive_file_id;
+        storageFileId = driveRecord.id;
+      } catch (driveErr: any) {
+        if (driveErr instanceof GoogleDriveConfigError) {
+          const ext = file.name.split(".").pop();
+          const path = `${collegeId}/${user.id}/${Date.now()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage.from("documents").upload(path, file, { upsert: true });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage.from("documents").getPublicUrl(path);
+          fileUrl = urlData.publicUrl;
+          storageProvider = "supabase";
+          toast.info("Uploaded to Supabase Storage", {
+            description: "To use Google Drive, configure GOOGLE_CLIENT_ID and GOOGLE_REFRESH_TOKEN in secrets.",
+          });
+        } else {
+          throw driveErr;
+        }
+      }
+
       const { error: insertErr } = await supabase.from("documents").insert({
         college_id: collegeId,
         uploaded_by: user.id,
         title: form.title.trim(),
-        file_url: urlData.publicUrl,
+        file_url: fileUrl,
         file_name: file.name,
         file_size: file.size,
         doc_type: form.doc_type,
         subject: form.subject.trim() || null,
         access_level: form.access_level,
+        storage_provider: storageProvider,
+        google_drive_file_id: driveFileId,
+        storage_file_id: storageFileId,
       });
       if (insertErr) throw insertErr;
-      toast.success("Document uploaded");
+      toast.success(storageProvider === "google_drive" ? "Document uploaded to Google Drive" : "Document uploaded");
       qc.invalidateQueries({ queryKey: ["admin", "documents"] });
       setOpen(false);
       setForm({ title: "", subject: "", doc_type: "notes", access_level: "students" });
@@ -122,8 +153,11 @@ export default function AdminDocumentsPage() {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("documents").update({ is_active: false }).eq("id", id);
+    mutationFn: async (doc: Doc) => {
+      if (doc.storage_file_id) {
+        await deleteFromGoogleDrive(doc.storage_file_id).catch(() => {});
+      }
+      const { error } = await supabase.from("documents").update({ is_active: false }).eq("id", doc.id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Document removed"); qc.invalidateQueries({ queryKey: ["admin", "documents"] }); },
@@ -144,9 +178,16 @@ export default function AdminDocumentsPage() {
           <h1 className="text-xl font-bold text-foreground">Document Library</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Upload and manage study materials</p>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Upload
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/platform/admin/storage">
+              <HardDrive className="h-4 w-4 mr-1.5" /> File Storage
+            </Link>
+          </Button>
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" /> Upload
+          </Button>
+        </div>
       </div>
 
       {/* Search + Filter */}
@@ -217,6 +258,11 @@ export default function AdminDocumentsPage() {
                       <Badge className={`text-[9px] h-4 border-0 ${TYPE_COLORS[doc.doc_type]}`}>
                         {doc.doc_type}
                       </Badge>
+                      {doc.storage_provider === "google_drive" && (
+                        <Badge variant="outline" className="text-[9px] h-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                          Google Drive
+                        </Badge>
+                      )}
                       {doc.subject && (
                         <span className="text-[10px] text-muted-foreground">{doc.subject}</span>
                       )}
@@ -238,7 +284,7 @@ export default function AdminDocumentsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteMutation.mutate(doc.id)}
+                      onClick={() => deleteMutation.mutate(doc)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

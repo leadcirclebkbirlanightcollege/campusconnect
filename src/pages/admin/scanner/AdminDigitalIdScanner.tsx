@@ -114,7 +114,7 @@ export default function AdminDigitalIdScanner() {
       // Use BarcodeDetector if available
       if ("BarcodeDetector" in window) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
           const barcodes = await detector.detect(canvas);
           if (barcodes.length > 0) {

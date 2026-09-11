@@ -55,6 +55,10 @@ describe("Production Email Template System Validation", () => {
       expect(content).not.toContain("doubleclick");
       expect(content).not.toContain("facebook.com");
       expect(content).not.toContain("track.png");
+      expect(content).not.toContain("onerror=");
+      expect(content).not.toContain("onload=");
+      expect(content).not.toContain("onclick=");
+      expect(content).not.toMatch(/\son[a-z]+=/i);
 
       // Brand checks
       expect(content).toContain("Campus Connect");

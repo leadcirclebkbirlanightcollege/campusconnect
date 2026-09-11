@@ -13,6 +13,15 @@ export default function PublicRoute({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
+  // If password recovery is active in URL hash or sessionStorage, do not redirect to dashboard
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hash.includes("type=recovery") ||
+      sessionStorage.getItem("cc_password_recovery_active") === "true")
+  ) {
+    return <>{children}</>;
+  }
+
   if (authLoading || (!!user && tenantLoading)) return null;
   if (user) return <Navigate to={resolveRoleDashboard(role)} replace />;
 

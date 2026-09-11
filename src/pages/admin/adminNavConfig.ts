@@ -70,6 +70,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { title: "Exams & Marks", url: "/platform/admin/exams", icon: "ClipboardList" },
       { title: "Document Library", url: "/platform/admin/documents", icon: "FileText" },
       { title: "Verify Documents", url: "/platform/admin/verify", icon: "ShieldCheck" },
+      { title: "File Storage", url: "/platform/admin/storage", icon: "UploadCloud" },
     ],
   },
   {
@@ -129,6 +130,7 @@ const ADMIN_PAGE_META: Record<string, PageMeta> = {
   "/platform/admin/attendance/corrections": { title: "Corrections", description: "Edit attendance records" },
   "/platform/admin/exams": { title: "Exams & Results", description: "Manage exams and publish results" },
   "/platform/admin/documents": { title: "Document Library", description: "Study materials and resources" },
+  "/platform/admin/storage": { title: "File Storage", description: "Google Drive storage management & files directory" },
   "/platform/admin/verify": { title: "Document Verification", description: "Issue tamper-proof documents with QR verification" },
   "/platform/admin/announcements": { title: "Announcements", description: "Broadcast to students" },
   "/platform/admin/events": { title: "Events", description: "Campus events management" },

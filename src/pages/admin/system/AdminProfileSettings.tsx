@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import AdminRoleBackfillPanel from "@/pages/admin/system/AdminRoleBackfillPanel";
+import AccountSecuritySettings from "@/pages/settings/AccountSecuritySettings";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -194,6 +195,8 @@ export default function AdminProfileSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <AccountSecuritySettings initialTab="security" />
 
       <AdminRoleBackfillPanel />
     </div>

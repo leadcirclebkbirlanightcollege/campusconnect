@@ -52,6 +52,7 @@ import {
 import { APP_VERSION } from "@/config/version";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import AccountSecuritySettings from "@/pages/settings/AccountSecuritySettings";
 
 type ProfileForm = { name: string; email: string };
 
@@ -788,89 +789,13 @@ export default function StudentProfile() {
 
       {/* ── Security sheet ─────────────────────────────────────── */}
       <Sheet open={sheet === "security"} onOpenChange={(o) => !o && setSheet(null)}>
-        <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto">
-          <SheetHeader className="text-left">
-            <SheetTitle>Security</SheetTitle>
-            <SheetDescription>Change your password and review active sessions.</SheetDescription>
+        <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
+          <SheetHeader className="text-left mb-3">
+            <SheetTitle>Account & Security</SheetTitle>
+            <SheetDescription>Manage credentials, password, email, and two-factor authentication.</SheetDescription>
           </SheetHeader>
 
-          <div className="mt-4 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="current-password">Current password</Label>
-              <Input
-                id="current-password"
-                type="password"
-                value={pwForm.currentPassword}
-                onChange={(e) => setPwForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="new-password">New password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={pwForm.newPassword}
-                onChange={(e) => setPwForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm-password">Confirm new password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={pwForm.confirmPassword}
-                onChange={(e) => setPwForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                className="h-11"
-              />
-            </div>
-
-            <Button
-              type="button"
-              className="h-11 w-full"
-              onClick={() => updatePasswordMutation.mutate()}
-              disabled={updatePasswordMutation.isPending}
-            >
-              <KeyRound className="h-4 w-4" />
-              {updatePasswordMutation.isPending ? "Updating…" : "Change password"}
-            </Button>
-
-            <div className="rounded-[18px] border border-border-subtle bg-surface-2 p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />
-                <p className="text-[12.5px] font-semibold text-foreground">Active sessions</p>
-              </div>
-              <div className="space-y-2">
-                <div className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2">
-                  <p className="text-[11px] text-muted-foreground">Current session</p>
-                  <p className="mt-0.5 text-[12px] font-medium text-foreground">
-                    {sessionQuery.data?.expires_at
-                      ? `Expires ${new Date(sessionQuery.data.expires_at * 1000).toLocaleString()}`
-                      : "Session active"}
-                  </p>
-                </div>
-                {(activityQuery.data ?? []).slice(0, 3).map((entry) => (
-                  <div key={entry.id} className="rounded-xl border border-border-subtle bg-surface-1 px-2.5 py-2">
-                    <p className="line-clamp-1 text-[11px] text-muted-foreground">{entry.user_agent ?? "Unknown device"}</p>
-                    <p className="mt-0.5 text-[12px] font-medium text-foreground">
-                      {new Date(entry.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-3 h-10 w-full"
-                onClick={() => logoutOthersMutation.mutate()}
-                disabled={logoutOthersMutation.isPending}
-              >
-                <LogOut className="h-4 w-4" />
-                Log out from other devices
-              </Button>
-            </div>
-          </div>
+          <AccountSecuritySettings initialTab="security" />
         </SheetContent>
       </Sheet>
 

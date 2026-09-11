@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       academic_promotion_runs: {
@@ -931,8 +906,11 @@ export type Database = {
           file_name: string | null
           file_size: number | null
           file_url: string
+          google_drive_file_id: string | null
           id: string
           is_active: boolean
+          storage_file_id: string | null
+          storage_provider: string
           subject: string | null
           title: string
           updated_at: string
@@ -947,8 +925,11 @@ export type Database = {
           file_name?: string | null
           file_size?: number | null
           file_url: string
+          google_drive_file_id?: string | null
           id?: string
           is_active?: boolean
+          storage_file_id?: string | null
+          storage_provider?: string
           subject?: string | null
           title: string
           updated_at?: string
@@ -963,8 +944,11 @@ export type Database = {
           file_name?: string | null
           file_size?: number | null
           file_url?: string
+          google_drive_file_id?: string | null
           id?: string
           is_active?: boolean
+          storage_file_id?: string | null
+          storage_provider?: string
           subject?: string | null
           title?: string
           updated_at?: string
@@ -983,6 +967,13 @@ export type Database = {
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_storage_file_id_fkey"
+            columns: ["storage_file_id"]
+            isOneToOne: false
+            referencedRelation: "storage_files"
             referencedColumns: ["id"]
           },
         ]
@@ -2177,6 +2168,7 @@ export type Database = {
           validity_start: string | null
           verified_at: string | null
           verified_by: string | null
+          welcome_email_sent_at: string | null
         }
         Insert: {
           academic_session?: string | null
@@ -2246,6 +2238,7 @@ export type Database = {
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          welcome_email_sent_at?: string | null
         }
         Update: {
           academic_session?: string | null
@@ -2315,6 +2308,7 @@ export type Database = {
           validity_start?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          welcome_email_sent_at?: string | null
         }
         Relationships: [
           {
@@ -2596,6 +2590,118 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storage_files: {
+        Row: {
+          access_level: string
+          college_id: string | null
+          created_at: string
+          drive_download_link: string | null
+          drive_url: string
+          entity_id: string | null
+          entity_type: string
+          file_name: string
+          file_size: number
+          google_drive_file_id: string
+          google_drive_folder_id: string | null
+          id: string
+          metadata: Json
+          mime_type: string
+          original_file_name: string
+          status: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          access_level?: string
+          college_id?: string | null
+          created_at?: string
+          drive_download_link?: string | null
+          drive_url: string
+          entity_id?: string | null
+          entity_type: string
+          file_name: string
+          file_size: number
+          google_drive_file_id: string
+          google_drive_folder_id?: string | null
+          id?: string
+          metadata?: Json
+          mime_type: string
+          original_file_name: string
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          access_level?: string
+          college_id?: string | null
+          created_at?: string
+          drive_download_link?: string | null
+          drive_url?: string
+          entity_id?: string | null
+          entity_type?: string
+          file_name?: string
+          file_size?: number
+          google_drive_file_id?: string
+          google_drive_folder_id?: string | null
+          id?: string
+          metadata?: Json
+          mime_type?: string
+          original_file_name?: string
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_files_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storage_folders: {
+        Row: {
+          category: string
+          college_id: string | null
+          created_at: string
+          folder_name: string
+          google_drive_folder_id: string
+          id: string
+          parent_folder_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          college_id?: string | null
+          created_at?: string
+          folder_name: string
+          google_drive_folder_id: string
+          id?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          college_id?: string | null
+          created_at?: string
+          folder_name?: string
+          google_drive_folder_id?: string
+          id?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_folders_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
             referencedColumns: ["id"]
           },
         ]
@@ -3161,6 +3267,39 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_email_logs: {
+        Row: {
+          created_at: string | null
+          email: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3168,10 +3307,6 @@ export type Database = {
     Functions: {
       admin_approve_student: {
         Args: { p_college_id: string; p_student_id?: string; p_user_id: string }
-        Returns: Json
-      }
-      admin_set_core_member: {
-        Args: { p_is_core_member: boolean; p_user_id: string }
         Returns: Json
       }
       admin_assign_faculty_institution: {
@@ -3208,6 +3343,10 @@ export type Database = {
         Args: { p_reason?: string; p_user_id: string }
         Returns: undefined
       }
+      admin_set_core_member: {
+        Args: { p_is_core_member: boolean; p_user_id: string }
+        Returns: undefined
+      }
       admin_unlock_exam: { Args: { p_exam_id: string }; Returns: Json }
       award_points: {
         Args: {
@@ -3219,15 +3358,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_storage_file_access: {
+        Args: { p_file_id: string; p_user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_rejected_students: { Args: never; Returns: Json }
       course_code_to_class_suffix: {
         Args: { p_course_code: string }
         Returns: string
       }
-      delete_event_cascade: {
-        Args: { p_event_id: string }
-        Returns: Json
-      }
+      delete_event_cascade: { Args: { p_event_id: string }; Returns: Json }
       delete_exam: { Args: { p_exam_id: string }; Returns: Json }
       delete_student_account_permanently: {
         Args: { p_user_id: string }
@@ -3258,6 +3398,10 @@ export type Database = {
         Returns: Json
       }
       get_admin_college_analytics: { Args: never; Returns: Json }
+      get_approved_student_count: {
+        Args: { p_college_id?: string }
+        Returns: number
+      }
       get_class_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
@@ -3333,6 +3477,30 @@ export type Database = {
           p_target_id?: string
         }
         Returns: undefined
+      }
+      resolve_student_department: {
+        Args: {
+          p_college_id: string
+          p_course_code: string
+          p_course_name: string
+        }
+        Returns: {
+          college_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          normalized_name: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "departments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       unlock_achievement: {
         Args: { p_code: string; p_metadata?: Json; p_user_id: string }
@@ -3490,9 +3658,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       account_deletion_status: [

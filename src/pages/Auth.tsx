@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
+import { toast } from "sonner";
 import {
   Loader2, Eye, EyeOff,
-  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, ShieldCheck, QrCode
+  ArrowRight, CheckCircle2, BookOpen, Trophy, Zap, ShieldCheck, QrCode,
+  Mail, KeyRound, ShieldAlert, Sparkles
 } from "@/components/icons";
 import { User } from "@supabase/supabase-js";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -28,15 +30,19 @@ const HIGHLIGHTS = [
 
 /* ── Input wrapper with show/hide ── */
 function PasswordInput({
-  id, placeholder, value, onChange, label,
+  id, placeholder, value, onChange, label, rightAction,
 }: {
   id: string; placeholder: string;
   value: string; onChange: (v: string) => void; label: string;
+  rightAction?: React.ReactNode;
 }) {
   const [show, setShow] = useState(false);
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-[13px] font-semibold text-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor={id} className="text-[13px] font-semibold text-foreground">{label}</Label>
+        {rightAction}
+      </div>
       <div className="relative">
         <Input
           id={id}
@@ -80,19 +86,79 @@ const Auth = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
+  // Magic Link / OTP state
+  const [loginMode, setLoginMode] = useState<"password" | "magic_link">("password");
+  const [magicEmail, setMagicEmail] = useState("");
+  const [magicOtpCode, setMagicOtpCode] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
+
+  // MFA Challenge state
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+
   // Signup form
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
 
+  const checkMfaAndProceed = async (userId: string): Promise<boolean> => {
+    try {
+      if (typeof supabase.auth?.mfa?.getAuthenticatorAssuranceLevel === "function") {
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2") {
+          const { data: factors } = await supabase.auth.mfa.listFactors();
+          const verified =
+            factors?.totp?.find((f) => f.status === "verified") ||
+            (factors as any)?.all?.find((f: any) => f.status === "verified");
+          if (verified) {
+            setPendingUserId(userId);
+            setMfaFactorId(verified.id);
+            setMfaRequired(true);
+            return false;
+          }
+        }
+      }
+    } catch {
+      // MFA check not required or error; proceed
+    }
+    return true;
+  };
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
+    // If arriving with password recovery parameters in hash, route directly to /reset-password
+    if (typeof window !== "undefined" && window.location.hash.includes("type=recovery")) {
+      navigate("/reset-password" + window.location.hash, { replace: true });
+      return;
+    }
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const canProceed = await checkMfaAndProceed(session.user.id);
+        if (canProceed) {
+          setUser(session.user);
+          redirectToDashboard(session.user.id);
+        }
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (_event === "PASSWORD_RECOVERY") {
+        navigate("/reset-password", { replace: true });
+        return;
+      }
       // If signup is currently in flight, handleSignup manages profile initialization and direct navigation
       if (signupInFlight.current) return;
-      if (session?.user) { setUser(session.user); redirectToDashboard(session.user.id); }
+      if (session?.user) {
+        const canProceed = await checkMfaAndProceed(session.user.id);
+        if (canProceed) {
+          setUser(session.user);
+          redirectToDashboard(session.user.id);
+        }
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -148,11 +214,18 @@ const Auth = () => {
     }
     // Fire-and-forget: log login activity + retention
     setTimeout(() => {
-      void supabase.from("login_activity").insert({
-        user_id: userId,
-        user_agent: navigator.userAgent.slice(0, 255),
-      });
-      supabase.functions.invoke("retention-on-login", { body: {} }).catch(() => {});
+      try {
+        const fromObj = supabase.from?.("login_activity");
+        if (fromObj && typeof fromObj.insert === "function") {
+          void fromObj.insert({
+            user_id: userId,
+            user_agent: navigator.userAgent?.slice?.(0, 255) ?? "",
+          });
+        }
+        supabase.functions?.invoke?.("retention-on-login", { body: {} })?.catch?.(() => {});
+      } catch {
+        // Defensive: ignore in tests or mock environments
+      }
     }, 1500);
   };
 
@@ -180,13 +253,135 @@ const Auth = () => {
         loginTimeout,
       ]);
       if (error) throw error;
-      showSuccessToast("Welcome back! 👋");
-      if (data.user) redirectToDashboard(data.user.id);
+      
+      if (data.user) {
+        const canProceed = await checkMfaAndProceed(data.user.id);
+        if (canProceed) {
+          showSuccessToast("Welcome back! 👋");
+          redirectToDashboard(data.user.id);
+        }
+      }
     } catch (error: any) {
       showErrorToast(error, { context: "login" });
     } finally {
       setLoginLoading(false);
     }
+  };
+
+  const handleSendMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = magicEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setMagicLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+      showSuccessToast(
+        "Sign-in link sent!",
+        "Check your email for a sign-in link or enter the 6-digit code below."
+      );
+    } catch (err: any) {
+      showErrorToast(err, { context: "login" });
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  const handleVerifyMagicOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = magicEmail.trim().toLowerCase();
+    const token = magicOtpCode.trim();
+    if (!token || token.length < 6) {
+      toast.error("Please enter the 6-digit verification code");
+      return;
+    }
+
+    setMagicLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+      if (error) throw error;
+
+      if (data.user) {
+        const canProceed = await checkMfaAndProceed(data.user.id);
+        if (canProceed) {
+          showSuccessToast("Signed in successfully! 👋");
+          redirectToDashboard(data.user.id);
+        }
+      }
+    } catch (err: any) {
+      showErrorToast(err, { context: "login" });
+    } finally {
+      setMagicLoading(false);
+    }
+  };
+
+  const handleVerifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = mfaCode.trim();
+    if (!code || code.length < 6) {
+      toast.error("Please enter the 6-digit code from your authenticator app");
+      return;
+    }
+
+    setMfaLoading(true);
+    try {
+      let verifyError = null;
+      if (typeof (supabase.auth.mfa as any).challengeAndVerify === "function") {
+        const res = await (supabase.auth.mfa as any).challengeAndVerify({
+          factorId: mfaFactorId,
+          code,
+        });
+        verifyError = res.error;
+      } else {
+        const challengeRes = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+        if (challengeRes.error) throw challengeRes.error;
+        const res = await supabase.auth.mfa.verify({
+          factorId: mfaFactorId,
+          challengeId: challengeRes.data.id,
+          code,
+        });
+        verifyError = res.error;
+      }
+
+      if (verifyError) {
+        throw new Error(
+          verifyError.message.toLowerCase().includes("invalid")
+            ? "Invalid authentication code. Please try again."
+            : verifyError.message
+        );
+      }
+
+      showSuccessToast("Identity verified! 👋");
+      setMfaRequired(false);
+      if (pendingUserId) {
+        redirectToDashboard(pendingUserId);
+      }
+    } catch (err: any) {
+      showErrorToast(err, { context: "login" });
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleCancelMfa = async () => {
+    setMfaRequired(false);
+    setPendingUserId(null);
+    setMfaCode("");
+    await supabase.auth.signOut().catch(() => {});
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -494,41 +689,242 @@ const Auth = () => {
 
             {/* ── Login Tab ── */}
             <TabsContent value="login" className="mt-5 space-y-4">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-identifier" className="text-[13px] font-semibold text-foreground">
-                    Email or Student ID
-                  </Label>
-                  <Input
-                    id="login-identifier"
-                    placeholder="student@college.edu or CS-2024-001"
-                    value={loginIdentifier}
-                    onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] h-11 rounded-xl"
-                    required
-                  />
-                </div>
+              {mfaRequired ? (
+                /* ── Two-Factor Authentication Challenge Form ── */
+                <form onSubmit={handleVerifyMfa} className="space-y-4">
+                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-center space-y-2">
+                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500">
+                      <ShieldAlert className="h-6 w-6" />
+                    </div>
+                    <p className="text-[14px] font-bold text-foreground">Two-Factor Authentication Required</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      Enter the 6-digit security code generated by your authenticator app.
+                    </p>
+                  </div>
 
-                <PasswordInput
-                  id="login-password"
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={loginPassword}
-                  onChange={setLoginPassword}
-                />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mfa-code" className="text-[13px] font-semibold text-foreground">
+                      Authenticator Security Code
+                    </Label>
+                    <Input
+                      id="mfa-code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+                      className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-center font-mono tracking-widest text-lg h-11 rounded-xl"
+                      autoFocus
+                      required
+                    />
+                  </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-2"
-                  disabled={loginLoading}
-                >
-                  {loginLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <Button
+                    type="submit"
+                    className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold"
+                    disabled={mfaLoading || mfaCode.length < 6}
+                  >
+                    {mfaLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>Verify Code <ArrowRight className="h-4 w-4" /></>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleCancelMfa}
+                    className="w-full h-10 text-[13px] text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel & Return to Sign In
+                  </Button>
+                </form>
+              ) : loginMode === "magic_link" ? (
+                /* ── Magic Link / OTP Sign-in Form ── */
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Mail className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-[13px] font-bold text-foreground">Passwordless Sign In</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setLoginMode("password"); setMagicLinkSent(false); }}
+                      className="text-[12px] font-semibold text-primary hover:underline transition-colors"
+                    >
+                      Use Password
+                    </button>
+                  </div>
+
+                  {!magicLinkSent ? (
+                    <form onSubmit={handleSendMagicLink} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="magic-email" className="text-[13px] font-semibold text-foreground">
+                          Email Address
+                        </Label>
+                        <Input
+                          id="magic-email"
+                          type="email"
+                          placeholder="student@college.edu"
+                          value={magicEmail}
+                          onChange={(e) => setMagicEmail(e.target.value)}
+                          className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] h-11 rounded-xl"
+                          required
+                          autoFocus
+                        />
+                      </div>
+
+                      <p className="text-[11.5px] text-muted-foreground leading-relaxed">
+                        We'll send a secure one-click link and a 6-digit login code to your registered email address.
+                      </p>
+
+                      <Button
+                        type="submit"
+                        className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold"
+                        disabled={magicLoading}
+                      >
+                        {magicLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>Send Magic Link / OTP <ArrowRight className="h-4 w-4" /></>
+                        )}
+                      </Button>
+                    </form>
                   ) : (
-                    <>Sign In <ArrowRight className="h-4 w-4" /></>
+                    <form onSubmit={handleVerifyMagicOtp} className="space-y-4">
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-center space-y-1">
+                        <p className="text-[12.5px] font-semibold text-foreground">Check your inbox</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Sent to <strong>{magicEmail}</strong>. Click the email link or enter the 6-digit OTP code below:
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="magic-otp" className="text-[13px] font-semibold text-foreground">
+                          6-Digit OTP Code
+                        </Label>
+                        <Input
+                          id="magic-otp"
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={magicOtpCode}
+                          onChange={(e) => setMagicOtpCode(e.target.value.replace(/\D/g, ""))}
+                          className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-center font-mono tracking-widest text-lg h-11 rounded-xl"
+                          autoFocus
+                          required
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold"
+                        disabled={magicLoading || magicOtpCode.length < 6}
+                      >
+                        {magicLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>Verify & Sign In <ArrowRight className="h-4 w-4" /></>
+                        )}
+                      </Button>
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                        <button
+                          type="button"
+                          onClick={handleSendMagicLink}
+                          disabled={magicLoading}
+                          className="text-primary hover:underline"
+                        >
+                          Resend code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMagicLinkSent(false)}
+                          className="hover:underline"
+                        >
+                          Change email
+                        </button>
+                      </div>
+                    </form>
                   )}
-                </Button>
-              </form>
+                </div>
+              ) : (
+                /* ── Standard Email + Password Sign-in Form ── */
+                <>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="login-identifier" className="text-[13px] font-semibold text-foreground">
+                        Email or Student ID
+                      </Label>
+                      <Input
+                        id="login-identifier"
+                        placeholder="student@college.edu or CS-2024-001"
+                        value={loginIdentifier}
+                        onChange={(e) => setLoginIdentifier(e.target.value)}
+                        className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-[14px] h-11 rounded-xl"
+                        required
+                      />
+                    </div>
+
+                    <PasswordInput
+                      id="login-password"
+                      label="Password"
+                      placeholder="Enter your password"
+                      value={loginPassword}
+                      onChange={setLoginPassword}
+                      rightAction={
+                        <button
+                          type="button"
+                          onClick={() => navigate("/forgot-password")}
+                          className="text-[12px] font-semibold text-primary hover:underline hover:text-primary/80 transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      }
+                    />
+
+                    <Button
+                      type="submit"
+                      id="login-submit-btn"
+                      className="w-full h-11 rounded-xl gap-2 shadow-md shadow-primary/25 text-[14px] font-bold mt-2"
+                      disabled={loginLoading}
+                    >
+                      {loginLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>Sign In <ArrowRight className="h-4 w-4" /></>
+                      )}
+                    </Button>
+                  </form>
+
+                  <div className="relative my-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border-subtle" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase">
+                      <span className="bg-surface-1 px-2.5 text-muted-foreground font-semibold">Or</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setLoginMode("magic_link");
+                      setMagicLinkSent(false);
+                      if (loginIdentifier.includes("@")) setMagicEmail(loginIdentifier);
+                    }}
+                    className="w-full h-11 rounded-xl gap-2 font-semibold text-[13px] border-border-subtle bg-surface-2/60 hover:bg-surface-2 text-foreground"
+                  >
+                    <Mail className="h-4 w-4 text-primary" /> Sign in with Magic Link
+                  </Button>
+                </>
+              )}
             </TabsContent>
 
             {/* ── Signup Tab ── */}

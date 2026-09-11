@@ -100,7 +100,7 @@ export default function TenantBrandingApplicator() {
     const tooDark  = hsl.l < 14;
     const tooGrey  = hsl.s < 12 && (hsl.l > 40 || hsl.l < 25);
     if (tooLight || tooDark || tooGrey) {
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[TenantBranding] Rejecting unsafe primary_color ${college.primary_color} ` +
         `(H=${hsl.h} S=${hsl.s}% L=${hsl.l}%). Falling back to system default.`

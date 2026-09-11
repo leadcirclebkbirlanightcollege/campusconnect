@@ -1,36 +1,95 @@
-# Campus Connect — Storage Buckets Specification
+# Campus Connect — File Storage Specification
 
 ## Overview
-Campus Connect uses Supabase Storage for academic assets, lecture schedules, student assignment submissions, and tamper-proof verification certificates.
+Campus Connect uses **Google Drive** as its primary, scalable file storage layer for application-managed assets, with **Supabase PostgreSQL** acting as the single source of truth for authentication, permissions, Row-Level Security (RLS), metadata cataloging, and entity relationships.
+
+The initial production deployment operates at **$0/month** using a personal Google account's free 15 GB storage tier via Google OAuth 2.0. The system features a clean provider abstraction upgradeable to a Google Workspace Shared Drive when organizational demand requires it.
 
 ---
 
-## 1. Storage Buckets Inventory
+## 1. Storage Architecture
 
-| Bucket Name | Visibility | Creation Mechanism | Storage RLS in SQL? | Signed URL Required? | Production Required? |
-|---|---|---|---|---|---|
-| **`lecture-flyers`** | **PUBLIC** | Created in SQL (`20260118133501`) | Yes | No (Direct public URL) | **YES** |
-| **`documents`** | **PUBLIC** | Created in SQL (`20260323100951`) | Yes | No (Direct public URL) | **YES** |
-| **`submissions`** | **PRIVATE** | Created in SQL (`20260321043930`) | Yes | **Yes** (`createSignedUrl(3600)`) | **YES** |
-| **`verify-documents`**| **PRIVATE** | **MANUAL DASHBOARD / API CREATION** | Yes (`20260713093619`) | **Yes** (`createSignedUrl(600)`) | **YES** |
+```
+Campus Connect Frontend (React 18 + Vite + TS)
+        ↓
+Supabase Auth (User JWT)
+        ↓
+Supabase Edge Function (`storage-google-drive`)
+        ↓
+Google OAuth 2.0 (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`)
+        ↓
+Google Drive API v3
+        ↓
+Personal Google Drive (15 GB Free Tier) / Shared Drive
+        ↓
+Campus Connect Folder Hierarchy
+```
 
-> **IMPORTANT DISTINCTION**:
-> - **`public.verify_documents`** (with underscore `_`): **Active Database Table** created in SQL migration `20260713093558_7cfeb33b-7a77-43cf-b4fb-a14a6e708cfc.sql`.
-> - **`verify-documents`** (with hyphen `-`): **Private Storage Bucket** holding binary PDF certificates. RLS policies are in `20260713093619_2fceb566-b1c0-4267-b49a-6e1a0537af81.sql`.
-> - **Action Required**: The `verify-documents` storage bucket must be manually created via the Supabase Dashboard (`Storage > New Bucket`) or Storage API on your independent Supabase project.
+### Folder Structure in Google Drive:
+```
+Campus Connect/
+├── Academics/             (Study materials, notes, syllabi)
+├── Assignments/           (Problem sets, student submissions)
+├── Events/                (Festivals, event banners, posters)
+├── Notices/               (Official campus circulars)
+├── Certificates/          (Tamper-proof verifiable PDF certificates)
+├── Student Documents/     (Student ID verification cards)
+├── Media/                 (Avatars, promotional images)
+└── General/               (Uncategorized administrative files)
+```
 
 ---
 
-## 2. Storage Row-Level Security (RLS) Policies (26 Net Policies)
+## 2. Metadata Schema (`public.storage_files`)
 
-1. **`lecture-flyers`**:
-   - `SELECT`: Public access (anyone can view lecture promotional flyers).
-   - `INSERT`/`UPDATE`/`DELETE`: Staff only (`public.is_admin(auth.uid()) OR public.is_faculty(auth.uid())`).
-2. **`documents`**:
-   - `SELECT`: Authenticated users.
-   - `INSERT`/`UPDATE`/`DELETE`: Staff only (`public.is_admin(auth.uid()) OR public.is_faculty(auth.uid())`).
-3. **`submissions`**:
-   - `SELECT`: Faculty/admin OR student viewing their own folder `auth.uid()::text = (storage.foldername(name))[1]`.
-   - `INSERT`: Student uploading into their own folder prefix `auth.uid()::text = (storage.foldername(name))[1]`.
-4. **`verify-documents`**:
-   - `SELECT`/`INSERT`/`UPDATE`/`DELETE`: Administrators and Super Administrators only (`public.is_admin(auth.uid()) OR public.is_super_admin(auth.uid())`).
+All files stored in Google Drive are indexed in the `public.storage_files` table in Supabase:
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `college_id` | UUID | Multi-tenant scoping reference |
+| `file_name` | TEXT | Sanitized system file name |
+| `original_file_name` | TEXT | User-uploaded file name |
+| `mime_type` | TEXT | Verified MIME type |
+| `file_size` | BIGINT | Size in bytes |
+| `google_drive_file_id`| TEXT | Official Google Drive file ID |
+| `google_drive_folder_id`| TEXT | Parent Google Drive folder ID |
+| `drive_url` | TEXT | Web view URL |
+| `drive_download_link` | TEXT | Download URL |
+| `entity_type` | TEXT | Associated module (`document`, `event`, `assignment`, `certificate`, etc.) |
+| `entity_id` | TEXT | Linked entity identifier |
+| `access_level` | TEXT | `public`, `authenticated`, `private` |
+| `uploaded_by` | UUID | Creator reference (`auth.users`) |
+| `status` | TEXT | `active`, `archived`, `deleted`, `inaccessible` |
+| `metadata` | JSONB | Additional Google Drive object telemetry |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+
+---
+
+## 3. Server-Side Environment Variables
+
+Set these secrets in Supabase via CLI (`npx supabase secrets set ...`):
+
+| Variable | Description | Required? |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | Google Cloud Console OAuth 2.0 Web Client ID | Yes |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud Console OAuth 2.0 Client Secret | Yes |
+| `GOOGLE_REFRESH_TOKEN` | Google OAuth 2.0 Refresh Token | Yes |
+| `GOOGLE_DRIVE_ROOT_FOLDER_ID` | Root folder ID in Google Drive | Optional (auto-created if omitted) |
+| `GOOGLE_DRIVE_TYPE` | Storage mode: `personal` ($0/mo, default) or `shared_drive` | Optional |
+| `GOOGLE_DRIVE_SHARED_DRIVE_ID`| Shared Drive ID if upgrading to Workspace | Optional |
+
+---
+
+## 4. Backward Compatibility & Legacy Supabase Storage
+
+Existing assets in Supabase Storage buckets continue to function transparently without disruption:
+- `documents` (Academic resources)
+- `verify-documents` (Private certificates)
+- `submissions` (Student assignment submissions)
+- `student-id-cards` (Private student verification ID cards)
+- `lecture-flyers` (Lecture and event posters)
+- `avatars` (User avatars)
+- `team-photos` (E-Cell committee members)
+
+New uploads and files managed via `/platform/admin/storage` flow directly to Google Drive.
