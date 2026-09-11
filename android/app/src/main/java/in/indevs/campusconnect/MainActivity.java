@@ -98,7 +98,7 @@ public class MainActivity extends BridgeActivity {
 
         // 2. Strict File Access Hardening (CWE-73 / CWE-79 mitigation)
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        settings.setAllowContentAccess(true); // Permits <input type="file"> picking via content:// providers
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
 
@@ -114,6 +114,17 @@ public class MainActivity extends BridgeActivity {
 
         // 6. Secure WebViewClient for strict domain filtering
         webView.setWebViewClient(new SecureBridgeWebViewClient(getBridge()));
+
+        // 7. Native Download Listener for PDF, study materials, and report downloads
+        webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**

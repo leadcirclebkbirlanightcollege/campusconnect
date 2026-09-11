@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "Campus Connect",
   webDir: "dist",
   server: {
-    url: "https://campusconnect.indevs.in/auth",
+    url: "https://campusconnect.indevs.in",
     cleartext: false,
     androidScheme: "https",
   },
