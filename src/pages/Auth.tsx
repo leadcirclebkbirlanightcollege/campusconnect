@@ -288,7 +288,7 @@ const Auth = () => {
       setMagicLinkSent(true);
       showSuccessToast(
         "Sign-in link sent!",
-        "Check your email for a sign-in link or enter the 6-digit code below."
+        "Check your email for a sign-in link or enter the verification code below."
       );
     } catch (err: any) {
       showErrorToast(err, { context: "login" });
@@ -302,7 +302,7 @@ const Auth = () => {
     const email = magicEmail.trim().toLowerCase();
     const token = magicOtpCode.trim();
     if (!token || token.length < 6) {
-      toast.error("Please enter the 6-digit verification code");
+      toast.error("Please enter the verification code");
       return;
     }
 
@@ -471,8 +471,9 @@ const Auth = () => {
         );
         showSuccessToast(
           "Check Your Email",
-          "We've sent a verification link to your inbox. Click it to activate your account."
+          "We've sent an 8-digit verification code and link to your inbox."
         );
+        navigate(`/auth/verify?email=${encodeURIComponent(email)}`, { replace: true });
         return;
       }
 
@@ -799,22 +800,22 @@ const Auth = () => {
                       <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-center space-y-1">
                         <p className="text-[12.5px] font-semibold text-foreground">Check your inbox</p>
                         <p className="text-[11px] text-muted-foreground">
-                          Sent to <strong>{magicEmail}</strong>. Click the email link or enter the 6-digit OTP code below:
+                          Sent to <strong>{magicEmail}</strong>. Click the email link or enter the verification code below:
                         </p>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="magic-otp" className="text-[13px] font-semibold text-foreground">
-                          6-Digit OTP Code
+                          Verification Code
                         </Label>
                         <Input
                           id="magic-otp"
                           type="text"
                           inputMode="numeric"
-                          maxLength={6}
-                          placeholder="123456"
+                          maxLength={8}
+                          placeholder="31305366"
                           value={magicOtpCode}
-                          onChange={(e) => setMagicOtpCode(e.target.value.replace(/\D/g, ""))}
+                          onChange={(e) => setMagicOtpCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
                           className="bg-surface-2/80 border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary/30 text-center font-mono tracking-widest text-lg h-11 rounded-xl"
                           autoFocus
                           required

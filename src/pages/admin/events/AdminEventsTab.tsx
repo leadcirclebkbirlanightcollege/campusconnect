@@ -40,6 +40,7 @@ import {
   Phone,
   AlertTriangle,
   Loader2,
+  Sparkles,
 } from "@/components/icons";
 import { format } from "date-fns";
 import EventFlyerUploader from "./EventFlyerUploader";
@@ -62,6 +63,11 @@ type EventRow = {
   is_featured: boolean | null;
   is_ecell_event: boolean | null;
   max_stalls: number | null;
+  promotional_popup_enabled: boolean | null;
+  promotional_image_url: string | null;
+  promotional_duration_seconds: number | null;
+  promotional_start_at: string | null;
+  promotional_end_at: string | null;
   created_at: string;
 };
 
@@ -77,6 +83,11 @@ const initialForm = {
   is_featured: false,
   is_ecell_event: false,
   max_stalls: "" as string,
+  promotional_popup_enabled: false,
+  promotional_image_url: null as string | null,
+  promotional_duration_seconds: 7,
+  promotional_start_at: "",
+  promotional_end_at: "",
 };
 
 export function extractEventStoragePath(url: string | null | undefined): string | null {
@@ -110,7 +121,7 @@ export default function AdminEventsTab() {
       const { data, error } = await supabase
         .from("events")
         .select(
-          "id,title,description,event_date,event_time,venue,poster_url,flyer_url,full_flyer_url,whatsapp_group_link,is_featured,is_ecell_event,max_stalls,created_at"
+          "id,title,description,event_date,event_time,venue,poster_url,flyer_url,full_flyer_url,whatsapp_group_link,is_featured,is_ecell_event,max_stalls,created_at,promotional_popup_enabled,promotional_image_url,promotional_duration_seconds,promotional_start_at,promotional_end_at"
         )
         .order("event_date", { ascending: true });
       if (error) throw error;
@@ -139,6 +150,18 @@ export default function AdminEventsTab() {
       is_featured: Boolean(e.is_featured),
       is_ecell_event: Boolean(e.is_ecell_event),
       max_stalls: e.max_stalls != null ? String(e.max_stalls) : "",
+      promotional_popup_enabled: Boolean(e.promotional_popup_enabled),
+      promotional_image_url: e.promotional_image_url || null,
+      promotional_duration_seconds:
+        e.promotional_duration_seconds != null
+          ? Math.min(9, Math.max(5, Number(e.promotional_duration_seconds)))
+          : 7,
+      promotional_start_at: e.promotional_start_at
+        ? new Date(e.promotional_start_at).toISOString().slice(0, 16)
+        : "",
+      promotional_end_at: e.promotional_end_at
+        ? new Date(e.promotional_end_at).toISOString().slice(0, 16)
+        : "",
     });
     setWhatsappError(null);
     setOpen(true);
@@ -176,10 +199,35 @@ export default function AdminEventsTab() {
         throw new Error("Invalid WhatsApp group link. Must be https://chat.whatsapp.com/...");
       }
 
+      // Validate promotional popup configuration if enabled
+      if (form.promotional_popup_enabled) {
+        const hasImage = Boolean(
+          form.promotional_image_url || form.flyer_url || form.full_flyer_url
+        );
+        if (!hasImage) {
+          throw new Error(
+            "Promotional popup requires an image. Please upload a promotional image or event flyer."
+          );
+        }
+
+        if (form.promotional_start_at && form.promotional_end_at) {
+          const start = new Date(form.promotional_start_at).getTime();
+          const end = new Date(form.promotional_end_at).getTime();
+          if (start > end) {
+            throw new Error("Promotion start time must be before promotion end time.");
+          }
+        }
+      }
+
       const max =
         form.max_stalls.trim() === ""
           ? null
           : Math.max(0, Number(form.max_stalls));
+
+      const promoDuration = Math.min(
+        9,
+        Math.max(5, Number(form.promotional_duration_seconds) || 7)
+      );
 
       const payload = {
         title: form.title.trim(),
@@ -193,6 +241,16 @@ export default function AdminEventsTab() {
         is_featured: form.is_featured,
         is_ecell_event: form.is_ecell_event,
         max_stalls: max,
+        promotional_popup_enabled: form.promotional_popup_enabled,
+        promotional_image_url:
+          form.promotional_image_url || form.flyer_url || null,
+        promotional_duration_seconds: promoDuration,
+        promotional_start_at: form.promotional_start_at
+          ? new Date(form.promotional_start_at).toISOString()
+          : null,
+        promotional_end_at: form.promotional_end_at
+          ? new Date(form.promotional_end_at).toISOString()
+          : null,
       };
 
       if (editEvent) {
@@ -218,6 +276,7 @@ export default function AdminEventsTab() {
       qc.invalidateQueries({ queryKey: ["admin", "events"] });
       qc.invalidateQueries({ queryKey: ["student", "events"] });
       qc.invalidateQueries({ queryKey: ["event", "detail"] });
+      qc.invalidateQueries({ queryKey: ["event-promo"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save event"),
   });
@@ -247,6 +306,7 @@ export default function AdminEventsTab() {
         target.flyer_url,
         target.poster_url,
         target.full_flyer_url,
+        target.promotional_image_url,
       ];
       if (rpcResult && Array.isArray(rpcResult.flyer_urls)) {
         candidateUrls.push(...rpcResult.flyer_urls);
@@ -287,6 +347,7 @@ export default function AdminEventsTab() {
       qc.invalidateQueries({ queryKey: ["student", "events"] });
       qc.invalidateQueries({ queryKey: ["event", "detail"] });
       qc.invalidateQueries({ queryKey: ["events"] });
+      qc.invalidateQueries({ queryKey: ["event-promo"] });
       qc.invalidateQueries({ queryKey: ["ecell", "user_stalls"] });
       qc.invalidateQueries({ queryKey: ["stall-existing"] });
       qc.invalidateQueries({ queryKey: ["upcoming-events"] });
@@ -404,6 +465,11 @@ export default function AdminEventsTab() {
                             <Rocket className="h-3 w-3 text-black" /> E-Cell
                           </Badge>
                         )}
+                        {e.promotional_popup_enabled && (
+                          <Badge className="bg-cyan-500 text-white font-bold gap-1 shadow-md text-[10px]">
+                            <Sparkles className="h-3 w-3" /> Promo ({e.promotional_duration_seconds || 7}s)
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -417,6 +483,11 @@ export default function AdminEventsTab() {
                       <h3 className="font-bold text-base text-foreground leading-snug line-clamp-1">
                         {e.title}
                       </h3>
+                      {e.promotional_popup_enabled && !flyer && (
+                        <Badge className="bg-cyan-500 text-white font-bold gap-1 shadow-xs text-[10px] shrink-0">
+                          <Sparkles className="h-3 w-3" /> Promo
+                        </Badge>
+                      )}
                     </div>
 
                     {e.description && (
@@ -748,6 +819,143 @@ export default function AdminEventsTab() {
                 checked={form.is_ecell_event}
                 onCheckedChange={(v) => setForm((p) => ({ ...p, is_ecell_event: v }))}
               />
+            </div>
+
+            {/* EVENT PROMOTION Section */}
+            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-4 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-500" />
+                    Promotional Launch Popup
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Show a branded promotional modal on app open for this event
+                  </p>
+                </div>
+                <Switch
+                  checked={form.promotional_popup_enabled}
+                  onCheckedChange={(v) =>
+                    setForm((p) => ({ ...p, promotional_popup_enabled: v }))
+                  }
+                />
+              </div>
+
+              {form.promotional_popup_enabled && (
+                <div className="pt-2 border-t border-cyan-500/20 space-y-3.5">
+                  {/* Promotional Image Upload / Selection */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">
+                        Promotional Image / Poster *
+                      </Label>
+                      {form.flyer_url &&
+                        form.promotional_image_url !== form.flyer_url && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((p) => ({
+                                ...p,
+                                promotional_image_url: p.flyer_url,
+                              }))
+                            }
+                            className="text-[11px] text-primary hover:underline font-medium"
+                          >
+                            Use Main Event Flyer
+                          </button>
+                        )}
+                    </div>
+                    <EventFlyerUploader
+                      value={form.promotional_image_url || form.flyer_url}
+                      onChange={(url) =>
+                        setForm((p) => ({ ...p, promotional_image_url: url }))
+                      }
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Dedicated promotional poster (defaults to main flyer if not separately specified).
+                    </p>
+                  </div>
+
+                  {/* Display Duration (5-9 seconds) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">
+                        Display Duration: {form.promotional_duration_seconds}s
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground">
+                        5 to 9 seconds
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={5}
+                        max={9}
+                        step={1}
+                        value={form.promotional_duration_seconds}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            promotional_duration_seconds: Number(e.target.value),
+                          }))
+                        }
+                        className="flex-1 accent-primary h-2 bg-slate-700/50 rounded-lg cursor-pointer"
+                      />
+                      <Badge variant="outline" className="font-mono text-xs px-2.5">
+                        {form.promotional_duration_seconds}s
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Promotional Window */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">Promotion Start</Label>
+                      <Input
+                        type="datetime-local"
+                        value={form.promotional_start_at}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            promotional_start_at: e.target.value,
+                          }))
+                        }
+                        className="rounded-xl h-9 text-xs"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Optional (defaults to immediately)
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">Promotion End</Label>
+                      <Input
+                        type="datetime-local"
+                        value={form.promotional_end_at}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            promotional_end_at: e.target.value,
+                          }))
+                        }
+                        className="rounded-xl h-9 text-xs"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Optional (defaults to event date)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CTA Preview */}
+                  <div className="p-2.5 rounded-xl bg-background/80 border border-input flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">
+                      CTA Action:
+                    </span>
+                    <Badge className="bg-primary text-white font-bold text-[10px] gap-1">
+                      VIEW EVENT <ExternalLink className="h-2.5 w-2.5" />
+                    </Badge>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

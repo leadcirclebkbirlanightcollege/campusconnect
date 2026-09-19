@@ -1175,6 +1175,11 @@ export type Database = {
           is_featured: boolean
           max_stalls: number | null
           poster_url: string | null
+          promotional_duration_seconds: number
+          promotional_end_at: string | null
+          promotional_image_url: string | null
+          promotional_popup_enabled: boolean
+          promotional_start_at: string | null
           title: string
           updated_at: string
           venue: string | null
@@ -1194,6 +1199,11 @@ export type Database = {
           is_featured?: boolean
           max_stalls?: number | null
           poster_url?: string | null
+          promotional_duration_seconds?: number
+          promotional_end_at?: string | null
+          promotional_image_url?: string | null
+          promotional_popup_enabled?: boolean
+          promotional_start_at?: string | null
           title: string
           updated_at?: string
           venue?: string | null
@@ -1213,6 +1223,11 @@ export type Database = {
           is_featured?: boolean
           max_stalls?: number | null
           poster_url?: string | null
+          promotional_duration_seconds?: number
+          promotional_end_at?: string | null
+          promotional_image_url?: string | null
+          promotional_popup_enabled?: boolean
+          promotional_start_at?: string | null
           title?: string
           updated_at?: string
           venue?: string | null

@@ -214,7 +214,7 @@ describe("Production Authentication & Account Security System Suite", () => {
     });
   });
 
-  it("3. Magic Link flow prompts for 6-digit OTP code and calls verifyOtp", async () => {
+  it("3. Magic Link flow prompts for 8-digit OTP code and calls verifyOtp", async () => {
     vi.mocked(useAuth).mockReturnValue({ user: null, session: null, isLoading: false });
 
     render(
@@ -234,17 +234,17 @@ describe("Production Authentication & Account Security System Suite", () => {
 
     // OTP form appears
     await waitFor(() => {
-      expect(screen.getByLabelText(/6-digit otp code/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/(8-digit|verification code)/i)).toBeInTheDocument();
     });
 
-    const otpInput = screen.getByLabelText(/6-digit otp code/i);
-    fireEvent.change(otpInput, { target: { value: "123456" } });
+    const otpInput = screen.getByLabelText(/(8-digit|verification code)/i);
+    fireEvent.change(otpInput, { target: { value: "31305366" } });
     fireEvent.click(screen.getByRole("button", { name: /verify & sign in/i }));
 
     await waitFor(() => {
       expect(supabase.auth.verifyOtp).toHaveBeenCalledWith({
         email: "student@example.com",
-        token: "123456",
+        token: "31305366",
         type: "email",
       });
     });

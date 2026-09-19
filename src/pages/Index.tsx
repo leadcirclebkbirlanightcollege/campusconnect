@@ -11,6 +11,8 @@ import {
 import { useAuth } from "@/providers/AuthProvider";
 import { useTenant } from "@/providers/TenantProvider";
 import { resolveRoleDashboard } from "@/lib/roleRouting";
+import { resolveStudentOnboardingDestination } from "@/lib/onboardingRouting";
+import { supabase } from "@/integrations/supabase/client";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
 import { useLandingContent } from "@/hooks/use-landing-content";
 import { Button } from "@/components/ui/button";
@@ -39,10 +41,60 @@ export default function Index() {
   const { user, isLoading: authLoading } = useAuth();
   const { role, isLoading: tenantLoading } = useTenant();
 
-  // If already logged in, route immediately to the canonical role-specific dashboard
+  // If URL arrives at root with email verification tokens, intercept and forward to /auth/verify
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (
+      hash.includes("access_token") ||
+      hash.includes("type=signup") ||
+      hash.includes("type=recovery") ||
+      search.includes("code=") ||
+      search.includes("type=signup")
+    ) {
+      if (hash.includes("type=recovery")) {
+        navigate(`/reset-password${hash}`, { replace: true });
+      } else {
+        navigate(`/auth/verify${search}${hash}`, { replace: true });
+      }
+    }
+  }, [navigate]);
+
+  // If already logged in, route immediately to the canonical role dashboard or student onboarding state
   useEffect(() => {
     if (authLoading || !user || tenantLoading) return;
-    navigate(resolveRoleDashboard(role), { replace: true });
+
+    // Staff roles bypass student onboarding checks
+    if (role === "super_admin" || role === "admin" || role === "faculty") {
+      navigate(resolveRoleDashboard(role), { replace: true });
+      return;
+    }
+
+    // Student: resolve onboarding & review state directly to avoid welcome back loop
+    let isMounted = true;
+    const resolveDestination = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("profile_completed, approval_status, college_assigned")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!isMounted) return;
+        const target = resolveStudentOnboardingDestination(profile, role);
+        navigate(target, { replace: true });
+      } catch {
+        if (!isMounted) return;
+        navigate(resolveRoleDashboard(role), { replace: true });
+      }
+    };
+
+    resolveDestination();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user, authLoading, tenantLoading, role, navigate]);
 
   // If launched as installed PWA and not logged in, route to /auth

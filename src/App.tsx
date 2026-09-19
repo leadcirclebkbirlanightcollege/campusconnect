@@ -5,6 +5,7 @@ import OfflineBanner from "@/components/layout/OfflineBanner";
 import NetworkHealthDot from "@/components/layout/NetworkHealthDot";
 import SwUpdateManager from "@/components/pwa/SwUpdateManager";
 import AppSplash from "@/components/pwa/AppSplash";
+import EventPromoModal from "@/components/events/EventPromoModal";
 import WhatsNewModal from "@/components/whats-new/WhatsNewModal";
 import { AppProviders } from "@/providers/AppProviders";
 import { useWebVitals } from "@/hooks/use-web-vitals";
@@ -58,6 +59,9 @@ function AppInner() {
 
       {/* Canonical initial splash screen across all entry points */}
       <AppSplash />
+
+      {/* Dynamic promotional event popup */}
+      <EventPromoModal />
 
       {/* Offline overlay — never blocks rendering */}
       <OfflineAutoRecovery />

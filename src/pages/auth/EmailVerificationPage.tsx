@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,45 +14,95 @@ import {
   Mail,
   ShieldCheck,
   RefreshCw,
+  KeyRound,
   LogIn,
 } from "@/components/icons";
 import { toast } from "sonner";
 import { BRANDING } from "@/config/branding";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect";
+import { resolveStudentOnboardingDestination } from "@/lib/onboardingRouting";
 
-type VerifyState =
-  | "verifying"
-  | "success"
-  | "already_verified"
-  | "expired"
-  | "invalid";
+type VerifyViewState =
+  | "verifying" // Actively verifying URL hash/callback token
+  | "code_entry" // User enters the 8-digit verification code
+  | "success" // Verified successfully, preparing redirect
+  | "already_verified" // Already verified account
+  | "expired"; // Token/code expired
 
-const VERIFIED_SESSION_KEY = "cc_email_verified_state";
 const VERIFIED_EMAIL_KEY = "cc_email_verified_address";
 
 export default function EmailVerificationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [state, setState] = useState<VerifyState>("verifying");
-  const [emailAddress, setEmailAddress] = useState<string>("");
-  const [resendEmail, setResendEmail] = useState<string>("");
-  const [resending, setResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
+  // Verification code state (8 digits)
+  const [viewState, setViewState] = useState<VerifyViewState>("verifying");
+  const [emailAddress, setEmailAddress] = useState<string>(() => {
+    return (
+      searchParams.get("email") ||
+      (typeof window !== "undefined" ? sessionStorage.getItem(VERIFIED_EMAIL_KEY) || "" : "")
+    );
+  });
+  const [verificationCode, setVerificationCode] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isSubmittingCode, setIsSubmittingCode] = useState(false);
+  const [redirectTarget, setRedirectTarget] = useState<string>("/onboarding-wizard");
 
+  // Resend state
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // In-flight guard against duplicate submissions
+  const verifyInFlight = useRef(false);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  /**
+   * Helper: Determine user's current destination without signing out.
+   */
+  const resolveAndRedirectUser = async (userId: string, immediate: boolean = false) => {
+    try {
+      const [{ data: roleData }, { data: profileData }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("profile_completed, approval_status, college_assigned")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+
+      const target = resolveStudentOnboardingDestination(profileData, roleData?.role);
+      setRedirectTarget(target);
+      setViewState("success");
+
+      if (immediate) {
+        navigate(target, { replace: true });
+      } else {
+        setTimeout(() => {
+          navigate(target, { replace: true });
+        }, 900);
+      }
+    } catch {
+      // Safe fallback to onboarding wizard
+      navigate("/onboarding-wizard", { replace: true });
+    }
+  };
+
+  /**
+   * 1. Inspect URL parameters / hash on mount.
+   * Handles incoming email confirmation links from Gmail / external browsers.
+   */
   useEffect(() => {
     let isMounted = true;
 
-    async function evaluateVerification() {
-      // 1. Check if previously verified during this browser tab session (handles page refresh)
-      const cachedState = sessionStorage.getItem(VERIFIED_SESSION_KEY) as VerifyState | null;
-      const cachedEmail = sessionStorage.getItem(VERIFIED_EMAIL_KEY);
-      if (cachedEmail) {
-        setEmailAddress(cachedEmail);
-        setResendEmail(cachedEmail);
-      }
-
-      // Check hash params (Supabase standard email confirmation redirects via hash)
+    async function evaluateUrlTokens() {
       const hash = window.location.hash.startsWith("#")
         ? window.location.hash.substring(1)
         : window.location.hash;
@@ -62,18 +112,19 @@ export default function EmailVerificationPage() {
       const errorDescription =
         searchParams.get("error_description") || hashParams.get("error_description") || "";
       const error = searchParams.get("error") || hashParams.get("error");
-      const type = searchParams.get("type") || hashParams.get("type");
 
-      // 2. Check for explicit error parameters
+      // Handle explicit error query/hash from Supabase
       if (errorCode || error) {
-        const descLower = errorDescription.toLowerCase();
+        const descLower = (errorDescription || "").toLowerCase();
         if (
           errorCode === "otp_expired" ||
           descLower.includes("expired") ||
-          descLower.includes("invalid") ||
           descLower.includes("has expired")
         ) {
-          if (isMounted) setState("expired");
+          if (isMounted) {
+            setViewState("expired");
+            setErrorMessage("This verification link or code has expired. Please request a new one below.");
+          }
           return;
         }
 
@@ -83,146 +134,278 @@ export default function EmailVerificationPage() {
           descLower.includes("already verified") ||
           descLower.includes("already been verified")
         ) {
-          if (isMounted) setState("already_verified");
+          if (isMounted) setViewState("already_verified");
           return;
         }
 
-        // Generic error state
-        if (isMounted) setState("invalid");
+        if (isMounted) {
+          setViewState("code_entry");
+          setErrorMessage(errorDescription || "Invalid or unparseable verification link. Please enter your code manually.");
+        }
         return;
       }
 
-      // 3. Inspect active session / user state
+      // Check if URL has access_token (email confirmation link returned by Supabase)
+      const hasAccessToken = hashParams.has("access_token") || searchParams.has("code");
+
+      // Inspect active Supabase session
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
         if (session?.user) {
           const user = session.user;
           const userEmail = user.email || "";
-          if (userEmail) {
+          if (userEmail && isMounted) {
             setEmailAddress(userEmail);
-            setResendEmail(userEmail);
             sessionStorage.setItem(VERIFIED_EMAIL_KEY, userEmail);
           }
 
-          // If email is confirmed
+          // If user email is confirmed and authenticated, resolve and route
           if (user.email_confirmed_at) {
-            sessionStorage.setItem(VERIFIED_SESSION_KEY, "success");
-            if (isMounted) setState("success");
+            if (isMounted) {
+              await resolveAndRedirectUser(user.id);
+            }
             return;
           }
         }
       } catch (err) {
-        console.error("Auth session inspection error:", err);
+        console.error("Session inspection notice:", err);
       }
 
-      // 4. Check if we have cached success state from refresh
-      if (cachedState === "success") {
-        if (isMounted) setState("success");
-        return;
-      }
-      if (cachedState === "already_verified") {
-        if (isMounted) setState("already_verified");
-        return;
-      }
-
-      // 5. Listen to auth state changes (in case Supabase is processing hash tokens asynchronously)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Listen to auth state changes (Supabase client processes hash tokens asynchronously)
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
         if (!isMounted) return;
 
-        if (session?.user) {
-          if (session.user.email) {
-            setEmailAddress(session.user.email);
-            setResendEmail(session.user.email);
-            sessionStorage.setItem(VERIFIED_EMAIL_KEY, session.user.email);
+        if (nextSession?.user) {
+          if (nextSession.user.email) {
+            setEmailAddress(nextSession.user.email);
+            sessionStorage.setItem(VERIFIED_EMAIL_KEY, nextSession.user.email);
           }
 
-          if (session.user.email_confirmed_at || event === "SIGNED_IN" || event === "USER_UPDATED") {
-            sessionStorage.setItem(VERIFIED_SESSION_KEY, "success");
-            setState("success");
+          if (
+            nextSession.user.email_confirmed_at ||
+            event === "SIGNED_IN" ||
+            event === "USER_UPDATED"
+          ) {
+            subscription.unsubscribe();
+            await resolveAndRedirectUser(nextSession.user.id);
           }
         }
       });
 
-      // Timeout fallback: if after 2.5 seconds no token or error was parsed
-      const timer = setTimeout(() => {
-        if (isMounted && state === "verifying") {
-          // If hash had an access_token, give success
-          if (hashParams.has("access_token")) {
-            sessionStorage.setItem(VERIFIED_SESSION_KEY, "success");
-            setState("success");
+      // If no token in URL and no active confirmed session after a brief check, show the 8-digit code entry view
+      const timeout = setTimeout(() => {
+        if (isMounted && viewState === "verifying") {
+          subscription.unsubscribe();
+          if (!hasAccessToken) {
+            setViewState("code_entry");
           } else {
-            setState("invalid");
+            // Token was present but couldn't be parsed
+            setViewState("code_entry");
+            setErrorMessage("We couldn't verify the link automatically. Please enter your 8-digit verification code below.");
           }
         }
-      }, 2500);
+      }, hasAccessToken ? 3000 : 350);
 
       return () => {
         subscription.unsubscribe();
-        clearTimeout(timer);
+        clearTimeout(timeout);
       };
     }
 
-    evaluateVerification();
+    evaluateUrlTokens();
 
     return () => {
       isMounted = false;
     };
   }, [searchParams]);
 
-  // Clean transition to login (clearing any transient auth session)
-  const handleReturnToLogin = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Safe to ignore
-    } finally {
-      // Clear URL fragments to prevent re-triggering
-      window.history.replaceState(null, "", "/auth/login");
-      navigate("/auth/login", { replace: true });
-    }
-  };
+  /**
+   * Handle manual 8-digit verification code submission.
+   */
+  const handleVerifyCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-  // Handle Resend Verification Email
-  const handleResend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const targetEmail = resendEmail.trim().toLowerCase();
-    if (!targetEmail) {
-      toast.error("Please enter your registered email address.");
+    if (verifyInFlight.current) return;
+    const cleanEmail = emailAddress.trim().toLowerCase();
+    const cleanCode = verificationCode.trim().replace(/\D/g, "");
+
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      toast.error("Please enter a valid email address.");
       return;
     }
 
+    if (!cleanCode || cleanCode.length !== 8) {
+      toast.error("Please enter the complete 8-digit verification code.");
+      return;
+    }
+
+    verifyInFlight.current = true;
+    setIsSubmittingCode(true);
+    setErrorMessage("");
+
+    try {
+      // 1. First attempt verification with type 'signup' (official email confirmation OTP type)
+      let authResult = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanCode,
+        type: "signup",
+      });
+
+      // 2. Fallback to type 'email' if signup type returned invalid parameter error
+      if (authResult.error) {
+        const errLower = (authResult.error.message || "").toLowerCase();
+        if (
+          errLower.includes("already confirmed") ||
+          errLower.includes("already verified") ||
+          authResult.error.code === "already_confirmed"
+        ) {
+          toast.info("Account is already verified.");
+          // Attempt sign in or resolve current session
+          const { data: currentSession } = await supabase.auth.getSession();
+          if (currentSession.session?.user) {
+            await resolveAndRedirectUser(currentSession.session.user.id);
+            return;
+          } else {
+            navigate("/auth", { replace: true });
+            return;
+          }
+        }
+
+        // Try email OTP type fallback
+        const fallback = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanCode,
+          type: "email",
+        });
+
+        if (!fallback.error) {
+          authResult = fallback;
+        }
+      }
+
+      if (authResult.error) {
+        const msg = authResult.error.message || "";
+        const msgLower = msg.toLowerCase();
+
+        if (
+          authResult.error.code === "otp_expired" ||
+          msgLower.includes("expired") ||
+          msgLower.includes("has expired")
+        ) {
+          throw new Error("This 8-digit verification code has expired. Please click 'Resend Code' below.");
+        }
+
+        if (msgLower.includes("invalid") || msgLower.includes("token")) {
+          throw new Error("Incorrect 8-digit verification code. Please check your email and try again.");
+        }
+
+        throw authResult.error;
+      }
+
+      const verifiedUser = authResult.data?.user;
+      if (!verifiedUser) {
+        throw new Error("Verification succeeded, but session could not be established. Please sign in.");
+      }
+
+      toast.success("Email verified successfully! 🎉");
+      sessionStorage.setItem(VERIFIED_EMAIL_KEY, cleanEmail);
+
+      // Successfully verified — resolve onboarding state and route
+      await resolveAndRedirectUser(verifiedUser.id);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to verify code. Please try again.");
+      toast.error(err.message || "Verification failed");
+    } finally {
+      setIsSubmittingCode(false);
+      verifyInFlight.current = false;
+    }
+  };
+
+  /**
+   * Handle Resend Verification Code
+   */
+  const handleResendCode = async () => {
+    const cleanEmail = emailAddress.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      toast.error("Please enter a valid registered email address.");
+      return;
+    }
+
+    if (resendCooldown > 0) return;
+
     setResending(true);
+    setErrorMessage("");
+
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email: targetEmail,
+        email: cleanEmail,
         options: {
           emailRedirectTo: getAuthRedirectUrl("/auth/verify"),
         },
       });
 
       if (error) {
-        if (error.message.toLowerCase().includes("already")) {
-          setState("already_verified");
+        const lower = error.message.toLowerCase();
+        if (lower.includes("already confirmed") || lower.includes("already verified")) {
+          setViewState("already_verified");
           return;
+        }
+        if (lower.includes("rate limit") || lower.includes("too many requests")) {
+          throw new Error("Please wait a few minutes before requesting another code.");
         }
         throw error;
       }
 
-      setResendSuccess(true);
-      toast.success("Verification email sent!", {
-        description: `Check the inbox for ${targetEmail}.`,
+      setResendCooldown(60);
+      toast.success("New 8-digit code dispatched!", {
+        description: `Check your inbox at ${cleanEmail}.`,
       });
     } catch (err: any) {
-      toast.error(err.message || "Failed to resend verification email.");
+      toast.error(err.message || "Could not resend verification email.");
     } finally {
       setResending(false);
     }
   };
 
+  /**
+   * Handle pasting verification code from clipboard.
+   * Strips spaces/dashes and auto-submits if 8 digits are detected.
+   */
+  const handleCodePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    const digits = pasted.replace(/\D/g, "").slice(0, 8);
+    setVerificationCode(digits);
+
+    if (digits.length === 8 && emailAddress.trim()) {
+      // Trigger submission immediately
+      setTimeout(() => {
+        handleVerifyCode();
+      }, 50);
+    }
+  };
+
+  /**
+   * Handle clean transition to sign in (clears active session)
+   */
+  const handleSwitchAccount = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignored
+    } finally {
+      navigate("/auth", { replace: true });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-8 relative overflow-hidden text-foreground">
       {/* Background Accent Gradients */}
       <div
         className="absolute inset-0 opacity-[0.04] pointer-events-none"
@@ -254,21 +437,146 @@ export default function EmailVerificationPage() {
           </span>
         </div>
 
-        {/* ── State 1: Verifying Spinner ── */}
-        {state === "verifying" && (
+        {/* ── View 1: Automatic Verifying Spinner (Email Link Processing) ── */}
+        {viewState === "verifying" && (
           <div className="py-8 space-y-4">
             <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
             <h1 className="text-xl font-bold tracking-tight">Verifying email address…</h1>
             <p className="text-sm text-muted-foreground">
-              Please wait while we confirm your credentials with Campus Connect.
+              Processing your verification token and establishing your campus session.
             </p>
           </div>
         )}
 
-        {/* ── State 2: Verification Success (Exact Required Spec) ── */}
-        {state === "success" && (
+        {/* ── View 2: 8-Digit Verification Code Entry & Confirmation ── */}
+        {viewState === "code_entry" && (
+          <div className="space-y-5 text-left">
+            <div className="text-center space-y-1.5">
+              <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
+                <KeyRound className="h-7 w-7" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Verify Your Email
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Enter the <strong>8-digit verification code</strong> sent to your email address or click the verification link in your inbox.
+              </p>
+            </div>
+
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-2.5 text-xs text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="flex-1 leading-relaxed">{errorMessage}</div>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              {/* Email Address */}
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-email" className="text-[13px] font-semibold text-foreground">
+                  Registered Email Address
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="verify-email"
+                    type="email"
+                    required
+                    placeholder="student@college.edu"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    className="h-11 pl-9 text-sm bg-surface-2/80 border-border-subtle"
+                  />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              {/* 8-Digit Code Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="verification-code" className="text-[13px] font-semibold text-foreground">
+                    8-Digit Verification Code
+                  </Label>
+                  <span className="text-[11px] font-mono text-muted-foreground">
+                    {verificationCode.length}/8 digits
+                  </span>
+                </div>
+
+                <Input
+                  id="verification-code"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  placeholder="31305366"
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                    setVerificationCode(val);
+                  }}
+                  onPaste={handleCodePaste}
+                  className="h-12 text-center font-mono tracking-[0.3em] sm:tracking-[0.4em] text-xl font-bold rounded-xl bg-surface-2/80 border-border-subtle focus:border-primary"
+                  autoFocus
+                  autoComplete="one-time-code"
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Tip: You can paste the complete 8-digit code directly.
+                </p>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmittingCode || verificationCode.length !== 8 || !emailAddress.trim()}
+                className="w-full h-12 text-[14px] font-bold gap-2 shadow-lg shadow-primary/25 mt-2"
+              >
+                {isSubmittingCode ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Verifying Code…
+                  </>
+                ) : (
+                  <>
+                    Verify Code & Continue <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Resend Action */}
+            <div className="pt-2 border-t border-border-subtle/80 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Didn't receive the email?</span>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resending || resendCooldown > 0}
+                className="text-primary font-semibold hover:underline disabled:opacity-50 disabled:hover:no-underline flex items-center gap-1"
+              >
+                {resending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+                {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+              </button>
+            </div>
+
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={handleSwitchAccount}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Sign in with a different account &rarr;
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── View 3: Verification Success (Establishing Session & Auto-Redirecting) ── */}
+        {viewState === "success" && (
           <div className="space-y-5">
             <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-lg shadow-primary/15">
               <CheckCircle2 className="h-9 w-9 text-primary" />
@@ -276,10 +584,10 @@ export default function EmailVerificationPage() {
 
             <div className="space-y-2">
               <h1 className="text-2xl font-black tracking-tight text-foreground">
-                Email verified successfully! ✓
+                Email Verified Successfully! ✓
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your email address has been successfully verified.
+                Your authenticated session is active. Taking you to your campus workspace…
               </p>
             </div>
 
@@ -293,24 +601,24 @@ export default function EmailVerificationPage() {
             <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 text-left space-y-1">
               <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 shrink-0" />
-                Account Activated
+                Session Established
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Please log in again to continue. You can now set up your student profile and submit your college ID.
+                Your credentials are confirmed. You will be redirected automatically in a moment.
               </p>
             </div>
 
             <Button
-              onClick={handleReturnToLogin}
+              onClick={() => navigate(redirectTarget, { replace: true })}
               className="w-full h-12 text-sm font-bold gap-2 shadow-lg shadow-primary/25"
             >
-              Return to Campus Connect <ArrowRight className="h-4 w-4" />
+              Continue Now <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         )}
 
-        {/* ── State 3: Already Verified ── */}
-        {state === "already_verified" && (
+        {/* ── View 4: Already Verified ── */}
+        {viewState === "already_verified" && (
           <div className="space-y-5">
             <div className="mx-auto h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-500">
               <ShieldCheck className="h-8 w-8" />
@@ -318,123 +626,86 @@ export default function EmailVerificationPage() {
 
             <div className="space-y-2">
               <h1 className="text-2xl font-black tracking-tight text-foreground">
-                Email already verified
+                Email Already Verified
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your email address has already been verified and activated on Campus Connect.
+                This account is already verified and active on Campus Connect.
               </p>
             </div>
 
             <div className="p-3.5 rounded-xl bg-surface-2 border border-border-subtle text-xs text-muted-foreground">
-              You can proceed directly to sign in with your credentials.
+              You can proceed directly to your campus onboarding or student dashboard.
             </div>
 
             <Button
-              onClick={handleReturnToLogin}
+              onClick={async () => {
+                const { data } = await supabase.auth.getSession();
+                if (data?.session?.user) {
+                  await resolveAndRedirectUser(data.session.user.id, true);
+                } else {
+                  navigate("/auth", { replace: true });
+                }
+              }}
               className="w-full h-12 text-sm font-bold gap-2 shadow-md shadow-primary/20"
             >
-              <LogIn className="h-4 w-4" /> Continue to Login
+              <LogIn className="h-4 w-4" /> Continue to Campus Connect
             </Button>
           </div>
         )}
 
-        {/* ── State 4: Expired / Invalid Token ── */}
-        {state === "expired" && (
-          <div className="space-y-5">
-            <div className="mx-auto h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500">
-              <Clock className="h-8 w-8" />
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Verification link expired or invalid
-              </h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                This verification link has expired or has already been used. Please request a fresh verification link below.
-              </p>
-            </div>
-
-            {resendSuccess ? (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-left space-y-2">
-                <p className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  New verification link dispatched
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  We've sent a new confirmation email to <span className="font-semibold text-foreground">{resendEmail}</span>. Please check your inbox and click the new link.
-                </p>
+        {/* ── View 5: Token / Code Expired ── */}
+        {viewState === "expired" && (
+          <div className="space-y-5 text-left">
+            <div className="text-center space-y-2">
+              <div className="mx-auto h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500 mb-2">
+                <Clock className="h-8 w-8" />
               </div>
-            ) : (
-              <form onSubmit={handleResend} className="space-y-3 text-left">
-                <div className="space-y-1.5">
-                  <Label htmlFor="resend-email" className="text-xs font-semibold">
-                    Registered Email Address
-                  </Label>
-                  <Input
-                    id="resend-email"
-                    type="email"
-                    required
-                    placeholder="student@bkbc.edu.in"
-                    value={resendEmail}
-                    onChange={(e) => setResendEmail(e.target.value)}
-                    className="h-10 text-sm"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={resending}
-                  className="w-full h-11 text-sm font-bold gap-2"
-                >
-                  {resending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                  {resending ? "Sending New Link…" : "Resend verification email"}
-                </Button>
-              </form>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={handleReturnToLogin}
-              className="w-full h-11 text-sm border-border-subtle"
-            >
-              Return to Campus Connect
-            </Button>
-          </div>
-        )}
-
-        {/* ── State 5: Missing / Invalid Parameters ── */}
-        {state === "invalid" && (
-          <div className="space-y-5">
-            <div className="mx-auto h-16 w-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive">
-              <AlertCircle className="h-8 w-8" />
-            </div>
-
-            <div className="space-y-2">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                No Pending Verification
+                Verification Link or Code Expired
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We couldn't detect an active verification token in this URL. If you already verified your email, please proceed to sign in.
+                Security codes expire after a limited period. Request a fresh 8-digit verification code below:
               </p>
             </div>
 
-            <div className="flex flex-col gap-2.5 pt-2">
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="expired-email" className="text-xs font-semibold">
+                  Registered Email Address
+                </Label>
+                <Input
+                  id="expired-email"
+                  type="email"
+                  required
+                  placeholder="student@college.edu"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  className="h-10 text-sm"
+                />
+              </div>
+
               <Button
-                onClick={handleReturnToLogin}
-                className="w-full h-12 text-sm font-bold gap-2 shadow-md shadow-primary/20"
+                onClick={async () => {
+                  await handleResendCode();
+                  setViewState("code_entry");
+                }}
+                disabled={resending || resendCooldown > 0 || !emailAddress.trim()}
+                className="w-full h-11 text-sm font-bold gap-2"
               >
-                Return to Campus Connect <ArrowRight className="h-4 w-4" />
+                {resending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : "Send New 8-Digit Code"}
               </Button>
+
               <Button
                 variant="outline"
-                onClick={() => setState("expired")}
+                onClick={() => setViewState("code_entry")}
                 className="w-full h-11 text-sm border-border-subtle"
               >
-                Need a new verification link?
+                Enter Code Manually
               </Button>
             </div>
           </div>
