@@ -9,15 +9,64 @@
 --   5. promotional_end_at (optional scheduled end time)
 -- ============================================================
 
-ALTER TABLE public.events
-  ADD COLUMN IF NOT EXISTS promotional_popup_enabled boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS promotional_image_url text,
-  ADD COLUMN IF NOT EXISTS promotional_duration_seconds integer NOT NULL DEFAULT 7 
-    CHECK (promotional_duration_seconds >= 5 AND promotional_duration_seconds <= 9),
-  ADD COLUMN IF NOT EXISTS promotional_start_at timestamptz,
-  ADD COLUMN IF NOT EXISTS promotional_end_at timestamptz;
+DO $$
+BEGIN
+  -- 1. promotional_popup_enabled
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'promotional_popup_enabled'
+  ) THEN
+    ALTER TABLE public.events ADD COLUMN promotional_popup_enabled boolean NOT NULL DEFAULT false;
+  END IF;
 
--- Partial index to make active promotional lookup instantaneous
+  -- 2. promotional_image_url
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'promotional_image_url'
+  ) THEN
+    ALTER TABLE public.events ADD COLUMN promotional_image_url text;
+  END IF;
+
+  -- 3. promotional_duration_seconds
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'promotional_duration_seconds'
+  ) THEN
+    ALTER TABLE public.events ADD COLUMN promotional_duration_seconds integer DEFAULT 7;
+  END IF;
+
+  -- Ensure check constraint on promotional_duration_seconds
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.events'::regclass
+      AND conname = 'check_events_promotional_duration_seconds'
+  ) THEN
+    ALTER TABLE public.events
+      ADD CONSTRAINT check_events_promotional_duration_seconds
+      CHECK (promotional_duration_seconds IS NULL OR (promotional_duration_seconds >= 5 AND promotional_duration_seconds <= 9));
+  END IF;
+
+  -- 4. promotional_start_at
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'promotional_start_at'
+  ) THEN
+    ALTER TABLE public.events ADD COLUMN promotional_start_at timestamptz;
+  END IF;
+
+  -- 5. promotional_end_at
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'promotional_end_at'
+  ) THEN
+    ALTER TABLE public.events ADD COLUMN promotional_end_at timestamptz;
+  END IF;
+END $$;
+
+-- Partial index for active promotional events
 CREATE INDEX IF NOT EXISTS idx_events_promotional_active
   ON public.events (promotional_popup_enabled, event_date)
   WHERE promotional_popup_enabled = true;
+
+-- Reload PostgREST schema cache so PGRST204 resolves immediately
+NOTIFY pgrst, 'reload schema';
