@@ -29,6 +29,7 @@ import {
 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/hooks/use-theme";
 import { usePlatformBranding } from "@/hooks/use-platform-branding";
@@ -75,22 +76,13 @@ export default function AppSidebar() {
   const { theme, setTheme } = useTheme();
   const { branding } = usePlatformBranding();
   const collapsed = state === "collapsed";
-
-  const authQuery = useQuery({
-    queryKey: ["app_sidebar", "auth"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return data.user ?? null;
-    },
-    staleTime: 120_000,
-  });
+  const { user } = useAuth();
 
   const roleQuery = useQuery({
-    queryKey: ["app_sidebar", "role", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id),
+    queryKey: ["app_sidebar", "role", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -102,10 +94,10 @@ export default function AppSidebar() {
   });
 
   const unreadQuery = useQuery({
-    queryKey: ["app_sidebar", "unread", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id),
+    queryKey: ["app_sidebar", "unread", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { count, error } = await supabase
         .from("notification_recipients")
         .select("id", { count: "exact", head: true })

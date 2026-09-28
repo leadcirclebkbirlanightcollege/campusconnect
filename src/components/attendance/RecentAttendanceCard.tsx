@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Clock, XCircle } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,11 +19,13 @@ type AttendanceWithLecture = {
 };
 
 export default function RecentAttendanceCard() {
+  const { user } = useAuth();
+
   const query = useQuery({
-    queryKey: ["student", "recent-attendance"],
+    queryKey: ["student", "recent-attendance", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async (): Promise<AttendanceWithLecture[]> => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return [];
+      if (!user?.id) return [];
 
       const { data, error } = await supabase
         .from("attendance")
@@ -34,7 +37,7 @@ export default function RecentAttendanceCard() {
           points_earned,
           lecture:lectures(topic, lecture_date)
         `)
-        .eq("student_user_id", user.user.id)
+        .eq("student_user_id", user.id)
         .order("marked_at", { ascending: false })
         .limit(3);
 

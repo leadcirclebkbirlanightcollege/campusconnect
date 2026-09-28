@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -63,11 +64,8 @@ function resolveKind(kind: string) {
 
 export default function StudentInbox() {
   const qc = useQueryClient();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
-  }, []);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const inboxQuery = useInfiniteQuery({
     queryKey: ["student", "inbox", userId],

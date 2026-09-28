@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 
 export type LiveLecture = {
   id: string;
@@ -65,19 +66,19 @@ export function useLiveLecture() {
  */
 export function useMyAttendance(lectureId: string | undefined) {
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const query = useQuery({
-    queryKey: ["student", "my-attendance", lectureId],
-    enabled: Boolean(lectureId),
+    queryKey: ["student", "my-attendance", lectureId, user?.id],
+    enabled: Boolean(lectureId && user?.id),
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return null;
+      if (!user?.id) return null;
 
       const { data, error } = await supabase
         .from("attendance")
         .select("id, status, marked_at, points_earned")
         .eq("lecture_id", lectureId!)
-        .eq("student_user_id", user.user.id)
+        .eq("student_user_id", user.id)
         .maybeSingle();
 
       if (error) throw error;

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,13 @@ type Programme = {
 };
 
 export default function StudentProgrammesCard() {
+  const { user } = useAuth();
+
   const programmesQuery = useQuery({
-    queryKey: ["student", "my-programmes"],
+    queryKey: ["student", "my-programmes", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) return [];
 
       // Get allotments for this student
       const { data: allotments, error: allotError } = await supabase

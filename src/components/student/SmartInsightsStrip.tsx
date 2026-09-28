@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, TrendingUp, Flame, Zap, ChevronRight } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -90,6 +91,7 @@ function buildInsights(
 
 export default function SmartInsightsStrip() {
   const [idx, setIdx] = useState(0);
+  const { user } = useAuth();
 
   const streakQ = useQuery({
     queryKey: ["student", "streak-insights"],
@@ -119,9 +121,9 @@ export default function SmartInsightsStrip() {
   });
 
   const attendanceQ = useQuery({
-    queryKey: ["student", "attendance-pct-insights"],
+    queryKey: ["student", "attendance-pct-insights", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 0;
       const [{ count: attended }, { count: total }] = await Promise.all([
         supabase.from("attendance").select("id", { count: "exact", head: true }).eq("student_user_id", user.id).eq("status", "present"),

@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Zap } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -52,20 +53,22 @@ export default function ForceUpdateBanner() {
   const [countdown, setCountdown] = useState(5);
   const [isAdmin, setIsAdmin] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { user } = useAuth();
 
   /* ── Determine if current user is admin (skip overlay for admins) ── */
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      supabase.from("user_roles")
-        .select("role").eq("user_id", data.user.id)
-        .in("role", ["admin", "super_admin"])
-        .limit(1)
-        .then(({ data: roles }) => {
-          if (roles && roles.length > 0) setIsAdmin(true);
-        });
-    });
-  }, []);
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase.from("user_roles")
+      .select("role").eq("user_id", user.id)
+      .in("role", ["admin", "super_admin"])
+      .limit(1)
+      .then(({ data: roles }) => {
+        if (roles && roles.length > 0) setIsAdmin(true);
+      });
+  }, [user?.id]);
 
   /* ── Check + apply force-update setting ── */
   const applyPayload = (value: unknown) => {

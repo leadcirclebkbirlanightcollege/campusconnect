@@ -12,6 +12,7 @@ import AdminSidebar from "@/pages/admin/AdminSidebar";
 import { useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -81,11 +82,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const { branding } = usePlatformBranding();
   const { title, description } = getAdminPageMeta(location.pathname);
-  const { data: user } = useQuery({
-    queryKey: ["admin_topbar", "user"],
-    queryFn: async () => { const { data } = await supabase.auth.getUser(); return data.user ?? null; },
-    staleTime: 120_000,
-  });
+  const { user } = useAuth();
 
   const logoSrc = branding.logo_url || BRANDING.logo;
   const brandName = branding.brand_name || BRANDING.name;

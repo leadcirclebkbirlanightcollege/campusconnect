@@ -5,6 +5,7 @@ import { Building2, Users, GraduationCap, BookOpen, CheckCircle2, ChevronRight, 
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -50,11 +51,7 @@ export default function AdminSetupWizard() {
   const [studentEmail, setStudentEmail] = useState("");
   const [addedStudents, setAddedStudents] = useState<{ name: string; email: string }[]>([]);
 
-  const { data: user } = useQuery({
-    queryKey: ["setup_wizard_user"],
-    queryFn: async () => { const { data } = await supabase.auth.getUser(); return data.user; },
-    staleTime: 120_000,
-  });
+  const { user } = useAuth();
 
   const { data: collegeId } = useQuery({
     queryKey: ["setup_wizard_college"],

@@ -27,6 +27,7 @@ export const REFETCH_INTERVAL = {
 } as const;
 
 export const SLOW_REQUEST_THRESHOLD_MS = 800;
+export const SLOW_AUTH_THRESHOLD_MS = 2000;
 
 export function queryOpts(
   opts: {
@@ -48,7 +49,7 @@ export function queryOpts(
 
 /**
  * Global API timing logger (best effort).
- * Logs slow backend requests (> 800ms) for optimization.
+ * Logs slow backend requests (> 800ms for data queries, > 2000ms for auth verification) for optimization.
  */
 export function setupSlowRequestLogger() {
   if (typeof window === "undefined" || !window.fetch) return () => undefined;
@@ -57,26 +58,44 @@ export function setupSlowRequestLogger() {
   const globalWithPatch = window as typeof window & { [KEY]?: boolean };
   if (globalWithPatch[KEY]) return () => undefined;
 
+  // Track logged warnings to avoid spamming the console for repeated calls
+  const loggedAuthEndpoints = new Set<string>();
+
   try {
     const originalFetch = window.fetch.bind(window);
 
     const patchedFetch = async (...args: Parameters<typeof fetch>) => {
       const startedAt = performance.now();
       const requestUrl = typeof args[0] === "string" ? args[0] : args[0] instanceof Request ? args[0].url : "";
+      const isAuthRequest = requestUrl.includes("/auth/v1/");
+      const isDataRequest = requestUrl.includes("/rest/v1/") || requestUrl.includes("/functions/v1/");
 
       try {
         const response = await originalFetch(...args);
         const durationMs = Math.round(performance.now() - startedAt);
-        if (
-          durationMs > SLOW_REQUEST_THRESHOLD_MS &&
-          (requestUrl.includes("/rest/v1/") || requestUrl.includes("/functions/v1/") || requestUrl.includes("supabase"))
-        ) {
-          console.warn("[perf][slow-api]", { durationMs, status: response.status, path: requestUrl });
+
+        if (isAuthRequest) {
+          // Supabase Auth token cryptographic verification routinely takes 800-1200ms.
+          // Only warn if duration exceeds SLOW_AUTH_THRESHOLD_MS (2000ms), and avoid repeating the warning.
+          if (durationMs > SLOW_AUTH_THRESHOLD_MS) {
+            const endpointKey = `${response.status}:${requestUrl.split("?")[0]}`;
+            if (!loggedAuthEndpoints.has(endpointKey)) {
+              loggedAuthEndpoints.add(endpointKey);
+              console.warn("[perf][slow-auth]", { durationMs, status: response.status, path: requestUrl });
+            }
+          }
+        } else if (isDataRequest || requestUrl.includes("supabase")) {
+          // Strict 800ms threshold for REST tables and Edge Functions
+          if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
+            console.warn("[perf][slow-api]", { durationMs, status: response.status, path: requestUrl });
+          }
         }
+
         return response;
       } catch (error) {
         const durationMs = Math.round(performance.now() - startedAt);
-        if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
+        const threshold = isAuthRequest ? SLOW_AUTH_THRESHOLD_MS : SLOW_REQUEST_THRESHOLD_MS;
+        if (durationMs > threshold || !isAuthRequest) {
           console.warn("[perf][slow-api-error]", { durationMs, path: requestUrl });
         }
         throw error;

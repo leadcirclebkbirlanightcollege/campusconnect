@@ -15,6 +15,7 @@ import SessionGuard from "@/components/auth/SessionGuard";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import ForceUpdateBanner from "@/components/layout/ForceUpdateBanner";
 import OnboardingGuard from "@/components/auth/OnboardingGuard";
+import { useAuth } from "@/providers/AuthProvider";
 
 import SoftUpdateBanner from "@/components/layout/SoftUpdateBanner";
 import {
@@ -177,14 +178,7 @@ export default function AppLayout() {
   const { canGoBack, goBack } = useSmartBack();
 
 
-  const { data: user } = useQuery({
-    queryKey: ["topbar", "user"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return data.user ?? null;
-    },
-    staleTime: 120_000,
-  });
+  const { user } = useAuth();
 
   // Cross-module reactivity: translate app-events → query invalidations,
   // and subscribe to realtime tables that ripple across the ecosystem.

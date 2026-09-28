@@ -6,6 +6,7 @@ import { Camera, CheckCircle2, KeyRound, Loader2, QrCode, Radio, AlertTriangle, 
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,7 @@ function safeErrorMessage(e: unknown): string {
 export default function LiveAttendanceWidget() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const [otp, setOtp] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -86,17 +88,16 @@ export default function LiveAttendanceWidget() {
 
   // Check if user already marked attendance for this lecture
   const attendanceQuery = useQuery({
-    queryKey: ["student", "my-attendance", liveLectureQuery.data?.id],
-    enabled: Boolean(liveLectureQuery.data?.id),
+    queryKey: ["student", "my-attendance", liveLectureQuery.data?.id, user?.id],
+    enabled: Boolean(liveLectureQuery.data?.id && user?.id),
     queryFn: async (): Promise<AttendanceRecord | null> => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return null;
+      if (!user?.id) return null;
 
       const { data, error } = await supabase
         .from("attendance")
         .select("id, lecture_id, status, marked_at")
         .eq("lecture_id", liveLectureQuery.data!.id)
-        .eq("student_user_id", user.user.id)
+        .eq("student_user_id", user.id)
         .maybeSingle();
 
       if (error) throw error;

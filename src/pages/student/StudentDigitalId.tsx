@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,21 +33,13 @@ export default function StudentDigitalId() {
   const cardRef = useRef<HTMLDivElement>(null);
   const downloadRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
-
-  const meQuery = useQuery({
-    queryKey: ["student", "me"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return data.user ?? null;
-    },
-  });
+  const { user, isLoading: authLoading } = useAuth();
 
   const profileQuery = useQuery({
-    queryKey: ["student", "id-card-profile", meQuery.data?.id],
-    enabled: Boolean(meQuery.data?.id),
+    queryKey: ["student", "id-card-profile", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async (): Promise<ProfileRow | null> => {
-      const uid = meQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase
         .from("profiles")
         .select("name,email,student_id,department,class_name,avatar_url,is_verified")
@@ -58,10 +51,10 @@ export default function StudentDigitalId() {
   });
 
   const programmesQuery = useQuery({
-    queryKey: ["student", "id-card-programmes", meQuery.data?.id],
-    enabled: Boolean(meQuery.data?.id),
+    queryKey: ["student", "id-card-programmes", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async (): Promise<ProgrammeRow[]> => {
-      const uid = meQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase
         .from("student_programme_allotments")
         .select("programme_id, programmes(name, color)")
@@ -72,7 +65,7 @@ export default function StudentDigitalId() {
   });
 
   const profile = profileQuery.data;
-  const userId = meQuery.data?.id ?? "";
+  const userId = user?.id ?? "";
   const qrPayload = JSON.stringify({ type: "campus_connect_id", uid: userId, ts: Date.now() });
 
   const handleDownload = useCallback(async () => {
@@ -120,7 +113,7 @@ export default function StudentDigitalId() {
     }
   }, [handleDownload]);
 
-  if (profileQuery.isLoading || meQuery.isLoading) {
+  if (profileQuery.isLoading || authLoading) {
     return (
       <PageContainer className="flex flex-col items-center gap-6 py-8">
         <Skeleton className="h-[440px] w-full max-w-sm rounded-3xl" />

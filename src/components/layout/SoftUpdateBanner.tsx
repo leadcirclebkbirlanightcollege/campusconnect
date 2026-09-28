@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, X, Sparkles } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -31,20 +32,22 @@ function ackTimestamp(ts: string) {
 export default function SoftUpdateBanner() {
   const [payload, setPayload] = useState<SoftUpdatePayload | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
 
   /* ── Determine if current user is admin ── */
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      supabase.from("user_roles")
-        .select("role").eq("user_id", data.user.id)
-        .in("role", ["admin", "super_admin"])
-        .limit(1)
-        .then(({ data: roles }) => {
-          if (roles && roles.length > 0) setIsAdmin(true);
-        });
-    });
-  }, []);
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase.from("user_roles")
+      .select("role").eq("user_id", user.id)
+      .in("role", ["admin", "super_admin"])
+      .limit(1)
+      .then(({ data: roles }) => {
+        if (roles && roles.length > 0) setIsAdmin(true);
+      });
+  }, [user?.id]);
 
   const applyPayload = (value: unknown) => {
     if (!value || typeof value !== "object") return;

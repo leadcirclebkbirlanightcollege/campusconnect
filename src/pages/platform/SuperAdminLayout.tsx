@@ -1,6 +1,7 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { msToSeconds, MOTION_MS } from "@/motion/motionTokens";
 import { PAGE_TRANSITION, PAGE_TRANSITION_VARIANTS } from "@/motion/pageTransitions";
@@ -70,11 +71,7 @@ function SAProfileMenu({ userId }: { userId: string }) {
 export default function SuperAdminLayout() {
   const location = useLocation();
   const { title, description } = getSAPageMeta(location.pathname);
-  const { data: user } = useQuery({
-    queryKey: ["sa_topbar", "user"],
-    queryFn: async () => { const { data } = await supabase.auth.getUser(); return data.user ?? null; },
-    staleTime: 120_000,
-  });
+  const { user } = useAuth();
 
   return (
     <CollegeProvider>

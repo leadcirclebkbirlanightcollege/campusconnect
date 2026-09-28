@@ -3,24 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import AdminShell from "@/components/layout/AdminShell";
 
 export default function RoleShell({ children }: { children: ReactNode }) {
-  const authQuery = useQuery({
-    queryKey: ["role_shell", "auth"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return data.user ?? null;
-    },
-  });
+  const { user, isLoading: authLoading } = useAuth();
 
   const roleQuery = useQuery({
-    queryKey: ["role_shell", "role", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id),
+    queryKey: ["role_shell", "role", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -31,7 +25,7 @@ export default function RoleShell({ children }: { children: ReactNode }) {
     },
   });
 
-  if (authQuery.isLoading || roleQuery.isLoading) {
+  if (authLoading || (user?.id && roleQuery.isLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-primary/5">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

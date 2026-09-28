@@ -15,6 +15,7 @@ import { useStudentIntelligence } from "@/hooks/use-intelligence";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -144,11 +145,12 @@ function GoalTracker({ attendancePct, currentStreak, totalPoints, riskLevel }: {
 export default function IntelligenceScoreCard() {
   const intel     = useStudentIntelligence();
   const growth    = useGrowthInsights();
+  const { user } = useAuth();
 
   const pointsQ = useQuery({
-    queryKey: ["student", "points-weekly-chart"],
+    queryKey: ["student", "points-weekly-chart", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
       const { data } = await supabase
         .from("points_ledger")

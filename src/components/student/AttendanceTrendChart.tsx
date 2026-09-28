@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Minus, TrendingUpIcon } from "@/components/icons";
@@ -28,13 +29,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function AttendanceTrendChart() {
   const growth = useGrowthInsights();
+  const { user } = useAuth();
 
   // Get attendance data grouped by week over last 30 days
   const attendanceQ = useQuery({
-    queryKey: ["student", "attendance-trend-chart"],
+    queryKey: ["student", "attendance-trend-chart", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!user?.id) return [];
 
       const since = new Date();
       since.setDate(since.getDate() - 30);

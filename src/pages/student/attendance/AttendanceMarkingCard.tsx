@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/lib/error-handling";
 import { Camera, CheckCircle2, KeyRound, QrCode, Loader2, HelpCircle, AlertTriangle, Sparkles, ArrowRight } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { useRateLimit } from "@/hooks/use-rate-limit";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,21 +57,22 @@ export default function AttendanceMarkingCard({ lectureId, initialToken }: Props
   const [helpOpen, setHelpOpen] = useState(false);
   const [success, setSuccess] = useState<{ at: number; points: number } | null>(null);
   const [scanLock, setScanLock] = useState(false);
+  const { user } = useAuth();
 
   const canSubmitOtp = otp.trim().length === 6;
 
   // Check if attendance already marked
   const existingQuery = useQuery({
-    queryKey: ["student", "attendance-check", lectureId],
+    queryKey: ["student", "attendance-check", lectureId, user?.id],
+    enabled: Boolean(lectureId && user?.id),
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return null;
+      if (!user?.id) return null;
 
       const { data, error } = await supabase
         .from("attendance")
         .select("id, marked_at, points_earned")
         .eq("lecture_id", lectureId)
-        .eq("student_user_id", user.user.id)
+        .eq("student_user_id", user.id)
         .maybeSingle();
 
       if (error) throw error;

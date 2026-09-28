@@ -5,6 +5,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -49,10 +50,11 @@ function EngagementMetric({
 }
 
 export default function EngagementScorePanel() {
+  const { user } = useAuth();
   const q = useQuery({
-    queryKey: ["student", "engagement-week"],
+    queryKey: ["student", "engagement-week", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       const weekAgo = new Date();

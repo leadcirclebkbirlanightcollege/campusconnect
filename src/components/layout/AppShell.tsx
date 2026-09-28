@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { BRANDING } from "@/config/branding";
 import { CoreMemberBadge } from "@/components/badges/CoreMemberBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -252,20 +253,13 @@ const AppShell = ({ children }: AppShellProps) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const authQuery = useQuery({
-    queryKey: ["shell", "auth"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return data.user ?? null;
-    },
-  });
+  const { user, isLoading: authLoading } = useAuth();
 
   const roleQuery = useQuery({
-    queryKey: ["shell", "role", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id),
+    queryKey: ["shell", "role", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid).maybeSingle();
       if (error) throw error;
       return (data?.role as "student" | "admin" | null) ?? null;
@@ -273,10 +267,10 @@ const AppShell = ({ children }: AppShellProps) => {
   });
 
   const unreadQuery = useQuery({
-    queryKey: ["shell", "unread", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id) && roleQuery.data === "student",
+    queryKey: ["shell", "unread", user?.id],
+    enabled: Boolean(user?.id) && roleQuery.data === "student",
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { count, error } = await supabase
         .from("notification_recipients")
         .select("id", { count: "exact", head: true })
@@ -288,10 +282,10 @@ const AppShell = ({ children }: AppShellProps) => {
   });
 
   const profileMiniQuery = useQuery({
-    queryKey: ["shell", "profile_mini", authQuery.data?.id],
-    enabled: Boolean(authQuery.data?.id) && roleQuery.data === "student",
+    queryKey: ["shell", "profile_mini", user?.id],
+    enabled: Boolean(user?.id) && roleQuery.data === "student",
     queryFn: async () => {
-      const uid = authQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase.from("profiles").select("name,avatar_url,is_verified,is_core_member").eq("user_id", uid).maybeSingle();
       if (error) throw error;
       return data as { name: string; avatar_url: string | null; is_verified: boolean; is_core_member?: boolean } | null;
@@ -299,7 +293,7 @@ const AppShell = ({ children }: AppShellProps) => {
   });
 
   useEffect(() => {
-    const uid = authQuery.data?.id;
+    const uid = user?.id;
     if (!uid || roleQuery.data !== "student") return;
     const channel = supabase
       .channel(`shell_unread_${uid}`)
@@ -308,7 +302,7 @@ const AppShell = ({ children }: AppShellProps) => {
       }, () => { qc.invalidateQueries({ queryKey: ["shell", "unread", uid] }); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [authQuery.data?.id, qc, roleQuery.data]);
+  }, [user?.id, qc, roleQuery.data]);
 
   const showStudentNav = roleQuery.data === "student";
   const path = location.pathname;
@@ -323,7 +317,7 @@ const AppShell = ({ children }: AppShellProps) => {
   };
 
   const unread = unreadQuery.data ?? 0;
-  const uid = authQuery.data?.id ?? "";
+  const uid = user?.id ?? "";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">

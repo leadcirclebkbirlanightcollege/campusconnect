@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -221,14 +222,7 @@ export default function Leaderboard() {
     setVisibleCount(PAGE_SIZE);
   }, [mode]);
 
-  const meQuery = useQuery({
-    queryKey: ["leaderboard", "me"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return data.user ?? null;
-    },
-    staleTime: 60_000,
-  });
+  const { user } = useAuth();
 
   const allTimeQuery = useQuery({
     queryKey: ["leaderboard", "alltime", visibleCount],
@@ -288,18 +282,16 @@ export default function Leaderboard() {
   const isLoading =
     allTimeQuery.isLoading ||
     weeklyQuery.isLoading ||
-    (mode === "class" && classQuery.isLoading) ||
-    meQuery.isLoading;
-  const myId = meQuery.data?.id;
+    (mode === "class" && classQuery.isLoading);
+  const myId = user?.id;
 
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([
-      meQuery.refetch(),
       allTimeQuery.refetch(),
       weeklyQuery.refetch(),
       classQuery.refetch(),
     ]);
-  }, [allTimeQuery, classQuery, meQuery, weeklyQuery]);
+  }, [allTimeQuery, classQuery, weeklyQuery]);
 
   const movementMap = useMemo(() => {
     const compareRankByUser = new Map(compareRows.map((row) => [row.user_id, row.rank]));

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Clock3, Radio, TrendingUp } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { useLiveLecture } from "@/hooks/use-live-lecture";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 
@@ -47,16 +48,8 @@ export default function LecturesList() {
   const liveLectureQuery = useLiveLecture();
   const growthQuery = useGrowthInsights();
 
-  const userQuery = useQuery({
-    queryKey: ["student", "auth-user-id"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return data.user?.id ?? null;
-    },
-    staleTime: 60_000,
-  });
-
-  const userId = userQuery.data;
+  const { user, isLoading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
 
   const programmeFilterQuery = useQuery({
     queryKey: ["student", "lectures", "programme-filter", userId],
@@ -83,7 +76,7 @@ export default function LecturesList() {
 
   const upcomingQuery = useQuery({
     queryKey: ["student", "lectures", "upcoming", userId],
-    enabled: !userQuery.isLoading,
+    enabled: !authLoading,
     queryFn: async (): Promise<LectureRecord[]> => {
       const today = new Date().toISOString().slice(0, 10);
 
@@ -106,7 +99,7 @@ export default function LecturesList() {
 
   const historyQuery = useInfiniteQuery({
     queryKey: ["student", "lectures", "history", userId],
-    enabled: !userQuery.isLoading,
+    enabled: !authLoading,
     initialPageParam: 0,
     queryFn: async ({ pageParam }): Promise<HistoryLectureRecord[]> => {
       const today = new Date().toISOString().slice(0, 10);
@@ -185,7 +178,7 @@ export default function LecturesList() {
     | "stable";
 
   const isInitialLoading =
-    userQuery.isLoading ||
+    authLoading ||
     (programmeFilterQuery.isLoading && !!userId) ||
     (upcomingQuery.isLoading && !upcomingQuery.data) ||
     (historyQuery.isLoading && historyRows.length === 0);

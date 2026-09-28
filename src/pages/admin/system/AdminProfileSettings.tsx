@@ -4,6 +4,7 @@ import { z } from "zod";
 import { KeyRound, Save, Shield } from "@/components/icons";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,22 +38,13 @@ export default function AdminProfileSettings() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-
-  const meQuery = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      if (!data.user) throw new Error("Not logged in");
-      return data.user;
-    },
-  });
+  const { user, isLoading: authLoading } = useAuth();
 
   const profileQuery = useQuery({
-    queryKey: ["admin", "profile", meQuery.data?.id],
-    enabled: Boolean(meQuery.data?.id),
+    queryKey: ["admin", "profile", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async (): Promise<ProfileRow | null> => {
-      const uid = meQuery.data!.id;
+      const uid = user!.id;
       const { data, error } = await supabase
         .from("profiles")
         .select("name,email,phone")
@@ -74,7 +66,7 @@ export default function AdminProfileSettings() {
       const parsed = profileSchema.safeParse({ name, phone });
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid profile");
 
-      const uid = meQuery.data?.id;
+      const uid = user?.id;
       if (!uid) throw new Error("Not logged in");
 
       const { error } = await supabase
@@ -111,7 +103,7 @@ export default function AdminProfileSettings() {
   });
 
   const busy =
-    meQuery.isLoading ||
+    authLoading ||
     profileQuery.isLoading ||
     saveProfileMutation.isPending ||
     changePasswordMutation.isPending;

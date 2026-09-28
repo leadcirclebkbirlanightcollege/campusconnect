@@ -2,6 +2,7 @@ import { useEffect, useState, type ElementType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BookOpen, Megaphone, Trophy, AlertTriangle, Settings2, CheckCircle2 } from "@/components/icons";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { PageContainer } from "@/layout/PageContainer";
 import { PageHeader } from "@/layout/PageHeader";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -37,11 +38,8 @@ const PREF_ROWS: Array<{ key: keyof Prefs; label: string; desc: string; icon: El
 
 export default function NotificationSettings() {
   const qc = useQueryClient();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
-  }, []);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const prefsQuery = useQuery({
     queryKey: ["notification_preferences", userId],

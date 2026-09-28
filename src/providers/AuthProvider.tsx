@@ -11,6 +11,21 @@ interface AuthContextValue {
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
 
+// Deduplicate server verification across concurrent mounts and React Strict Mode
+let inFlightVerification: Promise<ReturnType<typeof supabase.auth.getUser>> | null = null;
+
+function verifyServerUser(): Promise<ReturnType<typeof supabase.auth.getUser>> {
+  if (!inFlightVerification) {
+    inFlightVerification = supabase.auth.getUser().finally(() => {
+      // Retain verification promise briefly for StrictMode remounts, then release
+      setTimeout(() => {
+        inFlightVerification = null;
+      }, 4000);
+    });
+  }
+  return inFlightVerification;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [user, setUser] = React.useState<User | null>(null);
@@ -25,7 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up listener BEFORE getSession to avoid missing events
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "SIGNED_OUT") {
+        inFlightVerification = null;
+      }
       if (!mounted) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
@@ -39,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(nextSession.user);
         setIsLoading(false);
 
-        // Verify that the user still exists on the server
-        const { data: userData, error: userError } = await supabase.auth.getUser();
+        // Verify that the user still exists on the server (deduplicated against Strict Mode double-mount)
+        const { data: userData, error: userError } = await verifyServerUser();
         if (!mounted) return;
         if (userError || !userData?.user) {
           const msg = (userError?.message || "").toLowerCase();

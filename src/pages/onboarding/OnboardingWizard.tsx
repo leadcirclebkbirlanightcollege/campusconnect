@@ -37,7 +37,7 @@ interface OnboardingWizardProps {
 }
 
 export default function OnboardingWizard({ initialStep }: OnboardingWizardProps = {}) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -83,22 +83,13 @@ export default function OnboardingWizard({ initialStep }: OnboardingWizardProps 
     staleTime: 60_000,
   });
 
-  // Real-time auth integrity check: verify user actually exists on server
+  // Auth guard: redirect to sign in if not authenticated
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (!active) return;
-      if (error || !data?.user) {
-        toast.error("Session expired. Please sign in again.");
-        await supabase.auth.signOut().catch(() => {});
-        navigate("/auth", { replace: true });
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
+    if (!authLoading && !user) {
+      toast.error("Session expired. Please sign in again.");
+      navigate("/auth", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   // PERSISTENCE GUARD: If student already submitted profile & ID verification, never show profile creation again!
   useEffect(() => {

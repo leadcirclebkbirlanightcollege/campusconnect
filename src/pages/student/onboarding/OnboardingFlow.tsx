@@ -7,6 +7,7 @@ import {
 } from "@/components/icons";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -50,11 +51,12 @@ const STORAGE_KEY = "cc_onboarding_step";
 export default function OnboardingFlow() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user, isLoading: authLoading } = useAuth();
 
-  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
-    queryKey: ["onboarding", "profile"],
+  const { data: profile, isLoading: profileQueryLoading, error: profileError } = useQuery({
+    queryKey: ["onboarding", "profile", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("profiles").select("*").eq("user_id", user.id).single();
@@ -62,6 +64,8 @@ export default function OnboardingFlow() {
       return data as Record<string, unknown>;
     },
   });
+
+  const profileLoading = authLoading || (Boolean(user?.id) && profileQueryLoading);
 
   // Resolve furthest step the user is allowed to be on (cannot bypass forward).
   const minStep: Step = useMemo(() => {
@@ -87,9 +91,9 @@ export default function OnboardingFlow() {
 
   const completeMutation = useMutation({
     mutationFn: async (patch: Record<string, unknown>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("profiles").update(patch as any).eq("user_id", user.id);
+      const uid = user?.id;
+      if (!uid) throw new Error("Not authenticated");
+      const { error } = await supabase.from("profiles").update(patch as any).eq("user_id", uid);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
@@ -439,13 +443,13 @@ function UploadAvatarStep({
     setError(null);
     setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      const path = `${user.id}/${Date.now()}_${file.name}`;
+      const uid = (profile.user_id as string) || (profile.id as string);
+      if (!uid) throw new Error("Not authenticated");
+      const path = `${uid}/${Date.now()}_${file.name}`;
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      await supabase.from("profiles").update({ avatar_url: pub.publicUrl }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ avatar_url: pub.publicUrl }).eq("user_id", uid);
       setUrl(pub.publicUrl);
       toast.success("Photo uploaded");
     } catch (err) {

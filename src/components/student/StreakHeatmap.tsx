@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -36,11 +37,12 @@ export default function StreakHeatmap() {
   const days30 = useMemo(() => getLast30Days(), []);
   const since = days30[0];
   const today = toLocalDate();
+  const { user } = useAuth();
 
   const q = useQuery({
-    queryKey: ["student", "heatmap-30d"],
+    queryKey: ["student", "heatmap-30d", user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return { checkins: new Set<string>(), attended: new Set<string>() };
 
       const [{ data: checkins }, { data: attendance }] = await Promise.all([

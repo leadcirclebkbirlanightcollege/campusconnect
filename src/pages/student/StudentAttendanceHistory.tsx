@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 import { useGrowthInsights } from "@/hooks/use-growth-insights";
 import { cn } from "@/lib/utils";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
@@ -113,17 +114,8 @@ function GroupTitle({ title, hint }: { title: string; hint?: string }) {
 export default function StudentAttendanceHistory() {
   const [exporting, setExporting] = useState(false);
   const growth = useGrowthInsights();
-
-  const userQuery = useQuery({
-    queryKey: ["student", "auth-user-id"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return data.user?.id ?? null;
-    },
-    staleTime: 60_000,
-  });
-
-  const userId = userQuery.data;
+  const { user, isLoading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
 
   const totalsQuery = useQuery({
     queryKey: ["student", "attendance", "totals", userId],
@@ -306,7 +298,7 @@ export default function StudentAttendanceHistory() {
   }, [totals]);
 
   const isInitialLoading =
-    userQuery.isLoading ||
+    authLoading ||
     (totalsQuery.isLoading && !totals) ||
     (historyQuery.isLoading && timelineRows.length === 0);
 
